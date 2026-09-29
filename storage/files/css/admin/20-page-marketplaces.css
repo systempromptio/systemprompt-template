@@ -24,12 +24,6 @@
     margin-bottom: var(--sp-space-1);
 }
 
-.sp-mkt-audience__split {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: var(--sp-space-5);
-}
-
 .sp-audience-matrix-wrap {
     overflow-x: auto;
     border: 1px solid var(--sp-border-subtle);

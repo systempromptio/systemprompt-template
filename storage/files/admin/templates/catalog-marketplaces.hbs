@@ -14,7 +14,7 @@
 
     <section class="sp-kpi-grid" aria-label="Marketplace totals">
         {{#each kpis}}
-        {{> components/kpi label=this.label value=this.value note=this.sub tone=this.tone}}
+        {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone}}
         {{/each}}
     </section>
 
@@ -40,6 +40,7 @@
         <thead><tr>
             <th aria-sort="none">Marketplace</th>
             <th aria-sort="none">Status</th>
+            <th aria-sort="none">Source</th>
             <th aria-sort="none">Granted</th>
             <th class="sp-table__cell--num" aria-sort="none">Plugins</th>
             <th class="sp-table__cell--num" aria-sort="none">Skills</th>
@@ -51,6 +52,7 @@
         <tr data-marketplace-id="{{id}}">
             <td class="sp-table__cell--primary"><a class="sp-table__link" href="{{detail_url}}" title="{{description}}">{{name}}</a></td>
             <td title="v{{version}} · {{visibility}}{{#if default_included}} · open by default{{/if}}">{{#if enabled}}{{> components/badge tone="ok" text="enabled"}}{{else}}{{> components/badge tone="muted" text="disabled"}}{{/if}}</td>
+            <td>{{> components/badge tone=source_tone text=source}}{{#if content_hash}} <span class="sp-sync-hash" title="content hash {{content_hash.full}} — this marketplace's version">{{content_hash.short}}</span>{{/if}}</td>
             <td class="sp-table__cell--muted">{{#if assigned_group_count}}{{assigned_group_count}} group{{#unless (eq assigned_group_count 1)}}s{{/unless}}{{else}}none{{/if}}</td>
             <td class="sp-table__cell--num sp-u-num">{{plugin_count}}</td>
             <td class="sp-table__cell--num sp-u-num">{{skill_count}}</td>
@@ -65,13 +67,14 @@
         <thead><tr>
             <th aria-sort="none">Marketplace</th>
             <th aria-sort="none">Status</th>
+            <th aria-sort="none">Source</th>
             <th aria-sort="none">Granted</th>
             <th class="sp-table__cell--num" aria-sort="none">Plugins</th>
             <th class="sp-table__cell--num" aria-sort="none">Skills</th>
             <th class="sp-table__cell--num" aria-sort="none">Reaches</th>
             <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
         </tr></thead>
-        <tbody><tr class="sp-table__empty"><td colspan="7">
+        <tbody><tr class="sp-table__empty"><td colspan="8">
             {{#if search}}
             {{> components/empty-state heading="Nothing matches" message="No marketplace matches that filter."}}
             {{else}}

@@ -20,11 +20,9 @@ use crate::repositories::users::access_control::{
     MatrixSection, MatrixSubject, group_subject, resolve_subject_matrices, role_subject,
 };
 
-use super::view::{
-    AudienceCellView, AudienceColumnView, AudienceMatrixView, AudienceRowView, AudienceSubjectView,
-};
+use super::view::{AudienceCellView, AudienceColumnView, AudienceMatrixView, AudienceRowView};
 
-pub(super) const MARKETPLACE_ENTITY: &str = "marketplace";
+pub(crate) const MARKETPLACE_ENTITY: &str = "marketplace";
 
 // Why: the manifests name the marketplaces; the database says who reaches
 // them. Both are needed for every card and every audience cell.
@@ -130,55 +128,12 @@ pub(super) async fn audience_matrix(
     }
 }
 
-fn subject_view(row: AudienceRowView, marketplace_id: &MarketplaceId) -> AudienceSubjectView {
-    let cell = row
-        .cells
-        .into_iter()
-        .find(|c| &c.marketplace_id == marketplace_id);
-    AudienceSubjectView {
-        subject: row.subject,
-        label: row.label,
-        effective: cell
-            .as_ref()
-            .map_or_else(|| "deny".to_owned(), |c| c.effective.clone()),
-        is_allow: cell.as_ref().is_some_and(|c| c.is_allow),
-        layer: cell
-            .as_ref()
-            .map_or_else(|| "default".to_owned(), |c| c.layer.clone()),
-        detail: cell.map(|c| c.detail).unwrap_or_default(),
-    }
-}
-
-// Why: "Who can see this" for one marketplace: the same resolved answer as the
-// matrix, sliced to a single column.
-pub(super) async fn audience_for(
-    pool: &PgPool,
-    manifests: &[MarketplaceConfigSummary],
-    marketplace_id: &MarketplaceId,
-    roles: &[String],
-) -> (Vec<AudienceSubjectView>, Vec<AudienceSubjectView>) {
-    let matrix = audience_matrix(pool, manifests, roles).await;
-    let mut group_rows = Vec::new();
-    let mut role_rows = Vec::new();
-    for row in matrix.rows {
-        let kind = row.kind;
-        let view = subject_view(row, marketplace_id);
-        if kind == "group" {
-            group_rows.push(view);
-        } else {
-            role_rows.push(view);
-        }
-    }
-    (group_rows, role_rows)
-}
-
 // Why: Which groups hold an explicit `allow` rule on each marketplace.
 //
 // This is the *declared* half of entitlement — the rule a person clicked into
-// existence — and it is what the assign toggle reflects. The resolved half
-// (what the policy chain actually decides) is [`audience_for`], and the two
-// are shown side by side because a deny written elsewhere can close a
-// marketplace this map says is open.
+// existence. The resolved half is the audience matrix, and the list page shows
+// both because a deny written elsewhere can close a marketplace this map says
+// is open.
 pub(super) async fn group_grants(pool: &PgPool) -> HashMap<MarketplaceId, Vec<GroupId>> {
     let rules = repositories::users::access_control::list_all_rules(pool)
         .await
@@ -199,36 +154,4 @@ pub(super) async fn group_grants(pool: &PgPool) -> HashMap<MarketplaceId, Vec<Gr
         ids.sort();
     }
     out
-}
-
-// Why: Every group, paired with the grant it declares and the verdict it gets.
-pub(super) async fn group_assignments(
-    pool: &PgPool,
-    marketplace_id: &MarketplaceId,
-    resolved: &[AudienceSubjectView],
-) -> Vec<super::view::GroupAssignmentView> {
-    let granted = group_grants(pool)
-        .await
-        .remove(marketplace_id)
-        .unwrap_or_default();
-    repositories::groups::crud::list_group_summaries(pool)
-        .await
-        .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: group listing failed"))
-        .unwrap_or_default()
-        .into_iter()
-        .map(|g| {
-            let verdict = resolved
-                .iter()
-                .find(|r| r.subject == format!("group:{}", g.id));
-            super::view::GroupAssignmentView {
-                assigned: granted.contains(&g.id),
-                resolved_allow: verdict.is_some_and(|r| r.is_allow),
-                resolved_layer: verdict.map(|r| r.layer.clone()).unwrap_or_default(),
-                detail_url: format!("/admin/groups/{}", g.id),
-                id: g.id,
-                name: g.name,
-                member_count: g.member_count,
-            }
-        })
-        .collect()
 }

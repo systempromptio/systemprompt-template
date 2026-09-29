@@ -17,10 +17,10 @@ pub(super) fn list_kpis(
     let assigned: usize = cards.iter().map(|c| c.assigned_group_count).sum();
     let unreachable = cards.iter().filter(|c| c.allowed_subjects == 0).count();
     let kpi =
-        |label: &'static str, value: String, sub: String, tone: &'static str| MarketplaceKpiView {
+        |label: &'static str, value: String, note: String, tone: &'static str| MarketplaceKpiView {
             label,
             value,
-            sub,
+            note,
             tone,
         };
     vec![
