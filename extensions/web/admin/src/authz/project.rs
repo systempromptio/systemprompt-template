@@ -7,6 +7,9 @@ use systemprompt::identifiers::UserId;
 use systemprompt_security::authz::{
     AuthzError, RuleType, SubjectAttributeProvider, SubjectDimension,
 };
+use systemprompt_web_shared::ProjectId;
+
+use crate::authz::primary::lead_with_primary;
 
 const PROJECT_SLUG: &str = "project";
 
@@ -54,13 +57,22 @@ impl SubjectAttributeProvider for ProjectAttributeProvider {
         project_dimension()
     }
 
+    // Why: the primary project leads so the quota bucket and the cost
+    // attribution key are the same project — see `authz::primary`.
     async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, AuthzError> {
-        Ok(
+        let ids: Vec<String> =
             crate::repositories::projects::members::list_project_ids_for_user(&self.pool, user_id)
                 .await?
                 .into_iter()
                 .map(|id| id.as_str().to_owned())
-                .collect(),
-        )
+                .collect();
+        let primary =
+            crate::repositories::scope::defaults::find_scope_defaults(&self.pool, user_id)
+                .await?
+                .and_then(|d| d.primary_project_id);
+        Ok(lead_with_primary(
+            primary.as_ref().map(ProjectId::as_str),
+            ids,
+        ))
     }
 }

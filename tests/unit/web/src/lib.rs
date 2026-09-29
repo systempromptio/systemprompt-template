@@ -329,3 +329,9 @@ mod connector_oauth;
 mod observability_view;
 #[cfg(test)]
 mod tool_schema_diff;
+
+// The quota subject dimensions the gateway's windows key on: the
+// installation-wide `organization`, the re-exposed `role`, and the ordering
+// that puts a person's attribution key first.
+#[cfg(test)]
+mod authz_quota_subjects;

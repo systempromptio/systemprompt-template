@@ -18,10 +18,16 @@ use super::month_window::MONTH_WINDOW_SECONDS;
 // Why: The bound on window rows the form renders and the parser reads.
 pub const MAX_WINDOWS: usize = 8;
 
-// Why: The subject kinds a window may name: core's `user` and installation-wide
-// `organization`, plus every dimension this extension registers a subject
-// provider for (`group`, `project`, `connector`).
-pub const SUBJECTS: [&str; 5] = ["user", "group", "project", "connector", "organization"];
+// Why: The subject kinds a window may name: core's `user` plus every dimension
+// this extension registers a quota subject provider for.
+pub const SUBJECTS: [&str; 6] = [
+    "user",
+    "group",
+    "project",
+    "role",
+    "connector",
+    "organization",
+];
 
 // Why: The scanners the gateway's registry resolves on this instance.
 pub const SCANNERS: [&str; 3] = ["heuristic", "secrets", "pii_extended"];

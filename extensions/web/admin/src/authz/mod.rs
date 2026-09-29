@@ -6,13 +6,18 @@
 //! the precedence ladder, and a [`SubjectAttributeProvider`][p] that looks up
 //! the values a user holds for it.
 //!
-//! We declare three: [`project`], [`group`], and [`connector`]. They form a
-//! ladder with core's — user (0), `project` (140), `group` (150),
-//! `connector` (160), role (200) — where a lower number is the narrower,
-//! higher-priority scope. Groups carry people and marketplace entitlement;
-//! projects are work attribution. Both are DB rows an operator edits, and the
-//! directory's AD groups map into them rather than being a dimension of their
-//! own. `connector` is the MCP servers a person holds a ready connection to.
+//! We declare four: [`project`], [`group`], [`connector`] and
+//! [`organization`]. They form a ladder with core's — user (0), `project`
+//! (140), `group` (150), `connector` (160), role (200), `organization` (300)
+//! — where a lower number is the narrower, higher-priority scope. Groups
+//! carry people and marketplace entitlement; projects are work attribution.
+//! Both are DB rows an operator edits, and the directory's AD groups map into
+//! them rather than being a dimension of their own. `connector` is the MCP
+//! servers a person holds a ready connection to. A fifth provider, [`role`],
+//! re-exposes core's own `role` dimension: the resolver ignores it, but the
+//! gateway's quota resolver finds subjects only through this registry, so
+//! without it a `subject: role` window has nothing to key on. The same goes
+//! for `organization`, which is why it exists as a dimension at all.
 //! Adding another — cost centre, clearance, jurisdiction — means writing a
 //! provider beside them and one
 //! `register_subject_attribute_provider!` call; no core change, and no edit to
@@ -26,7 +31,10 @@ pub use account::account_scope;
 pub(crate) mod catalog;
 pub mod connector;
 pub mod group;
+pub mod organization;
+pub mod primary;
 pub mod project;
+pub mod role;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -40,7 +48,9 @@ use systemprompt_security::authz::{
 
 use crate::authz::connector::ConnectorAttributeProvider;
 use crate::authz::group::GroupAttributeProvider;
+use crate::authz::organization::OrganizationAttributeProvider;
 use crate::authz::project::ProjectAttributeProvider;
+use crate::authz::role::RoleAttributeProvider;
 
 systemprompt_security::register_subject_attribute_provider!(|ctx| {
     let provider: SharedSubjectAttributeProvider =
@@ -57,6 +67,17 @@ systemprompt_security::register_subject_attribute_provider!(|ctx| {
 systemprompt_security::register_subject_attribute_provider!(|ctx| {
     let provider: SharedSubjectAttributeProvider =
         Arc::new(ConnectorAttributeProvider::new(Arc::clone(&ctx.pool)));
+    provider
+});
+
+systemprompt_security::register_subject_attribute_provider!(|_ctx| {
+    let provider: SharedSubjectAttributeProvider = Arc::new(OrganizationAttributeProvider);
+    provider
+});
+
+systemprompt_security::register_subject_attribute_provider!(|ctx| {
+    let provider: SharedSubjectAttributeProvider =
+        Arc::new(RoleAttributeProvider::new(Arc::clone(&ctx.pool)));
     provider
 });
 
