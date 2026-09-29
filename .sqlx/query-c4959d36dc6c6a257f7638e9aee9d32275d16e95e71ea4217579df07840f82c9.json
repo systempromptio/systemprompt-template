@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- One skill's day-by-day record inside the window: invocations and people\n-- from the hook plane; conversations, tokens, cost and errors from the\n-- conversation_facts rows whose harness session invoked it that day.\nWITH days AS (\n    SELECT generate_series(date_trunc('day', $1::timestamptz), date_trunc('day', $2::timestamptz), interval '1 day')::date AS day\n), events AS (\n    SELECT e.user_id, e.session_id, date_trunc('day', e.invoked_at)::date AS day\n    FROM analysis_skill_version_events e\n    WHERE e.skill = $3 AND e.invoked_at >= $1 AND e.invoked_at < $2\n      AND ($4::text[] IS NULL OR e.user_id = ANY($4))\n), per_day AS (\n    SELECT e.day, COUNT(*)::bigint AS invocations, COUNT(DISTINCT e.user_id)::bigint AS users,\n           COUNT(DISTINCT e.session_id)::bigint AS sessions\n    FROM events e GROUP BY e.day\n), facts AS (\n    SELECT s.day,\n           COUNT(DISTINCT f.context_id)::bigint AS conversations,\n           COALESCE(SUM(f.input_tokens + f.output_tokens), 0)::bigint AS tokens,\n           COALESCE(SUM(f.cost_microdollars), 0)::bigint AS cost_microdollars,\n           COALESCE(SUM(f.error_count + f.gov_deny), 0)::bigint AS errors,\n           percentile_cont(0.95) WITHIN GROUP (ORDER BY f.p95_latency_ms)::float8 AS p95_latency_ms,\n           AVG(a.completion)::float8 AS completion_avg\n    FROM (SELECT DISTINCT day, session_id FROM events) s\n    JOIN conversation_facts f ON f.client_session_id = s.session_id\n    LEFT JOIN conversation_analyses a ON a.context_id = f.context_id\n    GROUP BY s.day\n)\nSELECT d.day AS \"day!\",\n       COALESCE(p.invocations, 0)::bigint AS \"invocations!\",\n       COALESCE(p.users, 0)::bigint AS \"users!\",\n       COALESCE(p.sessions, 0)::bigint AS \"sessions!\",\n       COALESCE(f.conversations, 0)::bigint AS \"conversations!\",\n       COALESCE(f.tokens, 0)::bigint AS \"tokens!\",\n       COALESCE(f.cost_microdollars, 0)::bigint AS \"cost_microdollars!\",\n       COALESCE(f.errors, 0)::bigint AS \"errors!\",\n       f.p95_latency_ms, f.completion_avg\nFROM days d\nLEFT JOIN per_day p ON p.day = d.day\nLEFT JOIN facts f ON f.day = d.day\nORDER BY d.day\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "day!",
+        "type_info": "Date",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "sessions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "conversations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "p95_latency_ms",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "completion_avg",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c4959d36dc6c6a257f7638e9aee9d32275d16e95e71ea4217579df07840f82c9"
+}

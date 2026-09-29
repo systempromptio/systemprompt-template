@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT refresh_conversation_facts_pending() AS \"written!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "written!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e2676d3c718de414f604c8cbae2d3bd5482e12914dfb583c7f2bad32de2424e9"
+}

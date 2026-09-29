@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT v.marketplace_id AS \"marketplace_id!: MarketplaceId\", v.content_hash AS \"content_hash!\",\n                  (v.effective_until IS NULL) AS \"is_current!\",\n                  COUNT(DISTINCT s.context_id)::bigint AS \"conversations!\",\n                  COUNT(DISTINCT s.context_id) FILTER (WHERE a.completion IS NOT NULL)::bigint AS \"judged!\",\n                  AVG(a.completion)::float8 AS completion_avg\n           FROM marketplace_versions v\n           LEFT JOIN conversation_skill_facts s\n                  ON s.marketplace_id = v.marketplace_id AND s.marketplace_hash = v.content_hash\n           LEFT JOIN conversation_analyses a ON a.context_id = s.context_id\n           WHERE $1::text IS NULL OR v.marketplace_id = $1\n           GROUP BY v.marketplace_id, v.content_hash, v.effective_until\n           ORDER BY v.marketplace_id, v.first_seen_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "marketplace_id!: MarketplaceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "marketplace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "content_hash!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "content_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "is_current!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "conversations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "judged!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "completion_avg",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1de3ae0f9601c94da90f4be1b3ae0719ca7c37d44e43f6e8dd9410c31dc87ba5"
+}

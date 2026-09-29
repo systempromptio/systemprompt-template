@@ -17,6 +17,8 @@
 #[cfg(test)]
 mod access_expiry;
 #[cfg(test)]
+mod analysis_report_digest;
+#[cfg(test)]
 mod analytics_content_metrics;
 #[cfg(test)]
 mod analytics_content_rollup;
@@ -34,6 +36,8 @@ mod analytics_session_detail;
 mod analytics_site;
 #[cfg(test)]
 mod analytics_site_code;
+#[cfg(test)]
+mod conversation_facts_detail;
 #[cfg(test)]
 mod dashboard_apm;
 #[cfg(test)]
@@ -66,6 +70,8 @@ mod mcp_servers_yaml;
 mod req_026_audit_completeness;
 #[cfg(test)]
 mod tempdb;
+#[cfg(test)]
+mod tool_activity_intent_rows;
 #[cfg(test)]
 mod traces_list;
 #[cfg(test)]

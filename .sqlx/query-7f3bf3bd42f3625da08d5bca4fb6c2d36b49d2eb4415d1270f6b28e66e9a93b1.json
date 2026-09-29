@@ -1,0 +1,218 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.tool_name, t.server_name, t.state AS \"state!\", t.source, t.execution_status,\n                  t.execution_time_ms::bigint AS execution_time_ms, t.occurred_at,\n                  t.artifact_id AS \"artifact_id?: ArtifactId\", t.artifact_type, t.artifact_title,\n                  t.artifact_kind, t.input_summary, COALESCE(t.is_builtin, false) AS \"is_builtin!\",\n                  COALESCE(t.is_structured, false) AS \"is_structured!\", t.payload_bytes,\n                  t.is_error, t.error_message, t.request_id\n           FROM tool_activity t\n           WHERE t.context_id = $1 OR t.execution_context_id = $1\n              OR ($2::text IS NOT NULL AND (t.execution_trace_id = $2 OR t.session_id = $2))\n           ORDER BY t.occurred_at NULLS LAST\n           LIMIT 500",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "server_name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "server_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "state!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "source",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "execution_status",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "execution_status"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "execution_time_ms",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "occurred_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "occurred_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "artifact_id?: ArtifactId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "artifact_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "artifact_type",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "artifact_type"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "artifact_title",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "artifact_title"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "artifact_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "artifact_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "input_summary",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "input_summary"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "is_builtin!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "is_structured!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "payload_bytes",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "payload_bytes"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "is_error",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "is_error"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "error_message",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "error_message"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "request_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "request_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      null,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "7f3bf3bd42f3625da08d5bca4fb6c2d36b49d2eb4415d1270f6b28e66e9a93b1"
+}

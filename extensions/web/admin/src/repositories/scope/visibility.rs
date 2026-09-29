@@ -93,3 +93,27 @@ impl SubjectScope {
         }
     }
 }
+
+// Why: whether one owner's rows are inside the caller's view — the question a
+// detail page asks before rendering a session, context, trace or request the
+// header lookup landed on. A console caller sees every owner; a scoped caller
+// resolves their unfiltered view once and checks membership. An unknown owner
+// is outside every scoped view.
+pub async fn may_view(
+    pool: &sqlx::PgPool,
+    user_ctx: &UserContext,
+    owner: Option<&systemprompt::identifiers::UserId>,
+) -> Result<bool, sqlx::Error> {
+    if user_ctx.is_console {
+        return Ok(true);
+    }
+    let Some(owner) = owner else {
+        return Ok(false);
+    };
+    let request = ScopeRequest::from_query(user_ctx, None, None);
+    let scope = super::membership::get_subject_scope(pool, &request).await?;
+    Ok(match scope {
+        SubjectScope::All => true,
+        SubjectScope::Users(ids) => ids.iter().any(|id| id == owner.as_str()),
+    })
+}

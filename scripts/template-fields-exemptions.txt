@@ -20,10 +20,3 @@ storage/files/admin/templates/models.hbs: deny_rule_id, requests_link, selected_
 # analysis suite (Stage 3 phase 7); until then no page carries `help` and the
 # layout never renders this partial.
 storage/files/admin/partials/components/help-dialog.hbs: guide_href, intro
-
-# The export dialog's whole-conversation choices. `ExportView` carries
-# `document` (one conversation's full record) and `transcripts` (the full
-# record of a list's selection) once the transcript export lands with the
-# analysis suite (Stage 3 phase 7); until then no view sets them and the
-# `{{#if}}` blocks render nothing.
-storage/files/admin/partials/components/export-dialog.hbs: document, transcripts

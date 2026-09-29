@@ -1,0 +1,254 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT cr.id AS \"request_id!\", cr.created_at AS \"created_at!\",\n                  cr.effective_kind AS \"effective_kind!\", cr.provider, cr.model, ar.requested_model,\n                  ar.route_match, cr.status AS \"status!\", ar.finish_reason,\n                  COALESCE(cr.input_tokens, 0)::bigint AS \"input_tokens!\",\n                  COALESCE(cr.output_tokens, 0)::bigint AS \"output_tokens!\",\n                  COALESCE(ar.cache_read_tokens, 0)::bigint AS \"cache_read_tokens!\",\n                  COALESCE(ar.cache_creation_tokens, 0)::bigint AS \"cache_creation_tokens!\",\n                  COALESCE(ar.reasoning_tokens, 0)::bigint AS \"reasoning_tokens!\",\n                  cr.cost_microdollars AS \"cost_microdollars!\", cr.latency_ms, ar.upstream_latency_ms,\n                  COALESCE(ar.is_streaming, false) AS \"is_streaming!\", cr.max_tokens,\n                  (SELECT COUNT(*)::bigint FROM ai_request_tool_calls t WHERE t.request_id = cr.id) AS \"tool_calls!\",\n                  ARRAY(SELECT t.tool_name FROM ai_request_tool_calls t WHERE t.request_id = cr.id\n                        ORDER BY t.sequence_number) AS \"tool_names!\",\n                  (SELECT COUNT(*)::bigint FROM ai_safety_findings s WHERE s.ai_request_id = cr.id) AS \"safety_findings!\",\n                  (SELECT COUNT(*)::bigint FROM ai_safety_findings s WHERE s.ai_request_id = cr.id AND s.blocked) AS \"safety_blocked!\",\n                  ar.error_message\n           FROM conversation_requests cr\n           JOIN ai_requests ar ON ar.id = cr.id\n           WHERE cr.context_id = $1\n           ORDER BY cr.created_at, cr.id\n           LIMIT 500",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "request_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "effective_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "effective_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "requested_model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "requested_model"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "route_match",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "route_match"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "status!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "finish_reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "finish_reason"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "cache_read_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "cache_creation_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "reasoning_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "upstream_latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "upstream_latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "is_streaming!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 18,
+        "name": "max_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "max_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "tool_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 20,
+        "name": "tool_names!",
+        "type_info": "VarcharArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 21,
+        "name": "safety_findings!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 22,
+        "name": "safety_blocked!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 23,
+        "name": "error_message",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "error_message"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      true,
+      true,
+      true,
+      null,
+      true,
+      null,
+      null,
+      null,
+      null,
+      true
+    ]
+  },
+  "hash": "68c67fd6321a080303ee196cf44e0f5cd2a1f05a61713d8792e4f4359818c4a8"
+}

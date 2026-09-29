@@ -1,0 +1,159 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH cur AS (\n SELECT marketplace_id,content_hash,source,source_hash,first_seen_at,plugin_count,skill_count,manifest->>'name' AS name\n FROM marketplace_versions WHERE effective_until IS NULL\n), hist AS (\n SELECT marketplace_id,count(*) AS versions,min(first_seen_at) AS first_seen_at,max(first_seen_at) AS last_changed_at\n FROM marketplace_versions GROUP BY 1\n), served AS (\n SELECT s.marketplace_id,s.context_id,s.user_id,sum(s.invocations) AS invocations,sum(s.failures) AS failures\n FROM conversation_skill_facts s\n WHERE s.marketplace_id IS NOT NULL AND s.first_invoked_at>=$1 AND s.first_invoked_at<$2\n GROUP BY 1,2,3\n), keyed AS (\n SELECT k.marketplace_id,sum(k.invocations) AS invocations,sum(k.failures) AS failed_invocations,\n  count(DISTINCT k.user_id) AS users,sum(f.turn_count) AS requests,sum(f.error_count) AS failed,\n  sum(f.cost_microdollars-f.side_call_cost_microdollars) AS cost\n FROM served k JOIN conversation_facts f ON f.context_id=k.context_id\n GROUP BY 1\n)\nSELECT h.marketplace_id AS \"marketplace_id: MarketplaceId\",c.name AS \"name?\",c.content_hash AS \"content_hash?\",c.source AS \"source?\",\n c.source_hash AS \"source_hash?\",c.plugin_count AS \"plugin_count?\",c.skill_count AS \"skill_count?\",\n h.versions::bigint AS \"versions!\",h.first_seen_at AS \"first_seen_at!\",h.last_changed_at AS \"last_changed_at!\",\n coalesce(k.invocations,0)::bigint AS \"invocations!\",coalesce(k.failed_invocations,0)::bigint AS \"failed_invocations!\",\n coalesce(k.users,0)::bigint AS \"users!\",coalesce(k.requests,0)::bigint AS \"requests!\",coalesce(k.failed,0)::bigint AS \"failed!\",\n coalesce(k.cost,0)::bigint AS \"cost!\"\nFROM hist h\nLEFT JOIN cur c ON c.marketplace_id=h.marketplace_id\nLEFT JOIN keyed k ON k.marketplace_id=h.marketplace_id\nORDER BY (c.content_hash IS NULL),k.invocations DESC NULLS LAST,h.marketplace_id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "marketplace_id: MarketplaceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "marketplace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "content_hash?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "content_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "source?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "source_hash?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "source_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "plugin_count?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "plugin_count"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "skill_count?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "skill_count"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "versions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "first_seen_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "last_changed_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "failed_invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "failed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e6ef729aa0791bc5bd83324e81a0ab72a6857b2dac4eff2ce51eca28df0794ea"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO conversation_analyses (context_id, user_id, status)\n               VALUES ($1, $2, 'pending')\n               ON CONFLICT (context_id) DO UPDATE\n                   SET status = 'pending', attempts = 0, next_attempt = clock_timestamp(),\n                       lease_token = NULL, lease_until = NULL, updated_at = clock_timestamp()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "02195335e5f3be1dd3658e5d20ee440cc7f101d008e4563903081c4077d3ba64"
+}

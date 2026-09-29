@@ -1,7 +1,10 @@
 //! What a page hands its template so the export button and dialog can render.
 
 use serde::Serialize;
+use systemprompt::identifiers::ContextId;
 
+use super::document::DocumentExportView;
+pub(crate) use super::document::selection::TranscriptSource;
 use super::format::Format;
 use super::model::{Column, Window};
 use super::registry;
@@ -55,7 +58,22 @@ pub(crate) struct ExportView {
     multiple: bool,
     datasets: Vec<ExportDatasetView>,
     formats: Vec<ExportFormatView>,
+    // Why: a conversation page offers its whole record beside its tables, as
+    // the first choice in the same dialog rather than a second set of buttons.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    document: Option<DocumentExportView>,
+    // Why: a list of conversations offers the full record of every row it
+    // selects — one JSON object per conversation — as one more Data choice.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    transcripts: Option<TranscriptsView>,
     filters: Vec<ExportFilterView>,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct TranscriptsView {
+    source: &'static str,
+    window: Window,
+    cap: i64,
 }
 
 // Why: the page filters a download carries, shown as chips the reader can
@@ -170,7 +188,56 @@ impl ExportView {
                     label: f.label(),
                 })
                 .collect(),
+            document: None,
+            transcripts: None,
         }
+    }
+
+    // Why: the full record of every conversation the page's filters (or the
+    // ticked rows) select, read through `source`'s own query type and window.
+    #[must_use]
+    pub(crate) fn with_transcripts(mut self, source: TranscriptSource) -> Self {
+        if self.datasets.is_empty() {
+            let sep = if self.query.is_empty() { "" } else { "&" };
+            self.href = format!(
+                "/admin/export/transcripts?source={}{sep}{}",
+                source.as_str(),
+                self.query
+            );
+        }
+        // Why: a session pins its conversations, so no window applies.
+        let pinned = self.filters.iter().any(|f| f.key == "session_id");
+        self.multiple = true;
+        self.transcripts = Some(TranscriptsView {
+            source: source.as_str(),
+            window: if pinned {
+                Window::None
+            } else {
+                source.window()
+            },
+            cap: super::document::selection::MAX_CONVERSATIONS,
+        });
+        self
+    }
+
+    // Why: one conversation's Export dialog, the same on the Analysis page,
+    // the AI activity page and the owner's history — the whole record first,
+    // then (for a console reader) the ledger table of its turns.
+    pub(crate) fn conversation(context_id: &ContextId, with_ledger: bool) -> Self {
+        let query = format!("context_id={}", urlencoding::encode(context_id.as_str()));
+        let ids: &[&str] = if with_ledger {
+            &["analysis-conversation-turns"]
+        } else {
+            &[]
+        };
+        let mut view = Self::new(ids, &query);
+        let document = DocumentExportView::conversation(context_id);
+        if !with_ledger {
+            view.href.clone_from(&document.json_href);
+        }
+        view.multiple = true;
+        view.document = Some(document);
+        view
     }
 
     pub(crate) fn single(id: &str, query: &str) -> Self {

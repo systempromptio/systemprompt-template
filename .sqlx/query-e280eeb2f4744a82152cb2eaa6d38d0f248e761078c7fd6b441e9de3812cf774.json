@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH runs AS (\n  SELECT s.context_id, s.plugin_id, s.skill, s.marketplace_hash, s.first_invoked_at\n  FROM conversation_skill_facts s\n  WHERE s.marketplace_id = $3 AND s.first_invoked_at >= $1 AND s.first_invoked_at < $2\n),\nturns AS (\n  SELECT r.context_id, r.id, r.created_at\n  FROM ai_requests r\n  WHERE r.context_id IN (SELECT context_id FROM runs) AND r.request_kind = 'turn'\n),\nmsg AS (\n  SELECT t.context_id, t.created_at, m.role, m.content, m.sequence_number,\n    lead(m.content) OVER (PARTITION BY m.request_id ORDER BY m.sequence_number) AS result\n  FROM turns t\n  JOIN ai_request_messages m ON m.request_id = t.id\n  WHERE m.role <> 'system'\n),\ncalls AS (\n  SELECT DISTINCT ON (context_id, sequence_number, md5(content))\n    context_id, sequence_number, substring(content FROM '^\\[tool_use:([^ \\]]+)') AS tool,\n    content AS input, coalesce(result, '') AS result\n  FROM msg\n  WHERE role = 'assistant' AND content LIKE '[tool_use:%'\n  ORDER BY context_id, sequence_number, md5(content), length(coalesce(result, '')) DESC\n),\nclassified AS (\n  SELECT context_id, tool, input,\n    result ~ 'INVALID_FIELD|No such column|No such relation|INVALID_TYPE|is not supported|MALFORMED_QUERY|ValidationError' AS schema_error,\n    result ~ 'INSUFFICIENT_ACCESS|Permission ''[^'']*'' denied|PERMISSION_DENIED' AS access_error,\n    result ~ '\"status_code\"\\W*5\\d\\d|UNKNOWN_EXCEPTION' AS upstream_error,\n    result ~ 'Invalid JSON payload|Invalid value at ''|does not match \\[a-z' AS bad_arguments,\n    result ~* 'timed out' AS timeout,\n    tool LIKE '%\\_\\_display\\_widget' AND result !~ '\"status_code\"\\W*[45]\\d\\d|isError' AS widget,\n    tool ~* '(create|update|delete|upsert|send|insert)'\n      OR input ~ '\"method\"\\s*:\\s*\"(POST|PATCH|PUT|DELETE)\"' AS write_call,\n    count(*) OVER (PARTITION BY context_id, md5(input)) > 1 AS repeated\n  FROM calls\n)\nSELECT\n  r.marketplace_hash AS \"marketplace_hash!\",\n  r.plugin_id AS \"plugin_id!: PluginId\",\n  r.skill AS \"skill!\",\n  c.tool AS \"tool!\",\n  count(*)::bigint AS \"calls!\",\n  count(DISTINCT c.context_id)::bigint AS \"conversations!\",\n  count(*) FILTER (WHERE c.schema_error OR c.access_error OR c.upstream_error OR c.bad_arguments OR c.timeout)::bigint AS \"failed_calls!\",\n  count(*) FILTER (WHERE c.schema_error)::bigint AS \"schema_errors!\",\n  count(*) FILTER (WHERE c.access_error)::bigint AS \"access_errors!\",\n  count(*) FILTER (WHERE c.upstream_error)::bigint AS \"upstream_errors!\",\n  count(*) FILTER (WHERE c.bad_arguments)::bigint AS \"bad_arguments!\",\n  count(*) FILTER (WHERE c.timeout)::bigint AS \"timeouts!\",\n  count(*) FILTER (WHERE c.repeated)::bigint AS \"repeated_calls!\"\nFROM classified c\nJOIN runs r ON r.context_id = c.context_id\nWHERE c.tool IS NOT NULL\nGROUP BY r.marketplace_hash, r.plugin_id, r.skill, c.tool\nORDER BY 7 DESC, 5 DESC, 3, 4\nLIMIT 5000\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "marketplace_hash!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "marketplace_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "plugin_id!: PluginId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "plugin_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "tool!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "conversations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "failed_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "schema_errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "access_errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "upstream_errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "bad_arguments!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "timeouts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "repeated_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e280eeb2f4744a82152cb2eaa6d38d0f248e761078c7fd6b441e9de3812cf774"
+}

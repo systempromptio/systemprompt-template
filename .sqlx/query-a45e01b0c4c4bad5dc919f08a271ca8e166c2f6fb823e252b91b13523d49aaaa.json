@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(cost_microdollars), 0)::bigint AS \"spend!\"\n               FROM ai_requests\n               WHERE actor_kind = 'job' AND actor_id = $1\n                 AND created_at >= date_trunc('day', now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "spend!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a45e01b0c4c4bad5dc919f08a271ca8e166c2f6fb823e252b91b13523d49aaaa"
+}

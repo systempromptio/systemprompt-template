@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH latest AS (\n                SELECT ar.context_id,\n                       (ARRAY_AGG(ar.user_id ORDER BY ar.created_at DESC, ar.id DESC))[1] AS user_id,\n                       COUNT(*)::bigint AS request_count,\n                       MAX(ar.created_at) AS last_at,\n                       COUNT(*) FILTER (WHERE ar.request_kind = 'turn')::bigint AS turns\n                FROM ai_requests ar\n                WHERE ar.context_id <> $1\n                  AND ar.actor_kind <> 'job'\n                  AND NOT ar.synthetic\n                  AND ar.created_at >= now() - make_interval(days => $2::int)\n                GROUP BY ar.context_id\n            ), quiet AS (\n                SELECT * FROM latest l\n                WHERE l.turns >= 1\n                  AND (l.last_at < now() - make_interval(mins => $3::int)\n                       OR EXISTS (SELECT 1 FROM ai_requests s\n                                  JOIN plugin_usage_events e ON e.session_id = s.client_session_id\n                                  WHERE s.context_id = l.context_id AND e.event_type = 'SessionEnd'\n                                    AND e.created_at >= l.last_at))\n            )\n            INSERT INTO conversation_analyses (context_id, user_id, status)\n            SELECT q.context_id, q.user_id, 'pending' FROM quiet q\n            ON CONFLICT (context_id) DO UPDATE\n                SET status = 'pending', attempts = 0, next_attempt = clock_timestamp(),\n                    user_id = EXCLUDED.user_id, updated_at = clock_timestamp()\n                WHERE conversation_analyses.status = 'classified'\n                  AND conversation_analyses.lease_until IS NULL\n                  AND (SELECT q.request_count FROM quiet q WHERE q.context_id = conversation_analyses.context_id)\n                      > conversation_analyses.source_request_count\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "61d00d736df69868d33be2a11f18bc6cbd5d4407c158af1ac4449b2e75d16901"
+}

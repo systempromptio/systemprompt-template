@@ -116,6 +116,23 @@ Conventions (strict — hold every entry to them):
   "Who gets this" access panel for the `gateway_route` entity.
 - The Safety findings tab on `/admin/governance` takes a search (`?q=`) over
   category, scanner, excerpt, user and model.
+- The analysis data layer and its two jobs. `conversation_rollup` (every
+  minute) keeps `conversation_facts` / `conversation_skill_facts` current from
+  a watermark; `conversation_judge` (every five minutes, `services/scheduler/config.yaml`)
+  labels each quiet or finished conversation with a title, summary, intent,
+  outcome and a 0–100 completion score in `conversation_analyses`, audited as
+  the job's actor and capped by `daily_cost_cap_microdollars`. The judge runs
+  in-process through the provider its scheduler entry names (Gemini Flash by
+  default), so that provider must stay enabled in `services/ai/config.yaml`.
+  Repositories under `repositories/analysis/` and the on-demand report writer
+  (`services/analysis_report/`) back the Analysis pages.
+- Full-record conversation export: `/admin/export/transcripts/{context_id}`
+  (JSON or Markdown) and `/admin/export/transcripts` (JSON Lines for a ticked
+  or filtered set, with `/preview`), offered by the Sessions and history
+  pages' Export dialog. A context outside the reader's scope answers 404.
+  Eleven new export tables: analysis skills, skill conversations, skill runs,
+  kit-release impact, classified conversations and their breakdown,
+  conversation turns, marketplaces/versions and plugin evaluation.
 
 - Console chrome from the upstream admin: the sidebar is now six collapsible
   groups (AI activity, People & access, Governance, Platform, Account,
@@ -178,6 +195,14 @@ Conventions (strict — hold every entry to them):
   next restart as before.
 - Governance page routes moved to `routes/ssr_governance.rs` (size split only;
   every URL, including the two legacy `.csv` downloads, is unchanged).
+- `conversation_requests` and `conversation_metrics_for`
+  (`27_conversation_requests.sql`, migration `100`) now carry the client
+  (`client_kind`, `client_attestation`), exclude every request a scheduled job
+  made (the judge's own calls), file a conversation under the group and
+  project stamped on its latest request (`ai_request_scopes`) rather than the
+  person's current primaries, and treat a single tool-less request as a side
+  call only inside a harness-bound context. The migration rewinds the rollup
+  watermark so every fact row is re-derived once.
 
 - Avatars take a stable per-person tone from the new `avatar_tone` helper and
   one size scale (`05-avatar.css`, `01-tokens-avatar.css`) instead of a single

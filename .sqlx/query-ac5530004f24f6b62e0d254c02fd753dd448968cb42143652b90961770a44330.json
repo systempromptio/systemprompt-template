@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE conversation_analyses\n               SET status = 'classified', category = $3, summary = $4, tags = $5, skills_used = $6,\n                   outcome = $7, confidence = $8, provider = $9, model = $10, ai_request_id = $11,\n                   source_request_count = $12, source_last_at = $13,\n                   title = $14, completion = $15, completion_rationale = $16,\n                   input_tokens = $17, output_tokens = $18, trigger = $19,\n                   cost_microdollars = (SELECT r.cost_microdollars FROM ai_requests r WHERE r.id = $11),\n                   classified_at = clock_timestamp(), lease_token = NULL, lease_until = NULL,\n                   last_error = NULL, updated_at = clock_timestamp()\n               WHERE context_id = $1 AND lease_token = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "Text",
+        "Float4",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Timestamptz",
+        "Text",
+        "Int2",
+        "Text",
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ac5530004f24f6b62e0d254c02fd753dd448968cb42143652b90961770a44330"
+}

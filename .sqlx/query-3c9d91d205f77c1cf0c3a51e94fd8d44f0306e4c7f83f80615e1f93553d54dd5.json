@@ -1,0 +1,281 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, scope_kind, scope_id, scope_label, window_start, window_end, status,\n                  requested_by, provider, model, ai_request_id, input_tokens, output_tokens,\n                  cost_microdollars, inputs AS \"inputs: Json<ReportDigestInputs>\",\n                  findings AS \"findings?: Json<ReportFindings>\", attempts, lease_token,\n                  last_error, generated_at, created_at, updated_at\n           FROM analysis_reports\n           WHERE scope_kind = $1 AND scope_id IS NOT DISTINCT FROM $2\n             AND status IN ('generated', 'pending')\n           ORDER BY (status = 'generated') DESC, created_at DESC\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "scope_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "scope_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "scope_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "scope_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "scope_label",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "scope_label"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "window_start",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "window_start"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "window_end",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "window_end"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "requested_by",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "requested_by"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "ai_request_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "ai_request_id"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "input_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "output_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "cost_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "inputs: Json<ReportDigestInputs>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "inputs"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "findings?: Json<ReportFindings>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "findings"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "attempts",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "attempts"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "lease_token",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "lease_token"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "last_error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "last_error"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "generated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "generated_at"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "analysis_reports",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "3c9d91d205f77c1cf0c3a51e94fd8d44f0306e4c7f83f80615e1f93553d54dd5"
+}

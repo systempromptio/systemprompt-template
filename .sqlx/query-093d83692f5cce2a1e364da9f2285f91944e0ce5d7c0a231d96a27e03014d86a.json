@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT f.user_id AS \"user_id!\" FROM conversation_facts f WHERE f.context_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "093d83692f5cce2a1e364da9f2285f91944e0ce5d7c0a231d96a27e03014d86a"
+}

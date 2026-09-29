@@ -77,6 +77,10 @@ mod format_display;
 #[cfg(test)]
 mod groups_yaml_types;
 #[cfg(test)]
+mod marketplace_hash;
+#[cfg(test)]
+mod marketplace_version_diff;
+#[cfg(test)]
 mod mcp_tool_name;
 #[cfg(test)]
 mod release_version_substitution;
@@ -100,6 +104,8 @@ mod jobs_assets_copy;
 #[cfg(test)]
 mod jobs_bundles;
 #[cfg(test)]
+mod jobs_conversation_judge;
+#[cfg(test)]
 mod jobs_errors_stats;
 #[cfg(test)]
 mod scope;
@@ -114,6 +120,8 @@ mod jobs_governance_config;
 mod jobs_metadata;
 #[cfg(test)]
 mod jobs_robots_llms;
+#[cfg(test)]
+mod judge_params;
 #[cfg(test)]
 mod link_models;
 #[cfg(test)]
@@ -197,6 +205,8 @@ mod adfs_session_pure;
 mod adfs_state_cookie;
 #[cfg(test)]
 mod admin_css_classes;
+#[cfg(test)]
+mod analysis_skills;
 #[cfg(test)]
 mod analytics;
 #[cfg(test)]

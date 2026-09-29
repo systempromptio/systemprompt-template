@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.plugin_id AS \"plugin_id?: PluginId\", s.skill,\n                  s.marketplace_id AS \"marketplace_id?: MarketplaceId\", s.marketplace_hash,\n                  s.invocations, s.first_invoked_at\n           FROM conversation_skill_facts s\n           WHERE s.context_id = $1\n           ORDER BY s.first_invoked_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "plugin_id?: PluginId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "plugin_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "skill",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "marketplace_id?: MarketplaceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "marketplace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "marketplace_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "marketplace_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "invocations",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "invocations"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "first_invoked_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "first_invoked_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "0e117edc0b31eaba0beca5c14f84f1597a8e03a1a3689258afdc4365806dbd30"
+}

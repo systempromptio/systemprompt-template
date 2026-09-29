@@ -143,13 +143,7 @@ RETURNS BIGINT LANGUAGE plpgsql AS $$
 DECLARE written BIGINT; stamp TIMESTAMPTZ := clock_timestamp();
 BEGIN
     WITH requests AS MATERIALIZED (
-        -- Why: this repo's conversation_requests (27_) does not carry the
-        -- client columns, so they are read from ai_requests, joined anyway.
-        -- When astound's 27_ (which exposes them) is ported, drop
-        -- `ar.client_kind, ar.client_attestation` here or the CTE carries
-        -- duplicate column names. Only this file changes; 091 is history.
-        SELECT r.*, ar.client_kind, ar.client_attestation,
-               ar.wire_protocol, ar.cache_read_tokens, ar.cache_creation_tokens,
+        SELECT r.*, ar.wire_protocol, ar.cache_read_tokens, ar.cache_creation_tokens,
                ar.reasoning_tokens, ar.is_streaming
         FROM conversation_requests r
         JOIN ai_requests ar ON ar.id = r.id

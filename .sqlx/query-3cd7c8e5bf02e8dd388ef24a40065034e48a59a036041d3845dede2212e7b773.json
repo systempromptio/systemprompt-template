@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*)::BIGINT AS \"count!\"\n           FROM access_control_rules\n           WHERE rule_type <> 'user'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "3cd7c8e5bf02e8dd388ef24a40065034e48a59a036041d3845dede2212e7b773"
+}

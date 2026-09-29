@@ -1,0 +1,79 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.client_kind AS \"client_kind!\", m.model, m.turn_count AS \"turn_count!\",\n                      m.tool_call_count AS \"tool_call_count!\", m.error_count AS \"error_count!\",\n                      m.first_at, m.last_at,\n                      (SELECT COUNT(*)::bigint FROM ai_requests ar\n                        WHERE ar.context_id = $1 AND ar.actor_kind <> 'job') AS \"request_count!\",\n                      (SELECT MAX(ar.created_at) FROM ai_requests ar\n                        WHERE ar.context_id = $1 AND ar.actor_kind <> 'job') AS \"last_request_at\"\n               FROM conversation_metrics_for(ARRAY[$1::text]) m",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "client_kind!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "model",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "turn_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "tool_call_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "error_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "first_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "request_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "last_request_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c08a733b7f73723f23acd77b29fe288d80202113e2dccbd08dea5f0af74097bf"
+}

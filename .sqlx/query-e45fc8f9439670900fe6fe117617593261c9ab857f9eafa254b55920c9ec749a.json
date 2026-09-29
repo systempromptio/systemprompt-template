@@ -1,0 +1,144 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.marketplace_id AS \"marketplace_id!: MarketplaceId\",s.marketplace_hash AS \"marketplace_hash!\",\n s.plugin_id AS \"plugin_id!: PluginId\",s.skill AS \"skill!\",\n sum(s.invocations)::bigint AS \"invocations!\",sum(s.failures)::bigint AS \"failed_invocations!\",\n count(DISTINCT s.user_id)::bigint AS \"users!\",count(*)::bigint AS \"conversations!\",\n sum(f.turn_count)::bigint AS \"requests!\",sum(f.error_count)::bigint AS \"failed!\",\n sum(f.input_tokens+f.output_tokens)::bigint AS \"tokens!\",\n sum(f.cost_microdollars-f.side_call_cost_microdollars)::bigint AS \"cost!\",\n percentile_cont(0.5) WITHIN GROUP (ORDER BY f.p50_latency_ms) FILTER (WHERE f.p50_latency_ms IS NOT NULL) AS \"p50_ms?\",\n percentile_cont(0.95) WITHIN GROUP (ORDER BY f.p95_latency_ms) FILTER (WHERE f.p95_latency_ms IS NOT NULL) AS \"p95_ms?\",\n count(*) FILTER (WHERE f.p50_latency_ms IS NOT NULL)::bigint AS \"latency_measured!\"\nFROM conversation_skill_facts s\nJOIN conversation_facts f ON f.context_id=s.context_id\nWHERE s.marketplace_id=$3 AND s.marketplace_hash=ANY($4)\n AND s.first_invoked_at>=$1 AND s.first_invoked_at<$2\nGROUP BY s.marketplace_id,s.marketplace_hash,s.plugin_id,s.skill\nORDER BY s.marketplace_hash,sum(s.invocations) DESC,s.plugin_id,s.skill\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "marketplace_id!: MarketplaceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "marketplace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "marketplace_hash!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "marketplace_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "plugin_id!: PluginId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "plugin_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "failed_invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "conversations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "failed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "p50_ms?",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "p95_ms?",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "latency_measured!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e45fc8f9439670900fe6fe117617593261c9ab857f9eafa254b55920c9ec749a"
+}

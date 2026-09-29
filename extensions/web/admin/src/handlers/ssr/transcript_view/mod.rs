@@ -21,6 +21,7 @@ use crate::repositories::analytics::conversations::{redact_text, strip_gateway_m
 mod conversation;
 mod grouping;
 mod markers;
+mod steps;
 mod thread;
 
 pub use conversation::{

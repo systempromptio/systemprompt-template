@@ -6,6 +6,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::error::AdminError;
+use crate::export::view::TranscriptSource;
 use crate::repositories::analytics::conversations::{
     HistoryFilter, HistoryItem, list_history_items,
 };
@@ -44,8 +45,13 @@ pub(crate) async fn export_rows(
 }
 
 // Why: the export opens on the listing the reader is looking at — the same
-// search, user and side calls.
+// search, user and side calls — and offers the same set as full
+// transcripts, one conversation per line.
 pub(super) fn export_view(query: &HistoryQuery, view: HistoryView) -> crate::export::ExportView {
+    let source = match view {
+        HistoryView::Org => TranscriptSource::Conversations,
+        HistoryView::Own => TranscriptSource::History,
+    };
     crate::export::ExportView::single(
         view.dataset(),
         &crate::export::view::query_string(&[
@@ -54,4 +60,5 @@ pub(super) fn export_view(query: &HistoryQuery, view: HistoryView) -> crate::exp
             ("side", query.side.as_deref()),
         ]),
     )
+    .with_transcripts(source)
 }

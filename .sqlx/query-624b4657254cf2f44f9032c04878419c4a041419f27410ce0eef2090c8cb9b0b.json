@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO analysis_reports\n               (id, scope_kind, scope_id, scope_label, window_start, window_end, requested_by, inputs,\n                lease_token, lease_until, attempts)\n           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, clock_timestamp() + interval '10 minutes', 1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Jsonb",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "624b4657254cf2f44f9032c04878419c4a041419f27410ce0eef2090c8cb9b0b"
+}

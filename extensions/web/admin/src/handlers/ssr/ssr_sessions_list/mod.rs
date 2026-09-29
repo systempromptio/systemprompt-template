@@ -250,7 +250,8 @@ async fn load_sessions_data(
         error_toggle_url: view::error_toggle_url(query, error_only),
         show_side,
         side_toggle_url: view::side_toggle_url(query, show_side),
-        export: crate::export::ExportView::single("sessions", &export_query),
+        export: crate::export::ExportView::single("sessions", &export_query)
+            .with_transcripts(crate::export::view::TranscriptSource::Sessions),
     }
 }
 

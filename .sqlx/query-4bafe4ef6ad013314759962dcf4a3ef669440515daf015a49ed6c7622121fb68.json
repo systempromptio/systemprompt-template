@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE conversation_analyses\n               SET status = CASE WHEN attempts >= 5 THEN 'failed' ELSE 'pending' END,\n                   lease_token = NULL, lease_until = NULL,\n                   next_attempt = clock_timestamp() + least(attempts, 12) * interval '5 minutes',\n                   last_error = LEFT($3, 500), updated_at = clock_timestamp()\n               WHERE context_id = $1 AND lease_token = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4bafe4ef6ad013314759962dcf4a3ef669440515daf015a49ed6c7622121fb68"
+}

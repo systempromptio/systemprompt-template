@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            policy,\n            COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS \"allowed!\",\n            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS \"denied!\",\n            MAX(created_at) AS last_at\n        FROM governance_decisions\n        WHERE created_at > now() - make_interval(secs => $1::double precision)\n        GROUP BY policy\n        ORDER BY policy",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "policy",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "policy"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "allowed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "denied!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "d0b7b1b7d64f13fe6b144652a35947a03c266359ce78876682bd4c7c6b5fdca9"
+}

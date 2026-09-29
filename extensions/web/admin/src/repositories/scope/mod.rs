@@ -21,7 +21,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_web_shared::{GroupId, ProjectId};
 
-pub use visibility::{ScopeRequest, SubjectScope, Visibility};
+pub use visibility::{ScopeRequest, SubjectScope, Visibility, may_view};
 
 /// Which container a usage query names.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

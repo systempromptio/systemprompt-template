@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT (ARRAY_AGG(ar.user_id ORDER BY ar.created_at DESC, ar.id DESC))[1] AS \"user_id\"\n               FROM ai_requests ar WHERE ar.context_id = $1 AND ar.actor_kind <> 'job'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "079aa9f5a03a888f80e39345c19a40cfeaac5f13c1f64ce57eaddb1234a8f5d9"
+}

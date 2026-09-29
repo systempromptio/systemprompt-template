@@ -1,0 +1,810 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT f.context_id AS \"context_id!: ContextId\", f.user_id AS \"user_id!: UserId\",\n                  u.display_name, f.session_id AS \"session_id?: SessionId\", f.client_session_id,\n                  f.group_id AS \"group_id?: GroupId\", f.project_id AS \"project_id?: ProjectId\",\n                  g.name AS group_name, p.name AS project_name,\n                  f.client_kind AS \"client_kind!\", f.client_attestation AS \"client_attestation!\",\n                  f.wire_protocol AS \"wire_protocol!\", f.model, f.provider,\n                  f.models AS \"models!\", f.providers AS \"providers!\",\n                  f.request_count AS \"request_count!\", f.turn_count AS \"turn_count!\",\n                  f.side_call_count AS \"side_call_count!\",\n                  f.side_call_cost_microdollars AS \"side_call_cost_microdollars!\",\n                  f.error_count AS \"error_count!\", f.rejected_count AS \"rejected_count!\",\n                  f.streaming_count AS \"streaming_count!\", f.input_tokens AS \"input_tokens!\",\n                  f.output_tokens AS \"output_tokens!\",\n                  f.cache_read_tokens AS \"cache_read_tokens!\",\n                  f.cache_creation_tokens AS \"cache_creation_tokens!\",\n                  f.reasoning_tokens AS \"reasoning_tokens!\",\n                  f.cost_microdollars AS \"cost_microdollars!\", f.p50_latency_ms, f.p95_latency_ms,\n                  f.max_latency_ms, f.tool_calls_intended AS \"tool_calls_intended!\",\n                  f.tool_calls_executed AS \"tool_calls_executed!\",\n                  f.tool_calls_failed AS \"tool_calls_failed!\",\n                  f.artifact_count AS \"artifact_count!\", f.artifact_files AS \"artifact_files!\",\n                  f.artifact_cards AS \"artifact_cards!\", f.safety_findings AS \"safety_findings!\",\n                  f.safety_blocked AS \"safety_blocked!\", f.gov_allow AS \"gov_allow!\",\n                  f.gov_warn AS \"gov_warn!\", f.gov_deny AS \"gov_deny!\",\n                  f.prompt_count AS \"prompt_count!\", f.hook_event_count AS \"hook_event_count!\",\n                  f.hook_status, f.skill_invocations AS \"skill_invocations!\",\n                  f.skills AS \"skills!\", f.first_at AS \"first_at!\", f.last_at AS \"last_at!\",\n                  f.duration_seconds AS \"duration_seconds!\",\n                  a.status AS \"judge_status?\", a.title AS \"judge_title?\", a.category AS \"category?\",\n                  a.summary AS \"summary?\", a.tags AS \"tags?\", a.skills_used AS \"skills_used?\",\n                  a.outcome AS \"outcome?\", a.completion AS \"completion?\",\n                  a.completion_rationale AS \"completion_rationale?\", a.confidence AS \"confidence?\",\n                  a.classified_at AS \"classified_at?\", a.model AS \"judge_model?\",\n                  a.cost_microdollars AS \"judge_cost_microdollars?\",\n                  (COALESCE(a.input_tokens, 0) + COALESCE(a.output_tokens, 0))::bigint AS \"judge_tokens?\",\n                  a.trigger AS \"judge_trigger?\",\n                  conversation_title(f.context_id, f.client_session_id) AS \"title!\"\n           FROM conversation_facts f\n           LEFT JOIN conversation_analyses a ON a.context_id = f.context_id\n           LEFT JOIN users u ON u.id = f.user_id\n           LEFT JOIN groups g ON g.id = f.group_id\n           LEFT JOIN projects p ON p.id = f.project_id\n           WHERE f.context_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: ContextId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "session_id?: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "client_session_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "client_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "group_id?: GroupId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "project_id?: ProjectId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "group_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "project_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "client_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "client_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "client_attestation!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "client_attestation"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "wire_protocol!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "wire_protocol"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "models!",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "models"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "providers!",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "providers"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "request_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "request_count"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "turn_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "turn_count"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "side_call_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "side_call_count"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "side_call_cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "side_call_cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "error_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "error_count"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "rejected_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "rejected_count"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "streaming_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "streaming_count"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 24,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 25,
+        "name": "cache_read_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "cache_read_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 26,
+        "name": "cache_creation_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "cache_creation_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 27,
+        "name": "reasoning_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "reasoning_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 28,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 29,
+        "name": "p50_latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "p50_latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 30,
+        "name": "p95_latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "p95_latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 31,
+        "name": "max_latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "max_latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 32,
+        "name": "tool_calls_intended!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "tool_calls_intended"
+          }
+        }
+      },
+      {
+        "ordinal": 33,
+        "name": "tool_calls_executed!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "tool_calls_executed"
+          }
+        }
+      },
+      {
+        "ordinal": 34,
+        "name": "tool_calls_failed!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "tool_calls_failed"
+          }
+        }
+      },
+      {
+        "ordinal": 35,
+        "name": "artifact_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "artifact_count"
+          }
+        }
+      },
+      {
+        "ordinal": 36,
+        "name": "artifact_files!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "artifact_files"
+          }
+        }
+      },
+      {
+        "ordinal": 37,
+        "name": "artifact_cards!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "artifact_cards"
+          }
+        }
+      },
+      {
+        "ordinal": 38,
+        "name": "safety_findings!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "safety_findings"
+          }
+        }
+      },
+      {
+        "ordinal": 39,
+        "name": "safety_blocked!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "safety_blocked"
+          }
+        }
+      },
+      {
+        "ordinal": 40,
+        "name": "gov_allow!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "gov_allow"
+          }
+        }
+      },
+      {
+        "ordinal": 41,
+        "name": "gov_warn!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "gov_warn"
+          }
+        }
+      },
+      {
+        "ordinal": 42,
+        "name": "gov_deny!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "gov_deny"
+          }
+        }
+      },
+      {
+        "ordinal": 43,
+        "name": "prompt_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "prompt_count"
+          }
+        }
+      },
+      {
+        "ordinal": 44,
+        "name": "hook_event_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "hook_event_count"
+          }
+        }
+      },
+      {
+        "ordinal": 45,
+        "name": "hook_status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "hook_status"
+          }
+        }
+      },
+      {
+        "ordinal": 46,
+        "name": "skill_invocations!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "skill_invocations"
+          }
+        }
+      },
+      {
+        "ordinal": 47,
+        "name": "skills!",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "skills"
+          }
+        }
+      },
+      {
+        "ordinal": 48,
+        "name": "first_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "first_at"
+          }
+        }
+      },
+      {
+        "ordinal": 49,
+        "name": "last_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "last_at"
+          }
+        }
+      },
+      {
+        "ordinal": 50,
+        "name": "duration_seconds!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "duration_seconds"
+          }
+        }
+      },
+      {
+        "ordinal": 51,
+        "name": "judge_status?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 52,
+        "name": "judge_title?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 53,
+        "name": "category?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "category"
+          }
+        }
+      },
+      {
+        "ordinal": 54,
+        "name": "summary?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "ordinal": 55,
+        "name": "tags?",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "tags"
+          }
+        }
+      },
+      {
+        "ordinal": 56,
+        "name": "skills_used?",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "skills_used"
+          }
+        }
+      },
+      {
+        "ordinal": 57,
+        "name": "outcome?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "outcome"
+          }
+        }
+      },
+      {
+        "ordinal": 58,
+        "name": "completion?",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "completion"
+          }
+        }
+      },
+      {
+        "ordinal": 59,
+        "name": "completion_rationale?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "completion_rationale"
+          }
+        }
+      },
+      {
+        "ordinal": 60,
+        "name": "confidence?",
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "confidence"
+          }
+        }
+      },
+      {
+        "ordinal": 61,
+        "name": "classified_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "classified_at"
+          }
+        }
+      },
+      {
+        "ordinal": 62,
+        "name": "judge_model?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 63,
+        "name": "judge_cost_microdollars?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 64,
+        "name": "judge_tokens?",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 65,
+        "name": "judge_trigger?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "trigger"
+          }
+        }
+      },
+      {
+        "ordinal": 66,
+        "name": "title!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      true,
+      null
+    ]
+  },
+  "hash": "3f3b00bf0961952817ac79f12989c152f052761e7a7da905f5e1687a4a36d4ab"
+}

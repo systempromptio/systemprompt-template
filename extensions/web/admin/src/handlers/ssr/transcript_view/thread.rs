@@ -6,28 +6,31 @@
 //! is a prefix.
 //!
 //! A `user` row starts a turn unless the assistant row before it carried a
-//! tool use — then it is that tool's result and folds into the pending tool
-//! step. An `assistant` row becomes a text step (when any text survives the
-//! marker strip) plus one tool step per marker, whose arguments come from the
-//! attributed request's `ai_request_tool_calls` rows when their count matches
-//! and from the marker's own JSON otherwise.
+//! tool use — then it carries that row's results and folds into its tool
+//! steps. A `tool` row is always a result. An `assistant` row becomes a text
+//! step (when any text survives the marker strip) plus one tool step per
+//! marker, whose arguments come from the attributed request's
+//! `ai_request_tool_calls` rows when their count matches and from the marker's
+//! own JSON otherwise.
+//!
+//! Results pair by `tool_use` id when both sides carry one, and by position
+//! among the latest assistant row's still-open steps only when neither does.
+//! A step whose ledger row holds a result payload keeps it and never takes
+//! message text.
 
 use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 
 use super::conversation::{
-    Counters, PROMPT_SHORT_CHARS, StepView, THREAD_LABEL_CHARS, ThreadView, ToolChipView, TurnView,
-    is_long, local_time, single_line,
+    Counters, StepView, THREAD_LABEL_CHARS, ThreadView, TurnView, is_long, local_time, single_line,
 };
-use super::markers::{
-    ToolUseMarker, parse_assistant, pretty_json_text, strip_system_reminders, tidy_lines,
-};
-use super::{meta_view, pretty_json, preview, short_id};
+use super::markers::{parse_assistant, pretty_json_text, strip_system_reminders, tidy_lines};
+use super::steps::{tool_step, turn_view};
+use super::{meta_view, preview, short_id};
 use crate::handlers::ssr::entity_urls::request_detail_url;
-use crate::repositories::analytics::context_detail::{
-    ContextMessageRow, ContextRequestRow, ContextToolCallRow,
-};
+use crate::repositories::analytics::context_detail::{ContextMessageRow, ContextRequestRow};
+use crate::repositories::analytics::context_tool_calls::ContextToolCallRow;
 
 type MessagesByRequest<'a> = HashMap<&'a str, Vec<&'a ContextMessageRow>>;
 type ToolsByRequest<'a> = HashMap<&'a str, Vec<&'a ContextToolCallRow>>;
@@ -36,6 +39,16 @@ pub(super) struct ThreadBuilder<'a, 'c> {
     counters: &'c mut Counters,
     messages: &'c MessagesByRequest<'a>,
     tools: &'c ToolsByRequest<'a>,
+    open: Vec<OpenTool>,
+}
+
+// Why: a tool step of the latest assistant row that may still take a result.
+// `backed` means its ledger row holds a result payload; a client-side tool's
+// row has none, so its result can only come from the message history.
+struct OpenTool {
+    step: usize,
+    id: Option<String>,
+    backed: bool,
 }
 
 struct TurnDraft {
@@ -54,6 +67,7 @@ impl<'a, 'c> ThreadBuilder<'a, 'c> {
             counters,
             messages,
             tools,
+            open: Vec::new(),
         }
     }
 
@@ -92,26 +106,30 @@ impl<'a, 'c> ThreadBuilder<'a, 'c> {
                     });
                     prev_tool_use = self.assistant_steps(turn, m, attributed.get(&idx).copied());
                 },
-                _ => {
-                    if prev_tool_use && let Some(turn) = draft.as_mut() {
+                role => {
+                    let is_result = role == "tool" || prev_tool_use;
+                    if is_result && let Some(turn) = draft.as_mut() {
                         self.fold_result(turn, m);
-                    } else {
-                        if let Some(done) = draft.take() {
-                            turns.push(self.finish(done));
-                        }
-                        let ts = attributed
-                            .iter()
-                            .filter(|(i, _)| **i > idx)
-                            .min_by_key(|(i, _)| *i)
-                            .map_or(m.created_at, |(_, r)| r.created_at);
-                        draft = Some(TurnDraft {
-                            prompt: self
-                                .counters
-                                .body(&tidy_lines(&strip_system_reminders(&m.content))),
-                            ts,
-                            steps: Vec::new(),
-                        });
+                        // Why: a `tool` row answers one call and more may
+                        // follow; a `user` row carries every result at once.
+                        prev_tool_use &= role == "tool";
+                        continue;
                     }
+                    if let Some(done) = draft.take() {
+                        turns.push(self.finish(done));
+                    }
+                    let ts = attributed
+                        .iter()
+                        .filter(|(i, _)| **i > idx)
+                        .min_by_key(|(i, _)| *i)
+                        .map_or(m.created_at, |(_, r)| r.created_at);
+                    draft = Some(TurnDraft {
+                        prompt: self
+                            .counters
+                            .body(&tidy_lines(&strip_system_reminders(&m.content))),
+                        ts,
+                        steps: Vec::new(),
+                    });
                     prev_tool_use = false;
                 },
             }
@@ -120,10 +138,9 @@ impl<'a, 'c> ThreadBuilder<'a, 'c> {
             turns.push(self.finish(done));
         }
 
-        let label = turns.first().map_or_else(
-            || format!("Thread {index}"),
-            |t| single_line(&t.prompt, THREAD_LABEL_CHARS),
-        );
+        let label = turns
+            .first()
+            .map_or_else(|| format!("Thread {index}"), thread_label);
         ThreadView {
             index,
             is_main: index == 1,
@@ -150,11 +167,17 @@ impl<'a, 'c> ThreadBuilder<'a, 'c> {
         let mut out = HashMap::new();
         for r in reqs {
             let rows = self.messages.get(r.id.as_str());
-            let len = rows.map_or_else(
-                // Why: discard-ok: a negative stored count reads as an empty thread.
-                || usize::try_from(r.message_count).unwrap_or_default(),
-                Vec::len,
-            );
+            let len = match rows {
+                Some(rows) => rows.len(),
+                None => match usize::try_from(r.message_count) {
+                    Ok(count) => count,
+                    Err(error) => {
+                        tracing::warn!(request_id = %r.id, message_count = r.message_count, %error,
+                            "Skipping transcript attribution with invalid message count");
+                        continue;
+                    },
+                },
+            };
             let appended_reply = r.status == "completed"
                 && rows.is_none_or(|rows| rows.last().is_some_and(|m| m.role == "assistant"));
             let n = if appended_reply {
@@ -192,16 +215,28 @@ impl<'a, 'c> ThreadBuilder<'a, 'c> {
                 tool_name: None,
                 tool_input_pretty: None,
                 tool_result_pretty: None,
+                artifact_url: None,
+                artifact_structured: false,
                 meta: request.map(meta_view),
                 request_id_short: id_short.clone(),
                 request_url: url.clone(),
             });
         }
+        // Why: markers carry no tool_use id, so ledger rows can only follow
+        // marker order, and only when every marker has one.
         let rows = request
             .and_then(|r| self.tools.get(r.id.as_str()))
             .filter(|rows| rows.len() == parsed.tool_uses.len());
+        self.open.clear();
         for (i, marker) in parsed.tool_uses.iter().enumerate() {
             let row = rows.and_then(|rows| rows.get(i).copied());
+            self.open.push(OpenTool {
+                step: turn.steps.len(),
+                id: row
+                    .and_then(|r| r.ai_tool_call_id.as_ref())
+                    .map(|id| id.as_str().to_owned()),
+                backed: row.is_some_and(|r| r.tool_result_payload.is_some()),
+            });
             turn.steps
                 .push(tool_step(marker, row, id_short.clone(), url.clone()));
             self.counters.tool_calls += 1;
@@ -210,65 +245,59 @@ impl<'a, 'c> ThreadBuilder<'a, 'c> {
     }
 
     fn fold_result(&mut self, turn: &mut TurnDraft, m: &ContextMessageRow) {
-        let body = self.counters.body(&m.content);
-        if let Some(step) = turn
-            .steps
-            .iter_mut()
-            .find(|s| s.is_tool && s.tool_result_pretty.is_none())
+        let target = match m.tool_call_id.as_ref() {
+            Some(id) => self
+                .open
+                .iter()
+                .position(|o| o.id.as_deref() == Some(id.as_str()))
+                .or_else(|| self.first_unbacked(true)),
+            None => self.first_unbacked(false),
+        };
+        let unclaimed = self.open.iter().filter(|o| !o.backed).count();
+        let Some(pos) = target else {
+            if m.role != "tool" {
+                self.open.clear();
+            }
+            return;
+        };
+        let open = self.open.remove(pos);
+        if !open.backed
+            && let Some(step) = turn.steps.get_mut(open.step)
         {
-            step.tool_result_pretty = Some(pretty_json_text(&body));
+            let body = self.counters.body(&m.content);
+            // Why: the gateway flattens a row's results into one text block
+            // with no boundary between them, so without ids the parallel
+            // results cannot be split and are shown together, said as such.
+            step.tool_result_pretty = Some(if m.tool_call_id.is_none() && unclaimed > 1 {
+                format!("Results of {unclaimed} parallel calls, stored as one block:\n\n{body}")
+            } else {
+                pretty_json_text(&body)
+            });
         }
+        if m.role != "tool" {
+            self.open.clear();
+        }
+    }
+
+    // Why: position is the fallback only for steps no id could ever reach;
+    // `id_less_only` keeps an id-carrying result off a step with its own id.
+    fn first_unbacked(&self, id_less_only: bool) -> Option<usize> {
+        self.open
+            .iter()
+            .position(|o| !o.backed && (!id_less_only || o.id.is_none()))
     }
 
     fn finish(&mut self, draft: TurnDraft) -> TurnView {
         self.counters.turn_number += 1;
-        let number = self.counters.turn_number;
-        let mut chips: Vec<ToolChipView> = Vec::new();
-        for name in draft.steps.iter().filter_map(|s| s.tool_name.as_deref()) {
-            if let Some(chip) = chips.iter_mut().find(|c| c.name == name) {
-                chip.count += 1;
-                continue;
-            }
-            chips.push(ToolChipView {
-                name: name.to_owned(),
-                count: 1,
-            });
-        }
-        TurnView {
-            number,
-            anchor: format!("turn-{number}"),
-            prompt_short: single_line(&draft.prompt, PROMPT_SHORT_CHARS),
-            prompt_is_long: is_long(&draft.prompt),
-            prompt: draft.prompt,
-            ts_local: local_time(draft.ts),
-            ts_full: draft.ts.to_rfc3339(),
-            steps: draft.steps,
-            tool_names: chips,
-        }
+        turn_view(
+            self.counters.turn_number,
+            draft.prompt,
+            draft.ts,
+            draft.steps,
+        )
     }
 }
 
-fn tool_step(
-    marker: &ToolUseMarker,
-    row: Option<&ContextToolCallRow>,
-    request_id_short: Option<String>,
-    request_url: Option<String>,
-) -> StepView {
-    StepView {
-        is_assistant: false,
-        is_tool: true,
-        text: None,
-        text_is_long: false,
-        tool_name: Some(row.map_or_else(|| marker.name.clone(), |r| r.tool_name.clone())),
-        tool_input_pretty: Some(row.map_or_else(
-            || pretty_json_text(&marker.input_json),
-            |r| pretty_json(&r.tool_input),
-        )),
-        tool_result_pretty: row
-            .and_then(|r| r.tool_result_payload.as_ref())
-            .map(pretty_json),
-        meta: None,
-        request_id_short,
-        request_url,
-    }
+fn thread_label(turn: &TurnView) -> String {
+    single_line(&turn.prompt, THREAD_LABEL_CHARS)
 }

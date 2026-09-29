@@ -1,5 +1,6 @@
 //! Service layer between the admin handlers and the repositories.
 
+pub(crate) mod analysis_report;
 pub(crate) mod auth;
 pub(crate) mod bridge_profile;
 pub(crate) mod device_service;

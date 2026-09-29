@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH queued AS (\n               INSERT INTO conversation_analyses (context_id, user_id, status, trigger, requested_by)\n               SELECT f.context_id, f.user_id, 'pending', 'manual', $2\n               FROM conversation_facts f WHERE f.context_id = ANY($1)\n               ON CONFLICT (context_id) DO UPDATE\n                   SET status = 'pending', attempts = 0, next_attempt = clock_timestamp(),\n                       lease_token = NULL, lease_until = NULL, trigger = 'manual',\n                       requested_by = EXCLUDED.requested_by, updated_at = clock_timestamp()\n               RETURNING 1)\n           SELECT COUNT(*)::bigint AS \"queued!\" FROM queued",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "queued!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "732307de3d5d7439b37211f7b013c8e4045a5bbf99661bfea7dd780b8c2b7179"
+}

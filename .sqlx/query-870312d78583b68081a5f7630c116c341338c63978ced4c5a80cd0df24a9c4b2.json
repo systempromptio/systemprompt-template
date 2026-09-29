@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE analysis_reports\n           SET status = 'generated', findings = $3, provider = $4, model = $5, ai_request_id = $6,\n               input_tokens = $7, output_tokens = $8,\n               cost_microdollars = (SELECT r.cost_microdollars FROM ai_requests r WHERE r.id = $6),\n               generated_at = clock_timestamp(), lease_token = NULL, lease_until = NULL,\n               last_error = NULL, updated_at = clock_timestamp()\n           WHERE id = $1 AND lease_token = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "870312d78583b68081a5f7630c116c341338c63978ced4c5a80cd0df24a9c4b2"
+}

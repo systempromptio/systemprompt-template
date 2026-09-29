@@ -14,6 +14,8 @@
 //! seeded rather than counting rows table-wide.
 
 #[cfg(test)]
+mod analysis_ingestion;
+#[cfg(test)]
 mod config_acl_detect;
 #[cfg(test)]
 mod config_acl_review;

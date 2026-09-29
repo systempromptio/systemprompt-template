@@ -1,0 +1,227 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH served AS (\n SELECT s.marketplace_hash,s.context_id,s.user_id,sum(s.invocations) AS invocations,sum(s.failures) AS failures\n FROM conversation_skill_facts s\n WHERE s.marketplace_id=$3 AND s.first_invoked_at>=$1 AND s.first_invoked_at<$2\n GROUP BY 1,2,3\n), keyed AS (\n SELECT k.marketplace_hash,sum(k.invocations) AS invocations,sum(k.failures) AS failed_invocations,\n  count(DISTINCT k.user_id) AS users,count(*) AS conversations,\n  sum(f.turn_count) AS requests,sum(f.error_count) AS failed,\n  sum(f.input_tokens+f.output_tokens) AS tokens,\n  sum(f.cost_microdollars-f.side_call_cost_microdollars) AS cost,\n  percentile_cont(0.5) WITHIN GROUP (ORDER BY f.p50_latency_ms) FILTER (WHERE f.p50_latency_ms IS NOT NULL) AS p50_ms,\n  percentile_cont(0.95) WITHIN GROUP (ORDER BY f.p95_latency_ms) FILTER (WHERE f.p95_latency_ms IS NOT NULL) AS p95_ms,\n  count(*) FILTER (WHERE f.p50_latency_ms IS NOT NULL) AS latency_measured\n FROM served k JOIN conversation_facts f ON f.context_id=k.context_id\n GROUP BY 1\n)\nSELECT v.marketplace_id AS \"marketplace_id: MarketplaceId\",v.content_hash,v.source,v.source_hash,v.origin,\n v.manifest AS \"manifest: Json<MarketplaceManifest>\",\n v.first_seen_at,v.last_seen_at,v.effective_until,v.plugin_count,v.skill_count,\n coalesce(k.invocations,0)::bigint AS \"invocations!\",coalesce(k.failed_invocations,0)::bigint AS \"failed_invocations!\",\n coalesce(k.users,0)::bigint AS \"users!\",coalesce(k.conversations,0)::bigint AS \"conversations!\",\n coalesce(k.requests,0)::bigint AS \"requests!\",coalesce(k.failed,0)::bigint AS \"failed!\",\n coalesce(k.tokens,0)::bigint AS \"tokens!\",coalesce(k.cost,0)::bigint AS \"cost!\",\n k.p50_ms AS \"p50_ms?\",k.p95_ms AS \"p95_ms?\",\n coalesce(k.latency_measured,0)::bigint AS \"latency_measured!\"\nFROM marketplace_versions v\nLEFT JOIN keyed k ON k.marketplace_hash=v.content_hash\nWHERE v.marketplace_id=$3\nORDER BY (v.effective_until IS NULL) DESC,v.first_seen_at DESC\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "marketplace_id: MarketplaceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "marketplace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "content_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "content_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "source_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "source_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "origin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "origin"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "manifest: Json<MarketplaceManifest>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "manifest"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "first_seen_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "first_seen_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "last_seen_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "last_seen_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "effective_until",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "effective_until"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "plugin_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "plugin_count"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "skill_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "skill_count"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "failed_invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "conversations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 16,
+        "name": "failed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 17,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 18,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 19,
+        "name": "p50_ms?",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 20,
+        "name": "p95_ms?",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 21,
+        "name": "latency_measured!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "21180134a26acb29b719ee6821345c499e2ffdd4880c22fe272ed161cd24cbb7"
+}

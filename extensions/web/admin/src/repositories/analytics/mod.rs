@@ -3,6 +3,7 @@
 pub mod agents;
 pub mod content_rollup;
 pub mod context_detail;
+pub mod context_tool_calls;
 pub mod conversation_rows;
 pub mod conversations;
 pub mod dashboard_report;

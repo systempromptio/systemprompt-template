@@ -96,8 +96,9 @@ pub async fn record_marketplace_versions(
     })
 }
 
-// Why: lint-ok: unused-pub — the marketplace-version pages read it; they land
-// with the analysis suite (Stage 3 phase 7).
+// Why: lint-ok: unused-pub — the catalog marketplace cards read it
+// (astound `handlers/catalog/marketplaces/cards.rs`); they land with the
+// catalog delta, not the analysis suite.
 pub async fn list_current_marketplace_versions(
     pool: &PgPool,
 ) -> Result<Vec<MarketplaceVersionRow>, sqlx::Error> {

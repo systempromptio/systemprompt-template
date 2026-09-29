@@ -1,0 +1,324 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH runs AS (\n  SELECT s.context_id, s.plugin_id, s.skill, s.marketplace_hash, s.first_invoked_at\n  FROM conversation_skill_facts s\n  WHERE s.marketplace_id = $3 AND s.first_invoked_at >= $1 AND s.first_invoked_at < $2\n),\nturns AS (\n  SELECT r.context_id, r.id, r.created_at\n  FROM ai_requests r\n  WHERE r.context_id IN (SELECT context_id FROM runs) AND r.request_kind = 'turn'\n),\nmsg AS (\n  SELECT t.context_id, t.created_at, m.role, m.content, m.sequence_number,\n    lead(m.content) OVER (PARTITION BY m.request_id ORDER BY m.sequence_number) AS result\n  FROM turns t\n  JOIN ai_request_messages m ON m.request_id = t.id\n  WHERE m.role <> 'system'\n),\ncalls AS (\n  SELECT DISTINCT ON (context_id, sequence_number, md5(content))\n    context_id, sequence_number, substring(content FROM '^\\[tool_use:([^ \\]]+)') AS tool,\n    content AS input, coalesce(result, '') AS result\n  FROM msg\n  WHERE role = 'assistant' AND content LIKE '[tool_use:%'\n  ORDER BY context_id, sequence_number, md5(content), length(coalesce(result, '')) DESC\n),\nclassified AS (\n  SELECT context_id, tool, input,\n    result ~ 'INVALID_FIELD|No such column|No such relation|INVALID_TYPE|is not supported|MALFORMED_QUERY|ValidationError' AS schema_error,\n    result ~ 'INSUFFICIENT_ACCESS|Permission ''[^'']*'' denied|PERMISSION_DENIED' AS access_error,\n    result ~ '\"status_code\"\\W*5\\d\\d|UNKNOWN_EXCEPTION' AS upstream_error,\n    result ~ 'Invalid JSON payload|Invalid value at ''|does not match \\[a-z' AS bad_arguments,\n    result ~* 'timed out' AS timeout,\n    tool LIKE '%\\_\\_display\\_widget' AND result !~ '\"status_code\"\\W*[45]\\d\\d|isError' AS widget,\n    tool ~* '(create|update|delete|upsert|send|insert)'\n      OR input ~ '\"method\"\\s*:\\s*\"(POST|PATCH|PUT|DELETE)\"' AS write_call,\n    count(*) OVER (PARTITION BY context_id, md5(input)) > 1 AS repeated\n  FROM calls\n),\nper AS (\n  SELECT c.context_id, r.skill,\n    count(*) FILTER (WHERE c.tool LIKE 'mcp\\_\\_%') AS mcp_calls,\n    count(*) FILTER (WHERE c.tool LIKE 'mcp\\_\\_plugin\\_' || replace(r.plugin_id, '_', '\\_') || '\\_%') AS connector_calls,\n    count(*) FILTER (WHERE c.tool NOT LIKE 'mcp\\_\\_%') AS builtin_calls,\n    count(*) FILTER (WHERE c.schema_error OR c.access_error OR c.upstream_error OR c.bad_arguments OR c.timeout) AS failed_calls,\n    count(*) FILTER (WHERE c.schema_error) AS schema_errors,\n    count(*) FILTER (WHERE c.access_error) AS access_errors,\n    count(*) FILTER (WHERE c.upstream_error) AS upstream_errors,\n    count(*) FILTER (WHERE c.bad_arguments) AS bad_arguments,\n    count(*) FILTER (WHERE c.timeout) AS timeouts,\n    count(*) FILTER (WHERE c.widget) AS widgets,\n    count(*) FILTER (WHERE c.write_call) AS writes,\n    count(*) FILTER (WHERE c.repeated) - count(DISTINCT md5(c.input)) FILTER (WHERE c.repeated) AS repeated_calls\n  FROM classified c\n  JOIN runs r ON r.context_id = c.context_id\n  GROUP BY c.context_id, r.skill\n),\nanswer AS (\n  SELECT DISTINCT ON (context_id) context_id, content\n  FROM msg\n  WHERE role = 'assistant' AND content NOT LIKE '[tool_use:%'\n  ORDER BY context_id, created_at DESC, sequence_number DESC\n),\njudged AS (\n  SELECT r.context_id, r.skill, coalesce(p.widgets, 0) AS widgets,\n    coalesce(length(a.content), 0) AS answer_chars,\n    coalesce(a.content ~* '(don''t|do not|cannot|can''t) (have|find|access|see)[^.]{0,80}(tool|connector)|not (available|connected) in this session|no [a-z ]{0,30}tool (is )?available', false) AS tools_unavailable,\n    coalesce((SELECT count(*) FROM regexp_matches(a.content, '\\mMOCK\\M|placeholder|sample data', 'gi')), 0) AS placeholder_mentions\n  FROM runs r\n  LEFT JOIN per p ON p.context_id = r.context_id AND p.skill = r.skill\n  LEFT JOIN answer a ON a.context_id = r.context_id\n)\nSELECT\n  r.context_id AS \"context_id!: ContextId\",\n  f.client_session_id AS \"client_session_id?\",\n  r.plugin_id AS \"plugin_id!: PluginId\",\n  r.skill AS \"skill!\",\n  r.marketplace_hash AS \"marketplace_hash!\",\n  r.first_invoked_at AS \"first_invoked_at!\",\n  f.turn_count AS \"turns!\",\n  f.request_count AS \"requests!\",\n  f.input_tokens AS \"input_tokens!\",\n  f.output_tokens AS \"output_tokens!\",\n  f.cache_read_tokens AS \"cache_read_tokens!\",\n  f.cache_creation_tokens AS \"cache_creation_tokens!\",\n  (f.cost_microdollars - f.side_call_cost_microdollars) AS \"cost!\",\n  f.duration_seconds AS \"duration_seconds?\",\n  f.p50_latency_ms AS \"p50_ms?\",\n  f.p95_latency_ms AS \"p95_ms?\",\n  coalesce(p.mcp_calls, 0)::bigint AS \"mcp_calls!\",\n  coalesce(p.connector_calls, 0)::bigint AS \"connector_calls!\",\n  coalesce(p.builtin_calls, 0)::bigint AS \"builtin_calls!\",\n  coalesce(p.failed_calls, 0)::bigint AS \"failed_calls!\",\n  coalesce(p.schema_errors, 0)::bigint AS \"schema_errors!\",\n  coalesce(p.access_errors, 0)::bigint AS \"access_errors!\",\n  coalesce(p.upstream_errors, 0)::bigint AS \"upstream_errors!\",\n  coalesce(p.bad_arguments, 0)::bigint AS \"bad_arguments!\",\n  coalesce(p.timeouts, 0)::bigint AS \"timeouts!\",\n  coalesce(p.repeated_calls, 0)::bigint AS \"repeated_calls!\",\n  j.widgets::bigint AS \"widgets!\",\n  coalesce(p.writes, 0)::bigint AS \"writes!\",\n  j.answer_chars::bigint AS \"answer_chars!\",\n  j.placeholder_mentions::bigint AS \"placeholder_mentions!\",\n  j.tools_unavailable AS \"tools_unavailable!\",\n  (j.widgets > 0 OR j.answer_chars >= 200) AS \"completed!\",\n  ((j.widgets > 0 OR j.answer_chars >= 200)\n    AND coalesce(p.connector_calls, 0) > 0\n    AND coalesce(p.schema_errors, 0) = 0\n    AND coalesce(p.writes, 0) = 0\n    AND NOT j.tools_unavailable) AS \"success!\"\nFROM runs r\nJOIN conversation_facts f ON f.context_id = r.context_id\nJOIN judged j ON j.context_id = r.context_id AND j.skill = r.skill\nLEFT JOIN per p ON p.context_id = r.context_id AND p.skill = r.skill\nORDER BY r.first_invoked_at DESC, r.skill\nLIMIT 5000\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: ContextId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "client_session_id?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "client_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "plugin_id!: PluginId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "plugin_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "marketplace_hash!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "marketplace_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "first_invoked_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_skill_facts",
+            "name": "first_invoked_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "turns!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "turn_count"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "request_count"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "cache_read_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "cache_read_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "cache_creation_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "cache_creation_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "duration_seconds?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "duration_seconds"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "p50_ms?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "p50_latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "p95_ms?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "p95_latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "mcp_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 17,
+        "name": "connector_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 18,
+        "name": "builtin_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 19,
+        "name": "failed_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 20,
+        "name": "schema_errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 21,
+        "name": "access_errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 22,
+        "name": "upstream_errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 23,
+        "name": "bad_arguments!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 24,
+        "name": "timeouts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 25,
+        "name": "repeated_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 26,
+        "name": "widgets!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 27,
+        "name": "writes!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 28,
+        "name": "answer_chars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 29,
+        "name": "placeholder_mentions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 30,
+        "name": "tools_unavailable!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 31,
+        "name": "completed!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 32,
+        "name": "success!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      true,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "544a7fe48f7525dc849afbd946cc013dc805db282f02fd1356097fbb52d95c7b"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT refresh_conversation_facts(NULL) AS \"written!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "written!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "007165f077ba167456ac442201c3cd09513d542e0b2f3884a3f27b2155fd6762"
+}

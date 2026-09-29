@@ -85,6 +85,47 @@ scheduler:
       owner: admin
       enabled: true
 
+    # The conversation judge (web extension): the one AI label on top of the
+    # deterministic conversation record. Every five minutes: queue every
+    # conversation with at least one turn that is quiet for `quiet_minutes`
+    # or whose harness session ended, lease `batch_size`, read each
+    # transcript and ask the model below — in one structured call — for a
+    # title, a summary, the intent category, an outcome and a single 0–100
+    # completion score (did the assistant deliver what was originally asked).
+    # Feeds every /admin/analysis page. Judge calls are audited as this job's
+    # actor and excluded from every conversation view;
+    # `daily_cost_cap_microdollars` stops a run once the day's judge spend
+    # reaches it. The provider must be enabled in services/ai/config.yaml —
+    # the judge runs in-process through AiService, which registers only the
+    # enabled providers. Re-judge one:
+    # `systemprompt infra jobs run conversation_judge -p context_id=<id>`.
+    # Gated by `hooks.judge` on the governance-owning plugin and by the
+    # profile's `judge.automatic`; the manual `context_id` run bypasses
+    # the latter.
+    - name: conversation_judge
+      extension: web
+      owner: admin
+      schedule: "0 */5 * * * *"
+      enabled: true
+      parameters:
+        provider: gemini
+        model: gemini-3.5-flash
+        batch_size: "20"
+        daily_cost_cap_microdollars: "2000000"
+        quiet_minutes: "30"
+
+    # The conversation rollup (web extension): keeps `conversation_facts` —
+    # the per-conversation deterministic record every Analysis page reads —
+    # current, with its per-skill rows (`conversation_skill_facts`, which the
+    # Versions pages read). Every minute it re-derives the rows of each
+    # conversation touched on any plane (gateway, hooks, governance, tools,
+    # artifacts) since a stored watermark, so each change is folded in once.
+    # `-p all=true` rebuilds every row (the backfill after an upgrade).
+    - name: conversation_rollup
+      extension: web
+      owner: admin
+      enabled: true
+
     - name: cleanup_anonymous_users
       extension: core
       owner: admin

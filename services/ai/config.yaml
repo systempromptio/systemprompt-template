@@ -13,6 +13,11 @@ ai:
       enabled: true
       default_model: gpt-5
       google_search_enabled: false
+    # Why: the conversation_judge job judges through Gemini Flash (response
+    # schema enforced by the API) in-process via AiService, which only
+    # registers providers enabled here; the gateway catalog alone is not
+    # enough. Disabling gemini idles the judge — or point the scheduler
+    # entry's `provider`/`model` at another enabled provider.
     gemini:
       enabled: true
       default_model: gemini-2.5-flash

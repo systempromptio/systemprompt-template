@@ -19,9 +19,8 @@ use super::thread::ThreadBuilder;
 use super::{TranscriptMetaView, TranscriptOptions, display_body, short_id};
 use crate::handlers::ssr::entity_urls::request_detail_url;
 use crate::handlers::ssr::format::format_cost;
-use crate::repositories::analytics::context_detail::{
-    ContextMessageRow, ContextRequestRow, ContextToolCallRow,
-};
+use crate::repositories::analytics::context_detail::{ContextMessageRow, ContextRequestRow};
+use crate::repositories::analytics::context_tool_calls::ContextToolCallRow;
 
 pub(super) const LONG_TEXT_CHARS: usize = 1200;
 pub(super) const LONG_TEXT_LINES: usize = 12;
@@ -93,6 +92,9 @@ pub struct StepView {
     pub tool_name: Option<String>,
     pub tool_input_pretty: Option<String>,
     pub tool_result_pretty: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub artifact_url: Option<String>,
+    pub artifact_structured: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<TranscriptMetaView>,
     pub request_id_short: Option<String>,

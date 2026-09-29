@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE conversation_analyses\n               SET lease_token = NULL, lease_until = NULL, attempts = GREATEST(attempts - 1, 0),\n                   next_attempt = clock_timestamp() + interval '1 hour', updated_at = clock_timestamp()\n               WHERE context_id = ANY($1) AND lease_token = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "55cfc05829f1f059777671fef8da538f351d3fe32514429888c7184578160d60"
+}

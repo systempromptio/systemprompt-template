@@ -1,0 +1,254 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- One row per skill run: a harness session that invoked a skill of the\n-- marketplace (or the one skill) in the window, measured from its first\n-- invocation to the agent's last stop. A session can span several contexts\n-- (subagents), so the fact columns sum over all of them and the row links to\n-- the context with the most turns.\n--\n-- Time splits into agent time and human wait. A prompt's wait is the gap\n-- since the agent last stopped; a question's wait is the gap between the\n-- model's answer that asked it and the AskUserQuestion result.\n--\n-- A skill that logs its workflow to `.sf-dev-workflow/<key>/workflow.log`\n-- (or `audit.log`, the releases before it) reports the state it reached and\n-- wall time per phase, parsed from the Bash commands that wrote the log.\nWITH inv AS (\n    SELECT e.session_id, e.skill, e.invoked_at,\n           (SELECT o.marketplace_id FROM service_owned_ids o\n             WHERE o.kind = 'plugin' AND o.id = e.plugin_id LIMIT 1) AS marketplace_id\n    FROM analysis_skill_version_events e\n    WHERE e.invoked_at >= $1 AND e.invoked_at < $2\n      AND ($4::text IS NULL OR e.skill = $4)\n      AND ($5::text[] IS NULL OR e.user_id = ANY($5))\n),\nruns AS (\n    SELECT DISTINCT ON (i.session_id) i.session_id, i.skill, i.marketplace_id, i.invoked_at AS started_at\n    FROM inv i\n    WHERE $3::text IS NULL OR i.marketplace_id = $3\n    ORDER BY i.session_id, i.invoked_at\n),\npicked AS (\n    SELECT r.session_id, r.skill, r.marketplace_id, r.started_at,\n           (ARRAY_AGG(f.context_id ORDER BY f.turn_count DESC, f.first_at))[1] AS context_id,\n           MAX(f.last_at) AS last_at,\n           SUM(f.turn_count)::bigint AS turns,\n           SUM(f.tool_calls_intended)::bigint AS tool_calls,\n           SUM(f.tool_calls_failed)::bigint AS tool_failures,\n           SUM(f.error_count)::bigint AS errors,\n           SUM(f.rejected_count)::bigint AS rejected,\n           SUM(f.cost_microdollars)::bigint AS cost_microdollars,\n           COUNT(*)::bigint AS contexts\n    FROM runs r\n    JOIN conversation_facts f ON f.client_session_id = r.session_id\n    GROUP BY r.session_id, r.skill, r.marketplace_id, r.started_at\n    ORDER BY r.started_at DESC\n    LIMIT $6\n),\nbounds AS (\n    SELECT p.session_id,\n           GREATEST(p.last_at, s.last_stop, p.started_at) AS ended_at\n    FROM picked p\n    LEFT JOIN LATERAL (SELECT MAX(x.created_at) AS last_stop FROM plugin_usage_events x\n                       WHERE x.session_id = p.session_id AND x.event_type = 'Stop'\n                         AND x.created_at >= p.started_at) s ON true\n),\nprompts AS (\n    SELECT p.session_id, p.started_at, u.created_at,\n           LAG(u.created_at) OVER (PARTITION BY p.session_id ORDER BY u.created_at) AS prev_at\n    FROM picked p\n    JOIN plugin_usage_events u ON u.session_id = p.session_id\n    WHERE u.event_type = 'UserPromptSubmit' AND COALESCE(u.metadata->>'agent_id', '') = ''\n      AND u.created_at >= p.started_at - interval '2 seconds'\n),\nprompt_waits AS (\n    SELECT q.session_id, COUNT(*)::bigint AS prompts,\n           COALESCE(SUM(EXTRACT(EPOCH FROM q.created_at - s.stop_at)), 0)::float8 AS wait_s\n    FROM prompts q\n    LEFT JOIN LATERAL (SELECT MAX(x.created_at) AS stop_at FROM plugin_usage_events x\n                       WHERE x.session_id = q.session_id AND x.event_type = 'Stop'\n                         AND x.created_at >= q.started_at AND x.created_at < q.created_at\n                         AND x.created_at > COALESCE(q.prev_at, '-infinity'::timestamptz)) s ON true\n    GROUP BY q.session_id\n),\nquestion_waits AS (\n    SELECT p.session_id, COUNT(*)::bigint AS questions,\n           COALESCE(SUM(EXTRACT(EPOCH FROM a.created_at - asked.asked_at)), 0)::float8 AS wait_s\n    FROM picked p\n    JOIN plugin_usage_events a ON a.session_id = p.session_id\n    JOIN LATERAL (SELECT MAX(cr.created_at + make_interval(secs => COALESCE(cr.latency_ms, 0) / 1000.0)) AS asked_at\n                  FROM conversation_facts f\n                  JOIN conversation_requests cr ON cr.context_id = f.context_id\n                  WHERE f.client_session_id = p.session_id AND cr.created_at < a.created_at) asked ON true\n    WHERE a.event_type IN ('PostToolUse', 'PostToolUseFailure') AND a.tool_name = 'AskUserQuestion'\n      AND a.created_at >= p.started_at AND asked.asked_at IS NOT NULL AND asked.asked_at < a.created_at\n    GROUP BY p.session_id\n),\nlog_commands AS (\n    SELECT p.session_id, u.created_at AS at, tool_input_summary(x.input) AS command\n    FROM picked p\n    JOIN plugin_usage_events u ON u.session_id = p.session_id\n    JOIN mcp_tool_executions x ON x.mcp_execution_id = u.mcp_execution_id\n    WHERE u.event_type = 'PostToolUse' AND u.tool_name = 'Bash' AND u.created_at >= p.started_at\n      AND x.input LIKE '%.sf-dev-workflow/%'\n),\nmilestones AS (\n    SELECT c.session_id, c.at, m.ord, m.parts[2] AS to_state\n    FROM log_commands c\n    CROSS JOIN LATERAL regexp_matches(c.command,\n        '\\$\\(date[^)]*\\)\"[\\s\\\\]+([A-Z][A-Z_]+)[\\s\\\\]+([A-Z][A-Z_]+)', 'g') WITH ORDINALITY AS m(parts, ord)\n    UNION ALL\n    SELECT c.session_id, c.at, 1000 + m.ord, m.parts[2]\n    FROM log_commands c\n    CROSS JOIN LATERAL regexp_matches(c.command, '([A-Z][A-Z_]{2,}) -> ([A-Z][A-Z_]{2,})', 'g')\n        WITH ORDINALITY AS m(parts, ord)\n    WHERE c.command LIKE '%audit.log%'\n),\nsteps AS (\n    SELECT m.session_id, m.to_state, m.at,\n           LEAD(m.at) OVER w AS next_at,\n           ROW_NUMBER() OVER (PARTITION BY m.session_id ORDER BY m.at DESC, m.ord DESC) AS from_end\n    FROM milestones m\n    WINDOW w AS (PARTITION BY m.session_id ORDER BY m.at, m.ord)\n),\nphases AS (\n    SELECT s.session_id,\n           MAX(s.to_state) FILTER (WHERE s.from_end = 1) AS terminal_state,\n           COUNT(*)::bigint AS transitions,\n           SUM(d.secs) FILTER (WHERE d.phase = 'requirements')::float8 AS requirements_s,\n           SUM(d.secs) FILTER (WHERE d.phase = 'design')::float8 AS design_s,\n           SUM(d.secs) FILTER (WHERE d.phase = 'build')::float8 AS build_s,\n           SUM(d.secs) FILTER (WHERE d.phase = 'verify')::float8 AS verify_s,\n           SUM(d.secs) FILTER (WHERE d.phase = 'ship')::float8 AS ship_s\n    FROM steps s\n    JOIN bounds b ON b.session_id = s.session_id\n    CROSS JOIN LATERAL (SELECT\n        CASE\n            WHEN s.to_state IN ('PR_CREATED', 'STOPPED', 'POLICY_REJECTED') THEN NULL\n            WHEN s.to_state LIKE 'AWAITING_SHIP%' OR s.to_state = 'PR_READY' THEN 'ship'\n            WHEN s.to_state IN ('VERIFICATION', 'FINAL_DEVELOPER_REVIEW', 'AI_CODE_REVIEW') THEN 'verify'\n            WHEN s.to_state LIKE 'REQUIREMENT%' OR s.to_state LIKE 'AWAITING_REQUIREMENT%'\n                 OR s.to_state LIKE 'CLARIFICATION%' OR s.to_state IN ('REQUEST_RECEIVED', 'POLICY_CHECK', 'JIRA_CONTEXT_REQUIRED') THEN 'requirements'\n            WHEN s.to_state LIKE 'SOLUTION%' OR s.to_state LIKE 'AWAITING_DESIGN%'\n                 OR s.to_state = 'AWAITING_HUMAN_APPROVAL' OR s.to_state LIKE 'PLAN\\_%' THEN 'design'\n            ELSE 'build'\n        END AS phase,\n        EXTRACT(EPOCH FROM COALESCE(s.next_at, b.ended_at) - s.at) AS secs) d\n    GROUP BY s.session_id\n)\nSELECT p.context_id AS \"context_id!: ContextId\", p.session_id AS \"session_id!\", p.skill AS \"skill!\",\n       p.marketplace_id, v.content_hash AS kit_hash, v.version AS kit_version,\n       p.started_at AS \"started_at!\", b.ended_at AS \"ended_at!\",\n       EXTRACT(EPOCH FROM b.ended_at - p.started_at)::float8 AS \"wall_s!\",\n       COALESCE(pw.wait_s, 0)::float8 AS \"prompt_wait_s!\",\n       COALESCE(qw.wait_s, 0)::float8 AS \"question_wait_s!\",\n       COALESCE(pw.prompts, 0)::bigint AS \"prompts!\",\n       COALESCE(qw.questions, 0)::bigint AS \"questions!\",\n       p.turns AS \"turns!\", p.tool_calls AS \"tool_calls!\", p.tool_failures AS \"tool_failures!\",\n       p.errors AS \"errors!\", p.rejected AS \"rejected!\", p.cost_microdollars AS \"cost_microdollars!\",\n       p.contexts AS \"contexts!\",\n       a.outcome, a.completion,\n       ph.terminal_state, COALESCE(ph.transitions, 0)::bigint AS \"transitions!\",\n       ph.requirements_s, ph.design_s, ph.build_s, ph.verify_s, ph.ship_s\nFROM picked p\nJOIN bounds b ON b.session_id = p.session_id\nLEFT JOIN prompt_waits pw ON pw.session_id = p.session_id\nLEFT JOIN question_waits qw ON qw.session_id = p.session_id\nLEFT JOIN phases ph ON ph.session_id = p.session_id\nLEFT JOIN conversation_analyses a ON a.context_id = p.context_id\nLEFT JOIN LATERAL (SELECT mv.content_hash, mv.manifest->>'version' AS version\n                   FROM marketplace_versions mv\n                   WHERE mv.marketplace_id = p.marketplace_id\n                     AND mv.content_hash = marketplace_version_at(p.marketplace_id, p.started_at)) v ON true\nORDER BY p.started_at DESC, p.session_id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: ContextId",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "session_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "marketplace_id",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "kit_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "content_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "kit_version",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "started_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "invoked_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "ended_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "wall_s!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "prompt_wait_s!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "question_wait_s!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "prompts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "questions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "turns!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "tool_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
+        "name": "tool_failures!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 16,
+        "name": "errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 17,
+        "name": "rejected!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 18,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 19,
+        "name": "contexts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 20,
+        "name": "outcome",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "outcome"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "completion",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "completion"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "terminal_state",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 23,
+        "name": "transitions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 24,
+        "name": "requirements_s",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 25,
+        "name": "design_s",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 26,
+        "name": "build_s",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 27,
+        "name": "verify_s",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 28,
+        "name": "ship_s",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "TextArray",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      true,
+      true,
+      null,
+      true,
+      null,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      true,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0de184212ce3e66611108d35136b0c9f9d9f4e788cac66dc8906cc49c2d4feee"
+}

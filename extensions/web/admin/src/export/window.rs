@@ -16,6 +16,7 @@ use crate::util::month_range::{MonthQuery, parse_month_range};
 use crate::util::time_range::TimeRangePreset;
 
 pub(crate) const RETAINED_DAYS: [u32; 5] = [1, 7, 30, 90, 365];
+const MAX_RETAINED_DAYS: i64 = 366;
 
 // Why: the export's own ceiling on a live custom range, matching the widest
 // live preset (90d). The pages keep their tighter
@@ -30,6 +31,8 @@ pub(crate) struct WindowQuery {
     from: Option<String>,
     to: Option<String>,
     days: Option<u32>,
+    start: Option<String>,
+    end: Option<String>,
     month: Option<String>,
 }
 
@@ -38,6 +41,7 @@ pub(crate) fn resolve(kind: Window, query: &WindowQuery) -> AdminResult<Option<E
         Window::None => Ok(None),
         Window::Live => live(query).map(Some),
         Window::Days => days_only(query).map(Some),
+        Window::Retained => retained(query).map(Some),
         Window::Month => Ok(Some(month(query))),
     }
 }
@@ -132,6 +136,29 @@ fn days_only(query: &WindowQuery) -> AdminResult<ExportWindow> {
         to,
         clamped: false,
     })
+}
+
+// Why: the dialog's end control is a date, and a reader who picks 1–30
+// September means to include the 30th; a date-only end therefore closes at
+// the following midnight. An end with a time is taken as given.
+fn inclusive_end(value: Option<&str>) -> AdminResult<Option<DateTime<Utc>>> {
+    let end = bound(value, "end")?;
+    let date_only = value.is_some_and(|v| v.trim().len() == "YYYY-MM-DD".len());
+    Ok(end.map(|e| if date_only { e + Duration::days(1) } else { e }))
+}
+
+fn retained(query: &WindowQuery) -> AdminResult<ExportWindow> {
+    let start = bound(query.start.as_deref(), "start")?;
+    let end = inclusive_end(query.end.as_deref())?;
+    let (from, to) = match (start, end) {
+        (None, None) => return days_only(query),
+        (Some(from), Some(to)) => (from, to),
+        _ => return Err(bad("A custom window needs both a start and an end date.")),
+    };
+    if from >= to {
+        return Err(bad("The window's end must be after its start."));
+    }
+    Ok(clamp(from, to, Duration::days(MAX_RETAINED_DAYS)))
 }
 
 // Why: the reports' own month rule — absent or unparseable is the last

@@ -1,0 +1,112 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.phase AS \"phase!\", s.category AS \"category!\", s.severity AS \"severity!\",\n                  s.scanner, s.blocked AS \"blocked!\", s.created_at AS \"created_at!\",\n                  s.ai_request_id AS \"request_id!\", s.excerpt\n           FROM ai_safety_findings s\n           JOIN conversation_requests cr ON cr.id = s.ai_request_id\n           WHERE cr.context_id = $1\n           ORDER BY s.created_at\n           LIMIT 200",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "phase!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "category!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "category"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "severity!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "severity"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "scanner",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "scanner"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "blocked!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "blocked"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "request_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "ai_request_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "excerpt",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "excerpt"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "bdf02bfc653ff6f6dbeb656744c2f2d339d6c939dd3ea0ab8d5d31df391a3a52"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE managed_revisions SET rationale='changed' WHERE id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "308aa86653f6a1b153dbe61389c61032096fe9070c1bd685647874bd2d5b0f87"
+}

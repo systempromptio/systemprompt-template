@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE conversation_analyses a\n               SET cost_microdollars = r.cost_microdollars\n               FROM ai_requests r\n               WHERE r.id = a.ai_request_id\n                 AND a.cost_microdollars IS DISTINCT FROM r.cost_microdollars\n                 AND a.classified_at >= now() - interval '1 day'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "3b454b9d10fa109367f5880450f275458daf83387a7c01d641da40466bd753a3"
+}

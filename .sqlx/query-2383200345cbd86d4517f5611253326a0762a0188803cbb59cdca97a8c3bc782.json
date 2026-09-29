@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT refresh_conversation_facts(ARRAY[$1::text]) AS \"written!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "written!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2383200345cbd86d4517f5611253326a0762a0188803cbb59cdca97a8c3bc782"
+}

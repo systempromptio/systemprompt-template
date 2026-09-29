@@ -173,15 +173,18 @@ impl Table {
     }
 }
 
-// Why: each dataset names its own window contract. `Live` is the AI-activity
-// `?preset=&from=&to=` contract (minutes to 90 days); `Days` is a fixed-size
-// preset only, for tables whose custom ranges schedule work rather than read
-// it; `Month` is one calendar month (`?month=YYYY-MM`), for the billing
-// reports; `None` for tables with no time axis.
+// Why: four window contracts exist across the console and each dataset
+// names its own. `Live` is the AI-activity `?preset=&from=&to=` contract
+// (minutes to 90 days); `Retained` is the snapshot pipeline's UTC-day window
+// (up to a year); `Days` is a fixed-size preset only, for tables whose
+// custom ranges schedule work rather than read it; `Month` is one calendar
+// month (`?month=YYYY-MM`), for the billing reports; `None` for tables with
+// no time axis.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Window {
     Live,
+    Retained,
     Days,
     Month,
     None,

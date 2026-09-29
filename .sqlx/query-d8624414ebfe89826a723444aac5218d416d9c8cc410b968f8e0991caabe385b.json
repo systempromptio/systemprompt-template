@@ -1,0 +1,368 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- The conversations that invoked one skill in the window, newest first, with\n-- the same fact columns the conversations page shows and the judge's row.\nWITH sessions AS (\n    SELECT e.session_id, COUNT(*)::bigint AS invocations, MIN(e.invoked_at) AS first_invoked_at\n    FROM analysis_skill_version_events e\n    WHERE e.skill = $3 AND e.invoked_at >= $1 AND e.invoked_at < $2\n      AND ($4::text[] IS NULL OR e.user_id = ANY($4))\n    GROUP BY e.session_id\n)\nSELECT f.context_id AS \"context_id!: ContextId\", f.user_id AS \"user_id!: UserId\", u.display_name,\n       f.client_session_id, g.name AS \"group_name?\", p.name AS \"project_name?\",\n       f.client_kind AS \"client_kind!\", f.model, f.models AS \"models!\",\n       f.turn_count AS \"turn_count!\", f.tool_calls_intended AS \"tool_calls!\",\n       f.tool_calls_failed AS \"tool_calls_failed!\", f.artifact_count AS \"artifacts!\",\n       f.error_count AS \"error_count!\",\n       f.gov_deny AS \"gov_deny!\",\n       (f.input_tokens + f.output_tokens)::bigint AS \"total_tokens!\",\n       (f.cache_read_tokens + f.cache_creation_tokens)::bigint AS \"cache_tokens!\",\n       f.cost_microdollars AS \"cost_microdollars!\", f.p95_latency_ms,\n       f.duration_seconds AS \"duration_seconds!\", f.skills AS \"skills!\",\n       f.first_at AS \"first_at!\", f.last_at AS \"last_at!\",\n       s.invocations AS \"invocations!\",\n       a.title AS judge_title, a.category, a.outcome, a.completion, a.summary,\n       conversation_title(f.context_id, f.client_session_id) AS \"title!\",\n       COUNT(*) OVER ()::bigint AS \"total!\"\nFROM sessions s\nJOIN conversation_facts f ON f.client_session_id = s.session_id\nLEFT JOIN conversation_analyses a ON a.context_id = f.context_id\nLEFT JOIN users u ON u.id = f.user_id\nLEFT JOIN groups g ON g.id = f.group_id\nLEFT JOIN projects p ON p.id = f.project_id\nORDER BY f.last_at DESC, f.context_id\nLIMIT $5 OFFSET $6\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: ContextId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "client_session_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "client_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "group_name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "project_name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "client_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "client_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "models!",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "models"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "turn_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "turn_count"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "tool_calls!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "tool_calls_intended"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "tool_calls_failed!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "tool_calls_failed"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "artifacts!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "artifact_count"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "error_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "error_count"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "gov_deny!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "gov_deny"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "total_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 16,
+        "name": "cache_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 17,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "p95_latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "p95_latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "duration_seconds!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "duration_seconds"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "skills!",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "skills"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "first_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "first_at"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "last_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_facts",
+            "name": "last_at"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 24,
+        "name": "judge_title",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 25,
+        "name": "category",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "category"
+          }
+        }
+      },
+      {
+        "ordinal": 26,
+        "name": "outcome",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "outcome"
+          }
+        }
+      },
+      {
+        "ordinal": 27,
+        "name": "completion",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "completion"
+          }
+        }
+      },
+      {
+        "ordinal": 28,
+        "name": "summary",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_analyses",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "ordinal": 29,
+        "name": "title!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 30,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "TextArray",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      null,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "d8624414ebfe89826a723444aac5218d416d9c8cc410b968f8e0991caabe385b"
+}

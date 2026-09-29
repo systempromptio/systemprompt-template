@@ -1,0 +1,117 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH events AS (\n    SELECT e.skill, e.user_id, e.session_id, e.source, e.resource_id, e.attribution_status\n    FROM analysis_skill_version_events e\n    WHERE e.invoked_at >= $1 AND e.invoked_at < $2\n      AND e.skill IS NOT NULL\n      AND ($3::TEXT[] IS NULL OR e.user_id = ANY($3))\n      AND ($4::TEXT IS NULL OR e.user_id = $4)\n),\nconversations AS (\n    SELECT DISTINCT skill, user_id, session_id FROM events\n),\nspend AS (\n    SELECT c.skill,\n           COUNT(r.id)::BIGINT AS requests,\n           COUNT(r.id) FILTER (WHERE r.cost_microdollars > 0)::BIGINT AS priced_requests,\n           COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS cost,\n           COALESCE(SUM(COALESCE(r.input_tokens, 0) + COALESCE(r.output_tokens, 0)), 0)::BIGINT AS tokens\n    FROM conversations c\n    JOIN ai_requests r ON r.user_id = c.user_id AND r.client_session_id = c.session_id\n                       AND NOT r.synthetic AND r.request_kind = 'turn'\n    GROUP BY c.skill\n)\nSELECT\n    ev.skill AS \"skill!\",\n    MAX(ev.resource_id) FILTER (WHERE ev.attribution_status = 'verified') AS resource_id,\n    COUNT(*)::BIGINT AS \"invocations!\",\n    COUNT(*) FILTER (WHERE ev.source = 'slash')::BIGINT AS \"slash!\",\n    COUNT(*) FILTER (WHERE ev.source = 'tool')::BIGINT AS \"tool!\",\n    COUNT(*) FILTER (WHERE ev.attribution_status = 'verified')::BIGINT AS \"attributed!\",\n    COUNT(DISTINCT ev.user_id)::BIGINT AS \"distinct_users!\",\n    COUNT(DISTINCT ev.session_id)::BIGINT AS \"conversations!\",\n    COALESCE(MAX(s.requests), 0)::BIGINT AS \"requests!\",\n    COALESCE(MAX(s.priced_requests), 0)::BIGINT AS \"priced_requests!\",\n    COALESCE(MAX(s.cost), 0)::BIGINT AS \"cost!\",\n    COALESCE(MAX(s.tokens), 0)::BIGINT AS \"tokens!\",\n    COUNT(*) OVER ()::BIGINT AS \"total!\"\nFROM events ev\nLEFT JOIN spend s ON s.skill = ev.skill\nGROUP BY ev.skill\nORDER BY COUNT(*) DESC, ev.skill\nLIMIT $5 OFFSET $6\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_id",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "slash!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "tool!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "attributed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "distinct_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "conversations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "priced_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "652c2294eb06b703be4cdcec20ccb7e92ab8489f1f2c65a0c2c8057a97f2bfe2"
+}
