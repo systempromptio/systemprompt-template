@@ -4,7 +4,6 @@
    slack. Every other column is sized to its own content and no wider; the
    roles column gets enough for four pills so a platform admin's row does not
    wrap the pills into a second line. */
-.sp-p-roles__grants .sp-col-role { width: 9rem; }
 .sp-p-roles__table .sp-col-roles { width: 22rem; }
 .sp-p-roles__table .sp-col-status { width: 6rem; }
 .sp-p-roles__table .sp-col-rowactions { width: 14rem; }
@@ -26,9 +25,83 @@
     outline: 1px solid var(--sp-accent);
     outline-offset: 1px;
 }
-.sp-p-roles__grants .sp-col-kind { width: 9rem; }
-.sp-p-roles__grants .sp-col-access { width: 6rem; }
-.sp-p-roles__grants .sp-col-default { width: 10rem; }
+.sp-p-roles__kind-table .sp-col-access { width: 6rem; }
+.sp-p-roles__kind-table .sp-col-default { width: 10rem; }
+
+/* Why: entitlements read as a catalogue per role — a kind is one line when
+   the role reaches all of it, and opens to the individual entities. */
+.sp-p-roles__groups {
+    display: grid;
+    gap: var(--sp-space-4);
+}
+
+.sp-p-roles__group { min-width: 0; }
+
+.sp-p-roles__kind { min-width: 0; }
+
+.sp-p-roles__group-title {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin: 0 0 var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-p-roles__group-count {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-p-roles__kinds {
+    display: grid;
+    gap: var(--sp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-p-roles__kind-details {
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+}
+
+.sp-p-roles__kind-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    cursor: pointer;
+}
+
+.sp-p-roles__kind-label { font-weight: 500; }
+
+.sp-p-roles__kind-note {
+    flex: 1 1 auto;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-p-roles__kind-link { font-size: var(--sp-text-xs); }
+
+.sp-p-roles__kind-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--sp-text-xs);
+}
+
+.sp-p-roles__kind-table th,
+.sp-p-roles__kind-table td {
+    padding: var(--sp-space-1) var(--sp-space-3);
+    text-align: left;
+    border-top: 1px solid var(--sp-border-subtle);
+}
+
+.sp-p-roles__kind-table th {
+    color: var(--sp-text-tertiary);
+    font-weight: 500;
+}
 
 .sp-p-roles__error,
 .sp-p-roles__toast {

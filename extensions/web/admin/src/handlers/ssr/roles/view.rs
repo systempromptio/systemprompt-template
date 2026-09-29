@@ -10,8 +10,9 @@
 use serde::Serialize;
 use systemprompt::identifiers::UserId;
 
+use super::entitlements_view::RoleEntitlementGroupView;
 use crate::handlers::ssr::list_view::Pagination;
-use crate::handlers::ssr::types::{BreadcrumbView, SortHeaderView};
+use crate::handlers::ssr::types::{BreadcrumbView, SortHeaderView, TabLinkView};
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct RoleCardView {
@@ -61,8 +62,13 @@ pub(crate) struct RoleEntitlementView {
     pub role: String,
     pub role_label: String,
     pub entity_type: String,
-    pub entity_type_label: String,
+    pub entity_type_label: &'static str,
     pub entity_id: String,
+    // Why: a route's declared name with the id demoted; other kinds are
+    // named by their id already.
+    pub entity_label: String,
+    pub entity_sub: Option<String>,
+    pub labelled: bool,
     pub access: String,
     pub access_tone: &'static str,
     pub default_included: bool,
@@ -94,10 +100,12 @@ pub(crate) struct RolesPageData {
     pub can_grant_platform_admin: bool,
     pub facts: Vec<HeaderFactView>,
     pub breadcrumbs: Vec<BreadcrumbView>,
+    pub tabs: Vec<TabLinkView>,
+    pub on_entitlements: bool,
     pub cards: Vec<RoleCardView>,
     pub members: Vec<RoleHolderView>,
     pub member_total: i64,
-    pub entitlements: Vec<RoleEntitlementView>,
+    pub entitlement_groups: Vec<RoleEntitlementGroupView>,
     pub entitlement_total: usize,
     pub pagination: Pagination,
     pub sort_headers: Vec<SortHeaderView>,

@@ -12,11 +12,10 @@
 
 use serde::Deserialize;
 
-use crate::handlers::ssr::list_view::{PageWindow, Pagination};
+use crate::handlers::ssr::list_view::{DEFAULT_PAGE_SIZE, PageWindow, Pagination, paginate};
 use crate::repositories::roles::members::RoleHolderRow;
 
 pub(super) const BASE_URL: &str = "/admin/roles";
-pub(super) const PAGE_SIZE: i64 = 50;
 // Why: one row per person, so the ceiling is the number of accounts that hold
 // any role at all.
 pub(super) const MEMBER_CAP: i64 = 2000;
@@ -31,6 +30,7 @@ pub(crate) struct RolesQuery {
     pub page: Option<i64>,
     pub sort: Option<String>,
     pub dir: Option<String>,
+    pub tab: Option<String>,
 }
 
 impl RolesQuery {
@@ -58,6 +58,10 @@ impl RolesQuery {
         }
     }
 
+    pub(super) fn on_entitlements(&self) -> bool {
+        self.tab.as_deref() == Some("entitlements")
+    }
+
     pub(super) fn descending(&self) -> bool {
         self.dir.as_deref() == Some("desc")
     }
@@ -66,6 +70,9 @@ impl RolesQuery {
     // nothing else, so a link never resurrects a filter the operator cleared.
     pub(super) fn url_with(&self, overrides: &[(&str, &str)]) -> String {
         let mut parts: Vec<(String, String)> = Vec::new();
+        if self.on_entitlements() {
+            parts.push(("tab".to_owned(), "entitlements".to_owned()));
+        }
         for name in ["role", "source", "status", "q", "sort", "dir"] {
             let overridden = overrides.iter().find(|(k, _)| *k == name);
             let value = match overridden {
@@ -178,26 +185,12 @@ pub(super) fn search(query: &RolesQuery) -> String {
 }
 
 pub(super) fn page_index(query: &RolesQuery, total: i64) -> i64 {
-    let last = (total.max(1) - 1) / PAGE_SIZE;
+    let last = (total.max(1) - 1) / DEFAULT_PAGE_SIZE;
     query.page.unwrap_or(0).clamp(0, last)
 }
 
 pub(super) fn pagination(query: &RolesQuery, window: PageWindow) -> Pagination {
-    let page = window.index;
-    let prev_url = (page > 0).then(|| query.url_with(&[("page", &(page - 1).to_string())]));
-    let next_url = (page + 1 < window.total_pages)
-        .then(|| query.url_with(&[("page", &(page + 1).to_string())]));
-    let (first_row, last_row) = window.bounds();
-    Pagination {
-        current_page: page + 1,
-        total_pages: window.total_pages,
-        first_row,
-        last_row,
-        total_rows: window.total_rows,
-        noun: window.noun,
-        has_prev: prev_url.is_some(),
-        has_next: next_url.is_some(),
-        prev_url,
-        next_url,
-    }
+    paginate(window, |page| {
+        query.url_with(&[("page", &page.to_string())])
+    })
 }

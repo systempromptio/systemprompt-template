@@ -1,7 +1,7 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
-    {{#> components/page-header title=title subtitle="What each role opens, and who holds it. A grant from the directory is withdrawn in the directory; only a grant made by hand can be revoked here."}}
+    {{#> components/page-header title=title subtitle="Who holds each role, and what holding it opens. A grant from the directory is withdrawn in the directory; only a grant made by hand can be revoked here."}}
         {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control">Access control</a>
         {{#if can_write}}
@@ -19,6 +19,9 @@
         {{/each}}
     </section>
 
+    {{> components/tabs tabs=tabs nav_label="Role views"}}
+
+    {{#unless on_entitlements}}
     {{#> components/section title="Who holds what" count=member_total note="One row per person. A coloured role was granted by hand and can be revoked here; a grey one comes from the directory."}}
         {{#*inline "section_actions"}}
         {{#if filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{clear_url}}">Clear filters</a>{{/if}}
@@ -100,36 +103,52 @@
     {{else}}
     {{> components/empty-state heading="No one matches" message="No one holds a role matching these filters. Clear them to see the whole estate."}}
     {{/if}}
+    {{/unless}}
 
-    {{#> components/section title="Role entitlements" count=entitlement_total note="Every access-control rule written at the role band. Edit them in Access control."}}
+    {{#if on_entitlements}}
+    {{#> components/section title="What each role opens" count=entitlement_total note="Every access-control rule written at the role band, grouped by role and then by kind. A kind reads as one line when the role reaches all of it; expand it for the individual entities. Each entity links to its own Who gets this panel, where its rules are edited."}}
         {{#*inline "section_actions"}}
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control?subject_kind=role">Open in Access control</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control?band=role">Open in Access control</a>
         {{/inline}}
     {{/components/section}}
 
-    {{#if entitlements}}
-    {{#> components/table caption="Entities each role reaches" modifier="sp-p-roles__grants"}}
-        <thead><tr>
-            <th class="sp-col-role">Role</th>
-            <th class="sp-col-kind">Entity kind</th>
-            <th>Entity</th>
-            <th class="sp-col-access">Access</th>
-            <th class="sp-col-default">Entity default</th>
-        </tr></thead>
-        <tbody>
-        {{#each entitlements}}
-        <tr>
-            <td>{{> components/badge tone="info" text=role_label}}</td>
-            <td>{{entity_type_label}}</td>
-            <td class="sp-u-mono"><a href="{{href}}">{{entity_id}}</a></td>
-            <td>{{> components/badge tone=access_tone text=access}}</td>
-            <td class="sp-u-text-muted">{{default_label}}</td>
-        </tr>
+    {{#if entitlement_groups}}
+    <div class="sp-p-roles__groups">
+    {{#each entitlement_groups}}
+    <section class="sp-p-roles__group" aria-label="{{role_label}} entitlements">
+        <h3 class="sp-p-roles__group-title">{{> components/badge tone=tone text=role_label}} <span class="sp-p-roles__group-count">{{total}} rules</span></h3>
+        <ul class="sp-p-roles__kinds">
+        {{#each kinds}}
+        <li class="sp-p-roles__kind">
+            <details class="sp-p-roles__kind-details"{{#unless all_of_kind}} open{{/unless}}>
+                <summary class="sp-p-roles__kind-summary">
+                    <span class="sp-p-roles__kind-label">{{kind_label}}</span>
+                    {{> components/badge tone=access_tone text=access}}
+                    <span class="sp-p-roles__kind-note">{{summary}}</span>
+                    <a class="sp-p-roles__kind-link" href="{{href}}">Rules →</a>
+                </summary>
+                <table class="sp-p-roles__kind-table">
+                    <thead><tr><th>Entity</th><th class="sp-col-access">Access</th><th class="sp-col-default">Entity default</th></tr></thead>
+                    <tbody>
+                    {{#each rows}}
+                    <tr>
+                        <td><a href="{{href}}">{{entity_label}}</a>{{#if labelled}} <span class="sp-u-text-tertiary sp-u-text-xs">{{entity_sub}}</span> <span class="sp-u-mono sp-u-text-xs sp-u-text-tertiary">{{entity_id}}</span>{{/if}}</td>
+                        <td>{{> components/access-badge decision=access}}</td>
+                        <td class="sp-u-text-muted">{{default_label}}</td>
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+            </details>
+        </li>
         {{/each}}
-        </tbody>
-    {{/components/table}}
+        </ul>
+    </section>
+    {{/each}}
+    </div>
     {{else}}
     {{> components/empty-state heading="No role entitlements" message="Nothing is granted at the role band. Entitlement here comes from the group and project bands instead."}}
+    {{/if}}
     {{/if}}
 
     {{#if can_write}}
