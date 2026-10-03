@@ -48,13 +48,13 @@ export class AccessControlPage extends BasePage {
   // "Person ▲" and an exact header match misses it. Matching on the label
   // prefix reads the column whether or not it is the one being sorted on.
   async columnValues(header: string, table = 0): Promise<string[]> {
-    const root = this.page.locator('.sp-table').nth(table);
-    const headers = await root.locator('.sp-table__el thead th').allInnerTexts();
+    const root = this.page.locator('table.sp-table__el').nth(table);
+    const headers = await root.locator(':scope > thead > tr > th').allInnerTexts();
     const index = headers.findIndex((t) => t.trim().toLowerCase().startsWith(header.toLowerCase()));
     if (index < 0) {
       throw new Error(`no column "${header}"; saw ${headers.join(' | ')}`);
     }
-    return root.locator(`.sp-table__el tbody tr td:nth-child(${index + 1})`).allInnerTexts();
+    return root.locator(`:scope > tbody > tr.sp-ac-entity > td:nth-child(${index + 1})`).allInnerTexts();
   }
 
   tree(): Locator {

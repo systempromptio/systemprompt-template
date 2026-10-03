@@ -9,7 +9,7 @@ const paths = [
   '/admin', '/admin/analytics', '/admin/users', '/admin/groups',
   '/admin/projects', '/admin/roles', '/admin/devices', '/admin/contexts',
   '/admin/history', '/admin/mcp', '/admin/marketplaces', '/admin/plugins',
-  '/admin/skills', '/admin/gateway', '/admin/profile',
+  '/admin/skills', '/admin/gateway', '/admin/profile', '/admin/connect',
 ];
 
 function collectErrors(page: Page): string[] {
@@ -45,30 +45,37 @@ test.describe('dashboard port', () => {
     await page.goto('/admin');
     const nav = page.getByRole('navigation', { name: 'Admin navigation' });
     for (const path of ['/admin/groups', '/admin/projects', '/admin/roles', '/admin/devices']) {
+      await expect(nav).toHaveAttribute('data-nav-ready', 'true');
+      const people = nav.getByRole('button', { name: 'People & access', exact: true });
+      if (await people.getAttribute('aria-expanded') !== 'true') await people.click();
       await nav.locator(`a[href="${path}"]`).click();
       await expect(page).toHaveURL(new RegExp(`${path}$`));
       await expect(nav.locator(`a[href="${path}"]`)).toHaveAttribute('aria-current', 'page');
     }
+    await expect(nav).toHaveAttribute('data-nav-ready', 'true');
+    const activity = nav.getByRole('button', { name: 'AI activity', exact: true });
+    if (await activity.getAttribute('aria-expanded') !== 'true') await activity.click();
     await nav.locator('a[href="/admin"]').click();
     await expect(page.locator('main')).toContainText('Overview');
   });
 
   test('connection tabs switch visible instructions and keyboard focus', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto('/admin/profile');
+    await page.goto('/admin/connect');
     const tabs = page.getByRole('tablist', { name: 'Client to connect' });
     for (const [name, id] of [
       ['Claude Code', 'claude-code'],
       ['Claude Desktop', 'claude-desktop'],
       ['OpenCode', 'opencode'],
     ]) {
-      await tabs.getByRole('tab', { name, exact: true }).click();
-      await expect(tabs.getByRole('tab', { name, exact: true })).toHaveAttribute('aria-selected', 'true');
+      const tab = tabs.getByRole('tab', { name: new RegExp(`^${name}`) });
+      await tab.click();
+      await expect(tab).toHaveAttribute('aria-selected', 'true');
       await expect(page.locator(`#connect-panel-${id}`)).toBeVisible();
     }
-    await tabs.getByRole('tab', { name: 'Claude Code', exact: true }).focus();
+    await tabs.getByRole('tab', { name: /^Claude Code/ }).focus();
     await page.keyboard.press('ArrowRight');
-    await expect(tabs.getByRole('tab', { name: 'Claude Desktop', exact: true })).toBeFocused();
+    await expect(tabs.getByRole('tab', { name: /^Claude Desktop/ })).toBeFocused();
     expect(errors).toEqual([]);
   });
 });

@@ -23,7 +23,7 @@ use pools::DbHandles;
 
 pub(crate) fn build(ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {
     let db = DbHandles::from_context(ctx)?;
-    let session_service = pools::build_session_service(&db)?;
+    let session_service = pools::build_session_service(&db);
 
     let sso_deps = admin::AdfsDeps {
         config: crate::extension::WebExtension::adfs_config()
@@ -32,9 +32,7 @@ pub(crate) fn build(ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {
         session_service: Arc::clone(&session_service),
     };
 
-    let api_router = api::build(&db, &session_service)
-        .map_err(|e| tracing::error!(error = %e, "Failed to build admin API repositories"))
-        .ok()?;
+    let api_router = api::build(&db, &session_service);
     let share_api = api::share(&db);
 
     let mut combined = Router::new()

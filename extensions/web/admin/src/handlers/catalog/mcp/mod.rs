@@ -196,14 +196,16 @@ pub(crate) async fn mcp_detail_page(
     }
 
     let counts = assignment_counts_by_type(&pool, ENTITY_MCP_SERVER).await;
+    let included_by = catalog
+        .plugins_by_mcp
+        .get(mcp_id.as_str())
+        .cloned()
+        .unwrap_or_default();
     let row = rows::build_row(&RowInputs {
         id: mcp_id.as_str(),
         server,
         runtime: &rt,
-        plugin_count: catalog
-            .plugins_by_mcp
-            .get(mcp_id.as_str())
-            .map_or(0, Vec::len),
+        plugin_count: included_by.len(),
         assignment_count: counts.get(mcp_id.as_str()).copied().unwrap_or(0),
     });
 
@@ -242,15 +244,8 @@ pub(crate) async fn mcp_detail_page(
         default_included: sections.default_included,
         config_facts: detail::config_facts(server),
         oauth_scopes: server.map(|s| s.oauth_scopes.clone()).unwrap_or_default(),
-        included_by_count: catalog
-            .plugins_by_mcp
-            .get(mcp_id.as_str())
-            .map_or(0, Vec::len),
-        included_by: catalog
-            .plugins_by_mcp
-            .get(mcp_id.as_str())
-            .cloned()
-            .unwrap_or_default(),
+        included_by_count: included_by.len(),
+        included_by,
         matrix_url: row.matrix_url.clone(),
         access_control_url: "/admin/access-control",
         access,

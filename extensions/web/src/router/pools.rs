@@ -36,13 +36,13 @@ impl DbHandles {
     }
 }
 
-pub(crate) fn build_session_service(db: &DbHandles) -> Option<Arc<SessionCreationService>> {
+pub(crate) fn build_session_service(db: &DbHandles) -> Arc<SessionCreationService> {
     let dbpool = Arc::clone(&db.db);
     let user_repo = systemprompt::users::UserRepository::new(&dbpool);
     let user = UserService::new(Arc::new(user_repo));
     let sessions = SessionRepository::new(&dbpool);
-    Some(Arc::new(SessionCreationService::new(
+    Arc::new(SessionCreationService::new(
         Arc::new(sessions),
         Arc::new(user),
-    )))
+    ))
 }

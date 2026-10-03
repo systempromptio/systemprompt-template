@@ -129,7 +129,7 @@ jobs:
 
   test:
     if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
-    name: Test (unit, integration, admin contract)
+    name: Test (unit, integration)
     runs-on: ubuntu-latest
     # Integration is dominated by CREATE/DROP DATABASE round-trips, and a cold
     # cache (every core re-pin) adds the full compile on top; leave headroom so
@@ -306,9 +306,13 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: EmbarkStudios/cargo-deny-action@v2
+      # Native invocation keeps the pinned sibling core visible to metadata;
+      # container actions mount only this workspace, not its sibling link.
+      - uses: ./.github/actions/core-checkout
+      - uses: taiki-e/install-action@v2
         with:
-          command: check
+          tool: cargo-deny
+      - run: cargo deny check
 
   machete:
     if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository

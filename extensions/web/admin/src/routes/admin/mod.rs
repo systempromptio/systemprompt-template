@@ -22,7 +22,6 @@ use sqlx::PgPool;
 use super::super::types::{ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM};
 use super::super::{handlers, middleware};
 use super::admin_groups;
-use super::managed_state::StateError;
 use crate::repositories::sync::archive::MAX_UPLOAD_BYTES;
 use systemprompt::database::DbPool;
 
@@ -34,7 +33,7 @@ pub(crate) fn build_admin_only_routes(
     read_pool: &Arc<PgPool>,
     write_pool: &Arc<PgPool>,
     owner: systemprompt::identifiers::UserId,
-) -> Result<Router, StateError> {
+) -> Router {
     // Why: the split is the `project_manager` boundary. Reads are the admin
     // dashboard's data and open to any console role; every ordinary write
     // mutates an identity, a role, an ACL rule or the gateway config, so it
@@ -57,11 +56,11 @@ pub(crate) fn build_admin_only_routes(
         axum_middleware::from_fn_with_state(ROLES_PLATFORM, middleware::require_roles_middleware),
     );
 
-    let managed = Arc::new(super::managed_state::ManagedState::new(db, owner)?);
-    Ok(reads
+    let managed = Arc::new(super::managed_state::ManagedState::new(db, owner));
+    reads
         .merge(writes)
         .merge(platform)
-        .layer(axum::Extension(managed)))
+        .layer(axum::Extension(managed))
 }
 
 // Why: the access-control writes are their own table — every route here edits

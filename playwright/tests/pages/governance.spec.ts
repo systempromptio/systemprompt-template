@@ -10,7 +10,7 @@ test.describe('renders', () => {
   test('shows the current policy-chain summary', async ({ adminPage }) => {
     await adminPage.goto(PATH);
     await expect(adminPage.getByRole('region', { name: /governance summary/i })).toBeVisible();
-    expect(await adminPage.locator('nav[aria-label="Deny counts by chain stage"] a').count()).toBeGreaterThan(0);
+    expect(await adminPage.getByRole('navigation', { name: 'Policies active in this window' }).getByRole('link').count()).toBeGreaterThan(0);
   });
 
   test('links each recorded decision to its audit detail', async ({ adminPage }) => {
@@ -28,7 +28,7 @@ test.describe('renders', () => {
 test.describe('actions', () => {
   test('a stage count filters the decision log', async ({ adminPage }) => {
     await adminPage.goto(PATH);
-    await adminPage.locator('nav[aria-label="Deny counts by chain stage"] a').first().click();
+    await adminPage.getByRole('navigation', { name: 'Policies active in this window' }).getByRole('link').first().click();
     await expect(adminPage).toHaveURL(/policy=/);
     await expect(adminPage.locator(".sp-table__el tbody tr").first()).toBeVisible();
   });

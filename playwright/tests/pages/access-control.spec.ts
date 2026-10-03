@@ -1,8 +1,4 @@
-// /admin/access-control — the rule ledger and the grant editor.
-//
-// The ledger is server-rendered, one row per `access_control_rules` row, at
-// the band it is written at: the entity it governs, the subject it applies
-// to, and the access it resolves to.
+// /admin/access-control — governed entities with expandable rule evidence.
 import { test, expect, CONSOLE_ACCESS } from '../support/fixtures';
 import { expectDensity } from '../support/a11y';
 import { PATHS } from '../support/paths';
@@ -19,12 +15,12 @@ test.describe('renders', () => {
     expect(await page.ledger().rowCount()).toBeGreaterThan(0);
   });
 
-  test('says what each rule resolves to', async ({ adminPage }) => {
+  test('says what each entity defaults to', async ({ adminPage }) => {
     const page = new AccessControlPage(adminPage);
     await page.goto();
-    const access = await page.columnValues('Access');
+    const access = await page.columnValues('Default');
     expect(access.length).toBeGreaterThan(0);
-    for (const value of access) expect(['allow', 'deny']).toContain(value.trim().toLowerCase());
+    for (const value of access) expect(['open', 'closed']).toContain(value.trim().toLowerCase());
   });
 
   test('carries the totals an auditor checks first', async ({ adminPage }) => {
@@ -41,12 +37,17 @@ test.describe('renders', () => {
 });
 
 test.describe('actions', () => {
-  test('the subject-kind filter narrows the ledger to one band', async ({ adminPage }) => {
+  test('the band filter retains entities with role rules', async ({ adminPage }) => {
     const page = new AccessControlPage(adminPage);
     await page.goto();
-    await page.filterBy('subject_kind', 'role');
-    const kinds = await page.columnValues('Subject kind');
-    for (const kind of kinds) expect(kind.trim()).toBe('role');
+    await page.filterBy('band', 'role');
+    await expect(adminPage).toHaveURL(/band=role/);
+    const rows = adminPage.locator('tr.sp-ac-entity');
+    expect(await rows.count()).toBeGreaterThan(0);
+    for (const row of await rows.all()) {
+      await row.locator('summary').click();
+      await expect(row.locator('.sp-ac-layer-tag').filter({ hasText: /role/i }).first()).toBeVisible();
+    }
   });
 
   test('the entity-kind filter isolates one kind of entity', async ({ adminPage }) => {
@@ -54,15 +55,20 @@ test.describe('actions', () => {
     await page.goto();
     const kind = await page.firstFilterValue('entity_kind');
     await page.filterBy('entity_kind', kind);
-    const kinds = new Set((await page.columnValues('Entity kind')).map((k) => k.trim()));
-    expect(kinds.size).toBe(1);
+    const kinds = await adminPage.locator('tr.sp-ac-entity').evaluateAll(rows => rows.map(row => row.getAttribute('data-entity-type')));
+    expect(kinds.length).toBeGreaterThan(0);
+    expect(new Set(kinds)).toEqual(new Set([kind]));
   });
 
-  test('sorting by subject kind reorders the ledger', async ({ adminPage }) => {
+  test('expanding an entity exposes its rule decisions', async ({ adminPage }) => {
     const page = new AccessControlPage(adminPage);
     await page.goto();
-    const direction = await page.ledger().sortBy('Subject kind');
-    expect(['ascending', 'descending']).toContain(direction);
+    const entity = adminPage.locator('tr.sp-ac-entity').first();
+    await entity.locator('summary').click();
+    await expect(entity.locator('.sp-ac-rules')).toBeVisible();
+    const access = await entity.locator('.sp-ac-rules tbody tr td:nth-child(3)').allInnerTexts();
+    expect(access.length).toBeGreaterThan(0);
+    for (const value of access) expect(['allow', 'deny']).toContain(value.trim().toLowerCase());
   });
 
   test('opens the group creation form', async ({ adminPage }) => {
@@ -91,6 +97,8 @@ test.describe('design language', () => {
   test('meets the density bar', async ({ adminPage }) => {
     const page = new AccessControlPage(adminPage);
     await page.goto();
-    await expectDensity(adminPage, 'list');
+    // Grouped entities carry identity, subjects and resolution metadata on
+    // multiple lines, like the other stacked activity listings.
+    await expectDensity(adminPage, 'stackedList');
   });
 });

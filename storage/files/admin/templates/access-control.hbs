@@ -2,7 +2,7 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
-    {{#> components/page-header title=title subtitle="Who reaches what on this instance, and why. Rules is the ledger by entity; Audience grid is every role, group and project at once; Find a person opens one account's own Access tab; Sync opens Code sync's Access review, where rules.yaml and this database are reconciled entity by entity."}}
+    {{#> components/page-header title=title subtitle="Who reaches what, and why. Expand an entity to inspect its rules."}}
         {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How it works</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/groups">Group rules</a>
@@ -14,7 +14,6 @@
         <span><strong>{{stats.groups}}</strong> groups</span>
         <span><strong>{{stats.projects}}</strong> projects</span>
         <span><strong>{{stats.users}}</strong> people</span>
-        <span>Declared in <code class="sp-code-inline">services/access-control/rules.yaml</code>; enforced from this database</span>
         {{/inline}}
     {{/components/page-header}}
 
@@ -70,18 +69,18 @@
     <div class="sp-notice sp-notice--warn sp-ac-drift" role="status">
         <p class="sp-notice__title">Code and database differ</p>
         <p>
-            <strong>{{drift.counts.missing_in_db}}</strong> added in code ·
-            <strong>{{drift.counts.changed}}</strong> changed in code ·
-            <strong>{{drift.counts.default_changed}}</strong> defaults changed ·
-            <strong>{{drift.counts.only_in_db_code}}</strong> removed from code ·
-            <strong>{{drift.counts.only_in_db_dashboard}}</strong> written in the console.
-            Nothing is changed automatically.
+            <strong>{{drift.counts.missing_in_db}}</strong> added ·
+            <strong>{{drift.counts.changed}}</strong> changed ·
+            <strong>{{drift.counts.default_changed}}</strong> defaults ·
+            <strong>{{drift.counts.only_in_db_code}}</strong> removed ·
+            <strong>{{drift.counts.only_in_db_dashboard}}</strong> console-only.
         </p>
         <p><a class="sp-btn sp-btn--sm sp-btn--secondary" href="{{drift.url}}">Review and synchronise</a></p>
     </div>
     {{/if}}
 
-    <details class="sp-ac-explain" data-ac="explain" open>
+    {{#*inline "access_explanation"}}
+    <details class="sp-ac-explain" data-ac="explain">
         <summary>How a decision is made</summary>
         <div class="sp-ac-explain__body">
             <ol class="sp-ac-ladder" aria-label="Precedence ladder, narrowest first">
@@ -100,6 +99,7 @@
             <p class="sp-ac-explain__more"><a href="{{docs_url}}" target="_blank" rel="noopener noreferrer">Worked examples, the file format and the sync loop →</a></p>
         </div>
     </details>
+    {{/inline}}
 
     <section class="sp-kpi-grid" aria-label="Access-control totals">
         {{#each entities.kpis}}
@@ -107,7 +107,7 @@
         {{/each}}
     </section>
 
-    {{#> components/section title="Entities" count=entities.total note="One row per governed entity, grouped by kind. Chips are the subjects each band names; expand a row for the individual rules and the resolver's outcome in plain words."}}
+    {{#> components/section title="Entities" count=entities.total note="Grouped by kind; expand an entity for its rules and resolver outcome."}}
         {{#*inline "section_actions"}}
         {{#if entities.filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{entities.clear_url}}">Clear filters</a>{{/if}}
         {{/inline}}
@@ -215,6 +215,8 @@
     {{#if entities.capped}}
     {{> components/notice tone="warn" title="Listing is capped" message="Only the first 1000 rules were read. Narrow the filters to see the rest."}}
     {{/if}}
+
+    {{> access_explanation}}
 
     {{/if}}
 

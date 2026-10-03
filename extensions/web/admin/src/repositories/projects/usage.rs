@@ -53,7 +53,7 @@ pub async fn list_project_rollups(
     window_days: i32,
     limit: i64,
 ) -> Result<Vec<ProjectRollup>, sqlx::Error> {
-    let rows = crate::scoped_query!(
+    crate::scoped_query!(@as ProjectRollup,
         r#"SELECT p.id AS "id!: ProjectId",
                   p.name AS "name!",
                   p.description AS "description?",
@@ -122,28 +122,5 @@ pub async fn list_project_rollups(
         limit
     )
     .fetch_all(pool)
-    .await?;
-    Ok(rows
-        .into_iter()
-        .map(|row| ProjectRollup {
-            id: row.id,
-            name: row.name,
-            description: row.description,
-            member_count: row.member_count,
-            attributed_members: row.attributed_members,
-            group_count: row.group_count,
-            active_members: row.active_members,
-            requests: row.requests,
-            tokens: row.tokens,
-            cost_microdollars: row.cost_microdollars,
-            models_used: row.models_used,
-            top_model: row.top_model,
-            clients_used: row.clients_used,
-            top_client: row.top_client,
-            tool_calls: row.tool_calls,
-            tool_success: row.tool_success,
-            skills_used: row.skills_used,
-            artifacts: row.artifacts,
-        })
-        .collect())
+    .await
 }

@@ -52,7 +52,6 @@ pub use handlers::connector_auth::router as connector_api_router;
 pub use handlers::dev_login::{
     DEV_LOGIN_PATH, dev_login_allowed, dev_login_enabled, dev_login_url,
 };
-pub use routes::managed_state::StateError;
 pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
 pub use services::{connector_oauth, identity_token};
 pub use types::{
@@ -166,12 +165,12 @@ pub fn admin_router(
     read_pool: Arc<PgPool>,
     write_pool: &Arc<PgPool>,
     owner: systemprompt::identifiers::UserId,
-) -> Result<Router, StateError> {
-    let admin_only = routes::build_admin_only_routes(db, &read_pool, write_pool, owner)?;
+) -> Router {
+    let admin_only = routes::build_admin_only_routes(db, &read_pool, write_pool, owner);
     let auth_reads = routes::build_auth_read_routes(&read_pool);
     let self_service = routes::build_self_service_routes(write_pool);
 
-    Ok(admin_only
+    admin_only
         .merge(auth_reads)
         .merge(self_service)
         .layer(axum_middleware::from_fn(
@@ -180,5 +179,5 @@ pub fn admin_router(
         .layer(axum_middleware::from_fn_with_state(
             read_pool,
             middleware::user_context_middleware,
-        )))
+        ))
 }

@@ -9,7 +9,6 @@ use tower_http::normalize_path::NormalizePathLayer;
 
 use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
-use super::managed_state::StateError;
 use super::ssr_redirects;
 use crate::handlers::adfs_auth::AdfsDeps;
 use systemprompt::database::DbPool;
@@ -20,8 +19,8 @@ pub fn admin_ssr_router(
     engine: AdminTemplateEngine,
     sso_deps: AdfsDeps,
     owner: systemprompt::identifiers::UserId,
-) -> Result<Router, StateError> {
-    let managed = Arc::new(super::managed_state::ManagedState::new(db, owner)?);
+) -> Router {
+    let managed = Arc::new(super::managed_state::ManagedState::new(db, owner));
     let inner = overview_routes()
         .merge(people_routes())
         .merge(ai_activity_routes())
@@ -56,11 +55,11 @@ pub fn admin_ssr_router(
         .with_state(pool)
         .fallback_service(inner);
 
-    Ok(Router::new().fallback_service(
+    Router::new().fallback_service(
         tower::ServiceBuilder::new()
             .layer(NormalizePathLayer::trim_trailing_slash())
             .service(combined),
-    ))
+    )
 }
 
 fn public_routes(pool: Arc<PgPool>) -> Router<Arc<PgPool>> {

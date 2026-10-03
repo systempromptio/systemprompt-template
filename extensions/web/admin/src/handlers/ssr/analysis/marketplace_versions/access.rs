@@ -25,7 +25,10 @@ pub(crate) fn require_versions_reader(user: &UserContext) -> AdminResult<()> {
 // datasets and the pages cannot disagree. Without a participant tier the
 // answer is the console flag; the marketplace id is part of the question so a
 // finer rule lands here and nowhere else.
-pub(crate) fn may_read_marketplace(user: &UserContext, _marketplace_id: &MarketplaceId) -> bool {
+pub(crate) const fn may_read_marketplace(
+    user: &UserContext,
+    _marketplace_id: &MarketplaceId,
+) -> bool {
     user.is_console
 }
 

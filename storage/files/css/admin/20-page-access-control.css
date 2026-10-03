@@ -13,8 +13,14 @@
 
 .sp-ac-drift .sp-btn { margin-top: var(--sp-space-2); }
 
-/* Why: the model in five lines, open on first visit and collapsible after.
-   A <details> so it costs nothing to keep on the page once it has been read. */
+.sp-ac-drift.sp-notice { flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--sp-space-2); padding: var(--sp-space-2) var(--sp-space-3); margin-bottom: var(--sp-space-3); }
+.sp-ac-drift p { margin: 0; }
+.sp-ac-drift .sp-btn { margin-top: 0; }
+.sp-ac-drift + .sp-kpi-grid { margin-bottom: var(--sp-space-3); }
+.sp-ac-drift ~ .sp-section__head:not(:first-child) { margin-top: var(--sp-space-3); }
+
+/* Why: keep the model available on demand without pushing the ledger below
+   the fold. A <details> preserves the explanation without a second page. */
 .sp-ac-explain {
     margin-block: var(--sp-space-4);
     padding: var(--sp-space-3) var(--sp-space-4);
@@ -124,11 +130,19 @@
 .sp-ac-entity__details[open] .sp-ac-entity__label { text-decoration: underline dotted; }
 
 .sp-ac-entity__expanded {
+    white-space: normal;
+    overflow-wrap: anywhere;
     margin-top: var(--sp-space-3);
     padding: var(--sp-space-3);
     border-radius: var(--sp-corners-sm);
     background: var(--sp-bg-surface-raised);
 }
+
+/* Why: Chromium lays out closed disclosure descendants for deferred rendering;
+   explicitly hide them so the compact row cannot inherit their table widths. */
+.sp-ac-entity__details:not([open]) > .sp-ac-entity__expanded { display: none; }
+.sp-ac-rules { width: 100%; table-layout: fixed; }
+.sp-ac-rules td { white-space: normal; overflow-wrap: anywhere; }
 
 .sp-ac-entity__resolution {
     margin: 0 0 var(--sp-space-3);

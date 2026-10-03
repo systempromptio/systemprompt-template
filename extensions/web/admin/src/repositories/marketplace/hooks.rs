@@ -60,7 +60,7 @@ pub fn list_configured_hooks(
             continue;
         }
 
-        let id_str = config.id.as_ref().map_or(dir_name, |id| id.to_string());
+        let id_str = config.id.as_ref().map_or(dir_name, ToString::to_string);
 
         out.push(ConfiguredHook {
             id: id_str.clone(),

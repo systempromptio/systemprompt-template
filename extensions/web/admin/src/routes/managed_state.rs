@@ -3,18 +3,6 @@
 use systemprompt::database::DbPool;
 use systemprompt::marketplace::managed::ManagedRepository;
 
-/// Why a state can fail to build: every core repository opens its own
-/// handles from the shared [`DbPool`], and each constructor reports that.
-#[derive(Debug, thiserror::Error)]
-pub enum StateError {
-    #[error(transparent)]
-    Managed(#[from] systemprompt::marketplace::managed::ManagedError),
-    #[error(transparent)]
-    Ai(#[from] systemprompt::traits::RepositoryError),
-    #[error(transparent)]
-    Users(#[from] systemprompt::users::UserError),
-}
-
 #[derive(Debug, Clone)]
 pub(crate) struct ManagedState {
     pub(crate) owner: systemprompt::identifiers::UserId,
@@ -25,15 +13,12 @@ pub(crate) struct ManagedState {
 }
 
 impl ManagedState {
-    pub(crate) fn new(
-        db: &DbPool,
-        owner: systemprompt::identifiers::UserId,
-    ) -> Result<Self, StateError> {
+    pub(crate) fn new(db: &DbPool, owner: systemprompt::identifiers::UserId) -> Self {
         let pool = db.write_pool().as_ref().clone();
-        Ok(Self {
+        Self {
             owner,
             otlp_export: systemprompt::scheduler::OtlpExportStateRepository::new(pool),
             repository: ManagedRepository::new(db),
-        })
+        }
     }
 }

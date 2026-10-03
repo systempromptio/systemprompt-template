@@ -28,10 +28,10 @@
    were folded into the chain strip, and the scope column was an em-dash on
    every row this instance has ever written. */
 .sp-t-decisions th:nth-child(1) { inline-size: 15%; }
-.sp-t-decisions th:nth-child(2) { inline-size: 8%; }
+.sp-t-decisions th:nth-child(2) { inline-size: 10%; }
 .sp-t-decisions th:nth-child(3) { inline-size: 18%; }
 .sp-t-decisions th:nth-child(4) { inline-size: 13%; }
-.sp-t-decisions th:nth-child(5) { inline-size: 21%; }
+.sp-t-decisions th:nth-child(5) { inline-size: 19%; }
 .sp-t-decisions th:nth-child(6) { inline-size: 19%; }
 .sp-t-decisions th:nth-child(7) { inline-size: 6%; }
 

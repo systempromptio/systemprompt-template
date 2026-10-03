@@ -30,7 +30,7 @@ pub struct TemplateMarketplaceFilter {
 }
 
 impl TemplateMarketplaceFilter {
-    #[allow(
+    #[expect(
         clippy::unnecessary_wraps,
         reason = "core's registered marketplace-filter factory requires a fallible signature"
     )]

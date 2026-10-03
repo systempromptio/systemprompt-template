@@ -27,7 +27,14 @@ pub const UNATTRIBUTED: &str = "unattributed";
 #[macro_export]
 macro_rules! scoped_query {
     ($tail:literal, $($args:tt)*) => {
-        sqlx::query!(
+        $crate::scoped_query!(@query query, [], $tail, $($args)*)
+    };
+    (@as $row:path, $tail:literal, $($args:tt)*) => {
+        $crate::scoped_query!(@query query_as, [$row,], $tail, $($args)*)
+    };
+    (@query $query:ident, [$($row:tt)*], $tail:literal, $($args:tt)*) => {
+        sqlx::$query!(
+            $($row)*
             "WITH membership AS (
                  SELECT ug.user_id, ug.group_id AS scope_id
                    FROM user_groups ug
