@@ -43,13 +43,8 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     tracing::info!("llms.txt generation started");
 
-    let db_pool = ctx
-        .db_pool::<DbPool>()
-        .ok_or(JobError::MissingContext("DbPool"))?;
-    let paths = ctx
-        .app_paths::<Arc<AppPaths>>()
-        .ok_or(JobError::MissingContext("AppPaths"))?
-        .as_ref();
+    let db_pool = ctx.get::<DbPool>()?;
+    let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
 
     generate_llms_txt(DbPool::clone(db_pool), paths).await?;
 
@@ -63,7 +58,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 systemprompt::traits::submit_job!(&LlmsTxtGenerationJob);
 
 pub(crate) async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Result<(), JobError> {
-    use systemprompt::models::Config;
+    use systemprompt::manifest::Config;
     use tokio::fs;
 
     let global_config = Config::get()?;
@@ -125,7 +120,7 @@ async fn build_llms_txt_content(
 
     write_header(&mut content, base_url)?;
 
-    let repo = ContentRepository::new(&db_pool)?;
+    let repo = ContentRepository::new(&db_pool);
 
     write_documentation_section(&mut content, config, &repo, base_url).await?;
 

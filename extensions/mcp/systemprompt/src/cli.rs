@@ -14,6 +14,10 @@ use tokio::process::Command;
 /// rmcp's `ErrorData` is a variant-less wire type, so the typed cause lives
 /// here and is projected onto the wire exactly once, in `From`.
 #[derive(Debug, thiserror::Error)]
+#[expect(
+    variant_size_differences,
+    reason = "small CLI boundary errors retain their concrete causes without heap allocation"
+)]
 pub enum CliError {
     #[error("profile is not initialised")]
     Profile(#[from] ProfileBootstrapError),

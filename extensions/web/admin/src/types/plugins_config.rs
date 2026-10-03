@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use systemprompt::identifiers::{AgentId, HookId, McpServerId, PluginId, SkillId};
-use systemprompt::models::{PluginConfig, PluginVariableDef};
+use systemprompt::manifest::{PluginConfig, PluginVariableDef};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PluginOnboardingQuestion {

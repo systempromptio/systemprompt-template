@@ -129,12 +129,8 @@ impl Job for RetentionExportWeeklyJob {
         &self,
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(JobError::MissingContext("DbPool"))?;
-        let paths = ctx
-            .app_paths::<Arc<AppPaths>>()
-            .ok_or(JobError::MissingContext("AppPaths"))?;
+        let db = ctx.get::<DbPool>()?;
+        let paths = ctx.get::<Arc<AppPaths>>()?;
         let params = WeeklyParams {
             weeks_back: ctx.get_parameter_parsed::<i64>("weeks_back")?.unwrap_or(1),
             keep_weeks: ctx

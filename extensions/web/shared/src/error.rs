@@ -12,6 +12,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum InfraError {
+    #[error(transparent)]
+    MissingDependency(#[from] systemprompt::traits::MissingDependency),
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
 
@@ -29,6 +31,7 @@ impl InfraError {
     #[must_use]
     pub const fn code(&self) -> &'static str {
         match self {
+            Self::MissingDependency(_) => "MISSING_DEPENDENCY",
             Self::Database(_) => "DATABASE_ERROR",
             Self::Io(_) => "IO_ERROR",
             Self::Yaml(_) => "YAML_ERROR",
@@ -102,7 +105,7 @@ impl MarketplaceError {
     }
 }
 
-infra_from!(MarketplaceError: sqlx::Error, std::io::Error, serde_yaml::Error, serde_json::Error);
+infra_from!(MarketplaceError: sqlx::Error, std::io::Error, serde_yaml::Error, serde_json::Error, systemprompt::traits::MissingDependency);
 
 impl ExtensionError for MarketplaceError {
     fn code(&self) -> &'static str {

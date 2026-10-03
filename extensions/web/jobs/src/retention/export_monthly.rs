@@ -159,12 +159,8 @@ impl Job for RetentionExportMonthlyJob {
         &self,
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(JobError::MissingContext("DbPool"))?;
-        let paths = ctx
-            .app_paths::<Arc<AppPaths>>()
-            .ok_or(JobError::MissingContext("AppPaths"))?;
+        let db = ctx.get::<DbPool>()?;
+        let paths = ctx.get::<Arc<AppPaths>>()?;
         let params = MonthlyParams {
             months_back: ctx.get_parameter_parsed::<u32>("months_back")?.unwrap_or(1),
             keep_months: ctx.get_parameter_parsed::<u32>("keep_months")?.unwrap_or(0),

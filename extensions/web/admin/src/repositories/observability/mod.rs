@@ -10,7 +10,7 @@
 pub mod view;
 
 use systemprompt::config::ProfileBootstrap;
-use systemprompt::models::profile::OtlpExportConfig;
+use systemprompt::manifest::profile::OtlpExportConfig;
 use systemprompt::scheduler::{OtlpExportState, OtlpExportStateRepository};
 
 use crate::error::AdminError;

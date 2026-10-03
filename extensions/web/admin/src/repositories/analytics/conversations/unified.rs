@@ -99,7 +99,7 @@ pub async fn list_history_items(
     } = filter;
     let query = search.map(str::trim).filter(|q| !q.is_empty());
     let pattern = query.map(|q| format!("%{}%", q.replace('\\', "\\\\").replace('%', "\\%")));
-    let legacy = ContextId::legacy();
+    let legacy = ContextId::legacy_context_row();
 
     let mut transaction = crate::repositories::dashboard_read::begin(pool).await?;
     let row = sqlx::query_file!(

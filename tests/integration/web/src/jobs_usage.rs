@@ -37,9 +37,7 @@ fn context(pool: &Arc<PgPool>) -> JobContext {
     ));
     JobContext::new(
         Actor::user(UserId::new("jobs-usage-test")),
-        Arc::new(database),
-        Arc::new(()),
-        Arc::new(()),
+        systemprompt::traits::Dependencies::new().with(database),
     )
 }
 
@@ -263,9 +261,7 @@ async fn the_sweep_refuses_a_context_with_no_database() {
     };
     let empty = JobContext::new(
         Actor::user(UserId::new("jobs-usage-test")),
-        Arc::new(()),
-        Arc::new(()),
-        Arc::new(()),
+        systemprompt::traits::Dependencies::new(),
     );
 
     let error = job("usage_anomaly")
@@ -273,9 +269,12 @@ async fn the_sweep_refuses_a_context_with_no_database() {
         .await
         .expect_err("a job wired without a pool fails rather than doing nothing");
 
-    assert!(
-        error.to_string().contains("DbPool"),
-        "the failure names the missing slot: {error}"
+    let systemprompt::traits::ProviderError::MissingDependency(missing) = error else {
+        panic!("expected a typed missing dependency, got {error}");
+    };
+    assert_eq!(
+        missing.type_name(),
+        std::any::type_name::<systemprompt::database::DbPool>()
     );
 
     db.cleanup().await;

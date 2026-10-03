@@ -5,7 +5,7 @@
 //! list, not just that tool.
 
 use serde_json::Value;
-use systemprompt::models::schema::gemini_declaration_violations;
+use systemprompt::wire::schema::gemini_declaration_violations;
 use systemprompt_mcp_agent::tools::list_tools;
 
 #[test]

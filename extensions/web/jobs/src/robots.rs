@@ -42,10 +42,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     tracing::info!("robots.txt generation started");
 
-    let paths = ctx
-        .app_paths::<Arc<AppPaths>>()
-        .ok_or(JobError::MissingContext("AppPaths"))?
-        .as_ref();
+    let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
     generate_robots_txt(paths).await?;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
@@ -56,7 +53,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 }
 
 pub(crate) async fn generate_robots_txt(paths: &AppPaths) -> Result<(), JobError> {
-    use systemprompt::models::Config;
+    use systemprompt::manifest::Config;
     use tokio::fs;
 
     let global_config = Config::get()?;

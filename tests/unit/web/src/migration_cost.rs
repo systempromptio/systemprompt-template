@@ -96,7 +96,12 @@ fn every_hot_table_rewrite_declares_its_measured_cost() {
     for path in migration_files() {
         let sql = std::fs::read_to_string(&path).expect("migration readable");
         let name = stem(&path);
-        let Some(cost) = audit_one("web", &name, &sql, &hot) else {
+        let Some(cost) = audit_one(
+            &systemprompt::identifiers::ExtensionId::new("web"),
+            &name,
+            &sql,
+            &hot,
+        ) else {
             continue;
         };
         if let Some(reason) = cost.malformed {

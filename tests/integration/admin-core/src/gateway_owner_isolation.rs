@@ -4,8 +4,8 @@ use crate::tempdb::TempDb;
 use std::sync::Arc;
 use std::time::Duration;
 use systemprompt::ai::repository::AiThoughtSignatureRepository;
-use systemprompt::api::services::gateway::signature_cache::ThoughtSignatureCache;
 use systemprompt::database::{Database, DbPool};
+use systemprompt::gateway::signature_cache::ThoughtSignatureCache;
 use systemprompt::identifiers::{ContextId, GatewayConversationId};
 
 #[tokio::test]
@@ -19,7 +19,7 @@ async fn identical_client_keys_are_isolated_in_memory_and_across_replicas() {
         Arc::clone(&db.pool),
         Some(Arc::clone(&db.pool)),
     ));
-    let repo = Arc::new(AiThoughtSignatureRepository::new(&pool).expect("repository"));
+    let repo = Arc::new(AiThoughtSignatureRepository::new(&pool));
     let first = ThoughtSignatureCache::new(Duration::from_secs(60), Arc::clone(&repo));
     let second = ThoughtSignatureCache::new(Duration::from_secs(60), repo);
     let conversation = GatewayConversationId::from_prefix_hash(42);
@@ -62,7 +62,7 @@ async fn identical_client_keys_are_isolated_in_memory_and_across_replicas() {
         .expect("delete owner");
     let fresh = ThoughtSignatureCache::new(
         Duration::from_secs(60),
-        Arc::new(AiThoughtSignatureRepository::new(&pool).expect("repository")),
+        Arc::new(AiThoughtSignatureRepository::new(&pool)),
     );
     assert_eq!(fresh.lookup(&alice, &conversation, "same-tool").await, None);
     assert_eq!(

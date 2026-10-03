@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use reqwest::StatusCode;
 use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue};
-use systemprompt::models::profile::{OtlpExportConfig, OtlpProtocol, OtlpSignal};
+use systemprompt::manifest::profile::{OtlpExportConfig, OtlpProtocol, OtlpSignal};
 
 const CONTENT_TYPE_PROTOBUF: &str = "application/x-protobuf";
 const PROBE_TIMEOUT: Duration = Duration::from_secs(10);

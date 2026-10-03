@@ -42,7 +42,7 @@ pub(crate) async fn marketplace_context_middleware(
             .into_response();
         },
     };
-    let site_url = systemprompt::models::Config::get().map_or_else(
+    let site_url = systemprompt::manifest::Config::get().map_or_else(
         |_| String::new(),
         |c| c.api_external_url.trim_end_matches('/').to_owned(),
     );

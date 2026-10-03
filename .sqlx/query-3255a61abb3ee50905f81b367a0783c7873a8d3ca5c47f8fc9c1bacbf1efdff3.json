@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH membership AS (\n                 SELECT ug.user_id, ug.group_id AS scope_id\n                   FROM user_groups ug\n                  WHERE $1::TEXT = 'group' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT pm.user_id, pm.project_id AS scope_id\n                   FROM project_members pm\n                  WHERE $1::TEXT = 'project' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT d.user_id, d.primary_group_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'group' AND $2::BOOLEAN\n                    AND d.primary_group_id IS NOT NULL\n                 UNION\n                 SELECT d.user_id, d.primary_project_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'project' AND $2::BOOLEAN\n                    AND d.primary_project_id IS NOT NULL\n             ) SELECT x.client_kind AS \"client_kind!\",\n                  COUNT(x.id)::BIGINT AS \"requests!\",\n                  COUNT(DISTINCT x.user_id)::BIGINT AS \"users!\",\n                  COALESCE(SUM(COALESCE(x.tokens_used, COALESCE(x.input_tokens, 0) + COALESCE(x.output_tokens, 0) + COALESCE(x.cache_read_tokens, 0) + COALESCE(x.cache_creation_tokens, 0))), 0)::BIGINT AS \"tokens!\",\n                  COALESCE(SUM(x.cost_microdollars), 0)::BIGINT AS \"cost_microdollars!\",\n                  COUNT(DISTINCT x.model)::BIGINT AS \"models!\"\n           FROM membership m\n           JOIN ai_requests x ON x.user_id = m.user_id\n            AND x.created_at >= NOW() - make_interval(days => $4)\n           WHERE m.scope_id = $3\n           GROUP BY x.client_kind\n           ORDER BY COUNT(x.id) DESC, x.client_kind",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "client_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "client_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "models!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "3255a61abb3ee50905f81b367a0783c7873a8d3ca5c47f8fc9c1bacbf1efdff3"
+}

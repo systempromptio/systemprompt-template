@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT project_id AS \"project_id!: ProjectId\" FROM user_projects WHERE user_id = $1 ORDER BY project_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "project_id!: ProjectId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_projects",
+            "name": "project_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "0eca48190681f80be918d910a30e58bd6f94a3653f88e988c8f7059f0fc77a2f"
+}

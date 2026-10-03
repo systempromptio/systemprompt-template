@@ -58,7 +58,7 @@ pub(crate) fn relative_time(t: chrono::DateTime<chrono::Utc>) -> String {
 // this build does not know (a newer core) is shown as it was stored rather
 // than mislabelled, so the chip never lies.
 pub(crate) fn client_label(client_kind: &str) -> String {
-    systemprompt::models::wire::origin::ClientKind::parse(client_kind)
+    systemprompt::models::origin::ClientKind::parse(client_kind)
         .map_or_else(|_| client_kind.to_owned(), |kind| kind.label().to_owned())
 }
 
@@ -75,7 +75,7 @@ pub(crate) struct ClientChipView {
 // and a user-agent Claude Code read as the same client at different
 // confidence, which is exactly the distinction the column records.
 pub(crate) fn client_chip(client_kind: &str, attestation: &str) -> ClientChipView {
-    use systemprompt::models::wire::origin::ClientAttestation;
+    use systemprompt::models::origin::ClientAttestation;
     let tone = match ClientAttestation::parse(attestation) {
         Ok(ClientAttestation::HostToken) => "accent",
         Ok(ClientAttestation::Declared) => "info",
@@ -89,7 +89,7 @@ pub(crate) fn client_chip(client_kind: &str, attestation: &str) -> ClientChipVie
 }
 
 pub(crate) fn attestation_title(attestation: &str) -> String {
-    systemprompt::models::wire::origin::ClientAttestation::parse(attestation).map_or_else(
+    systemprompt::models::origin::ClientAttestation::parse(attestation).map_or_else(
         |_| format!("Attestation: {attestation}"),
         |tier| tier.label().to_owned(),
     )

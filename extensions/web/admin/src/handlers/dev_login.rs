@@ -18,7 +18,7 @@ use axum::http::header::SET_COOKIE;
 use axum::response::{IntoResponse, Redirect, Response};
 use serde::Deserialize;
 use systemprompt::config::ProfileBootstrap;
-use systemprompt::models::profile::{Environment, ProfileType};
+use systemprompt::manifest::profile::{Environment, ProfileType};
 
 use super::adfs_auth::{AdfsDeps, SessionSubject, mint_session, session_cookie};
 use crate::repositories::dev_login::consume_dev_login_code;

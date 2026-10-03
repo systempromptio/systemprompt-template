@@ -8,8 +8,7 @@ mod overflow;
 #[doc(hidden)]
 pub mod tool;
 
-use crate::error::SystempromptToolError;
-use crate::tools::{self, SERVER_NAME};
+use crate::tools;
 use rmcp::model::{
     CallToolRequestParams, CallToolResponse, Icon, Implementation, InitializeRequestParams,
     InitializeResult, ListResourceTemplatesResult, ListResourcesResult, ListToolsResult,
@@ -50,24 +49,24 @@ impl SystempromptServer {
         service_id: McpServerId,
         authz_hook: SharedAuthzHook,
         artifact_ingest: Arc<ArtifactIngest>,
-    ) -> Result<Self, SystempromptToolError> {
-        let tool_usage_repo = Arc::new(
-            ToolUsageRepository::new(&db_pool)
-                .map_err(|e| SystempromptToolError::Internal(e.to_string()))?,
-        );
+    ) -> Self {
+        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool));
         let executor = McpToolExecutor::new(
             tool_usage_repo,
+            Arc::new(systemprompt::ai::repository::AiRequestRepository::new(
+                &db_pool,
+            )),
             Arc::clone(&artifact_ingest),
-            service_id.as_str(),
+            service_id.clone(),
         );
 
-        Ok(Self {
+        Self {
             service_id,
             db_pool,
             executor,
             authz_hook,
             artifact_ingest,
-        })
+        }
     }
 }
 
@@ -193,7 +192,7 @@ impl ServerHandler for SystempromptServer {
         _ctx: RequestContext<RoleServer>,
     ) -> impl Future<Output = Result<ListResourcesResult, McpError>> + MaybeSendFuture + '_ {
         std::future::ready(Ok(build_artifact_viewer_resource(&ArtifactViewerConfig {
-            server_name: SERVER_NAME,
+            server_name: &self.service_id,
             title: "systemprompt.io Artifact Viewer",
             description: "Interactive UI viewer for systemprompt.io artifacts. Receives the tool \
                           result via the MCP Apps ui/notifications/tool-result protocol and mounts \
@@ -213,16 +212,15 @@ impl ServerHandler for SystempromptServer {
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ReadResourceResponse, McpError> {
         if parse_artifact_resource_uri(&request.uri).is_some() {
-            let repo = McpArtifactRepository::new(&self.db_pool)
-                .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-            return read_artifact_resource(&request, SERVER_NAME, &repo)
+            let repo = McpArtifactRepository::new(&self.db_pool);
+            return read_artifact_resource(&request, &self.service_id, &repo)
                 .await
                 .map(Into::into);
         }
 
         read_artifact_viewer_resource(
             &request,
-            SERVER_NAME,
+            &self.service_id,
             &crate::reports::admin_artifact_shell(),
         )
         .map(Into::into)

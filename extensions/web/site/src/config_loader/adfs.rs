@@ -33,7 +33,7 @@ fn derive_saml_urls(config: &mut systemprompt_web_admin::AdfsConfig) {
     if !config.entity_id.is_empty() && !config.acs_url.is_empty() {
         return;
     }
-    let Ok(global) = systemprompt::models::Config::get().inspect_err(|e| {
+    let Ok(global) = systemprompt::manifest::Config::get().inspect_err(|e| {
         tracing::warn!(error = %e, "No profile config; ADFS SAML URLs stay unset");
     }) else {
         return;

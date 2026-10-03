@@ -20,7 +20,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use std::borrow::Cow;
-use systemprompt::identifiers::{Actor, SessionId};
+use systemprompt::identifiers::Actor;
 
 use systemprompt_security::authz::{
     AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, ChainSources, Decision,
@@ -135,7 +135,7 @@ async fn audit_decision(
     // session's other rows join to; deriving keeps them in a single context.
     let context_id = req.context_id.clone().unwrap_or_else(|| {
         req.session_id.as_ref().map_or_else(
-            systemprompt::identifiers::ContextId::legacy,
+            systemprompt::identifiers::ContextId::generate,
             systemprompt::identifiers::ContextId::derived_from_session,
         )
     });
@@ -147,7 +147,7 @@ async fn audit_decision(
         // to. Enforcement sites without a session (server-attach RBAC, MCP)
         // send none and store the empty string; `trace_id` below is what keeps
         // those rows correlatable, so this column never carries a trace id.
-        session_id: req.session_id.as_ref().map_or("", SessionId::as_str),
+        session_id: req.session_id.as_ref(),
         tool_name: entity_id_str,
         agent_id: None,
         // Why: authz decisions are entity-keyed, not agent-keyed; entity_type
@@ -158,18 +158,12 @@ async fn audit_decision(
         policy: POLICY_NAME,
         reason: &reason_str,
         evaluated_rules: &evaluated,
-        client_id: req
-            .client_id
-            .as_ref()
-            .map(systemprompt::identifiers::ClientId::as_str),
+        client_id: req.client_id.as_ref(),
         plugin_id: None,
         act_chain: &req.act_chain,
-        trace_id: Some(req.trace_id.as_str()),
-        context_id: context_id.as_str(),
-        task_id: req
-            .task_id
-            .as_ref()
-            .map(systemprompt::identifiers::TaskId::as_str),
+        trace_id: Some(&req.trace_id),
+        context_id: &context_id,
+        task_id: req.task_id.as_ref(),
     };
     if let Err(e) = insert_governance_decision(pool, &record).await {
         tracing::error!(error = %e, "Failed to record authz decision");

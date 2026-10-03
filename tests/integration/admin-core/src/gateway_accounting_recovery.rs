@@ -3,14 +3,14 @@
 use crate::fixtures::{insert_session, insert_user, unclaimed_email, unique};
 use crate::tempdb::TempDb;
 use std::sync::Arc;
-use systemprompt::api::services::gateway::captures::CapturedToolUse;
-use systemprompt::api::services::gateway::protocol::canonical::CanonicalRequest;
-use systemprompt::api::services::gateway::protocol::canonical_response::{
+use systemprompt::gateway::captures::CapturedToolUse;
+use systemprompt::gateway::protocol::canonical::CanonicalRequest;
+use systemprompt::gateway::protocol::canonical::{
     CanonicalResponse, CanonicalUsage,
 };
-use systemprompt::api::services::gateway::protocol::inbound::InboundAdapter;
-use systemprompt::api::services::gateway::protocol::inbound::anthropic_messages::AnthropicMessagesInbound;
-use systemprompt::api::services::gateway::{
+use systemprompt::gateway::protocol::inbound::InboundAdapter;
+use systemprompt::gateway::protocol::inbound::anthropic_messages::AnthropicMessagesInbound;
+use systemprompt::gateway::{
     GatewayAudit, GatewayRepositories, GatewayRequestContext,
 };
 use systemprompt::database::{Database, DbPool};
@@ -81,14 +81,14 @@ async fn terminal_receipt_survives_database_failure_and_replays_without_duplicat
         Some(Arc::clone(&db.pool)),
     ));
     let materializer = Arc::new(systemprompt::agent::services::ContextProviderService::new(
-        systemprompt::agent::repository::ContextRepository::new(&pool).expect("context repo"),
+        systemprompt::agent::repository::ContextRepository::new(&pool),
     ));
-    let journal = systemprompt::api::services::gateway::audit::journal::GatewayJournal::open(
+    let journal = systemprompt::gateway::audit::journal::GatewayJournal::open(
         systemprompt::config::ProfileBootstrap::get_path().expect("profile bootstrapped"),
         systemprompt::config::SecretsBootstrap::get().expect("secrets bootstrapped"),
     )
     .expect("gateway journal opens");
-    let repos = GatewayRepositories::new(&pool, journal, materializer).expect("gateway repos");
+    let repos = GatewayRepositories::new(&pool, journal, materializer, systemprompt::traits::BackgroundTasks::new());
     let raw = Vec::from(
         br#"{"model":"test-model","max_tokens":16,"messages":[{"role":"user","content":"test"}]}"#
             .as_slice(),
@@ -157,7 +157,7 @@ async fn terminal_receipt_survives_database_failure_and_replays_without_duplicat
         .await
         .expect("restore storage");
     let recovered =
-        systemprompt::api::services::gateway::audit::journal::recover(&repos.settlement())
+        systemprompt::gateway::audit::journal::recover(&repos.settlement())
             .await
             .expect("owned recovery settles the durable receipt");
     assert_eq!(recovered, 1);

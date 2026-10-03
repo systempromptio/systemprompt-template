@@ -20,7 +20,7 @@
 )]
 
 use systemprompt::loader::config_loader::gateway::backfill_route_ids;
-use systemprompt::models::services::{GatewayConfigSpec, ProviderRegistry, VertexRateCard};
+use systemprompt::manifest::services::{GatewayConfigSpec, ProviderRegistry, VertexRateCard};
 
 use crate::support::repo_root;
 

@@ -119,10 +119,7 @@ impl Job for BundleAdminCssJob {
         &self,
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
-        let paths = ctx
-            .app_paths::<Arc<AppPaths>>()
-            .ok_or(JobError::MissingContext("AppPaths"))?
-            .as_ref();
+        let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
         Ok(Self::execute_bundle(paths).await?)
     }
 }

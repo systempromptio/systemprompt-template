@@ -15,7 +15,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use systemprompt::models::services::ServicesConfig;
+use systemprompt::manifest::services::ServicesConfig;
 
 const SECTIONS: [&str; 14] = [
     "includes",

@@ -155,7 +155,7 @@ pub fn list_plugin_catalog(
         let skills: Vec<SkillId> =
             resolve_all_plugin_skill_ids(&plugin.base, &skills_path, &agents_path)
                 .into_iter()
-                .map(SkillId::from)
+                .map(SkillId::new)
                 .collect();
         out.push(PluginDetail {
             id: plugin.base.id,

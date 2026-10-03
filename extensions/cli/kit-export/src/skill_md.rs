@@ -12,7 +12,7 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use systemprompt::models::services::split_frontmatter;
+use systemprompt::manifest::services::split_frontmatter;
 
 #[derive(Debug, Default, Deserialize)]
 struct SkillConfigFields {

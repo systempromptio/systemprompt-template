@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.tool_name AS \"tool_name!\", t.sequence_number AS \"sequence_number!\",\n                  l.mcp_execution_id,\n                  l.artifact_id AS \"artifact_id: ArtifactId\",\n                  COALESCE(l.state, 'intended') AS \"state!\",\n                  l.execution_status,\n                  COALESCE(l.is_structured, FALSE) AS \"is_structured!\",\n                  t.created_at AS \"created_at!\"\n           FROM ai_request_tool_calls t\n           LEFT JOIN tool_call_ledger l ON l.intent_id = t.id\n           WHERE t.request_id = ANY($1)\n           ORDER BY t.created_at ASC, t.sequence_number ASC\n           LIMIT 200",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_request_tool_calls",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "sequence_number!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_request_tool_calls",
+            "name": "sequence_number"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "mcp_execution_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_call_ledger",
+            "name": "mcp_execution_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "artifact_id: ArtifactId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_call_ledger",
+            "name": "artifact_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "state!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "execution_status",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_call_ledger",
+            "name": "execution_status"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "is_structured!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_request_tool_calls",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      null,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "fd0d533c8da656ff0dcd8770c199e20dd59bb5e3a82acd3fb79552fbea79c7c0"
+}

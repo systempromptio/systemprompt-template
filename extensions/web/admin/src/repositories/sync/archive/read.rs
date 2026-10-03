@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use std::io::{Cursor, Read};
 
 use sha2::{Digest, Sha256};
-use systemprompt::models::services::bundle::BUNDLE_ALLOWED_DIRS;
+use systemprompt::manifest::services::bundle::BUNDLE_ALLOWED_DIRS;
 
 use super::manifest::{ArchiveManifest, parse_manifest};
 use super::staging::{OtherEntry, StagedArchive};

@@ -4,7 +4,7 @@
 use std::collections::BTreeMap;
 
 use chrono::{Duration, Utc};
-use systemprompt::models::profile::{OtlpExportConfig, OtlpProtocol, OtlpSignal};
+use systemprompt::manifest::profile::{OtlpExportConfig, OtlpProtocol, OtlpSignal};
 use systemprompt::scheduler::OtlpExportState;
 use systemprompt_web_admin::repositories::observability::view::{
     build_view, exporter_view, lag_label, lag_view, signal_status,

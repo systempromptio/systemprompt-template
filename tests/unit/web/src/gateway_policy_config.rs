@@ -13,7 +13,7 @@
 //! These tests exist so that putting any category back into a live block list
 //! is a deliberate, review-visible act rather than a one-word edit.
 
-use systemprompt::ai::{GatewayPolicyConfig, QuotaMode, SafetyHistoryMode, SafetyMode};
+use systemprompt::gateway::{GatewayPolicyConfig, QuotaMode, SafetyHistoryMode, SafetyMode};
 
 use crate::support::repo_root;
 
@@ -24,7 +24,7 @@ fn config() -> GatewayPolicyConfig {
     serde_yaml::from_str(&yaml).unwrap_or_else(|e| panic!("parsing {}: {e}", path.display()))
 }
 
-fn default_quotas() -> systemprompt::ai::GatewayPolicyEntry {
+fn default_quotas() -> systemprompt::gateway::GatewayPolicyEntry {
     config()
         .policies
         .into_iter()

@@ -8,7 +8,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use systemprompt::database::install_extension_schemas;
+use systemprompt::database::install_extension_schemas_full;
 use systemprompt::extension::ExtensionRegistry;
 use systemprompt_marketplace as _;
 use systemprompt_users as _;
@@ -109,7 +109,14 @@ async fn restore_and_upgrade(db: &TempDb, rung: &Rung) {
         .unwrap_or_else(|e| panic!("seed the release {} hot tables: {e}", rung.version));
     let registry = discover_registry();
     let database = db.db_pool();
-    if let Err(e) = install_extension_schemas(&registry, database.write()).await {
+    if let Err(e) = install_extension_schemas_full(
+        &registry,
+        database.write(),
+        &[],
+        systemprompt::database::MigrationConfig::default(),
+    )
+    .await
+    {
         panic!(
             "the current installer cannot upgrade a database left by release {}:\n{e}\n\n\
              This is the path every deployed instance takes and no other tier exercises. \

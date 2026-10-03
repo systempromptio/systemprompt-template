@@ -22,7 +22,7 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
-use systemprompt::models::Config;
+use systemprompt::manifest::Config;
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::validate_jwt_token;
 

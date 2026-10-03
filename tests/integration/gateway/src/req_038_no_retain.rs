@@ -7,9 +7,10 @@
 //! the provider default in `ProviderEntry::effective_governance`, which is
 //! what `validate()` and dispatch both consult.
 
-use systemprompt::models::services::{
-    GatewayProfileError, GatewayRoute, ModelGovernance, RouteRequirements, WireProtocol,
+use systemprompt::manifest::services::{
+    GatewayProfileError, GatewayRoute, ModelGovernance, RouteRequirements,
 };
+use systemprompt::wire::WireProtocol;
 
 use crate::support::{config, model, provider, registry, route};
 

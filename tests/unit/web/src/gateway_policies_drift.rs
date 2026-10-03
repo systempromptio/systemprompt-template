@@ -3,7 +3,7 @@
 //! the loader's inverse and always declares the sentinel.
 
 use chrono::{NaiveDate, Utc};
-use systemprompt::ai::{GatewayPolicyConfig, QuotaMode, SafetyMode};
+use systemprompt::gateway::{GatewayPolicyConfig, QuotaMode, SafetyMode};
 use systemprompt_web_admin::repositories::gateway_policies::declared::parse_declared_policies;
 use systemprompt_web_admin::repositories::gateway_policies::drift::compute_policy_drift;
 use systemprompt_web_admin::repositories::gateway_policies::export::render_policies_export;

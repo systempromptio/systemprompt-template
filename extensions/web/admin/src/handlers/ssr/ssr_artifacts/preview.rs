@@ -13,8 +13,9 @@ use axum::extract::{Path, State};
 use axum::http::{HeaderValue, header};
 use axum::response::{Html, IntoResponse, Response};
 use sqlx::PgPool;
-use systemprompt::extension::{FrameOptions, FrameOptionsOverride};
+use systemprompt::extension::FrameOptionsOverride;
 use systemprompt::identifiers::{ArtifactId, ContextId};
+use systemprompt::manifest::profile::FrameOptions;
 use systemprompt::mcp::services::ui_renderer::{RenderTarget, artifact_ui_resource};
 
 use crate::error::{AdminError, AdminHtmlResult};

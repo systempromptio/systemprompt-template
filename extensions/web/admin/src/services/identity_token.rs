@@ -10,7 +10,7 @@ use crate::error::{AdminError, AdminResult};
 use jsonwebtoken::{Algorithm, Header, encode};
 use serde::{Deserialize, Serialize};
 use systemprompt::identifiers::UserId;
-use systemprompt::models::ServicesConfig;
+use systemprompt::manifest::ServicesConfig;
 use systemprompt::models::mcp::McpServerType;
 
 pub const TOKEN_TTL_SECS: i64 = 300;

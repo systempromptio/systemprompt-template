@@ -229,14 +229,17 @@ fn a_dot_slash_services_path_resolves_against_the_profile_services_dir() {
 fn load_from_file_reports_a_file_that_cannot_be_read() {
     let temp = tempfile::tempdir().expect("tempdir");
 
-    let rendered = BlogConfigValidated::load_from_file(&temp.path().join("absent.yaml"))
-        .expect_err("a missing file is an error at this level")
-        .to_string();
-
-    assert!(
-        rendered.contains("Failed to read config file"),
-        "an unreadable file is distinguished from an unparseable one: {rendered}"
-    );
+    let errors = BlogConfigValidated::load_from_file(&temp.path().join("absent.yaml"))
+        .expect_err("a missing file is an error at this level");
+    assert_eq!(errors.errors.len(), 1);
+    assert_eq!(errors.errors[0].field, "_file");
+    let source = errors.errors[0]
+        .source
+        .as_ref()
+        .expect("the IO cause is preserved")
+        .downcast_ref::<std::io::Error>()
+        .expect("an unreadable file carries an IO cause, not a YAML cause");
+    assert_eq!(source.kind(), std::io::ErrorKind::NotFound);
 }
 
 #[test]
@@ -245,13 +248,18 @@ fn load_from_file_reports_yaml_that_does_not_parse() {
     let path = temp.path().join("content.yaml");
     fs::write(&path, "content_sources: [\n").expect("broken yaml");
 
-    let rendered = BlogConfigValidated::load_from_file(&path)
-        .expect_err("unbalanced YAML does not parse")
-        .to_string();
-
+    let errors =
+        BlogConfigValidated::load_from_file(&path).expect_err("unbalanced YAML does not parse");
+    assert_eq!(errors.errors.len(), 1);
+    assert_eq!(errors.errors[0].field, "_parse");
     assert!(
-        rendered.contains("Failed to parse config YAML"),
-        "the parse failure is named as such: {rendered}"
+        errors.errors[0]
+            .source
+            .as_ref()
+            .expect("the YAML cause is preserved")
+            .downcast_ref::<serde_yaml::Error>()
+            .is_some(),
+        "a parse failure carries a YAML cause, not an IO cause"
     );
 }
 

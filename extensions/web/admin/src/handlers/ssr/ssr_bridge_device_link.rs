@@ -172,7 +172,7 @@ fn render_code_page(
 // Why: `--gateway` is only worth printing when the server knows its own
 // external URL; a wrong one is worse than the CLI's configured default.
 fn gateway_suffix() -> String {
-    systemprompt::models::Config::get().map_or_else(
+    systemprompt::manifest::Config::get().map_or_else(
         |_| String::new(),
         |c| format!(" --gateway {}", c.api_external_url.trim_end_matches('/')),
     )

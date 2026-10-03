@@ -21,7 +21,7 @@
     reason = "test code: panics are the assertion mechanism"
 )]
 
-use systemprompt::models::services::{GatewayConfigSpec, ProviderModel, ProviderRegistry};
+use systemprompt::manifest::services::{GatewayConfigSpec, ProviderModel, ProviderRegistry};
 
 use crate::support::repo_root;
 

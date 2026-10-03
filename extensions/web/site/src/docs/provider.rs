@@ -159,7 +159,7 @@ impl PageDataProvider for DocsPageDataProvider {
         let item = ctx
             .content_item()
             .ok_or(DocsError::ContentItemRequired)
-            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(Box::new(e)))?;
 
         Ok(serde_json::to_value(DocsPageContext::from_content_item(
             item,

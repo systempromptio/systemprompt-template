@@ -11,7 +11,7 @@
 //! rendered page rather than a quiet one.
 
 use serde_json::Value;
-use systemprompt::models::services::WebConfig;
+use systemprompt::manifest::services::WebConfig;
 use systemprompt::template_provider::{ExtenderContext, TemplateDataExtender};
 use systemprompt_web_site::extenders::ReleaseVersionExtender;
 
@@ -52,7 +52,7 @@ fn extend(mut data: Value) -> Value {
     // config, so these values exercise it fully.
     let config = Default::default();
     let web = web_config();
-    let erased = ();
+    let erased = systemprompt::traits::Dependencies::new();
     let ctx = ExtenderContext::builder(&item, &items, &config, &web, &erased).build();
 
     tokio::runtime::Builder::new_current_thread()

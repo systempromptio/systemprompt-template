@@ -104,15 +104,6 @@ impl HistoryWindow {
             .collect()
     }
 
-    // Why: the export dialog has no "all time" — its retained contract tops
-    // out at a year — so an unbounded page opens the dialog on its widest.
-    pub(super) fn export_pairs(&self) -> Vec<(&'static str, String)> {
-        match self {
-            Self::All => vec![("days", "365".to_owned())],
-            Self::Days(_) | Self::Custom(_) => self.pairs(),
-        }
-    }
-
     pub(super) fn tabs(&self, prefix: &str) -> Vec<TabLinkView> {
         let active = match self {
             Self::Days(days) => Some(*days),

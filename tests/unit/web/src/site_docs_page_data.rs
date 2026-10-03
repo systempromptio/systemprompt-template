@@ -11,7 +11,7 @@
 //! doc and a silently blank one.
 
 use systemprompt::extension::prelude::{PageContext, PageDataProvider};
-use systemprompt::models::services::WebConfig;
+use systemprompt::manifest::services::WebConfig;
 use systemprompt_web_site::docs::DocsPageDataProvider;
 
 
@@ -32,16 +32,16 @@ fn block_on<T>(future: impl Future<Output = Result<T, systemprompt::traits::Prov
 // JSON: the provider's contract is a JSON template context
 fn page_data(item: &serde_json::Value) -> serde_json::Value {
     let config = web_config();
-    let erased = ();
-    let ctx = PageContext::new("docs-page", &config, &erased, &erased).with_content_item(item);
+    let erased = systemprompt::traits::Dependencies::new();
+    let ctx = PageContext::new("docs-page", &config, &erased).with_content_item(item);
     block_on(DocsPageDataProvider::new().provide_page_data(&ctx))
 }
 
 #[test]
 fn a_context_without_a_content_item_is_refused() {
     let config = web_config();
-    let erased = ();
-    let ctx = PageContext::new("docs-page", &config, &erased, &erased);
+    let erased = systemprompt::traits::Dependencies::new();
+    let ctx = PageContext::new("docs-page", &config, &erased);
 
     let error = tokio::runtime::Builder::new_current_thread()
         .build()

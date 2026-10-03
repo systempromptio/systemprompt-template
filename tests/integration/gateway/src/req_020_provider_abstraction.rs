@@ -9,10 +9,9 @@
 //! switching cost, demonstrated at the type level the loader enforces.
 
 use systemprompt::identifiers::ModelId;
-use systemprompt::models::services::{ModelGovernance, WireProtocol};
-use systemprompt::models::wire::canonical::{
-    CanonicalContent, CanonicalMessage, CanonicalRequest, Role,
-};
+use systemprompt::manifest::services::ModelGovernance;
+use systemprompt::wire::WireProtocol;
+use systemprompt::wire::canonical::{CanonicalContent, CanonicalMessage, CanonicalRequest, Role};
 
 use crate::support::{config, model, provider, registry, route};
 

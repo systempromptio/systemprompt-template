@@ -58,7 +58,7 @@ impl Provider {
             .unwrap_or_default()
     }
     pub fn callback(&self) -> AdminResult<String> {
-        let cfg = systemprompt::models::Config::get().map_err(AdminError::internal)?;
+        let cfg = systemprompt::manifest::Config::get().map_err(AdminError::internal)?;
         Ok(format!(
             "{}/api/public/connectors/{}/callback",
             cfg.api_external_url.trim_end_matches('/'),

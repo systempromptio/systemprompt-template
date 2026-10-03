@@ -7,7 +7,7 @@
 //! installed once from the development fixture, so the route's absence on a
 //! production or cloud profile is only ever a matter of this predicate.
 
-use systemprompt::models::profile::{Environment, ProfileType};
+use systemprompt::manifest::profile::{Environment, ProfileType};
 use systemprompt_web_admin::repositories::dev_login::hash_dev_login_code;
 use systemprompt_web_admin::{DEV_LOGIN_PATH, dev_login_allowed, dev_login_url};
 

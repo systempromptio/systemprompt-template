@@ -1,0 +1,73 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            pm.user_id AS \"user_id!: UserId\",\n            u.display_name AS \"display_name?\",\n            u.email AS \"email?\",\n            ARRAY_AGG(DISTINCT pm.source) AS \"sources!\",\n            COALESCE(\n                ARRAY_AGG(DISTINCT pm.source_ad_group)\n                    FILTER (WHERE pm.source_ad_group IS NOT NULL),\n                ARRAY[]::TEXT[]\n            ) AS \"source_ad_groups!\",\n            MIN(pm.valid_until) FILTER (WHERE pm.source = 'manual') AS \"valid_until?\"\n        FROM project_members pm\n        JOIN users u ON u.id = pm.user_id\n        WHERE pm.project_id = $1\n          AND pm.revoked_at IS NULL AND pm.valid_from <= CURRENT_TIMESTAMP\n          AND (pm.valid_until IS NULL OR pm.valid_until > CURRENT_TIMESTAMP)\n        GROUP BY pm.user_id, u.display_name, u.email\n        ORDER BY u.display_name NULLS LAST, pm.user_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_members",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "email?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "sources!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "source_ad_groups!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "valid_until?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "36a84aef428d0945646fc6baf8d8a4d6880e9d85b220a8f63d23c0573123efb1"
+}

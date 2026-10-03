@@ -53,10 +53,7 @@ async fn main() -> Result<()> {
     let ctx = AppContext::new()
         .await
         .context("Failed to initialize application context")?;
-    let pool = ctx
-        .db_pool()
-        .pool_arc()
-        .context("dev login needs a Postgres pool")?;
+    let pool = ctx.db_pool().pool();
 
     let Some(user_id) = find_active_user_id_by_login(&pool, &cli.user).await? else {
         bail!("no active user matches '{}'", cli.user);

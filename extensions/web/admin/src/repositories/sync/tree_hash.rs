@@ -12,7 +12,7 @@ use std::time::SystemTime;
 
 use sha2::{Digest, Sha256};
 use systemprompt::loader::bundle::pack::collect_files;
-use systemprompt::models::services::bundle::{
+use systemprompt::manifest::services::bundle::{
     BUNDLE_ALLOWED_DIRS, FileEntry, ServicesBundleManifest,
 };
 

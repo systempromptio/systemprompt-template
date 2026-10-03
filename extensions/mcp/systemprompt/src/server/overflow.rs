@@ -42,8 +42,10 @@ impl OverflowStore<'_> {
             .ingest
             .ingest(IngestRequest {
                 result: wire,
-                tool_name: "systemprompt".to_owned(),
-                server_name: Some(self.server_name.to_owned()),
+                tool_name: systemprompt::identifiers::McpToolName::new("systemprompt"),
+                server_name: Some(systemprompt::identifiers::McpServerId::new(
+                    self.server_name,
+                )),
                 ai_tool_call_id: None,
                 mcp_execution_id: None,
                 ctx: self.ctx.clone(),

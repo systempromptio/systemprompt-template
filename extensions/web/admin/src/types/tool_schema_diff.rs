@@ -13,7 +13,7 @@
 // JSON: tool schemas are protocol-boundary JSON Schema documents in three
 // provider wire shapes; the diff reads them as written.
 use serde_json::Value;
-use systemprompt::models::schema::gemini_declaration_violations;
+use systemprompt::wire::schema::gemini_declaration_violations;
 
 /// One tool in provider-neutral form.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT o.tools AS offered_tools, q.tools AS prepared_tools,\n                  p.request_body_sha256, p.prepared_body_sha256,\n                  p.request_bytes, p.request_truncated AS \"request_truncated!\"\n           FROM ai_request_payloads p\n           LEFT JOIN ai_tool_catalogs o ON o.sha256 = p.offered_tools_sha256\n           LEFT JOIN ai_tool_catalogs q ON q.sha256 = p.prepared_tools_sha256\n           WHERE p.ai_request_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "offered_tools",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "ai_tool_catalogs",
+            "name": "tools"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "prepared_tools",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "ai_tool_catalogs",
+            "name": "tools"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "request_body_sha256",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_payloads",
+            "name": "request_body_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "prepared_body_sha256",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_payloads",
+            "name": "prepared_body_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "request_bytes",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_request_payloads",
+            "name": "request_bytes"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "request_truncated!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "ai_request_payloads",
+            "name": "request_truncated"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "0a4c30619a976c3ea0e8294c004464ecf0216321f4e6cb5b4f5a4a3187273c74"
+}

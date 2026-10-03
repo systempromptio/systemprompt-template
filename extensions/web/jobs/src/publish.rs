@@ -17,7 +17,6 @@ use super::{
     LlmsTxtGenerationJob, RobotsTxtGenerationJob, SitemapGenerationJob,
 };
 use crate::error::JobError;
-use systemprompt_web_shared::error::MarketplaceError;
 
 #[doc(hidden)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -109,14 +108,7 @@ impl PublishPipelineJob {
         db_pool: &DbPool,
         stats: &mut PipelineStats,
     ) {
-        let content_repo = match systemprompt::content::ContentRepository::new(db_pool) {
-            Ok(repo) => repo,
-            Err(e) => {
-                tracing::error!(error = %e, "Content repository init failed");
-                stats.record_failure();
-                return;
-            },
-        };
+        let content_repo = systemprompt::content::ContentRepository::new(db_pool);
         match prerender_pages(Arc::clone(db_pool), content_repo, paths).await {
             Ok(results) => {
                 tracing::debug!(page_count = results.len(), "Page prerendering completed");
@@ -156,14 +148,7 @@ impl PublishPipelineJob {
     }
 
     async fn run_feed(&self, paths: &AppPaths, db_pool: &DbPool, stats: &mut PipelineStats) {
-        let content_repo = match systemprompt::content::ContentRepository::new(db_pool) {
-            Ok(repo) => repo,
-            Err(e) => {
-                tracing::error!(error = %e, "Content repository init failed");
-                stats.record_failure();
-                return;
-            },
-        };
+        let content_repo = systemprompt::content::ContentRepository::new(db_pool);
         match generate_feed(content_repo, paths).await {
             Ok(()) => {
                 tracing::debug!("RSS feed generation completed");
@@ -250,15 +235,8 @@ impl PublishPipelineJob {
     async fn execute_inner(&self, ctx: &JobContext) -> Result<JobResult, JobError> {
         let start_time = std::time::Instant::now();
 
-        let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-            "Database not available in job context".to_owned(),
-        ))?;
-        let paths = ctx
-            .app_paths::<Arc<AppPaths>>()
-            .ok_or(MarketplaceError::Internal(
-                "AppPaths not available in job context".to_owned(),
-            ))?
-            .as_ref();
+        let db_pool = ctx.get::<DbPool>()?;
+        let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
 
         tracing::info!(actor = %ctx.actor().user_id.as_str(), "Publish pipeline started");
 

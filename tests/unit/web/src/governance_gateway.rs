@@ -6,7 +6,7 @@
     reason = "test code: panics are the assertion mechanism and clones keep fixtures readable"
 )]
 
-use systemprompt::models::services::ProviderRegistry;
+use systemprompt::manifest::services::ProviderRegistry;
 use systemprompt_web_admin::repositories::config::gateway::{
     create_route, find_matching_route, find_matching_route_index, find_route_index_by_id,
     get_gateway_config, glob_match, reorder_routes, retain_client_facing, slugify_pattern,

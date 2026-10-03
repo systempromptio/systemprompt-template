@@ -7,7 +7,10 @@ impl From<systemprompt::system::managed::OrchestrationError> for AdminError {
         use systemprompt::system::managed::OrchestrationError;
         match error {
             OrchestrationError::Managed(error) => error.into(),
-            OrchestrationError::Source(message) => Self::Conflict(message),
+            error @ (OrchestrationError::CredentialUnresolved
+            | OrchestrationError::NotGitSource) => Self::Conflict(error.to_string()),
+            error @ (OrchestrationError::InventoryLoad(_)
+            | OrchestrationError::CredentialsUnavailable(_)) => Self::internal(error),
         }
     }
 }

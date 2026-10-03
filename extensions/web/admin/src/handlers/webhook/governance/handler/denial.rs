@@ -78,7 +78,7 @@ pub(super) fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
                 None,
             ),
             target: AuditTarget {
-                tool_name,
+                tool_name: systemprompt::identifiers::McpToolName::new(tool_name),
                 plugin_id,
                 tool_use_id: None,
             },

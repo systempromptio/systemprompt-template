@@ -24,10 +24,11 @@ fn config_and_other_render_differently() {
 
 #[test]
 fn missing_context_names_the_value_the_job_wanted() {
-    assert_eq!(
-        JobError::MissingContext("AppPaths").to_string(),
-        "Job context missing required value: AppPaths"
-    );
+    let missing = systemprompt::traits::Dependencies::new()
+        .get::<std::sync::Arc<systemprompt::config::AppPaths>>()
+        .unwrap_err();
+    let message = JobError::MissingContext(missing).to_string();
+    assert!(message.contains("AppPaths"), "{message}");
 }
 
 #[test]

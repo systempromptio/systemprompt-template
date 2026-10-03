@@ -69,7 +69,7 @@ fn create_tool(def: &ToolDef<'_>) -> Tool {
     tool.input_schema = Arc::new(input_obj);
     tool.output_schema = Some(Arc::new(output_obj));
     tool.meta = Some(MetaObject(tool_ui_meta(
-        def.server_name,
+        &systemprompt::identifiers::McpServerId::new(def.server_name),
         &default_tool_visibility(),
     )));
     tool
@@ -112,12 +112,33 @@ pub fn list_tools() -> Vec<Tool> {
     };
     let cli = &location;
     let token = "";
-    tools.push(crate::reports::ReportHandler { cli, token }.tool_definition(SERVER_NAME));
-    tools.push(crate::typed::UserActivityHandler { cli, token }.tool_definition(SERVER_NAME));
-    tools.push(crate::typed::ConversationListHandler { cli, token }.tool_definition(SERVER_NAME));
-    tools.push(crate::typed::UsageByUserHandler { cli, token }.tool_definition(SERVER_NAME));
-    tools.push(crate::typed::RequestLogHandler { cli, token }.tool_definition(SERVER_NAME));
-    tools.push(crate::typed::ConversationAuditHandler { cli, token }.tool_definition(SERVER_NAME));
-    tools.push(crate::typed::UsersHandler { cli, token }.tool_definition(SERVER_NAME));
+    tools.push(
+        crate::reports::ReportHandler { cli, token }
+            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
+    );
+    tools.push(
+        crate::typed::UserActivityHandler { cli, token }
+            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
+    );
+    tools.push(
+        crate::typed::ConversationListHandler { cli, token }
+            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
+    );
+    tools.push(
+        crate::typed::UsageByUserHandler { cli, token }
+            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
+    );
+    tools.push(
+        crate::typed::RequestLogHandler { cli, token }
+            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
+    );
+    tools.push(
+        crate::typed::ConversationAuditHandler { cli, token }
+            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
+    );
+    tools.push(
+        crate::typed::UsersHandler { cli, token }
+            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
+    );
     tools
 }

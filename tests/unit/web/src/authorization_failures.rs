@@ -18,7 +18,7 @@ async fn authz_database_failure_returns_http_200_with_an_explicit_deny() {
             .unwrap(),
     );
     let database = Arc::new(Database::from_pools(pool.clone(), Some(pool.clone())));
-    let users = UserService::new(Arc::new(UserRepository::new(&database).unwrap()));
+    let users = UserService::new(Arc::new(UserRepository::new(&database)));
     let repositories = AnalyticsRepositories::new(&database).unwrap();
     let analytics = AnalyticsService::new(None, None, &repositories);
     let sessions = Arc::new(SessionCreationService::new(

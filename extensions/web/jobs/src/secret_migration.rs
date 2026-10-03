@@ -43,9 +43,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         return Ok(JobResult::success().with_stats(0, 0).with_duration(0));
     };
 
-    let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-        "Database not available in job context".to_owned(),
-    ))?;
+    let db = ctx.get::<DbPool>()?;
 
     let pool = db.pool();
 

@@ -12,7 +12,7 @@
 //! *Overwrite from code* deletes it exactly as the boot seed would.
 
 use serde::Serialize;
-use systemprompt::ai::{GatewayPolicyEntry, GatewayPolicySpec};
+use systemprompt::gateway::{GatewayPolicyEntry, GatewayPolicySpec};
 
 use super::declared::DeclaredPolicies;
 use super::month_window::normalise_spec;

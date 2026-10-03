@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE users SET roles = (\n            SELECT COALESCE(ARRAY_AGG(DISTINCT r ORDER BY r), ARRAY[]::TEXT[])\n            FROM (\n                SELECT UNNEST($2::TEXT[]) AS r\n                UNION\n                SELECT role FROM user_manual_roles\n                 WHERE user_id = $1 AND valid_from <= CURRENT_TIMESTAMP\n                   AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)\n            ) all_roles\n        )\n        WHERE id = $1\n        RETURNING roles AS \"roles!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "roles!",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b8096c38ab328c7673c230ece494bb8f16270456229855b8e2d49704c1535838"
+}

@@ -257,9 +257,9 @@ workspace = true
 # sibling at bridge/CORE_REF. The version requirements above must track
 # whatever the patch points at: a patch whose version does not satisfy them is
 # silently ignored and the build falls back to the last published release.
-# Core v0.62.0 is published; this retained metadata documents the override set
-# used by the next unreleased-core cycle.
-[workspace.metadata.unreleased-core-patch]
+# Core 0.62.0 next builds use this active, pinned local override set.
+# ACTIVE: core 0.62.0 is unreleased
+[patch.crates-io]
 systemprompt = { path = "../systemprompt-core/systemprompt" }
 systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }
 systemprompt-traits = { path = "../systemprompt-core/crates/shared/traits" }
@@ -292,8 +292,8 @@ systemprompt-api = { path = "../systemprompt-core/crates/entry/api" }
 systemprompt-cli = { path = "../systemprompt-core/crates/entry/cli" }
 systemprompt-slack = { path = "../systemprompt-core/crates/domain/slack" }
 systemprompt-teams = { path = "../systemprompt-core/crates/domain/teams" }
-systemprompt-evaluation = { path = "../systemprompt-core/crates/domain/evaluation" }
-
-# Published macro dependency compatibility fix; see vendor/README.md.
-[patch.crates-io.proc-macro-error2]
-path = "vendor/proc-macro-error2"
+systemprompt-wire = { path = "../systemprompt-core/crates/shared/wire" }
+systemprompt-manifest = { path = "../systemprompt-core/crates/shared/manifest" }
+systemprompt-storage = { path = "../systemprompt-core/crates/infra/storage" }
+systemprompt-oauth-issuance = { path = "../systemprompt-core/crates/app/oauth-issuance" }
+systemprompt-gateway = { path = "../systemprompt-core/crates/app/gateway" }

@@ -10,13 +10,8 @@
 
 use systemprompt_security::policy::GovernanceEngine;
 
-pub(crate) fn engine()
--> Result<GovernanceEngine, systemprompt_security::policy::GovernanceEngineError> {
-    let profile = systemprompt::config::ProfileBootstrap::get().map_err(|error| {
-        systemprompt_security::policy::GovernanceEngineError::ConfigRejected {
-            path: "profile".to_owned(),
-            message: error.to_string(),
-        }
-    })?;
+pub(crate) fn engine() -> crate::error::AdminResult<GovernanceEngine> {
+    let profile = systemprompt::config::ProfileBootstrap::get()?;
     GovernanceEngine::from_services_root(std::path::Path::new(&profile.paths.services))
+        .map_err(crate::error::AdminError::internal)
 }

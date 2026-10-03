@@ -121,9 +121,7 @@ impl Job for ContentAnalyticsAggregationJob {
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
         tracing::info!(actor = %ctx.actor().user_id.as_str(), "Content analytics aggregation invoked");
 
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(JobError::MissingContext("DbPool"))?;
+        let db = ctx.get::<DbPool>()?;
 
         let pool = db.write_pool();
 

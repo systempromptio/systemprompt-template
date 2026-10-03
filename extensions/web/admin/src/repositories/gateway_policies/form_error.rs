@@ -38,5 +38,5 @@ pub enum FormError {
     #[error("'{scanner}' is not a scanner on this instance")]
     UnknownScanner { scanner: String },
     #[error("{0}")]
-    Invalid(#[source] systemprompt::ai::error::RepositoryError),
+    Invalid(#[source] systemprompt::gateway::GatewayPolicyError),
 }

@@ -9,15 +9,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use systemprompt::database::Database;
-use systemprompt::identifiers::{MarketplaceId, UserId};
+use systemprompt::identifiers::{LibraryArtifactId, MarketplaceId, PluginId, UserId};
+use systemprompt::manifest::services::MarketplaceAccess;
 use systemprompt::marketplace::{
     MarketplaceCandidate, MarketplaceFilter, MarketplaceFilterError, MarketplaceMembership,
 };
-use systemprompt::models::bridge::ids::{LibraryArtifactId, PluginId};
 use systemprompt::models::bridge::manifest::{
     AgentEntry, ArtifactEntry, HookEntry, ManagedMcpServer, PluginEntry, SkillEntry,
 };
-use systemprompt::models::services::MarketplaceAccess;
 use systemprompt_security::authz::{
     Access, AccessControlRepository, EntityKind, RuleType, UpsertRuleParams,
 };
@@ -146,10 +145,11 @@ async fn a_user_with_no_row_is_rejected_rather_than_filtered_to_nothing() {
         .await
         .expect_err("unknown user must not resolve");
 
-    assert!(
-        matches!(err, MarketplaceFilterError::UnknownUser(_)),
-        "expected UnknownUser, got {err:?}"
-    );
+    let MarketplaceFilterError::Backend(source) = err;
+    assert!(matches!(
+        source.downcast_ref::<systemprompt::traits::RepositoryError>(),
+        Some(systemprompt::traits::RepositoryError::NotFound { entity: "user", .. })
+    ));
 
     h.db.cleanup().await;
 }

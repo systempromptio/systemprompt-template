@@ -128,9 +128,7 @@ impl Job for AccessExpiryJob {
         &self,
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(JobError::MissingContext("DbPool"))?;
+        let db = ctx.get::<DbPool>()?;
         let pool = db.write_pool();
 
         Ok(Self::execute_with_pool(&pool).await?)

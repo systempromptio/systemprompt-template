@@ -1,0 +1,146 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id AS \"id!: ScheduledJobId\",\n            job_name AS \"job_name!: JobName\",\n            schedule,\n            enabled,\n            last_run,\n            next_run,\n            last_status,\n            last_error,\n            run_count,\n            created_at,\n            updated_at\n        FROM scheduled_jobs\n        ORDER BY job_name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: ScheduledJobId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "job_name!: JobName",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "job_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "schedule",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "schedule"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "enabled",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "enabled"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "last_run",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "last_run"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "next_run",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "next_run"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "last_status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "last_status"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "last_error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "last_error"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "run_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "run_count"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0f3d0c3c75ecd53186bd75d9c854774052a3e2c640a6dbe9fc05b3161745e4f4"
+}

@@ -12,8 +12,8 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use serde_yaml::Value;
+use systemprompt::manifest::services::split_frontmatter;
 use systemprompt::marketplace::{ImportOptions, import_anthropic_tree};
-use systemprompt::models::services::split_frontmatter;
 
 use crate::ExportReport;
 

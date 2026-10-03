@@ -49,9 +49,10 @@ impl ContentDataProvider for DocsContentDataProvider {
         item: &mut serde_json::Value,
     ) -> Result<(), systemprompt::traits::ProviderError> {
         let db = ctx
-            .db_pool::<Arc<Database>>()
+            .get::<Arc<Database>>()
+            .ok()
             .ok_or(DocsError::NoDatabaseInContext)
-            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(Box::new(e)))?;
 
         let pool = db.pool();
 
@@ -64,14 +65,14 @@ impl ContentDataProvider for DocsContentDataProvider {
                 sqlx::Error::RowNotFound => DocsError::ContentNotFound(content_id.to_owned()),
                 other => DocsError::Database(other),
             })
-            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(Box::new(e)))?;
 
         let after_reading_this = serde_json::to_value(&row.after_reading_this.0)
-            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(Box::new(e)))?;
         let related_playbooks = serde_json::to_value(&row.related_playbooks.0)
-            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(Box::new(e)))?;
         let related_code = serde_json::to_value(&row.related_code.0)
-            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(Box::new(e)))?;
 
         if let Some(obj) = item.as_object_mut() {
             obj.insert("after_reading_this".to_owned(), after_reading_this);
@@ -83,7 +84,7 @@ impl ContentDataProvider for DocsContentDataProvider {
         if kind == KIND_DOCS_INDEX || kind == KIND_DOCS_LIST {
             let children = self.get_children(&pool, &row.source_id, &row.slug).await;
             let children_value = serde_json::to_value(children)
-                .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+                .map_err(|e| systemprompt::traits::ProviderError::Internal(Box::new(e)))?;
             if let Some(obj) = item.as_object_mut() {
                 obj.insert("children".to_owned(), children_value);
             }

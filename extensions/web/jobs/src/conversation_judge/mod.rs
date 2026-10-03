@@ -239,12 +239,8 @@ impl Job for ConversationJudgeJob {
         &self,
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(JobError::MissingContext("DbPool"))?;
-        let app = ctx
-            .app_context::<Arc<AppContext>>()
-            .ok_or(JobError::MissingContext("AppContext"))?;
+        let db = ctx.get::<DbPool>()?;
+        let app = ctx.get::<Arc<AppContext>>()?;
         let params = JudgeParams::from_context(ctx)?;
         let automatic = ProfileBootstrap::get()
             .map_err(JobError::from)?

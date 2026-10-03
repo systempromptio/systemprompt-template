@@ -4,7 +4,7 @@
 //! whose digests let two versions diff without re-reading either tree.
 
 use systemprompt::identifiers::{MarketplaceId, PluginId, SkillId};
-use systemprompt::models::services::bundle::FileEntry;
+use systemprompt::manifest::services::bundle::FileEntry;
 use systemprompt_web_admin::repositories::sync::marketplace_hash::{
     MarketplaceSpec, MarketplaceVersion, PluginSpec, SourceOf, hash_marketplaces, skill_key,
 };

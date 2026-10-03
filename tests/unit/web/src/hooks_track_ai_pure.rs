@@ -283,7 +283,10 @@ fn the_request_context_carries_the_session_and_the_hook_summary_agent() {
     assert_eq!(ctx.request.session_id.as_str(), "sess-1");
     assert_eq!(ctx.execution.agent_name.as_str(), "hook-summary");
     assert!(!ctx.execution.trace_id.as_str().is_empty());
-    assert_eq!(ctx.auth.auth_token.as_str(), "jwt-token");
+    assert_eq!(
+        ctx.auth.auth_token.as_ref().expect("auth token").as_str(),
+        "jwt-token"
+    );
     assert_eq!(
         ctx.user.as_ref().map(|u| u.id.to_string()),
         Some("11111111-1111-4111-8111-111111111111".to_owned())
@@ -319,12 +322,9 @@ fn every_summary_of_one_session_shares_a_context_and_two_sessions_never_collide(
 }
 
 #[test]
-fn a_non_uuid_user_id_yields_the_nil_uuid_rather_than_failing_the_analysis() {
+fn a_non_uuid_user_id_is_preserved_for_the_analysis() {
     let ctx = build_request_context(&UserId::new("legacy-user"), &SessionId::new("s"), "jwt");
     let user = ctx.user.as_ref().expect("user is attached");
-    assert!(
-        user.id.is_nil(),
-        "an unparseable id must degrade, not panic"
-    );
+    assert_eq!(user.id.as_str(), "legacy-user");
     assert_eq!(user.username, "legacy-user");
 }

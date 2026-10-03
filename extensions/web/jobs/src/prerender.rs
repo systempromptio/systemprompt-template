@@ -42,17 +42,19 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     tracing::info!("Content prerender started");
 
-    let db_pool = ctx
-        .db_pool::<DbPool>()
-        .ok_or(JobError::MissingContext("DbPool"))?;
-    let paths = ctx
-        .app_paths::<Arc<AppPaths>>()
-        .ok_or(JobError::MissingContext("AppPaths"))?
-        .as_ref();
+    let db_pool = ctx.get::<DbPool>()?;
+    let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
 
-    let content_repo = systemprompt::content::ContentRepository::new(db_pool)?;
+    let content_repo = systemprompt::content::ContentRepository::new(db_pool);
 
-    prerender_content(DbPool::clone(db_pool), content_repo, paths).await?;
+    let content_analytics = systemprompt::analytics::ContentAnalyticsRepository::new(db_pool);
+    prerender_content(
+        DbPool::clone(db_pool),
+        content_repo,
+        content_analytics,
+        paths,
+    )
+    .await?;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 

@@ -1,0 +1,416 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- One artifact with its stored body, its execution, the ledger row of the\n-- same call, the one artifact rule's verdict on it and the decision keyed\n-- to that call.\nSELECT\n    a.artifact_id AS \"artifact_id!: ArtifactId\",\n    a.mcp_execution_id AS \"mcp_execution_id!: McpExecutionId\",\n    a.ai_tool_call_id,\n    t.request_id,\n    a.user_id AS \"user_id?: UserId\",\n    COALESCE(u.display_name, u.full_name, u.name, u.email) AS user_label,\n    a.session_id AS \"session_id?: SessionId\",\n    a.context_id AS \"context_id?: ContextId\",\n    a.trace_id,\n    a.tool_name,\n    a.server_name AS \"server_name!\",\n    a.artifact_type AS \"artifact_type!\",\n    a.title AS artifact_title,\n    a.source AS \"source!\",\n    a.last_seen_source,\n    t.correlation,\n    t.client_kind,\n    a.is_structured AS \"is_structured!\",\n    a.has_ui_resource AS \"has_ui_resource!\",\n    a.is_error AS \"is_error!\",\n    a.payload_bytes,\n    a.payload_sha256::text AS payload_sha256,\n    a.secret_redactions AS \"secret_redactions!\",\n    p.body AS \"body?: Json<serde_json::Value>\",\n    x.status AS execution_status,\n    x.execution_time_ms,\n    x.error_message,\n    t.intended_at,\n    t.artifact_kind,\n    t.input_summary,\n    COALESCE(t.is_builtin, false) AS \"is_builtin!\",\n    g.id AS governance_decision_id,\n    g.decision AS governance_decision,\n    (SELECT s.skill FROM analysis_skill_events s\n      WHERE s.user_id = a.user_id AND s.session_id = COALESCE(x.trace_id, a.session_id)\n        AND s.invoked_at <= a.created_at\n      ORDER BY s.invoked_at DESC LIMIT 1) AS skill,\n    a.created_at AS \"created_at!\"\nFROM mcp_artifacts a\nLEFT JOIN tool_activity t ON t.artifact_id = a.artifact_id\nLEFT JOIN mcp_tool_executions x ON x.mcp_execution_id = a.mcp_execution_id\nLEFT JOIN artifact_payloads p ON p.sha256 = a.payload_sha256\nLEFT JOIN users u ON u.id = a.user_id\nLEFT JOIN LATERAL (\n    SELECT d.id, d.decision FROM governance_decisions d\n    WHERE d.tool_use_id IS NOT NULL AND d.tool_use_id = a.ai_tool_call_id\n    ORDER BY d.created_at DESC LIMIT 1\n) g ON TRUE\nWHERE a.artifact_id = $1\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "artifact_id!: ArtifactId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "artifact_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "mcp_execution_id!: McpExecutionId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "mcp_execution_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "ai_tool_call_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "ai_tool_call_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "request_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "request_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "user_id?: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "user_label",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "session_id?: SessionId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "context_id?: ContextId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "trace_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "tool_name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "server_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "server_name"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "artifact_type!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "artifact_type"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "artifact_title",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "source!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "last_seen_source",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "last_seen_source"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "correlation",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "correlation"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "client_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "client_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "is_structured!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "is_structured"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "has_ui_resource!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "has_ui_resource"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "is_error!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "is_error"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "payload_bytes",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "payload_bytes"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "payload_sha256",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 22,
+        "name": "secret_redactions!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "secret_redactions"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "body?: Json<serde_json::Value>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "artifact_payloads",
+            "name": "body"
+          }
+        }
+      },
+      {
+        "ordinal": 24,
+        "name": "execution_status",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 25,
+        "name": "execution_time_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "execution_time_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 26,
+        "name": "error_message",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "error_message"
+          }
+        }
+      },
+      {
+        "ordinal": 27,
+        "name": "intended_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "intended_at"
+          }
+        }
+      },
+      {
+        "ordinal": 28,
+        "name": "artifact_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "artifact_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 29,
+        "name": "input_summary",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_activity",
+            "name": "input_summary"
+          }
+        }
+      },
+      {
+        "ordinal": 30,
+        "name": "is_builtin!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 31,
+        "name": "governance_decision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 32,
+        "name": "governance_decision",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "decision"
+          }
+        }
+      },
+      {
+        "ordinal": 33,
+        "name": "skill",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 34,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      null,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      null,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      true,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "1b4074e2ecae1912bf3316bbc37d44d8d98abfb719014000c5418c9711dcba50"
+}

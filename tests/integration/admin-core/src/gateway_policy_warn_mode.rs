@@ -14,13 +14,13 @@
 use std::sync::Arc;
 
 use systemprompt::ai::repository::{AiGatewayPolicyRepository, AiQuotaBucketRepository};
-use systemprompt::ai::{
+use systemprompt::database::{Database, DbPool};
+use systemprompt::gateway::policies::PolicyResolver;
+use systemprompt::gateway::quota::precheck_and_reserve;
+use systemprompt::gateway::{
     GatewayPolicyConfig, GatewayPolicyIngestOptions, GatewayPolicyIngestionService, QuotaMode,
     QuotaWindow, SafetyMode,
 };
-use systemprompt::api::services::gateway::policy::PolicyResolver;
-use systemprompt::api::services::gateway::quota::precheck_and_reserve;
-use systemprompt::database::{Database, DbPool};
 use systemprompt::identifiers::UserId;
 
 use crate::fixtures::unique;
@@ -42,7 +42,7 @@ fn db_pool(db: &TempDb) -> DbPool {
 
 async fn ingest_shipped(db: &TempDb) -> DbPool {
     let pool = db_pool(db);
-    let repo = AiGatewayPolicyRepository::new(&pool).expect("policy repository");
+    let repo = AiGatewayPolicyRepository::new(&pool);
     let report = GatewayPolicyIngestionService::from_repository(repo)
         .ingest_config(
             &shipped_policies(),
@@ -90,9 +90,9 @@ async fn the_resolver_keeps_both_warn_switches_after_ingestion() {
     };
     let pool = ingest_shipped(&db).await;
 
-    let repo = AiGatewayPolicyRepository::new(&pool).expect("policy repository");
+    let repo = AiGatewayPolicyRepository::new(&pool);
     let resolved = PolicyResolver::from_repository(repo)
-        .resolve(systemprompt::models::services::QuotaFaultMode::default())
+        .resolve(systemprompt::manifest::services::QuotaFaultMode::default())
         .await
         .expect("policy row resolves");
 
@@ -123,9 +123,9 @@ async fn an_exhausted_window_is_still_detected_so_the_warn_carries_a_reason() {
         return;
     };
     let pool = ingest_shipped(&db).await;
-    let repo = AiGatewayPolicyRepository::new(&pool).expect("policy repository");
+    let repo = AiGatewayPolicyRepository::new(&pool);
     let resolved = PolicyResolver::from_repository(repo)
-        .resolve(systemprompt::models::services::QuotaFaultMode::default())
+        .resolve(systemprompt::manifest::services::QuotaFaultMode::default())
         .await
         .expect("policy row resolves");
     assert!(resolved.quota_mode.is_warn());
@@ -144,7 +144,7 @@ async fn an_exhausted_window_is_still_detected_so_the_warn_carries_a_reason() {
         max_requests: Some(1),
         ..user_window.clone()
     };
-    let buckets = AiQuotaBucketRepository::new(&pool).expect("bucket repository");
+    let buckets = AiQuotaBucketRepository::new(&pool);
     let user = UserId::new(unique("quota-user"));
 
     let first = precheck_and_reserve(
@@ -152,7 +152,7 @@ async fn an_exhausted_window_is_still_detected_so_the_warn_carries_a_reason() {
         &buckets,
         &user,
         std::slice::from_ref(&tiny),
-        systemprompt::models::services::QuotaFaultMode::default(),
+        systemprompt::manifest::services::QuotaFaultMode::default(),
     )
     .await
     .expect("first reservation");
@@ -163,7 +163,7 @@ async fn an_exhausted_window_is_still_detected_so_the_warn_carries_a_reason() {
         &buckets,
         &user,
         std::slice::from_ref(&tiny),
-        systemprompt::models::services::QuotaFaultMode::default(),
+        systemprompt::manifest::services::QuotaFaultMode::default(),
     )
     .await
     .expect("second reservation")

@@ -9,7 +9,12 @@ runs:
     - name: Read pinned core ref
       id: core
       shell: bash
-      run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
+      run: |
+        set -euo pipefail
+        test -f bridge/CORE_REF
+        ref=$(tr -d '[:space:]' < bridge/CORE_REF)
+        test -n "$ref"
+        echo "ref=$ref" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v7
       with:
         repository: systempromptio/systemprompt-core
@@ -22,6 +27,7 @@ runs:
         echo "core ${{ steps.core.outputs.ref }} at .vendor/systemprompt-core (sibling link in place)"
         if grep -qE '^\[patch\.crates-io\]' Cargo.toml; then
           echo "[patch.crates-io] active — server crates resolve from the ../systemprompt-core link"
+          bash scripts/check-core-resolution.sh
         else
           echo "[patch.crates-io] commented — server crates resolve from crates.io; only bridge/ uses the checkout"
         fi

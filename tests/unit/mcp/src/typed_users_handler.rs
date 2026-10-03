@@ -15,6 +15,7 @@ fn context() -> RequestContext {
         TraceId::new("typed-users-trace"),
         ContextId::try_new("00000000-0000-4000-8000-00000000a11d").expect("context"),
         AgentName::try_new("typed-users-agent").expect("agent"),
+        systemprompt::identifiers::Actor::anonymous(systemprompt::identifiers::UserId::generate()),
     )
 }
 

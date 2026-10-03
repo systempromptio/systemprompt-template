@@ -29,9 +29,19 @@ fn db_pool(pool: &Arc<PgPool>) -> systemprompt::database::DbPool {
 }
 
 fn executor(db_pool: &systemprompt::database::DbPool, server_name: &str) -> McpToolExecutor {
-    let usage = Arc::new(ToolUsageRepository::new(db_pool).expect("tool usage repository"));
-    let ingest = Arc::new(ArtifactIngest::from_db(db_pool, None).expect("artifact ingest"));
-    McpToolExecutor::new(usage, ingest, server_name)
+    let usage = Arc::new(ToolUsageRepository::new(db_pool));
+    let ingest = Arc::new(ArtifactIngest::new(
+        systemprompt::mcp::repository::ArtifactIngestRepositories::new(db_pool),
+        None,
+    ));
+    McpToolExecutor::new(
+        usage,
+        Arc::new(systemprompt::ai::repository::AiRequestRepository::new(
+            db_pool,
+        )),
+        ingest,
+        systemprompt::identifiers::McpServerId::new(server_name),
+    )
 }
 
 fn request_context() -> systemprompt::models::execution::context::RequestContext {
@@ -41,6 +51,7 @@ fn request_context() -> systemprompt::models::execution::context::RequestContext
         ContextId::try_new("00000000-0000-4000-8000-00000000d15b")
             .expect("valid fixture identifier"),
         AgentName::try_new("dispatch-agent").expect("valid fixture agent name"),
+        systemprompt::identifiers::Actor::anonymous(systemprompt::identifiers::UserId::generate()),
     )
 }
 
@@ -66,7 +77,10 @@ async fn an_unknown_systemprompt_tool_points_the_caller_at_the_cli_skill() {
     };
     let db_pool = db_pool(&db.pool);
     let executor = executor(&db_pool, "systemprompt");
-    let ingest = Arc::new(ArtifactIngest::from_db(&db_pool, None).expect("artifact ingest"));
+    let ingest = Arc::new(ArtifactIngest::new(
+        systemprompt::mcp::repository::ArtifactIngestRepositories::new(&db_pool),
+        None,
+    ));
 
     let request = call("not_a_tool", serde_json::json!({}));
     let profile = client();

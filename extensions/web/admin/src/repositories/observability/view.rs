@@ -8,7 +8,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use systemprompt::models::profile::{OtlpExportConfig, OtlpSignal};
+use systemprompt::manifest::profile::{OtlpExportConfig, OtlpSignal};
 use systemprompt::scheduler::OtlpExportState;
 
 // Why: a lag under the job's own cadence is the exporter idling behind the

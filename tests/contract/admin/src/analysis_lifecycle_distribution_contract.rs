@@ -116,7 +116,7 @@ async fn marketplace_distribution_shows_only_its_delivered_managed_skill() {
     let credentials = principal::provision(&db.pool).await;
     let owner = credentials.admin_user_id.clone();
     let app = App::new(&db.pool, credentials);
-    let repository = ManagedRepository::new(&db.db_pool()).expect("managed repository");
+    let repository = ManagedRepository::new(&db.db_pool());
     let in_scope = seed::unique("distribution-in-scope");
     let out_of_scope = seed::unique("distribution-out-of-scope");
     let publication = publish_skill(&repository, &owner, &in_scope).await;

@@ -72,12 +72,12 @@ impl ReportModel {
 
 fn request_context(actor: Actor) -> AdminResult<RequestContext> {
     Ok(RequestContext::new(
-        SessionId::new(""),
+        SessionId::generate(),
         TraceId::new(uuid::Uuid::new_v4().to_string()),
         ContextId::from_uuid(uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_OID, CONTEXT_SEED)),
         AgentName::try_new(AGENT_NAME).map_err(AdminError::internal)?,
-    )
-    .with_actor(actor))
+        actor,
+    ))
 }
 
 fn digest_text(row: &AnalysisReportRow) -> String {

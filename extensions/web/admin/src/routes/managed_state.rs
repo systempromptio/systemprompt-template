@@ -10,7 +10,7 @@ pub enum StateError {
     #[error(transparent)]
     Managed(#[from] systemprompt::marketplace::managed::ManagedError),
     #[error(transparent)]
-    Ai(#[from] systemprompt::ai::error::RepositoryError),
+    Ai(#[from] systemprompt::traits::RepositoryError),
     #[error(transparent)]
     Users(#[from] systemprompt::users::UserError),
 }
@@ -33,7 +33,7 @@ impl ManagedState {
         Ok(Self {
             owner,
             otlp_export: systemprompt::scheduler::OtlpExportStateRepository::new(pool),
-            repository: ManagedRepository::new(db)?,
+            repository: ManagedRepository::new(db),
         })
     }
 }

@@ -6,7 +6,7 @@
 use crate::error::{AdminError, AdminResult};
 use axum::http::HeaderMap;
 use systemprompt::identifiers::{PluginId, UserId};
-use systemprompt::models::Config;
+use systemprompt::manifest::Config;
 use systemprompt_security::HookTokenValidator;
 
 pub(super) fn extract_and_validate_jwt(

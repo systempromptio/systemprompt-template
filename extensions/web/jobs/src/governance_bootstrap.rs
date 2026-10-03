@@ -76,9 +76,7 @@ impl Job for GovernanceBootstrapJob {
 async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let start = std::time::Instant::now();
 
-    let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-        "Database not available in job context".to_owned(),
-    ))?;
+    let db_pool = ctx.get::<DbPool>()?;
     // Why: the composed root — the same tree the sync page reads — so a kit's
     // marketplace validates once its bundle is active, and boot and page can
     // never disagree about what the declaration says.
@@ -246,8 +244,7 @@ async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, 
     }
 
     let source = format!("services:{}", gateway_path.display());
-    let repo = systemprompt::security::authz::AccessControlRepository::new(db_pool)
-        .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+    let repo = systemprompt::security::authz::AccessControlRepository::new(db_pool);
     let report =
         systemprompt::security::authz::reconcile_gateway_entities_exact(&repo, &id_refs, &source)
             .await

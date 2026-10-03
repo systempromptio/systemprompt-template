@@ -7,7 +7,7 @@ use axum::extract::{Extension, Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
-use systemprompt::models::Config;
+use systemprompt::manifest::Config;
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::validate_jwt_token;
 

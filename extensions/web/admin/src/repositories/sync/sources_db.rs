@@ -14,7 +14,7 @@ use systemprompt::config::ProfileBootstrap;
 use systemprompt::identifiers::MarketplaceId;
 use systemprompt::loader::ConfigLoader;
 use systemprompt::loader::services_root::ServicesRootBootstrap;
-use systemprompt::models::services::ServicesConfig;
+use systemprompt::manifest::services::ServicesConfig;
 use systemprompt_web_shared::error::MarketplaceError;
 
 use super::marketplace_hash::compute_marketplace_versions;

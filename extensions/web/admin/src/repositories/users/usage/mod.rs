@@ -234,7 +234,7 @@ pub async fn get_ai_request_summary(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<UserGatewayUsage, sqlx::Error> {
-    let legacy = ContextId::legacy();
+    let legacy = ContextId::legacy_context_row();
     let row = sqlx::query!(
         r#"SELECT
             COUNT(*)::bigint AS "requests!",

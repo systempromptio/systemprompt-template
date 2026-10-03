@@ -8,7 +8,7 @@
 //! when they merge the result.
 
 use chrono::{DateTime, Utc};
-use systemprompt::ai::{GatewayPolicyConfig, GatewayPolicyEntry};
+use systemprompt::gateway::{GatewayPolicyConfig, GatewayPolicyEntry};
 
 use super::month_window::{MONTH_WINDOW_SECONDS, normalise_spec};
 use super::rows::PolicyRow;

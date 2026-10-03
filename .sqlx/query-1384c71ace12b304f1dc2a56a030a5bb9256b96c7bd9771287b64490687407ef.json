@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT role FROM user_manual_roles\n         WHERE user_id = $1 AND valid_from <= CURRENT_TIMESTAMP\n           AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)\n         ORDER BY role",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_manual_roles",
+            "name": "role"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1384c71ace12b304f1dc2a56a030a5bb9256b96c7bd9771287b64490687407ef"
+}

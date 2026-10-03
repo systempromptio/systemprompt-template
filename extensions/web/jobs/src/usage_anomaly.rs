@@ -227,9 +227,7 @@ impl Job for UsageAnomalyJob {
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
         tracing::info!(actor = %ctx.actor().user_id.as_str(), "Usage anomaly sweep invoked");
 
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(JobError::MissingContext("DbPool"))?;
+        let db = ctx.get::<DbPool>()?;
         let pool = db.write_pool();
 
         Ok(Self::execute_with_pool(&pool).await?)

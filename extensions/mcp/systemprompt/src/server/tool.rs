@@ -119,7 +119,12 @@ pub(super) async fn authenticate_tool_request(
     authz_hook: &SharedAuthzHook,
 ) -> Result<(SysRequestContext, String), McpError> {
     let server_name = service_id;
-    let rbac_result = enforce_rbac_from_registry(ctx, service_id, authz_hook).await;
+    let rbac_result = enforce_rbac_from_registry(
+        ctx,
+        &systemprompt::identifiers::McpServerId::new(service_id),
+        authz_hook,
+    )
+    .await;
 
     match rbac_result {
         Ok(result) => {
@@ -135,7 +140,15 @@ pub(super) async fn authenticate_tool_request(
                         "authenticated",
                     )
                     .await;
-                    let token = authenticated.token().to_owned();
+                    let token = authenticated
+                        .auth_token()
+                        .ok_or_else(|| {
+                            McpError::internal_error(
+                                "authenticated request has no bearer token",
+                                None,
+                            )
+                        })?
+                        .to_string();
                     Ok((authenticated.context.clone(), token))
                 },
                 Err(e) => {

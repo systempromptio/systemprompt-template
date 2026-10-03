@@ -19,7 +19,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use sqlx::{AssertSqlSafe, PgPool};
-use systemprompt::database::{Database, install_extension_schemas};
+use systemprompt::database::{Database, install_extension_schemas_full};
 use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
@@ -167,9 +167,14 @@ async fn ensure_template(admin: &PgPool, base: &str, template: &str) {
             "no extensions registered — the integration binary must link the crates whose \
              `register_extension!` supplies the migrations"
         );
-        install_extension_schemas(&registry, database.write())
-            .await
-            .expect("install extension schemas");
+        install_extension_schemas_full(
+            &registry,
+            database.write(),
+            &[],
+            systemprompt::database::MigrationConfig::default(),
+        )
+        .await
+        .expect("install extension schemas");
         // Why: dashboard fixtures must exercise the production registration
         // path. A missing new relation is setup failure, not an empty dashboard.
         let dashboard_ready: bool = sqlx::query_scalar(

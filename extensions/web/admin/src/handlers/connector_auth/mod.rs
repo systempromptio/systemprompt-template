@@ -65,7 +65,7 @@ async fn live_user(
             .get("origin")
             .and_then(|h| h.to_str().ok())
             .ok_or_else(|| AdminError::Forbidden("Same-origin request required".into()))?;
-        let base = systemprompt::models::Config::get()?
+        let base = systemprompt::manifest::Config::get()?
             .api_external_url
             .clone();
         let expected = url::Url::parse(&base)

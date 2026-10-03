@@ -2,9 +2,10 @@
 
 use std::sync::Arc;
 
-use systemprompt::database::{Database, DbPool, PgPool};
+use systemprompt::database::{Database, DbPool};
 use systemprompt::extension::prelude::ExtensionContext;
 use systemprompt::oauth::SessionCreationService;
+use systemprompt::prelude::PgPool;
 use systemprompt::users::{SessionRepository, UserService};
 
 pub(crate) struct DbHandles {
@@ -21,10 +22,7 @@ impl DbHandles {
         let db_handle = ctx.database();
         let db = db_handle.as_any().downcast_ref::<Database>()?;
         let read = db.pool();
-        let write = db.write_pool_arc().unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to get write pool, falling back to read pool");
-            Arc::clone(&read)
-        });
+        let write = db.write_pool();
         let db = Arc::new(Database::from_pools(
             Arc::clone(&read),
             Some(Arc::clone(&write)),
@@ -40,13 +38,9 @@ impl DbHandles {
 
 pub(crate) fn build_session_service(db: &DbHandles) -> Option<Arc<SessionCreationService>> {
     let dbpool = Arc::clone(&db.db);
-    let user_repo = systemprompt::users::UserRepository::new(&dbpool)
-        .map_err(|e| tracing::error!(error = %e, "Failed to build user repository"))
-        .ok()?;
+    let user_repo = systemprompt::users::UserRepository::new(&dbpool);
     let user = UserService::new(Arc::new(user_repo));
-    let sessions = SessionRepository::new(&dbpool)
-        .map_err(|e| tracing::error!(error = %e, "Failed to build session repository"))
-        .ok()?;
+    let sessions = SessionRepository::new(&dbpool);
     Some(Arc::new(SessionCreationService::new(
         Arc::new(sessions),
         Arc::new(user),

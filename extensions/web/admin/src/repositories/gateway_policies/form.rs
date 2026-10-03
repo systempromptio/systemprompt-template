@@ -7,7 +7,7 @@
 //! a request. The result is validated the way core validates the file, so
 //! a spec that saves is a spec the gateway will read.
 
-use systemprompt::ai::{
+use systemprompt::gateway::{
     GatewayPolicyConfig, GatewayPolicyEntry, GatewayPolicySpec, HeuristicConfig, QuotaMode,
     QuotaWindow, SafetyConfig, SafetyHistoryMode, SafetyMode,
 };

@@ -111,7 +111,7 @@ async fn identity_token_is_signed_for_an_entitled_caller() {
     );
     let mut validation = Validation::new(Algorithm::RS256);
     validation.set_audience(&[AUDIENCE]);
-    validation.set_issuer(&[systemprompt::models::Config::get()
+    validation.set_issuer(&[systemprompt::manifest::Config::get()
         .expect("config")
         .jwt_issuer
         .as_str()]);

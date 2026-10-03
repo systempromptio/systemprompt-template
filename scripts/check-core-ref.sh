@@ -8,8 +8,8 @@
 #     must be the tag of the published core the pins name, `v<pin>` — so the
 #     bridge is proven against the same core the server crates come from.
 #
-# While the patch is active the ref is a SHA on core `next` and only its shape
-# is checked; the pins are the vendored tree's own version and move with it.
+# While the patch is active, also verify the sibling checkout and every
+# workspace lockfile resolve to the pinned core version.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -37,5 +37,8 @@ if ! grep -qE '^\[patch\.crates-io\]' "$REPO_ROOT/Cargo.toml"; then
         echo "  Set bridge/CORE_REF to v$pin so the bridge builds against the released core." >&2
         exit 1
     }
+fi
+if grep -qE '^\[patch\.crates-io\]' "$REPO_ROOT/Cargo.toml"; then
+    bash "$REPO_ROOT/scripts/check-core-resolution.sh"
 fi
 echo "check-core-ref: $ref ok"

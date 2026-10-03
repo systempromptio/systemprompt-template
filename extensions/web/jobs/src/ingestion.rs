@@ -109,9 +109,7 @@ fn load_blog_config(path: &std::path::Path) -> Result<Option<Arc<BlogConfigValid
 }
 
 async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
-    let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-        "Database not available in job context".to_owned(),
-    ))?;
+    let db = ctx.get::<DbPool>()?;
 
     let pool = db.write_pool();
 
@@ -120,8 +118,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     // first time any caller asks -- so a second profile, or a second test,
     // silently got the first one's config.
     let config_path = ctx
-        .app_paths::<Arc<AppPaths>>()
-        .ok_or(JobError::MissingContext("AppPaths"))?
+        .get::<Arc<AppPaths>>()?
         .system()
         .services()
         .join("config/blog.yaml");

@@ -15,8 +15,8 @@ use std::sync::{Mutex, OnceLock};
 use serde::{Deserialize, Serialize};
 use systemprompt::identifiers::{MarketplaceId, PluginId, SkillId};
 use systemprompt::loader::bundle::pack::collect_files;
-use systemprompt::models::services::ServicesConfig;
-use systemprompt::models::services::bundle::{FileEntry, ServicesBundleManifest};
+use systemprompt::manifest::services::ServicesConfig;
+use systemprompt::manifest::services::bundle::{FileEntry, ServicesBundleManifest};
 
 use super::sources::SourcesView;
 use super::sources_db::BASE_SOURCE;

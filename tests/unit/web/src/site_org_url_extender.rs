@@ -5,11 +5,11 @@
 //! `OnceLock`: this binary installs one fixed value, so the URLs asserted here
 //! are stable regardless of which test runs first.
 
-use systemprompt::models::Config;
-use systemprompt::models::profile::{
+use systemprompt::manifest::Config;
+use systemprompt::manifest::profile::{
     ContentNegotiationConfig, RateLimitsConfig, RetentionConfig, SecurityHeadersConfig,
 };
-use systemprompt::models::services::WebConfig;
+use systemprompt::manifest::services::WebConfig;
 use systemprompt::template_provider::{ExtenderContext, TemplateDataExtender};
 use systemprompt_web_site::extenders::OrgUrlExtender;
 
@@ -30,7 +30,7 @@ fn install_config() {
         return;
     }
     let _ = Config::install(Config {
-        instance_id: "org-url-tests".to_owned(),
+        instance_id: systemprompt::identifiers::InstanceId::new("org-url-tests"),
         max_concurrent_streams: 16,
         sitename: "example-test".to_owned(),
         database_type: "postgres".to_owned(),
@@ -86,7 +86,7 @@ fn extend(mut data: serde_json::Value) -> serde_json::Value {
     // OrgUrlExtender never reads the per-source config, so an empty mapping
     // exercises it fully.
     let config = Default::default();
-    let erased = ();
+    let erased = systemprompt::traits::Dependencies::new();
     let ctx = ExtenderContext::builder(&item, &items, &config, &web, &erased).build();
 
     tokio::runtime::Builder::new_current_thread()

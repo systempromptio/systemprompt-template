@@ -38,9 +38,9 @@ pub fn encrypt(
     plaintext: &[u8],
 ) -> Result<Vec<u8>, SecretCryptoError> {
     let cipher = ChaCha20Poly1305::new(key.into());
-    let nonce = Nonce::from_slice(nonce);
+    let nonce = Nonce::from(*nonce);
     cipher
-        .encrypt(nonce, plaintext)
+        .encrypt(&nonce, plaintext)
         .map_err(|e| SecretCryptoError::EncryptionFailed(e.to_string()))
 }
 
@@ -50,9 +50,9 @@ pub fn decrypt(
     ciphertext: &[u8],
 ) -> Result<Vec<u8>, SecretCryptoError> {
     let cipher = ChaCha20Poly1305::new(key.into());
-    let nonce = Nonce::from_slice(nonce);
+    let nonce = Nonce::from(*nonce);
     cipher
-        .decrypt(nonce, ciphertext)
+        .decrypt(&nonce, ciphertext)
         .map_err(|e| SecretCryptoError::DecryptionFailed(e.to_string()))
 }
 

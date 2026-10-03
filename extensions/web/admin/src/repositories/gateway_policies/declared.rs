@@ -5,8 +5,8 @@
 //! comment or a whitespace edit is not a drift.
 
 use sha2::{Digest, Sha256};
-use systemprompt::ai::{GATEWAY_POLICIES_FILE, GatewayPolicyConfig, GatewayPolicyEntry};
 use systemprompt::config::ProfileBootstrap;
+use systemprompt::gateway::{GATEWAY_POLICIES_FILE, GatewayPolicyConfig, GatewayPolicyEntry};
 use systemprompt::loader::services_root::ServicesRootBootstrap;
 
 use super::month_window::normalise_spec;

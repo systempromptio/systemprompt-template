@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT subject_kind, subject_id, requests, input_tokens, output_tokens,\n                 cost_microdollars, updated_at\n            FROM ai_quota_buckets\n           WHERE subject_kind = $1 AND window_seconds = $2 AND window_start = $3\n           ORDER BY cost_microdollars DESC, requests DESC, subject_id ASC\n           LIMIT 500",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "subject_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "subject_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "subject_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "subject_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "requests",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "requests"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "input_tokens",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "output_tokens",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "cost_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c1ef5879128f7392bca2677609cd89f85a886b063ef2940ee5616ee41b369ee6"
+}

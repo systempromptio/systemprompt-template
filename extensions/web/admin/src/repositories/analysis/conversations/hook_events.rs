@@ -31,7 +31,7 @@ pub async fn list_conversation_hook_events(
     let rows = sqlx::query!(
         r#"SELECT e.event_type AS "event_type!", e.tool_name, e.plugin_id AS "plugin_id?: PluginId",
                   e.prompt_preview, e.description, COALESCE(e.metadata, '{}'::jsonb) AS "metadata!",
-                  e.tool_use_id, e.trace_id, e.created_at AS "created_at!"
+                  e.metadata->>'tool_use_id' AS tool_use_id, e.metadata->>'trace_id' AS trace_id, e.created_at AS "created_at!"
            FROM plugin_usage_events e
            WHERE e.session_id = $1
            ORDER BY e.created_at

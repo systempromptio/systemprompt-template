@@ -3,6 +3,7 @@
 //!
 //! Ungated for the same reason as [`super::hook_events`]: the governance page's
 //! hooks tab renders both rankings, so they are live code in this fork.
+use systemprompt::identifiers::UserId;
 
 use sqlx::PgPool;
 
@@ -16,7 +17,7 @@ pub async fn list_top_actors(
     sqlx::query_as!(
         TopActor,
         r#"SELECT
-            g.user_id::TEXT AS "user_id!",
+            g.user_id::TEXT AS "user_id!: UserId",
             COALESCE(u.display_name, u.full_name, u.name, u.email, g.user_id) AS "display_name!",
             u.email::TEXT AS email,
             COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",

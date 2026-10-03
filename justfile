@@ -89,6 +89,7 @@ build-force *FLAGS:
 _build-uncoordinated *FLAGS:
     #!/usr/bin/env bash
     set -euo pipefail
+    bash scripts/check-core-ref.sh
     export CC="${CC:-clang}"
     export CXX="${CXX:-clang++}"
     export RUSTFLAGS="${RUSTFLAGS:--D warnings}"

@@ -11,8 +11,8 @@
 use std::collections::HashMap;
 
 use systemprompt::loader::ServicesBootstrap;
-use systemprompt::models::ServicesConfig;
-use systemprompt::models::services::ProviderEntry;
+use systemprompt::manifest::ServicesConfig;
+use systemprompt::manifest::services::ProviderEntry;
 use systemprompt_web_shared::error::MarketplaceError;
 
 use super::catalog::dispatchable_routes;

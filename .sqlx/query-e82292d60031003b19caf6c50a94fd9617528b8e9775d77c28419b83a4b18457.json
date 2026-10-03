@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT run_at, report AS \"report: sqlx::types::Json<HealthReportDoc>\",\n               findings_p1, findings_p2, findings_p3\n        FROM retention_health_reports\n        ORDER BY run_at DESC\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "run_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "retention_health_reports",
+            "name": "run_at"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "report: sqlx::types::Json<HealthReportDoc>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "retention_health_reports",
+            "name": "report"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "findings_p1",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "retention_health_reports",
+            "name": "findings_p1"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "findings_p2",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "retention_health_reports",
+            "name": "findings_p2"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "findings_p3",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "retention_health_reports",
+            "name": "findings_p3"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e82292d60031003b19caf6c50a94fd9617528b8e9775d77c28419b83a4b18457"
+}

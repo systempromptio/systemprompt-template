@@ -13,7 +13,7 @@ use std::sync::Arc;
 use systemprompt::extension::prelude::{
     PageContext, PageDataProvider, PagePrepareContext, PagePrerenderer,
 };
-use systemprompt::models::services::WebConfig;
+use systemprompt::manifest::services::WebConfig;
 use systemprompt_web_site::homepage::{
     HomepageConfig, HomepagePageDataProvider, HomepagePrerenderer,
 };
@@ -64,8 +64,8 @@ social:\n\
 
 fn page_data(provider: &dyn PageDataProvider, page_type: &str) -> serde_json::Value {
     let config = web_config();
-    let erased = ();
-    let ctx = PageContext::new(page_type, &config, &erased, &erased);
+    let erased = systemprompt::traits::Dependencies::new();
+    let ctx = PageContext::new(page_type, &config, &erased);
     block_on(provider.provide_page_data(&ctx))
 }
 
@@ -203,9 +203,9 @@ fn navigation_carries_the_branding_it_was_given() {
 #[test]
 fn the_homepage_prerenderer_targets_index_html() {
     let config = web_config();
-    let erased = ();
+    let erased = systemprompt::traits::Dependencies::new();
     let dist = std::path::Path::new("/nonexistent-dist");
-    let ctx = PagePrepareContext::new(&config, &erased, &erased, dist);
+    let ctx = PagePrepareContext::new(&config, &erased, dist);
     let prerenderer = HomepagePrerenderer::new(homepage_config());
 
     assert_eq!(prerenderer.page_type(), "homepage");
@@ -224,7 +224,7 @@ fn the_homepage_prerenderer_targets_index_html() {
 fn the_prerenderer_and_the_provider_build_the_same_context() {
     let config = homepage_config();
     let web = web_config();
-    let erased = ();
+    let erased = systemprompt::traits::Dependencies::new();
     let dist = std::path::Path::new("/nonexistent-dist");
 
     let from_provider = page_data(
@@ -232,8 +232,7 @@ fn the_prerenderer_and_the_provider_build_the_same_context() {
         "homepage",
     );
     let spec = block_on(
-        HomepagePrerenderer::new(config)
-            .prepare(&PagePrepareContext::new(&web, &erased, &erased, dist)),
+        HomepagePrerenderer::new(config).prepare(&PagePrepareContext::new(&web, &erased, dist)),
     )
     .expect("the homepage always has a render spec");
 

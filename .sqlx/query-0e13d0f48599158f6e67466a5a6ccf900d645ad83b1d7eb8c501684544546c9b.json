@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO project_members (project_id, user_id, source, granted_by, valid_until)\n         VALUES ($1, $2, 'manual', $3, $4)\n         ON CONFLICT (project_id, user_id, source) DO UPDATE\n            SET granted_by = EXCLUDED.granted_by,\n                valid_from = CURRENT_TIMESTAMP,\n                valid_until = EXCLUDED.valid_until,\n                revoked_at = NULL\n          WHERE project_members.revoked_at IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0e13d0f48599158f6e67466a5a6ccf900d645ad83b1d7eb8c501684544546c9b"
+}

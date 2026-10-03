@@ -1,0 +1,117 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT ON (r.table_name)\n               r.table_name, r.run_at, r.live_rows, r.dead_rows, r.total_bytes, r.index_bytes,\n               r.oldest_row, r.window_days,\n               (SELECT p.total_bytes FROM retention_runs p\n                 WHERE p.table_name = r.table_name AND p.tier = 'daily'\n                   AND p.run_at <= r.run_at - INTERVAL '7 days'\n                 ORDER BY p.run_at DESC LIMIT 1) AS bytes_week_ago\n        FROM retention_runs r\n        WHERE r.tier = 'daily'\n        ORDER BY r.table_name, r.run_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "table_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "retention_runs",
+            "name": "table_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "run_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "retention_runs",
+            "name": "run_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "live_rows",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "retention_runs",
+            "name": "live_rows"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "dead_rows",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "retention_runs",
+            "name": "dead_rows"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "total_bytes",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "retention_runs",
+            "name": "total_bytes"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "index_bytes",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "retention_runs",
+            "name": "index_bytes"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "oldest_row",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "retention_runs",
+            "name": "oldest_row"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "window_days",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "retention_runs",
+            "name": "window_days"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "bytes_week_ago",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "d0a096fd66d34ae5f599cf8fb6437641d4070483e6eb44a9e6631454acd24b63"
+}

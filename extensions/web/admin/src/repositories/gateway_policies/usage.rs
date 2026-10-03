@@ -9,7 +9,7 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::ai::QuotaWindow;
+use systemprompt::gateway::QuotaWindow;
 
 use super::month_window::align_window;
 

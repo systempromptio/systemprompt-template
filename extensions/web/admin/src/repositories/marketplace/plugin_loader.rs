@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use systemprompt::config::ProfileBootstrap;
-use systemprompt::models::PluginConfigFile;
+use systemprompt::manifest::PluginConfigFile;
 
 use crate::types::PlatformPluginConfig;
 use systemprompt_web_shared::error::MarketplaceError;

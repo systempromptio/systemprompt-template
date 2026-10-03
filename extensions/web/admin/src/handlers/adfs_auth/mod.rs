@@ -30,7 +30,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
 use sqlx::PgPool;
 
-use systemprompt::models::Config;
+use systemprompt::manifest::Config;
 use systemprompt::oauth::SessionCreationService;
 
 pub(crate) use callback::adfs_callback;

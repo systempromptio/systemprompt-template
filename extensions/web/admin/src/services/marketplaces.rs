@@ -1,7 +1,7 @@
 //! Loads the configured marketplace catalog.
 
 use systemprompt::loader::ConfigLoader;
-use systemprompt::models::services::MarketplaceConfig;
+use systemprompt::manifest::services::MarketplaceConfig;
 
 // Why: a config that fails to load yields an empty list rather than an error —
 // admin pages must still render.

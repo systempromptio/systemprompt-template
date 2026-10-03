@@ -25,7 +25,7 @@ pub async fn list_unencrypted_secrets(
         .into_iter()
         .map(|r| UnencryptedSecret {
             id: r.id,
-            user_id: r.user_id.into(),
+            user_id: UserId::new(r.user_id),
             var_name: r.var_name,
             var_value: r.var_value,
         })

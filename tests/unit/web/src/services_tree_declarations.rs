@@ -13,7 +13,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use systemprompt::loader::ConfigLoader;
-use systemprompt::models::services::ServicesConfig;
+use systemprompt::manifest::services::ServicesConfig;
 use systemprompt_security::authz::{EntityKind, RegisteredEntities};
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, DeclaredSet, build_declared_set,
@@ -275,7 +275,7 @@ fn no_export_carries_a_person() {
     let policies = render_policies_export(
         &[PolicyRow {
             name: "default".to_owned(),
-            spec: systemprompt::ai::GatewayPolicySpec::default(),
+            spec: systemprompt::gateway::GatewayPolicySpec::default(),
             enabled: true,
             priority: 0,
             updated_at: chrono::Utc::now(),

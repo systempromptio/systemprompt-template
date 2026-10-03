@@ -19,8 +19,8 @@ use systemprompt::loader::bundle::{BundleCache, cache_root};
 use systemprompt::loader::services_root::{
     ActiveServicesRoot, ServicesProvenance, ServicesRootBootstrap,
 };
-use systemprompt::models::profile::{Profile, ServicesSource};
-use systemprompt::models::services::bundle::{
+use systemprompt::manifest::profile::{Profile, ServicesSource};
+use systemprompt::manifest::services::bundle::{
     BundleOwnership, ServicesBundleManifest, ServicesBundleState,
 };
 

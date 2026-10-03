@@ -9,12 +9,10 @@ use systemprompt::identifiers::UserId;
 
 use systemprompt::analytics::SessionAnalyticsBuilder;
 use systemprompt::identifiers::SessionSource;
-use systemprompt::models::Config;
+use systemprompt::manifest::Config;
 use systemprompt::models::auth::{AuthenticatedUser, Permission};
 use systemprompt::oauth::SessionCreationService;
-use systemprompt::oauth::services::{
-    JwtConfig, JwtSigningParams, generate_access_token_jti, generate_jwt,
-};
+use systemprompt::oauth::services::{JwtConfig, JwtSigningParams, generate_jwt};
 
 use super::secure_flag;
 use crate::repositories::dev_login::DevLoginUser;
@@ -91,14 +89,9 @@ pub(crate) async fn mint_session(
         .map_err(|e| e.to_string())?;
 
     let cfg = Config::get().map_err(|e| e.to_string())?;
-    let uuid = subject
-        .user_id
-        .as_str()
-        .parse()
-        .unwrap_or_else(|_| uuid::Uuid::nil());
     let permissions = permissions_for_roles(&subject.roles);
     let user = AuthenticatedUser::new_with_roles(
-        uuid,
+        subject.user_id.clone(),
         subject.display_name.clone(),
         subject.email.clone(),
         permissions.clone(),
@@ -118,7 +111,7 @@ pub(crate) async fn mint_session(
     let signing = JwtSigningParams {
         issuer: &cfg.jwt_issuer,
     };
-    let jti = generate_access_token_jti();
+    let jti = systemprompt::identifiers::AccessTokenId::generate();
     let token =
         generate_jwt(&user, jwt_config, jti, &session_id, &signing).map_err(|e| e.to_string())?;
 

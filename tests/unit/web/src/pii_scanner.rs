@@ -3,8 +3,8 @@
 // negative space — ids, hashes, and bare digit runs must pass, because a false
 // positive on this scanner denies a customer's request.
 
-use systemprompt::ai::SafetyScanner;
-use systemprompt::models::wire::canonical::{CanonicalContent, CanonicalResponse};
+use systemprompt::gateway::SafetyScanner;
+use systemprompt::wire::canonical::{CanonicalContent, CanonicalResponse};
 use systemprompt_web_admin::gateway_safety::PiiScanner;
 
 fn response(text: &str) -> CanonicalResponse {
@@ -20,6 +20,7 @@ async fn scan(text: &str) -> Vec<String> {
     PiiScanner::new()
         .scan_response_final(&response(text))
         .await
+        .expect("configured scanner succeeds")
         .into_iter()
         .map(|f| f.category)
         .collect()
@@ -29,7 +30,8 @@ async fn scan(text: &str) -> Vec<String> {
 async fn a_formatted_ssn_is_flagged_and_masked() {
     let findings = PiiScanner::new()
         .scan_response_final(&response("the ssn is 123-45-6789 apparently"))
-        .await;
+        .await
+        .expect("configured scanner succeeds");
     assert_eq!(findings.len(), 1, "got {findings:?}");
     assert_eq!(findings[0].category, "pii_ssn");
     assert_eq!(

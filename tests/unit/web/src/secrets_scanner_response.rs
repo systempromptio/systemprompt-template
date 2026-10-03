@@ -2,11 +2,12 @@
 // model emits inside a tool call never appears in a `Text` block, so a scanner
 // reading only that variant lets it out; these tests pin the widened surface.
 
-use systemprompt::ai::SafetyScanner;
-use systemprompt::models::wire::canonical::{
+use systemprompt::gateway::SafetyScanner;
+use systemprompt::identifiers::ModelId;
+use systemprompt::wire::canonical::{
     CanonicalContent, CanonicalMessage, CanonicalRequest, CanonicalResponse, Role,
 };
-use systemprompt::models::wire::inspect::{SurfaceBudget, string_leaves};
+use systemprompt::wire::inspect::{SurfaceBudget, string_leaves};
 use systemprompt_security::policy::{GovernanceConfig, GovernanceEngine};
 use systemprompt_web_admin::gateway_safety::SecretsScanner;
 
@@ -36,9 +37,10 @@ async fn credential_in_a_tool_use_argument_is_flagged() {
         name: "post_webhook".to_owned(),
         input: serde_json::json!({ "headers": { "authorization": TOKEN } }),
         signature: None,
+        cache_control: None,
     }]);
 
-    let findings = configured_scanner().scan_response_final(&resp).await;
+    let findings = configured_scanner().scan_response_final(&resp).await.expect("configured scanner succeeds");
 
     assert_eq!(findings.len(), 1, "got {findings:?}");
     assert_eq!(findings[0].category, "secret");
@@ -53,9 +55,10 @@ async fn credential_in_a_tool_result_is_flagged() {
         is_error: false,
         structured_content: None,
         meta: None,
+        cache_control: None,
     }]);
 
-    let findings = configured_scanner().scan_response_final(&resp).await;
+    let findings = configured_scanner().scan_response_final(&resp).await.expect("configured scanner succeeds");
 
     assert_eq!(findings.len(), 1, "got {findings:?}");
     assert_eq!(findings[0].category, "secret");
@@ -69,7 +72,7 @@ async fn credential_only_in_the_received_surface_is_flagged() {
         SurfaceBudget::default(),
     );
 
-    let findings = configured_scanner().scan_response_final(&resp).await;
+    let findings = configured_scanner().scan_response_final(&resp).await.expect("configured scanner succeeds");
 
     assert_eq!(findings.len(), 1, "got {findings:?}");
     assert_eq!(findings[0].category, "secret");
@@ -81,16 +84,16 @@ async fn credential_only_in_the_received_surface_is_flagged() {
 // request scan brings back the duplicate plane.
 #[tokio::test]
 async fn a_credential_in_a_request_is_left_to_the_governance_chain() {
-    let req = CanonicalRequest {
-        model: "test-model".to_owned(),
-        messages: vec![CanonicalMessage {
+    let req = CanonicalRequest::new(
+        ModelId::new("test-model"),
+        vec![CanonicalMessage {
             role: Role::User,
             content: vec![CanonicalContent::text(format!("my token is {TOKEN}"))],
         }],
-        ..Default::default()
-    };
+        256,
+    );
 
-    assert!(SecretsScanner::new().scan_request(&req).await.is_empty());
+    assert!(SecretsScanner::new().scan_request(&req).await.expect("configured scanner succeeds").is_empty());
 }
 
 #[tokio::test]
@@ -100,9 +103,9 @@ async fn a_clean_response_yields_nothing() {
     )]);
 
     assert!(
-        SecretsScanner::new()
+        configured_scanner()
             .scan_response_final(&resp)
-            .await
+            .await.expect("configured scanner succeeds")
             .is_empty()
     );
 }

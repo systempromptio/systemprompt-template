@@ -13,11 +13,11 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use systemprompt::identifiers::{AgentId, HookId, MarketplaceId, McpServerId};
 use systemprompt::marketplace::{EntryKeepSets, MarketplaceCandidate, MarketplaceMembership};
-use systemprompt::models::bridge::ids::{LibraryArtifactId, PluginId, SkillId};
+use systemprompt::identifiers::{LibraryArtifactId, PluginId, SkillId};
 use systemprompt::models::bridge::manifest::{
     AgentEntry, ArtifactEntry, HookEntry, ManagedMcpServer, PluginEntry, SkillEntry,
 };
-use systemprompt::models::services::MarketplaceAccess;
+use systemprompt::manifest::services::MarketplaceAccess;
 use systemprompt_security::authz::{EntityKind, EntityRef};
 use systemprompt_web_admin::authz::group::{group_dimension, group_rule_type};
 use systemprompt_web_admin::authz::project::{project_dimension, project_rule_type};

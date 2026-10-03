@@ -10,11 +10,11 @@ use systemprompt::identifiers::{AgentId, SkillId};
 use crate::types::{AgentInfo, RequiredSecret, SkillInfo};
 
 pub(crate) fn resolve_all_plugin_skill_ids(
-    plugin: &systemprompt::models::PluginConfig,
+    plugin: &systemprompt::manifest::PluginConfig,
     skills_path: &Path,
     _agents_path: &Path,
 ) -> Vec<String> {
-    if plugin.skills.source == systemprompt::models::ComponentSource::Explicit {
+    if plugin.skills.source == systemprompt::models::plugin::ComponentSource::Explicit {
         plugin
             .skills
             .include
@@ -42,7 +42,7 @@ pub(crate) fn resolve_all_plugin_skill_ids(
 }
 
 pub(crate) fn resolve_plugin_skills(
-    plugin: &systemprompt::models::PluginConfig,
+    plugin: &systemprompt::manifest::PluginConfig,
     skills_path: &Path,
     agents_path: &Path,
 ) -> Vec<SkillInfo> {
@@ -51,11 +51,11 @@ pub(crate) fn resolve_plugin_skills(
         .map(|skill_id| {
             let skill_dir = skills_path.join(&skill_id);
             let (name, description, required_secrets) =
-                read_skill_config(&skill_dir, &SkillId::from(skill_id.as_str()));
+                read_skill_config(&skill_dir, &SkillId::new(skill_id.as_str()));
             let kebab_name = skill_id.replace('_', "-");
             let command = format!("/{}:{}", plugin.id, kebab_name);
             SkillInfo {
-                id: skill_id.into(),
+                id: SkillId::new(skill_id),
                 name,
                 description,
                 command,
@@ -113,11 +113,11 @@ fn read_skill_config(
 }
 
 pub(crate) fn resolve_plugin_agents(
-    plugin: &systemprompt::models::PluginConfig,
+    plugin: &systemprompt::manifest::PluginConfig,
     agents_path: &Path,
 ) -> Vec<AgentInfo> {
     let agent_ids: Vec<String> =
-        if plugin.agents.source == systemprompt::models::ComponentSource::Explicit {
+        if plugin.agents.source == systemprompt::models::plugin::ComponentSource::Explicit {
             plugin.agents.include.clone()
         } else {
             let mut ids = Vec::new();

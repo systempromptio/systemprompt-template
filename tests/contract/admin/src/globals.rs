@@ -61,26 +61,35 @@ fn try_init() -> bool {
     // the catalog and ACL contracts assert against a controlled two-route
     // gateway, and reading the shipped catalog would turn them into assertions
     // about whatever this deployment happens to expose.
-    let services_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/services");
+    let services_root = profile.parent().expect("fixture profile directory").join("services");
     // Why: names the fixture tree as the services root, so the admin gateway
     // editor writes the fixture's gateway.yaml. Without it the editor resolves
     // the repository's own services tree from the profile's `paths.services`
     // — which the rest of this suite still reads — and a contract row that
     // PATCHes the gateway rewrites a tracked config file.
     unsafe { std::env::set_var("SYSTEMPROMPT_SERVICES_PATH", &services_root) };
+    std::thread::scope(|scope| {
+        scope.spawn(|| {
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("runtime for the secrets bootstrap")
+                .block_on(systemprompt::config::SecretsBootstrap::try_init())
+                .expect("load the fixture profile's secrets");
+        }).join().expect("the secrets bootstrap thread did not panic");
+    });
+    systemprompt::config::try_init_config(Some(&services_root))
+        .expect("build config from the fixture profile");
     systemprompt::loader::ServicesBootstrap::init_from_path(
         &services_root.join("config/config.yaml"),
     )
     .expect("initialise the contract fixture services tree");
 
-    systemprompt::config::SecretsBootstrap::try_init().expect("load the fixture profile's secrets");
-    systemprompt::config::try_init_config().expect("build config from the fixture profile");
-
     // The local profile ships no signing key. A key generated per process is
     // enough because the same authority both mints and validates here.
     let key = systemprompt_security::keys::RsaSigningKey::generate()
         .expect("generate an ephemeral RSA signing key");
-    systemprompt_security::keys::authority::install_for_test(key);
+    systemprompt_security::keys::authority::install(key).expect("install fixture signing key");
     true
 }
 
@@ -121,8 +130,9 @@ const MASTER_KEY_HEX: &str = "00112233445566778899aabbccddeeff001122334455667788
 // to it.
 fn write_fixture_profile() -> Option<PathBuf> {
     let root = repo_root();
-    let dir = root.join("tests/target/contract-profile");
+    let dir = root.join(format!("tests/target/contract-profile-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("create fixture profile directory");
+    copy_tree(&Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/services"), &dir.join("services"));
 
     // Why: config validation rejects a profile naming a path that does not
     // exist, and `paths.bin` points at the workspace debug directory — absent
@@ -130,6 +140,7 @@ fn write_fixture_profile() -> Option<PathBuf> {
     std::fs::create_dir_all(root.join("target/debug")).expect("create fixture bin directory");
 
     let yaml = FIXTURE_PROFILE
+        .replace("__REPO__/services", &dir.join("services").to_string_lossy())
         .replace("__REPO__", &root.to_string_lossy())
         .replace(
             "jwt_issuer: http://localhost:8099",
@@ -141,9 +152,22 @@ fn write_fixture_profile() -> Option<PathBuf> {
     Some(dir.join("profile.yaml"))
 }
 
+fn copy_tree(source: &Path, destination: &Path) {
+    std::fs::create_dir_all(destination).expect("create fixture services directory");
+    for entry in std::fs::read_dir(source).expect("read fixture services directory") {
+        let entry = entry.expect("fixture services entry");
+        let target = destination.join(entry.file_name());
+        if entry.file_type().expect("fixture services file type").is_dir() {
+            copy_tree(&entry.path(), &target);
+        } else {
+            std::fs::copy(entry.path(), target).expect("copy fixture services file");
+        }
+    }
+}
+
 // The issuer the admin cookie validator will check tokens against.
 pub fn jwt_issuer() -> String {
-    systemprompt::models::Config::get()
+    systemprompt::manifest::Config::get()
         .expect("config installed by init()")
         .jwt_issuer
         .clone()

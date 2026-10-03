@@ -10,7 +10,7 @@
 //! file to the type: regenerate it with `UPDATE_PROFILE_SCHEMA=1`.
 
 use systemprompt::config::generate_schema;
-use systemprompt::models::Profile;
+use systemprompt::manifest::Profile;
 
 use crate::support::repo_root;
 

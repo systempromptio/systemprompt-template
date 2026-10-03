@@ -8,10 +8,12 @@
 use std::collections::HashMap;
 
 use systemprompt::identifiers::{ModelId, ProviderId, RouteId, SecretName};
-use systemprompt::models::services::{
-    ApiSurface, GatewayConfig, GatewayRoute, ModelCapabilities, ModelGovernance, ModelLimits,
-    ModelPricing, ProviderEntry, ProviderModel, ProviderRegistry, QuotaFaultMode, WireProtocol,
+use systemprompt::manifest::services::{
+    GatewayConfig, GatewayRoute, ModelCapabilities, ModelGovernance, ModelPricing, ProviderEntry,
+    ProviderModel, ProviderRegistry, QuotaFaultMode,
 };
+use systemprompt::models::providers::ApiSurface;
+use systemprompt::wire::{ModelLimits, WireProtocol};
 
 pub(crate) fn model(id: &str) -> ProviderModel {
     ProviderModel {
@@ -53,7 +55,7 @@ pub(crate) fn registry(providers: Vec<ProviderEntry>) -> ProviderRegistry {
 
 pub(crate) fn route(id: &str, pattern: &str, provider_name: &str) -> GatewayRoute {
     GatewayRoute {
-        id: RouteId::new(id),
+        id: Some(RouteId::new(id)),
         name: None,
         description: None,
         model_pattern: pattern.to_owned(),

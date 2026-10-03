@@ -65,9 +65,7 @@ impl Job for ConversationRollupJob {
         &self,
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(JobError::MissingContext("DbPool"))?;
+        let db = ctx.get::<DbPool>()?;
         let all = ctx.get_parameter_parsed::<bool>("all")?.unwrap_or(false);
         Ok(Self::execute_with_pool(&db.write_pool(), all).await?)
     }

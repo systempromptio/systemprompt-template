@@ -8,14 +8,20 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum JobError {
+    #[error(transparent)]
+    Identifier(#[from] systemprompt::identifiers::error::IdValidationError),
+    #[error(transparent)]
+    Ai(#[from] systemprompt::ai::error::AiError),
+    #[error(transparent)]
+    Provider(#[from] ProviderError),
     #[error("Job context missing required value: {0}")]
-    MissingContext(&'static str),
+    MissingContext(#[from] systemprompt::traits::MissingDependency),
 
     #[error("Configuration error: {0}")]
     Config(String),
 
     #[error("Configuration error: {0}")]
-    CoreConfig(#[from] systemprompt::models::errors::ConfigError),
+    CoreConfig(#[from] systemprompt::models::errors::GlobalConfigError),
 
     #[error("Profile error: {0}")]
     Profile(#[from] systemprompt::config::ProfileBootstrapError),
@@ -50,7 +56,7 @@ pub enum JobError {
 
 impl From<JobError> for ProviderError {
     fn from(err: JobError) -> Self {
-        Self::Internal(err.to_string())
+        Self::Internal(Box::new(err))
     }
 }
 

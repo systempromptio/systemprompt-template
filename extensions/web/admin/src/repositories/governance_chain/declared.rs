@@ -95,11 +95,14 @@ pub fn parse_declared_chain(yaml: &str) -> Result<DeclaredChain, String> {
     let cfg = GovernanceConfig::parse(yaml).map_err(|e| e.to_string())?;
     let mut policies = Vec::with_capacity(cfg.policies.len());
     for p in cfg.policies {
-        if policies.iter().any(|d: &DeclaredPolicy| d.id == p.id) {
+        if policies
+            .iter()
+            .any(|d: &DeclaredPolicy| d.id == p.id.as_str())
+        {
             return Err(format!("governance.policies repeats id `{}`", p.id));
         }
         policies.push(DeclaredPolicy {
-            id: p.id,
+            id: p.id.to_string(),
             enabled: p.enabled,
             mode: p.mode.as_str().to_owned(),
             entry: params_only(p.params),

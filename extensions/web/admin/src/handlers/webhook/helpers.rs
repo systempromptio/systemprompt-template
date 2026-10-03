@@ -2,7 +2,7 @@
 
 use axum::http::HeaderMap;
 use systemprompt::identifiers::UserId;
-use systemprompt::models::Config;
+use systemprompt::manifest::Config;
 use systemprompt::models::auth::JwtAudience;
 
 use crate::error::{AdminError, AdminResult};

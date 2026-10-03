@@ -14,7 +14,7 @@ pub async fn list_timeline(
 ) -> Result<Vec<ActivityTimelineEvent>, sqlx::Error> {
     sqlx::query_as!(
         ActivityTimelineEvent,
-        r#"SELECT a.id, a.user_id,
+        r#"SELECT a.id, a.user_id AS "user_id!: UserId",
             COALESCE(u.display_name, u.full_name, u.name, u.email, a.user_id) AS "display_name!",
             a.category AS "category: ActivityCategory",
             a.action AS "action: ActivityAction",
@@ -37,7 +37,7 @@ pub async fn list_user_recent_activity(
 ) -> Result<Vec<ActivityTimelineEvent>, sqlx::Error> {
     sqlx::query_as!(
         ActivityTimelineEvent,
-        r#"SELECT id AS "id!", user_id AS "user_id!",
+        r#"SELECT id AS "id!", user_id AS "user_id!: UserId",
             display_name AS "display_name!",
             category AS "category!: ActivityCategory",
             action AS "action!: ActivityAction",

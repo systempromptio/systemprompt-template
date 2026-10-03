@@ -1,7 +1,6 @@
 //! Scheduler parameter contracts for the conversation judge.
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use systemprompt::identifiers::{Actor, UserId};
 use systemprompt::traits::JobContext;
@@ -10,9 +9,7 @@ use systemprompt_web_extension::jobs::internals::JudgeParams;
 fn context(parameters: &[(&str, &str)]) -> JobContext {
     JobContext::new(
         Actor::user(UserId::new("judge-parameter-test")),
-        Arc::new(()),
-        Arc::new(()),
-        Arc::new(()),
+        systemprompt::traits::Dependencies::new(),
     )
     .with_parameters(
         parameters

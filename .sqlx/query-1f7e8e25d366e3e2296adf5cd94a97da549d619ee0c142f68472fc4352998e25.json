@@ -1,0 +1,134 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT tier, period, table_name, relative_path, row_count, byte_count, sha256,\n               window_from, window_to, created_at\n        FROM retention_archives\n        ORDER BY period DESC, tier, table_name\n        LIMIT 500\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tier",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "tier"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "period",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "period"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "table_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "table_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "relative_path",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "relative_path"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "row_count",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "row_count"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "byte_count",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "byte_count"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "sha256",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "window_from",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "window_from"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "window_to",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "window_to"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "retention_archives",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1f7e8e25d366e3e2296adf5cd94a97da549d619ee0c142f68472fc4352998e25"
+}

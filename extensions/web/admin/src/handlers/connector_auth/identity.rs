@@ -41,7 +41,7 @@ pub(super) async fn token(
         .display_name
         .filter(|n| !n.trim().is_empty())
         .unwrap_or(identity.username);
-    let issuer = systemprompt::models::Config::get()?.jwt_issuer.clone();
+    let issuer = systemprompt::manifest::Config::get()?.jwt_issuer.clone();
     let claims = identity_token::claims(&issuer, &audience, &user.user_id, &identity.email, &name);
     let access_token = identity_token::sign(&claims)?;
     Ok((

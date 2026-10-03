@@ -135,17 +135,15 @@ pub fn build_request_context(
         TraceId::new(uuid::Uuid::new_v4().to_string()),
         ContextId::derived_from_session(session_id),
         AgentName::try_new("hook-summary").expect("static agent name is valid"),
+        systemprompt::identifiers::Actor::user(user_id.clone()),
     )
     .with_user(AuthenticatedUser::new(
-        user_id
-            .as_str()
-            .parse()
-            .unwrap_or_else(|_| uuid::Uuid::nil()),
+        user_id.clone(),
         user_id.as_str().to_owned(),
         String::new(),
         Vec::new(),
     ))
-    .with_auth_token(jwt_token)
+    .with_auth_token(systemprompt::identifiers::JwtToken::new(jwt_token))
     .with_user_type(UserType::User)
 }
 

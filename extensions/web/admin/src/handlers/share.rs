@@ -257,7 +257,7 @@ async fn build_user_manifest(pool: &PgPool, user_id: &UserId) -> AdminResult<Man
         .collect();
 
     Ok(ManifestResponse {
-        user_id: matrix.user.id.into(),
+        user_id: UserId::new(matrix.user.id),
         sections,
     })
 }

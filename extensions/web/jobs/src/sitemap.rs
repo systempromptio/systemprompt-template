@@ -42,15 +42,10 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     tracing::info!("Sitemap generation started");
 
-    let db_pool = ctx
-        .db_pool::<DbPool>()
-        .ok_or(JobError::MissingContext("DbPool"))?;
-    let paths = ctx
-        .app_paths::<Arc<AppPaths>>()
-        .ok_or(JobError::MissingContext("AppPaths"))?
-        .as_ref();
+    let db_pool = ctx.get::<DbPool>()?;
+    let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
 
-    let content_repo = systemprompt::content::ContentRepository::new(db_pool)?;
+    let content_repo = systemprompt::content::ContentRepository::new(db_pool);
 
     generate_sitemap(content_repo, paths).await?;
 

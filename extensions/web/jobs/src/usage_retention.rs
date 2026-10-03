@@ -46,9 +46,7 @@ impl Job for PluginUsageRetentionJob {
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
         tracing::info!(actor = %ctx.actor().user_id, "Raw evidence retention invoked");
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(JobError::MissingContext("DbPool"))?;
+        let db = ctx.get::<DbPool>()?;
         Ok(Self::execute_with_pool(&db.write_pool()).await?)
     }
 }

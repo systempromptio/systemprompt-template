@@ -15,11 +15,9 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use serde::Serialize;
+use systemprompt::manifest::services::{MarketplaceConfig, PluginConfig, ServicesConfig};
 use systemprompt::marketplace::{CatalogContent, build_plugin_bundle};
-use systemprompt::models::services::{
-    ComponentSource, MarketplaceConfig, PluginComponentRef, PluginConfig, PluginHooksRef,
-    ServicesConfig,
-};
+use systemprompt::models::plugin::{ComponentSource, PluginComponentRef, PluginHooksRef};
 
 // Why: the catalog loader wants an API URL for agent cards and managed MCP
 // entries; neither reaches the kit, so any syntactically valid URL will do.
@@ -82,7 +80,7 @@ struct MarketplaceSidecarOut {
 #[derive(Debug, Serialize)]
 struct MarketplaceSidecarBody {
     title: String,
-    visibility: systemprompt::models::services::MarketplaceVisibility,
+    visibility: systemprompt::manifest::services::MarketplaceVisibility,
     enabled: bool,
     mcp_servers: ComponentRefOut,
     agents: ComponentRefOut,

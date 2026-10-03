@@ -5,7 +5,7 @@
 use std::path::Path;
 
 use systemprompt::loader::ConfigLoader;
-use systemprompt::models::services::split_frontmatter;
+use systemprompt::manifest::services::split_frontmatter;
 use systemprompt_kit_export::{export_kit, round_trip};
 
 const MARKETPLACE: &str = "enterprise-demo";

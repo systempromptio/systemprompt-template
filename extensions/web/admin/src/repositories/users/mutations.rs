@@ -28,7 +28,7 @@ pub async fn create_user(
             status = EXCLUDED.status,
             updated_at = NOW()
         RETURNING
-            id AS "user_id!",
+            id AS "user_id!: UserId",
             COALESCE(display_name, name) AS display_name,
             email AS "email: _",
             roles AS "roles!: Vec<String>",
@@ -86,7 +86,7 @@ pub async fn update_user(
             updated_at = NOW()
         WHERE id = $1
         RETURNING
-            id AS "user_id!",
+            id AS "user_id!: UserId",
             COALESCE(display_name, name) AS display_name,
             email AS "email: _",
             roles AS "roles!: Vec<String>",

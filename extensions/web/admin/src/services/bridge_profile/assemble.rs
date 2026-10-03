@@ -11,7 +11,7 @@ use std::sync::Arc;
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
 use systemprompt::identifiers::{TenantId, UserId};
-use systemprompt::models::Config;
+use systemprompt::manifest::Config;
 use uuid::Uuid;
 
 use crate::repositories::bridge::{BridgeIdentityRow, find_bridge_user};

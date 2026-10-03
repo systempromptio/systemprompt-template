@@ -218,8 +218,8 @@ impl From<systemprompt::security::authz::AuthzError> for AdminError {
     }
 }
 
-impl From<systemprompt::models::errors::ConfigError> for AdminError {
-    fn from(value: systemprompt::models::errors::ConfigError) -> Self {
+impl From<systemprompt::models::errors::GlobalConfigError> for AdminError {
+    fn from(value: systemprompt::models::errors::GlobalConfigError) -> Self {
         Self::Internal(Box::new(value))
     }
 }

@@ -2,7 +2,7 @@
 
 use chrono::NaiveDate;
 use serde::Serialize;
-use systemprompt::ai::{QuotaWindow, SafetyHistoryMode};
+use systemprompt::gateway::{QuotaWindow, SafetyHistoryMode};
 
 use crate::handlers::ssr::list_view::SelectOptionView;
 use crate::handlers::ssr::sync_plane::PlaneCardView;

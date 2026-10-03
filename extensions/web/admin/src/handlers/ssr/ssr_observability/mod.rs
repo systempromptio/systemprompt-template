@@ -19,7 +19,7 @@ use axum::http::HeaderMap;
 use axum::response::{Redirect, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use systemprompt::models::profile::OtlpExportConfig;
+use systemprompt::manifest::profile::OtlpExportConfig;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::shared::require_write_origin;
@@ -162,10 +162,10 @@ pub(crate) async fn export_now(
         Ok(config) => config,
         Err(redirect) => return Ok(redirect),
     };
-    let instance_id = systemprompt::models::Config::get()
+    let instance_id = systemprompt::manifest::Config::get()
         .ok()
         .map(|c| c.instance_id.clone());
-    let report = systemprompt::scheduler::otlp_export_now(&pool, &config, instance_id.as_deref())
+    let report = systemprompt::scheduler::otlp_export_now(&pool, &config, instance_id.as_ref())
         .await
         .map_err(AdminError::internal)?;
     tracing::info!(

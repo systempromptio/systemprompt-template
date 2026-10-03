@@ -161,7 +161,7 @@ pub async fn list_session_contexts(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<SessionContextRow>, sqlx::Error> {
-    let legacy = ContextId::legacy();
+    let legacy = ContextId::legacy_context_row();
     sqlx::query_as!(
         SessionContextRow,
         r#"
@@ -225,7 +225,7 @@ pub async fn list_session_requests(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<SessionRequestRow>, sqlx::Error> {
-    let legacy = ContextId::legacy();
+    let legacy = ContextId::legacy_context_row();
     sqlx::query_as!(
         SessionRequestRow,
         r#"

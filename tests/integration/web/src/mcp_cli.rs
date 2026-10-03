@@ -36,9 +36,19 @@ fn db_pool(pool: &Arc<PgPool>) -> systemprompt::database::DbPool {
 }
 
 fn executor(db_pool: &systemprompt::database::DbPool) -> McpToolExecutor {
-    let usage = Arc::new(ToolUsageRepository::new(db_pool).expect("tool usage repository"));
-    let ingest = Arc::new(ArtifactIngest::from_db(db_pool, None).expect("artifact ingest"));
-    McpToolExecutor::new(usage, ingest, "systemprompt")
+    let usage = Arc::new(ToolUsageRepository::new(db_pool));
+    let ingest = Arc::new(ArtifactIngest::new(
+        systemprompt::mcp::repository::ArtifactIngestRepositories::new(db_pool),
+        None,
+    ));
+    McpToolExecutor::new(
+        usage,
+        Arc::new(systemprompt::ai::repository::AiRequestRepository::new(
+            db_pool,
+        )),
+        ingest,
+        systemprompt::identifiers::McpServerId::new("systemprompt"),
+    )
 }
 
 fn request_context() -> SysRequestContext {
@@ -48,6 +58,7 @@ fn request_context() -> SysRequestContext {
         ContextId::try_new("00000000-0000-4000-8000-00000000c11e")
             .expect("valid fixture identifier"),
         AgentName::try_new("cli-agent").expect("valid fixture agent name"),
+        systemprompt::identifiers::Actor::anonymous(systemprompt::identifiers::UserId::generate()),
     )
 }
 
@@ -96,7 +107,10 @@ async fn run_tool(
 ) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
     let db_pool = db_pool(&db.pool);
     let executor = executor(&db_pool);
-    let ingest = Arc::new(ArtifactIngest::from_db(&db_pool, None).expect("artifact ingest"));
+    let ingest = Arc::new(ArtifactIngest::new(
+        systemprompt::mcp::repository::ArtifactIngestRepositories::new(&db_pool),
+        None,
+    ));
     let profile = client();
     let tool_name = request.name.to_string();
     systemprompt_mcp_agent::server::tool::dispatch_tool(

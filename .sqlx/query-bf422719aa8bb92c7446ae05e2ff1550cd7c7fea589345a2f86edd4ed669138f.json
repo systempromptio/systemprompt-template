@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_device_cert_validity (device_id, valid_until) VALUES ($1, $2)\n                 ON CONFLICT (device_id) DO UPDATE\n                    SET valid_until = EXCLUDED.valid_until, updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bf422719aa8bb92c7446ae05e2ff1550cd7c7fea589345a2f86edd4ed669138f"
+}

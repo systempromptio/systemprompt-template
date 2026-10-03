@@ -16,7 +16,7 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use sqlx::{AssertSqlSafe, PgPool};
-use systemprompt::database::{Database, install_extension_schemas};
+use systemprompt::database::{Database, install_extension_schemas_full};
 use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
@@ -164,9 +164,14 @@ async fn ensure_template(admin: &PgPool, base: &str, template: &str) {
             "no extensions registered — the integration binary must link the crates whose \
              `register_extension!` supplies the migrations"
         );
-        install_extension_schemas(&registry, database.write())
-            .await
-            .expect("install extension schemas");
+        install_extension_schemas_full(
+            &registry,
+            database.write(),
+            &[],
+            systemprompt::database::MigrationConfig::default(),
+        )
+        .await
+        .expect("install extension schemas");
         // The copy refuses to run while any session holds the template open, so
         // this close is load-bearing, not tidiness.
         pool.close().await;

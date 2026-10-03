@@ -27,7 +27,7 @@
 //! export compare and render the declaration, never the day's rewrite.
 
 use chrono::{DateTime, Datelike, NaiveDate, TimeZone, Utc};
-use systemprompt::ai::{GatewayPolicySpec, QuotaWindow};
+use systemprompt::gateway::{GatewayPolicySpec, QuotaWindow};
 
 pub const DAY_SECONDS: i32 = 86_400;
 

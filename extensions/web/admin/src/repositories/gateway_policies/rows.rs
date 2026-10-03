@@ -9,7 +9,7 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::ai::GatewayPolicySpec;
+use systemprompt::gateway::GatewayPolicySpec;
 use systemprompt::identifiers::AiGatewayPolicyId;
 
 use crate::error::{AdminError, AdminResult};

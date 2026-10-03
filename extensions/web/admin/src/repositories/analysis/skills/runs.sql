@@ -86,7 +86,7 @@ log_commands AS (
     SELECT p.session_id, u.created_at AS at, tool_input_summary(x.input) AS command
     FROM picked p
     JOIN plugin_usage_events u ON u.session_id = p.session_id
-    JOIN mcp_tool_executions x ON x.mcp_execution_id = u.mcp_execution_id
+    JOIN mcp_tool_executions x ON x.ai_tool_call_id = u.metadata->>'tool_use_id' AND x.user_id = u.user_id
     WHERE u.event_type = 'PostToolUse' AND u.tool_name = 'Bash' AND u.created_at >= p.started_at
       AND x.input LIKE '%.sf-dev-workflow/%'
 ),

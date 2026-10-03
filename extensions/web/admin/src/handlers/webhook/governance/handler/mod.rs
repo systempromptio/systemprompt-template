@@ -129,7 +129,7 @@ async fn evaluate_and_record(
             None,
         ),
         target: AuditTarget {
-            tool_name: governed.target.as_str().to_owned(),
+            tool_name: systemprompt::identifiers::McpToolName::new(governed.target.as_str()),
             plugin_id: governed.plugin_id.cloned(),
             tool_use_id: None,
         },
@@ -141,7 +141,7 @@ async fn evaluate_and_record(
         context_id: Some(systemprompt::identifiers::ContextId::derived_from_session(
             governed.session_id,
         )),
-        trace_id: Some(systemprompt::identifiers::TraceId::generate().to_string()),
+        trace_id: Some(systemprompt::identifiers::TraceId::generate()),
     };
     record_decision(pool, &audit).await.map_err(|error| {
         tracing::error!(%error, "Governance audit unavailable; denying execution");
