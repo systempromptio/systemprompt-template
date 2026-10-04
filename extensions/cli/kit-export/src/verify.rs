@@ -143,6 +143,7 @@ fn diff_values(file: &str, path: &str, services: &Value, imported: &Value, out: 
             }
         },
         (a, b) if a == b => {},
+        (a, b) if same_skill_selection(path, a, b) => {},
         (_, b) if NOT_IN_KIT_FORM.contains(&path) && is_empty(b) => {},
         (a, b) => out.push(Diff::Value {
             file: file.to_owned(),
@@ -151,6 +152,26 @@ fn diff_values(file: &str, path: &str, services: &Value, imported: &Value, out: 
             imported: render(b),
         }),
     }
+}
+
+// Why: core imports plugin skill selections in canonical order; membership,
+// including duplicates, must survive, but selection order is not a contract.
+fn same_skill_selection(path: &str, a: &Value, b: &Value) -> bool {
+    if path != "plugin.skills.include" {
+        return false;
+    }
+    let (Value::Sequence(a), Value::Sequence(b)) = (a, b) else {
+        return false;
+    };
+    let Some(mut a) = a.iter().map(Value::as_str).collect::<Option<Vec<_>>>() else {
+        return false;
+    };
+    let Some(mut b) = b.iter().map(Value::as_str).collect::<Option<Vec<_>>>() else {
+        return false;
+    };
+    a.sort_unstable();
+    b.sort_unstable();
+    a == b
 }
 
 // Why: an empty list, map or null on the instance side is nothing to lose;
@@ -171,4 +192,43 @@ fn body_of(md: &str) -> &str {
 
 fn render(v: &Value) -> String {
     serde_yaml::to_string(v).map_or_else(|_| format!("{v:?}"), |s| s.trim().replace('\n', " "))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::same_skill_selection;
+    use serde_yaml::Value;
+
+    #[test]
+    fn skill_selection_preserves_membership_and_duplicates_not_order() {
+        let selection = |names: &[&str]| {
+            Value::Sequence(
+                names
+                    .iter()
+                    .map(|name| Value::String((*name).to_owned()))
+                    .collect(),
+            )
+        };
+        let original = selection(&["b", "a"]);
+        assert!(same_skill_selection(
+            "plugin.skills.include",
+            &original,
+            &selection(&["a", "b"])
+        ));
+        assert!(!same_skill_selection(
+            "plugin.skills.include",
+            &original,
+            &selection(&["a"])
+        ));
+        assert!(!same_skill_selection(
+            "plugin.skills.include",
+            &original,
+            &selection(&["a", "b", "b"])
+        ));
+        assert!(!same_skill_selection(
+            "ordered.steps",
+            &original,
+            &selection(&["a", "b"])
+        ));
+    }
 }
