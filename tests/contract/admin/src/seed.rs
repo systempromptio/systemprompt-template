@@ -17,7 +17,7 @@ use std::collections::BTreeMap;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Algorithm, Header, encode};
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{PluginId, UserId};
 use systemprompt::models::auth::{
     JwtAudience, JwtClaims, Permission, RateLimitTier, TokenType, UserType,
 };
@@ -98,8 +98,9 @@ pub fn mint(spec: &TokenSpec<'_>) -> String {
         auth_time: now.timestamp(),
         session_id: None,
         rate_limit_tier: Some(RateLimitTier::Service),
-        plugin_id: spec.plugin_id.map(ToOwned::to_owned),
+        plugin_id: spec.plugin_id.map(PluginId::new),
         act: None,
+        purpose: None,
     };
 
     let kid =

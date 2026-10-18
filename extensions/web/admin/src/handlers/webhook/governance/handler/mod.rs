@@ -20,9 +20,10 @@ use systemprompt_security::authz::Decision;
 use systemprompt_security::policy::types::AccessScope;
 use systemprompt_security::policy::{
     AgentScope, AuditOrigin, AuditTarget, DecisionAudit, GovernedInput, GovernedTarget,
-    PolicyContext, PrincipalSnapshot, record_decision,
+    PolicyContext, PrincipalSnapshot, RateChargeSubject, RateWindowRepository, record_decision,
 };
 
+use crate::authz::AccountStanding;
 use crate::repositories::dashboard::usage_aggregations::ingestion;
 use crate::types::webhook::{GovernQuery, HookEventPayload};
 
@@ -69,10 +70,14 @@ async fn resolve_access_scope(
     pool: &PgPool,
     user_id: &UserId,
     denial: &AuthDenialParams<'_>,
-) -> Result<AccessScope, &'static str> {
-    match crate::authz::account_scope(pool, user_id).await {
-        Ok(AccessScope::Admin) => Ok(AccessScope::Admin),
-        Ok(AccessScope::User) => Ok(AccessScope::User),
+) -> Result<AccountStanding, &'static str> {
+    match crate::authz::account_standing(pool, user_id).await {
+        Ok(
+            standing @ AccountStanding {
+                scope: AccessScope::Admin | AccessScope::User,
+                ..
+            },
+        ) => Ok(standing),
         result => {
             tracing::warn!(?result, %user_id, "authorization_unavailable: active account");
             spawn_auth_denial(denial, "Active account authorization unavailable");
@@ -88,6 +93,7 @@ struct Governed<'a> {
     user_id: UserId,
     client_id: Option<ClientId>,
     access_scope: AccessScope,
+    roles: Vec<String>,
     _claimed: Option<String>,
     plugin_id: Option<&'a PluginId>,
 }
@@ -96,25 +102,35 @@ struct Governed<'a> {
 // an out-of-process agent has no second enforcement point to inherit from.
 async fn evaluate_and_record(
     pool: &PgPool,
+    rate_windows: &RateWindowRepository,
     governed: Governed<'_>,
     denial: &AuthDenialParams<'_>,
 ) -> Result<Decision, &'static str> {
     let call_id = CallId::generate();
-    let engine = engine().map_err(|error| {
+    let engine = engine(rate_windows).map_err(|error| {
         tracing::error!(error = %error, "governance engine unavailable");
         spawn_auth_denial(denial, "Governance engine unavailable");
         "Governance engine unavailable"
     })?;
+    let rate_counts = engine
+        .charge_rate_windows(RateChargeSubject {
+            session: governed.session_id,
+            user: &governed.user_id,
+            call: &call_id,
+        })
+        .await;
     let evaluation = engine.evaluate(&PolicyContext {
         target: governed.target.clone(),
         agent_scope: AgentScope::User {
             user_id: governed.user_id.clone(),
         },
         access_scope: governed.access_scope,
+        roles: &governed.roles,
         session_id: governed.session_id,
         user_id: &governed.user_id,
         input: governed.input,
         call_id: &call_id,
+        rate_counts: &rate_counts,
     });
     let audit = DecisionAudit {
         id: uuid::Uuid::new_v4().to_string(),
@@ -153,6 +169,7 @@ async fn evaluate_and_record(
 pub(crate) async fn govern_tool_use(
     State(pool): State<Arc<PgPool>>,
     Extension(session_service): Extension<Arc<SessionCreationService>>,
+    Extension(rate_windows): Extension<RateWindowRepository>,
     headers: HeaderMap,
     Query(query): Query<GovernQuery>,
     // JSON: protocol boundary — the third-party hook envelope, parsed into typed
@@ -200,8 +217,8 @@ pub(crate) async fn govern_tool_use(
             response_event,
         );
     }
-    let access_scope = match resolve_access_scope(&pool, &principal.user_id, &denial_params).await {
-        Ok(scope) => scope,
+    let standing = match resolve_access_scope(&pool, &principal.user_id, &denial_params).await {
+        Ok(standing) => standing,
         Err(reason) => return build_response(&deny_for_auth_failure(reason), response_event),
     };
 
@@ -211,11 +228,12 @@ pub(crate) async fn govern_tool_use(
         session_id: &session_id,
         user_id: principal.user_id,
         client_id: principal.client_id,
-        access_scope,
+        access_scope: standing.scope,
+        roles: standing.roles,
         _claimed: claimed,
         plugin_id,
     };
-    match evaluate_and_record(&pool, governed, &denial_params).await {
+    match evaluate_and_record(&pool, &rate_windows, governed, &denial_params).await {
         Ok(decision) => build_response(&decision, response_event),
         Err(reason) => build_response(&deny_for_auth_failure(reason), response_event),
     }

@@ -27,7 +27,7 @@
 //! [p]: systemprompt_security::authz::SubjectAttributeProvider
 
 mod account;
-pub use account::account_scope;
+pub use account::{AccountStanding, account_scope, account_standing};
 pub(crate) mod catalog;
 pub mod connector;
 pub mod group;

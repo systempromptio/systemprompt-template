@@ -7,6 +7,8 @@
 //! a request. The result is validated the way core validates the file, so
 //! a spec that saves is a spec the gateway will read.
 
+use std::collections::BTreeMap;
+
 use systemprompt::gateway::{
     GatewayPolicyConfig, GatewayPolicyEntry, GatewayPolicySpec, HeuristicConfig, QuotaMode,
     QuotaWindow, SafetyConfig, SafetyHistoryMode, SafetyMode,
@@ -151,6 +153,7 @@ fn parse_window(
         .ok_or(FormError::NoLength { index: index + 1 })?;
     let window = QuotaWindow {
         window_seconds: window_seconds(&raw, index)?,
+        calendar: None,
         subject: subject.to_owned(),
         max_requests: optional_i64(fields, &key("max_requests"))?,
         max_input_tokens: optional_i64(fields, &key("max_input_tokens"))?,
@@ -241,6 +244,7 @@ pub fn parse_policy_form(fields: &[(String, String)]) -> Result<ParsedPolicy, Fo
             QuotaMode::Enforce
         },
         quota_windows,
+        rate_windows: Vec::new(),
         safety: SafetyConfig {
             mode: if parse_mode(first(fields, "safety_mode"), "safety_mode")? {
                 SafetyMode::Warn
@@ -252,6 +256,8 @@ pub fn parse_policy_form(fields: &[(String, String)]) -> Result<ParsedPolicy, Fo
             block_categories: all(fields, "block"),
             block_response_categories: all(fields, "block_response"),
             history: parse_history(first(fields, "history"))?,
+            scanner_settings: BTreeMap::new(),
+            redact_categories: Vec::new(),
         },
     };
     let parsed = ParsedPolicy {

@@ -15,7 +15,7 @@ agents:
       - user
       - documentation
     card:
-      protocolVersion: "0.3.0"
+      protocolVersion: "1.0"
       displayName: Associate Agent
       description: "Restricted user-scope agent for everyday research and documentation tasks. Cannot access admin-only tools."
       version: "1.0.0"
@@ -23,12 +23,11 @@ agents:
       capabilities:
         streaming: true
         pushNotifications: false
-        stateTransitionHistory: true
       defaultInputModes:
         - text/plain
       defaultOutputModes:
         - text/plain
-      security:
+      securityRequirements:
         - oauth2:
             - user
     metadata:

@@ -15,7 +15,7 @@ agents:
       - admin
       - engineering
     card:
-      protocolVersion: "0.3.0"
+      protocolVersion: "1.0"
       displayName: Developer Agent
       description: "Full-access engineering agent for implementation, code review, and administration. Admin scope grants unrestricted tool access."
       version: "1.0.0"
@@ -23,12 +23,11 @@ agents:
       capabilities:
         streaming: true
         pushNotifications: false
-        stateTransitionHistory: true
       defaultInputModes:
         - text/plain
       defaultOutputModes:
         - text/plain
-      security:
+      securityRequirements:
         - oauth2:
             - admin
     metadata:

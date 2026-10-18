@@ -341,12 +341,15 @@ async fn gateway_does_not_allow_a_request_when_its_policy_database_is_unavailabl
     let model = systemprompt::identifiers::ModelId::new("test-model");
     let route = systemprompt::identifiers::RouteId::new("test-route");
     let provider = systemprompt::identifiers::ProviderId::new("test-provider");
+    let attribution = systemprompt::models::attribution::RequestAttribution::none();
     let request = GatewayGuardRequest {
         user_id: &user_id,
         model: &model,
         route_id: Some(&route),
         provider: &provider,
         streaming: false,
+        attribution: &attribution,
+        api_key_id: None,
     };
     let denial = RouteEntitlementGuard
         .check(&database, &request)
@@ -591,12 +594,15 @@ async fn gateway_rejects_incompatible_database_handles_even_when_reported_connec
     let model = ModelId::new("test-model");
     let route = RouteId::new("test-route");
     let provider = ProviderId::new("test-provider");
+    let attribution = systemprompt::models::attribution::RequestAttribution::none();
     let request = GatewayGuardRequest {
         user_id: &user_id,
         model: &model,
         route_id: Some(&route),
         provider: &provider,
         streaming: false,
+        attribution: &attribution,
+        api_key_id: None,
     };
     let denial = RouteEntitlementGuard
         .check(&ForeignDatabase, &request)

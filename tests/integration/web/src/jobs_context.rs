@@ -17,7 +17,8 @@ use systemprompt::database::Database;
 use systemprompt::extension::{AssetDefinition, AssetType, ExtensionRegistry};
 use systemprompt::identifiers::{Actor, UserId};
 use systemprompt::manifest::profile::{
-    ContentNegotiationConfig, PathsConfig, RateLimitsConfig, RetentionConfig, SecurityHeadersConfig,
+    ConfigPlanesConfig, ContentNegotiationConfig, NodeRole, PathsConfig, RateLimitsConfig,
+    RetentionConfig, SecurityHeadersConfig, ShutdownConfig,
 };
 use systemprompt::manifest::{Config, PathResolution};
 use systemprompt::traits::{Job, JobContext};
@@ -101,10 +102,14 @@ pub(crate) fn install_config() {
     let _ = Config::install(Config {
         instance_id: systemprompt::identifiers::InstanceId::new("jobs-context-tests"),
         max_concurrent_streams: 16,
+        role: NodeRole::All,
+        max_in_flight: None,
+        shutdown: ShutdownConfig::default(),
         sitename: "example-test".to_owned(),
         database_type: "postgres".to_owned(),
         database_url: "postgres://unused".to_owned(),
         database_write_url: None,
+        database_session_url: None,
         github_link: String::new(),
         github_token: None,
         system_path: "/tmp".to_owned(),
@@ -134,6 +139,7 @@ pub(crate) fn install_config() {
         use_https: true,
         rate_limits: RateLimitsConfig::default(),
         retention: RetentionConfig::default(),
+        planes: ConfigPlanesConfig::default(),
         cors_allowed_origins: vec![],
         trusted_proxies: vec![],
         is_cloud: false,
@@ -141,6 +147,7 @@ pub(crate) fn install_config() {
         security_headers: SecurityHeadersConfig::default(),
         allow_dynamic_client_registration: false,
         allow_registration: false,
+        api_key_max_lifetime_days: None,
         login_page_url: None,
         system_admin_username: "admin".to_owned(),
         system_admin_email: None,
@@ -161,6 +168,8 @@ fn app_paths(root: &Path) -> Arc<AppPaths> {
                 web_path: Some(root.clone()),
                 storage: Some(root),
                 geoip_database: None,
+                shipped_files: None,
+                data: None,
             },
             PathResolution::Canonicalize,
             None,

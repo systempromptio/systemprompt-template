@@ -1,6 +1,6 @@
 //! Owner-authenticated source and revision authoring; no implicit activation.
 
-use crate::error::AdminResult;
+use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared::require_write_origin;
 use crate::routes::managed_state::ManagedState;
 use crate::types::UserContext;
@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use axum::{Extension, Json};
 use serde::Deserialize;
+use systemprompt::config::{AppPaths, ProfileBootstrap};
 use systemprompt::identifiers::{
     ManagedReconciliationId, ManagedResourceId, ManagedSourceId, ResourceRevisionId,
     SourceSnapshotId, WithdrawalProposalId,
@@ -86,10 +87,22 @@ pub(crate) async fn sync_git(
     Ok(Json(
         systemprompt::system::managed::git_sources::GitSourceOrchestrator::new(
             state.repository.clone(),
+            scratch_root()?,
         )
         .synchronize(&state.owner, &input)
         .await?,
     ))
+}
+
+fn scratch_root() -> AdminResult<std::path::PathBuf> {
+    let profile = ProfileBootstrap::get().map_err(AdminError::internal)?;
+    let paths = AppPaths::from_profile(
+        &profile.paths,
+        profile.path_resolution(),
+        systemprompt::loader::ServicesRootBootstrap::get().map(|root| root.path.as_path()),
+    )
+    .map_err(AdminError::internal)?;
+    Ok(paths.storage().scratch().to_path_buf())
 }
 
 pub(crate) async fn begin_reconciliation(

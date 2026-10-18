@@ -118,6 +118,7 @@ pub fn declared_window_seconds(window_seconds: i32) -> i32 {
 fn normalise_window(window: &QuotaWindow) -> QuotaWindow {
     QuotaWindow {
         window_seconds: declared_window_seconds(window.window_seconds),
+        calendar: window.calendar,
         subject: window.subject.clone(),
         max_requests: window.max_requests,
         max_input_tokens: window.max_input_tokens,
@@ -133,6 +134,7 @@ pub fn normalise_spec(spec: &GatewayPolicySpec) -> GatewayPolicySpec {
     GatewayPolicySpec {
         quota_mode: spec.quota_mode,
         quota_windows: spec.quota_windows.iter().map(normalise_window).collect(),
+        rate_windows: spec.rate_windows.clone(),
         safety: spec.safety.clone(),
     }
 }

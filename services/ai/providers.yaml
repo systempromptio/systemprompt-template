@@ -12,7 +12,7 @@
 # host with Anthropic's API as the failover — declare the second copy under a
 # prefixed id (`anthropic-claude-sonnet-5`) with `upstream_model` carrying the
 # real name, mark it `hidden: true` so no client is offered the
-# twin, and name that provider as the route's `fallback_provider` in
+# twin, and list that provider in the route's `fallbacks` in
 # gateway.yaml. The failover finds the twin by `upstream_model`, ignoring
 # `hidden`, and prices the served request from it. This catalog has no twins:
 # each provider serves only its own models.

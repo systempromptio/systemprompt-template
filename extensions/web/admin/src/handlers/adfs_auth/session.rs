@@ -107,6 +107,7 @@ pub(crate) async fn mint_session(
         // Why: a browser session is minted for a person, not for a registered
         // OAuth client, so there is no client to name.
         client_id: None,
+        purpose: None,
     };
     let signing = JwtSigningParams {
         issuer: &cfg.jwt_issuer,

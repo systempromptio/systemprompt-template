@@ -3,18 +3,20 @@
 use crate::fixtures::{insert_session, insert_user, unclaimed_email, unique};
 use crate::tempdb::TempDb;
 use std::sync::Arc;
+use systemprompt::database::{Database, DbPool};
 use systemprompt::gateway::captures::CapturedToolUse;
-use systemprompt::gateway::protocol::canonical::CanonicalRequest;
 use systemprompt::gateway::protocol::canonical::{
-    CanonicalResponse, CanonicalUsage,
+    CanonicalRequest, CanonicalResponse, CanonicalUsage,
 };
 use systemprompt::gateway::protocol::inbound::InboundAdapter;
 use systemprompt::gateway::protocol::inbound::anthropic_messages::AnthropicMessagesInbound;
-use systemprompt::gateway::{
-    GatewayAudit, GatewayRepositories, GatewayRequestContext,
-};
-use systemprompt::database::{Database, DbPool};
+use systemprompt::gateway::{GatewayAudit, GatewayRepositories, GatewayRequestContext};
 use systemprompt::identifiers::{AiRequestId, AiToolCallId, ContextId, SessionId, TraceId, UserId};
+use systemprompt::models::attribution::RequestAttribution;
+use systemprompt::models::origin::{
+    ClientAttestation, ClientEvidence, ClientKind, InboundWireProtocol, RequestOrigin,
+};
+use systemprompt::traits::{BackgroundTasks, CacheEpochs};
 use systemprompt_security::policy::types::AccessScope;
 
 async fn profile() -> tempfile::TempDir {
@@ -54,8 +56,16 @@ fn audit(repos: &GatewayRepositories, user: &UserId, request: &CanonicalRequest)
         requested_model: None,
         max_tokens: Some(16),
         is_streaming: false,
-        wire_protocol: "anthropic-messages".into(),
+        origin: RequestOrigin::gateway(
+            ClientKind::Other,
+            InboundWireProtocol::AnthropicMessages,
+            ClientAttestation::None,
+        ),
+        evidence: ClientEvidence::none(),
+        attribution: RequestAttribution::none(),
+        api_key_windows: Vec::new(),
         access_log: None,
+        context_bound: false,
     };
     let audit = GatewayAudit::new(repos, ctx);
     audit
@@ -84,11 +94,17 @@ async fn terminal_receipt_survives_database_failure_and_replays_without_duplicat
         systemprompt::agent::repository::ContextRepository::new(&pool),
     ));
     let journal = systemprompt::gateway::audit::journal::GatewayJournal::open(
-        systemprompt::config::ProfileBootstrap::get_path().expect("profile bootstrapped"),
+        profile.path(),
         systemprompt::config::SecretsBootstrap::get().expect("secrets bootstrapped"),
     )
     .expect("gateway journal opens");
-    let repos = GatewayRepositories::new(&pool, journal, materializer, systemprompt::traits::BackgroundTasks::new());
+    let repos = GatewayRepositories::new(
+        &pool,
+        journal,
+        materializer,
+        BackgroundTasks::new(),
+        CacheEpochs::new(),
+    );
     let raw = Vec::from(
         br#"{"model":"test-model","max_tokens":16,"messages":[{"role":"user","content":"test"}]}"#
             .as_slice(),
@@ -105,6 +121,7 @@ async fn terminal_receipt_survives_database_failure_and_replays_without_duplicat
     )
     .await;
     first.open(&request, &raw).await.expect("admission");
+    first.commit_admission().await.expect("commit admission");
     sqlx::raw_sql("CREATE FUNCTION fail_completion() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status='completed' THEN RAISE EXCEPTION 'injected storage outage'; END IF; RETURN NEW; END $$; CREATE TRIGGER fail_completion BEFORE UPDATE ON ai_requests FOR EACH ROW EXECUTE FUNCTION fail_completion();")
         .execute(&*db.pool).await.expect("install fault");
     let usage = CanonicalUsage {
@@ -156,10 +173,9 @@ async fn terminal_receipt_survives_database_failure_and_replays_without_duplicat
         .execute(&*db.pool)
         .await
         .expect("restore storage");
-    let recovered =
-        systemprompt::gateway::audit::journal::recover(&repos.settlement())
-            .await
-            .expect("owned recovery settles the durable receipt");
+    let recovered = systemprompt::gateway::audit::journal::recover(&repos.settlement())
+        .await
+        .expect("owned recovery settles the durable receipt");
     assert_eq!(recovered, 1);
     let second = audit(&repos, &user, &request);
     insert_session(
@@ -172,6 +188,10 @@ async fn terminal_receipt_survives_database_failure_and_replays_without_duplicat
         .open(&request, &raw)
         .await
         .expect("admission after receipt recovery");
+    second
+        .commit_admission()
+        .await
+        .expect("commit admission after receipt recovery");
     let row:(String,Option<i32>,i64)=sqlx::query_as("SELECT status,tokens_used,(SELECT count(*) FROM ai_request_tool_calls WHERE request_id=r.id) FROM ai_requests r WHERE id=$1")
         .bind(first.ctx.ai_request_id.as_str()).fetch_one(&*db.pool).await.expect("replayed completion");
     assert_eq!(row, ("completed".into(), Some(18), 1));

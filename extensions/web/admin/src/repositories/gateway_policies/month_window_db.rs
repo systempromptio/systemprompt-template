@@ -71,13 +71,13 @@ async fn carry_forward(
 ) -> Result<u64, sqlx::Error> {
     let done = sqlx::query!(
         r"INSERT INTO ai_quota_buckets
-              (id, subject_kind, subject_id, window_seconds, window_start,
+              (id, subject_kind, subject_id, window_seconds, window_start, shard,
                requests, input_tokens, output_tokens, cost_microdollars, updated_at)
-          SELECT gen_random_uuid()::text, subject_kind, subject_id, $4, $5,
+          SELECT gen_random_uuid()::text, subject_kind, subject_id, $4, $5, shard,
                  requests, input_tokens, output_tokens, cost_microdollars, CURRENT_TIMESTAMP
             FROM ai_quota_buckets
            WHERE subject_kind = $1 AND window_seconds = $2 AND window_start = $3
-          ON CONFLICT (subject_kind, subject_id, window_seconds, window_start) DO UPDATE
+          ON CONFLICT (subject_kind, subject_id, window_seconds, window_start, shard) DO UPDATE
              SET requests = ai_quota_buckets.requests + EXCLUDED.requests,
                  input_tokens = ai_quota_buckets.input_tokens + EXCLUDED.input_tokens,
                  output_tokens = ai_quota_buckets.output_tokens + EXCLUDED.output_tokens,

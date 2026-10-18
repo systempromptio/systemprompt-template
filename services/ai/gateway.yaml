@@ -9,10 +9,10 @@ gateway:
   # `name` and `description` are what the console and the model picker show
   # in place of the generated id.
   #
-  # `fallback_provider` (not used here): when two providers in providers.yaml
-  # serve the same model, a route may name the second as its fallback — a
-  # retry-budget exhaustion (429/503), any other 5xx or a failed connection
-  # re-sends the same governed request there, and the audit row records
+  # `fallbacks` (not used here): when two providers in providers.yaml serve
+  # the same model, a route may list `{provider, upstream_model}` entries tried
+  # in order — a retry-budget exhaustion (429/503), any other 5xx or a failed
+  # connection re-sends the same governed request there, and the audit row records
   # `served_provider`. Each provider below serves its own models only, so no
   # route has a fallback.
   routes:

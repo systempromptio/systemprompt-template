@@ -16,12 +16,19 @@ use std::sync::Arc;
 use systemprompt::ai::repository::{AiGatewayPolicyRepository, AiQuotaBucketRepository};
 use systemprompt::database::{Database, DbPool};
 use systemprompt::gateway::policies::PolicyResolver;
-use systemprompt::gateway::quota::precheck_and_reserve;
+use systemprompt::gateway::quota::{
+    QuotaEstimate, QuotaSubjects, ReserveOutcome, ReserveParams, precheck_and_reserve,
+};
 use systemprompt::gateway::{
     GatewayPolicyConfig, GatewayPolicyIngestOptions, GatewayPolicyIngestionService, QuotaMode,
     QuotaWindow, SafetyMode,
 };
 use systemprompt::identifiers::UserId;
+use systemprompt::manifest::profile::QuotaConfig;
+use systemprompt::manifest::services::QuotaFaultMode;
+use systemprompt::models::attribution::RequestAttribution;
+use systemprompt::traits::CacheEpochs;
+use systemprompt_security::authz::SubjectProviderSet;
 
 use crate::fixtures::unique;
 use crate::tempdb::TempDb;
@@ -91,8 +98,8 @@ async fn the_resolver_keeps_both_warn_switches_after_ingestion() {
     let pool = ingest_shipped(&db).await;
 
     let repo = AiGatewayPolicyRepository::new(&pool);
-    let resolved = PolicyResolver::from_repository(repo)
-        .resolve(systemprompt::manifest::services::QuotaFaultMode::default())
+    let resolved = PolicyResolver::from_repository(repo, CacheEpochs::new())
+        .resolve(QuotaFaultMode::default())
         .await
         .expect("policy row resolves");
 
@@ -124,8 +131,8 @@ async fn an_exhausted_window_is_still_detected_so_the_warn_carries_a_reason() {
     };
     let pool = ingest_shipped(&db).await;
     let repo = AiGatewayPolicyRepository::new(&pool);
-    let resolved = PolicyResolver::from_repository(repo)
-        .resolve(systemprompt::manifest::services::QuotaFaultMode::default())
+    let resolved = PolicyResolver::from_repository(repo, CacheEpochs::new())
+        .resolve(QuotaFaultMode::default())
         .await
         .expect("policy row resolves");
     assert!(resolved.quota_mode.is_warn());
@@ -146,28 +153,37 @@ async fn an_exhausted_window_is_still_detected_so_the_warn_carries_a_reason() {
     };
     let buckets = AiQuotaBucketRepository::new(&pool);
     let user = UserId::new(unique("quota-user"));
+    let providers = SubjectProviderSet::default();
+    let attribution = RequestAttribution::none();
+    let reserve = || ReserveParams {
+        providers: &providers,
+        subjects: QuotaSubjects {
+            user_id: &user,
+            api_key_id: None,
+            attribution: &attribution,
+        },
+        windows: std::slice::from_ref(&tiny),
+        fault_mode: QuotaFaultMode::default(),
+        estimate: QuotaEstimate::default(),
+        sharding: QuotaConfig::default(),
+    };
 
-    let first = precheck_and_reserve(
-        &pool,
-        &buckets,
-        &user,
-        std::slice::from_ref(&tiny),
-        systemprompt::manifest::services::QuotaFaultMode::default(),
-    )
-    .await
-    .expect("first reservation");
-    assert!(first.is_none(), "the first request is within the window");
+    let first = precheck_and_reserve(&buckets, reserve())
+        .await
+        .expect("first reservation");
+    assert!(
+        matches!(first, ReserveOutcome::Admitted(_)),
+        "the first request is within the window"
+    );
 
-    let second = precheck_and_reserve(
-        &pool,
-        &buckets,
-        &user,
-        std::slice::from_ref(&tiny),
-        systemprompt::manifest::services::QuotaFaultMode::default(),
-    )
-    .await
-    .expect("second reservation")
-    .expect("the second request breaches a one-request window");
+    let ReserveOutcome::Denied {
+        decision: second, ..
+    } = precheck_and_reserve(&buckets, reserve())
+        .await
+        .expect("second reservation")
+    else {
+        panic!("the second request breaches a one-request window");
+    };
     assert!(
         !second.allow,
         "the breach is detected exactly as under enforce"

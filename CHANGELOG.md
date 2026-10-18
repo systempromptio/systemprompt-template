@@ -328,6 +328,20 @@ Conventions (strict — hold every entry to them):
   debt. The README carries a coverage badge rendered from `coverage/baseline.json`.
 
 ### Changed
+- `next` now builds against the published systemprompt-core 0.70.0 instead of
+  a live `[patch.crates-io]` onto an unreleased 0.62.0 `next` commit: every core
+  pin in both workspaces is 0.70.0, the patch blocks are commented, both
+  lockfiles are refreshed and `bridge/CORE_REF` is `v0.70.0`. `rmcp` moves to
+  `=3.5.1` with core. The extensions and tests follow the 0.63.0–0.70.0 core
+  API changes: the governance webhook passes `roles` and the cluster rate
+  windows into `PolicyContext` (without them the shipped `rate_limit` policy
+  denies every call), the monthly quota carry-forward and usage queries are
+  shard-aware (core ai migration 042), the safety scanner factories take
+  `ScannerSettings`, git-sourced managed resources and kit verification take a
+  scratch root, and the agent cards use A2A 1.0 `securityRequirements` and
+  `protocolVersion: "1.0"` (core refuses `security` and
+  `stateTransitionHistory` at load). The workspace version stays 0.62.0 until
+  release, so the schema ladder's top rung still names the last release.
 - The marketplace detail page reads and edits access only in the shared
   "Who gets this" panel, like every other catalog detail page.
 - Printed console pages paginate (the shell becomes ordinary flow); a

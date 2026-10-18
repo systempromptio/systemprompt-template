@@ -3,7 +3,7 @@
 use systemprompt::mcp::McpDomainResult;
 use systemprompt::mcp::services::ui_renderer::templates::DashboardRenderer;
 use systemprompt::mcp::services::ui_renderer::{UiRenderer, UiRendererRegistration, UiResource};
-use systemprompt::models::a2a::{Artifact, Part};
+use systemprompt::models::a2a::{Artifact, PartContent};
 use systemprompt::models::artifacts::ArtifactType;
 
 struct AdminRenderer;
@@ -25,13 +25,11 @@ impl UiRenderer for AdminRenderer {
         // the tool returned success with no artifact and nothing to say why.
         let mut failure: Option<serde_json::Error> = None;
         let report = artifact.parts.iter().find_map(|part| {
-            let Part::Data(data) = part else {
+            let PartContent::Data(data) = &part.content else {
                 return None;
             };
             // JSON: A2A data parts carry the serialized report protocol object.
-            match serde_json::from_value::<super::ReportOutput>(serde_json::Value::Object(
-                data.data.clone(),
-            )) {
+            match serde_json::from_value::<super::ReportOutput>(data.clone()) {
                 Ok(report) => Some(report),
                 Err(error) => {
                     failure = Some(error);

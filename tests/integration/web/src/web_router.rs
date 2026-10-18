@@ -20,8 +20,9 @@ use axum::http::{Request, StatusCode};
 use sqlx::PgPool;
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::{Extension, ExtensionContext};
-use systemprompt::identifiers::UserId;
-use systemprompt::traits::{ConfigProvider, DatabaseHandle};
+use systemprompt::identifiers::{InstanceId, UserId};
+use systemprompt::storage::LocalFileStorage;
+use systemprompt::traits::{ConfigProvider, DatabaseHandle, FileStorage};
 use systemprompt_web_extension::WebExtension;
 use tower::ServiceExt as _;
 
@@ -73,6 +74,12 @@ impl ExtensionContext for PoolCtx {
     fn database(&self) -> Arc<dyn DatabaseHandle> {
         Arc::clone(&self.database) as Arc<dyn DatabaseHandle>
     }
+    fn file_storage(&self) -> Arc<dyn FileStorage> {
+        Arc::new(LocalFileStorage::new(std::env::temp_dir()))
+    }
+    fn instance_id(&self) -> InstanceId {
+        InstanceId::new("web-router-test-instance")
+    }
     fn get_extension(&self, _id: &str) -> Option<Arc<dyn Extension>> {
         None
     }
@@ -103,6 +110,12 @@ impl ExtensionContext for ForeignDbCtx {
     }
     fn database(&self) -> Arc<dyn DatabaseHandle> {
         Arc::new(ForeignDb)
+    }
+    fn file_storage(&self) -> Arc<dyn FileStorage> {
+        Arc::new(LocalFileStorage::new(std::env::temp_dir()))
+    }
+    fn instance_id(&self) -> InstanceId {
+        InstanceId::new("web-router-test-instance")
     }
     fn get_extension(&self, _id: &str) -> Option<Arc<dyn Extension>> {
         None

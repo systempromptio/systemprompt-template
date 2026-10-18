@@ -70,7 +70,11 @@ impl App {
         // outside both route modules the contract table is derived from. They
         // are here because `handler_errors` drives their rejection paths;
         // nothing reads them back into the table.
-        let hooks = admin::hooks_webhook_router(Arc::clone(pool), session_service(pool));
+        let hooks = admin::hooks_webhook_router(
+            Arc::clone(pool),
+            session_service(pool),
+            systemprompt_security::policy::RateWindowRepository::new(pool.as_ref().clone()),
+        );
 
         // `secrets_router` and `share_manifest_router` are merged at the root
         // by `extensions/web/src/router/api.rs`, not nested under either route

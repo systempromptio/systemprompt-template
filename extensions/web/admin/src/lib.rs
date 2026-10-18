@@ -102,6 +102,7 @@ pub mod test_support {
 pub fn hooks_webhook_router(
     pool: Arc<PgPool>,
     session_service: Arc<systemprompt::oauth::SessionCreationService>,
+    rate_windows: systemprompt_security::policy::RateWindowRepository,
 ) -> Router {
     Router::new()
         .route(
@@ -115,6 +116,7 @@ pub fn hooks_webhook_router(
         .layer(Extension(event_hub::EventHub::default()))
         .layer(Extension(None::<Arc<systemprompt::ai::AiService>>))
         .layer(Extension(session_service))
+        .layer(Extension(rate_windows))
         .with_state(pool)
 }
 

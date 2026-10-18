@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use systemprompt::identifiers::{ModelId, ProviderId, RouteId, SecretName};
 use systemprompt::manifest::services::{
     GatewayConfig, GatewayRoute, ModelCapabilities, ModelGovernance, ModelPricing, ProviderEntry,
-    ProviderModel, ProviderRegistry, QuotaFaultMode,
+    ProviderModel, ProviderRegistry, QuotaFaultMode, SelectionStrategy,
 };
 use systemprompt::models::providers::ApiSurface;
 use systemprompt::wire::{ModelLimits, WireProtocol};
@@ -65,8 +65,11 @@ pub(crate) fn route(id: &str, pattern: &str, provider_name: &str) -> GatewayRout
         pricing: None,
         when: None,
         requires: None,
-        fallback_provider: None,
-        fallback_upstream_model: None,
+        fallbacks: Vec::new(),
+        by_scope: None,
+        strategy: SelectionStrategy::Ordered,
+        weight: None,
+        context_fallbacks: Vec::new(),
     }
 }
 
@@ -80,6 +83,8 @@ pub(crate) fn config(routes: Vec<GatewayRoute>) -> GatewayConfig {
         default_provider: None,
         default_model: None,
         allow_unlisted_models: false,
+        hidden_requires_route: true,
+        require_scopes: Vec::new(),
         auth_scheme: "bearer".to_owned(),
         inference_path_prefix: "/v1".to_owned(),
         system_prompt_overrides: Vec::new(),

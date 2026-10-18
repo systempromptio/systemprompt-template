@@ -16,14 +16,14 @@
 use std::path::PathBuf;
 
 use serde_json::json;
-use systemprompt::identifiers::{CallId, McpToolName, SessionId, UserId};
+use systemprompt::identifiers::{CallId, McpToolName, PolicyId, SessionId, TraceId, UserId};
 use systemprompt_security::authz::list_governance_warnings;
 use systemprompt_security::authz::types::DecisionTag;
 use systemprompt_security::policy::types::AccessScope;
 use systemprompt_security::policy::{
     AgentScope, AuditOrigin, AuditTarget, ChainEntryResult, DecisionAudit, Evaluation,
     GovernanceConfig, GovernanceEngine, GovernedInput, GovernedTarget, McpToolInput, PolicyContext,
-    PolicyMode, PrincipalSnapshot, record_decision,
+    PolicyMode, PrincipalSnapshot, RateCounts, record_decision,
 };
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
@@ -87,23 +87,31 @@ impl<'a> Call<'a> {
     }
 
     fn evaluate(&self, engine: &GovernanceEngine) -> Evaluation {
+        self.evaluate_at(engine, 1)
+    }
+
+    fn evaluate_at(&self, engine: &GovernanceEngine, rate_position: u64) -> Evaluation {
+        let mut rate_counts = RateCounts::empty();
+        rate_counts.record(PolicyId::new("rate_limit"), rate_position);
         engine.evaluate(&PolicyContext {
             target: self.target.clone(),
             agent_scope: AgentScope::User {
                 user_id: self.user.clone(),
             },
             access_scope: self.scope,
+            roles: &[],
             session_id: self.session,
             user_id: self.user,
             input: &self.input,
             call_id: &self.call_id,
+            rate_counts: &rate_counts,
         })
     }
 
     fn audit(&self, evaluation: Evaluation) -> DecisionAudit {
         DecisionAudit {
             id: unique("dec"),
-            call_id: self.call_id.as_str().to_owned(),
+            call_id: self.call_id.clone(),
             origin: AuditOrigin::Governed,
             decision: evaluation.decision,
             principal: PrincipalSnapshot {
@@ -113,17 +121,17 @@ impl<'a> Call<'a> {
                 agent_id: None,
                 agent_scope: self.scope,
                 client_id: None,
-                claimed: None,
             },
             target: AuditTarget {
-                tool_name: self.target.as_str().to_owned(),
+                tool_name: McpToolName::new(self.target.as_str()),
                 plugin_id: None,
+                tool_use_id: None,
             },
             chain: evaluation.chain,
             approver: None,
             act_chain: Vec::new(),
             context_id: None,
-            trace_id: Some(unique("trace")),
+            trace_id: Some(TraceId::new(unique("trace"))),
         }
     }
 }
@@ -303,9 +311,9 @@ fn an_exhausted_rate_limit_window_is_a_warn_from_rate_limit() {
     let session = SessionId::new(unique("session"));
 
     let mut last = None;
-    for _ in 0..301 {
+    for position in 1..=301 {
         let call = Call::prompt("hello", &user, &session);
-        last = Some(call.evaluate(&engine));
+        last = Some(call.evaluate_at(&engine, position));
     }
     let evaluation = last.expect("301 evaluations ran");
 

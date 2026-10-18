@@ -25,7 +25,11 @@ async fn authz_database_failure_returns_http_200_with_an_explicit_deny() {
         Arc::new(analytics),
         Arc::new(users),
     ));
-    let router = systemprompt_web_admin::hooks_webhook_router(pool.clone(), sessions);
+    let router = systemprompt_web_admin::hooks_webhook_router(
+        pool.clone(),
+        sessions,
+        systemprompt_security::policy::RateWindowRepository::new(pool.as_ref().clone()),
+    );
     pool.close().await;
     let payload = serde_json::json!({
         "entity": systemprompt_security::authz::EntityRef::McpServer(systemprompt::identifiers::McpServerId::try_new("atlassian").expect("valid test identifier")),

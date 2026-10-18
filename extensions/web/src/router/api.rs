@@ -6,6 +6,7 @@ use axum::Router;
 use axum::routing::post;
 
 use systemprompt::oauth::SessionCreationService;
+use systemprompt_security::policy::RateWindowRepository;
 
 use super::pools::DbHandles;
 use crate::extension::WebExtension;
@@ -13,8 +14,11 @@ use crate::{admin, api};
 
 pub(crate) fn build(db: &DbHandles, session_service: &Arc<SessionCreationService>) -> Router {
     let admin_api = admin::admin_router(&db.db, Arc::clone(&db.read), &db.write, db.owner.clone());
-    let webhook_api =
-        admin::hooks_webhook_router(Arc::clone(&db.write), Arc::clone(session_service));
+    let webhook_api = admin::hooks_webhook_router(
+        Arc::clone(&db.write),
+        Arc::clone(session_service),
+        RateWindowRepository::new(db.write.as_ref().clone()),
+    );
     let secrets_api = admin::secrets_router(Arc::clone(&db.write));
     let bridge_identity = admin::bridge_identity_router(Arc::clone(&db.read));
     let links_router = api::router(Arc::clone(&db.read), WebExtension::blog_config());
