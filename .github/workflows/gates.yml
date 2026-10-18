@@ -36,8 +36,7 @@ env:
   # scripts/build-coordinator.sh serialises builds across agents sharing one
   # clone (and guards free disk); a runner is single-tenant, so bypass it.
   BUILD_NO_COORD: "1"
-  # Tool pins: one place to bump, and Dependabot cannot see these, so they
-  # move deliberately.
+  # Tool pins: one place to bump, by hand, like the SHA-pinned actions.
   JUST_VERSION: "1.42.4"
   NEXTEST_VERSION: "0.9.148"
   DENY_VERSION: "0.20.2"
