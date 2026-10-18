@@ -246,6 +246,7 @@ _lint-gates-uncoordinated:
         check-dead-repository-code.sh
         check-file-headers.sh
         check-file-size.sh
+        lint-repo-hygiene.sh
         check-asset-reachability.sh
         check-workspace-deps.sh
         check-dockerfile-paths.sh
@@ -508,6 +509,11 @@ audit-standards:
 # 300-line ceiling on extension sources (same script CI runs)
 file-size:
     bash scripts/check-file-size.sh
+
+# Tracked prose only in the sanctioned trees; no status/plan/report docs
+# (same script CI runs in the source gates)
+lint-repo-hygiene:
+    bash scripts/lint-repo-hygiene.sh
 
 # Every Cargo workspace in the repo. `tests/` is excluded from the root
 # workspace, so a bare root-level scan silently skips its lockfile. Keep in
@@ -784,7 +790,7 @@ tenant:
 # A bare re-run preserves the ports chosen at first setup (read back from the
 # profile/compose files), so it never reverts a non-default install to 8080/5432.
 # ADMIN_EMAIL defaults to `git config user.email`.
-setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_PORT="5432" ADMIN_EMAIL="":
+setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_PORT="5432" ADMIN_EMAIL="" BUILD="true":
     #!/usr/bin/env bash
     set -euo pipefail
     ROOT="{{justfile_directory()}}"
@@ -993,8 +999,15 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
         path.write_text(json.dumps(data, indent=2) + "\n")
     PYTHON
     mkdir -p "$ROOT/web/dist"
-    echo "Building binaries (release, full workspace)..."
-    just build --release
+    # BUILD=false: the caller already built the binaries it runs (the CI e2e
+    # tier builds only the server and the MCP agent, in debug).
+    if [ "{{BUILD}}" = "true" ]; then
+        echo "Building binaries (release, full workspace)..."
+        just build --release
+    else
+        [ -x "$BIN" ] || { echo "setup-local: BUILD=false but $BIN is missing" >&2; exit 1; }
+        echo "Skipping the build (BUILD=false); using $BIN"
+    fi
     echo "Running database migrations..."
     just migrate
     echo "Ensuring bootstrap admin user ($ADMIN_EMAIL)..."

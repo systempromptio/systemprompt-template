@@ -47,12 +47,13 @@ concurrency:
 jobs:
   resolve:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       sha: ${{ steps.release.outputs.sha }}
       tag: ${{ steps.release.outputs.tag }}
       version: ${{ steps.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag || github.ref_name }}
           fetch-depth: 0
@@ -74,6 +75,7 @@ jobs:
     name: Build gateway (${{ matrix.name }})
     needs: resolve
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -102,7 +104,7 @@ jobs:
           # gateway needs a core port first. Windows runs the gateway via
           # Docker until then.
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.resolve.outputs.sha }}
       - run: rustup show
@@ -162,7 +164,7 @@ jobs:
           cd dist
           tar -czf "${STAGE}.tar.gz" "${STAGE}"
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: gateway-${{ matrix.name }}
           path: dist/${{ env.STAGE }}.${{ matrix.archive }}
@@ -171,12 +173,13 @@ jobs:
   sign-and-release:
     name: Sign + Release (gateway)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [resolve, build-gateway]
     outputs:
       tag: ${{ steps.tags.outputs.template_tag }}
       version: ${{ steps.tags.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.resolve.outputs.sha }}
 
@@ -192,7 +195,7 @@ jobs:
           tag="${tag:-${GITHUB_REF_NAME}}"
           echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           path: dist
           merge-multiple: true
@@ -210,7 +213,7 @@ jobs:
           cat SHA256SUMS.gateway
           [ -s SHA256SUMS.gateway ] || { echo "SHA256SUMS.gateway is empty — no gateway artefacts found"; exit 1; }
 
-      - uses: sigstore/cosign-installer@v3
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
 
       - name: Sign SHA256SUMS.gateway (keyless)
         if: ${{ !inputs.dry_run }}
@@ -369,6 +372,7 @@ jobs:
   bump-packagers:
     name: Bump Homebrew tap
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [sign-and-release]
     if: ${{ !inputs.dry_run }}
     steps:

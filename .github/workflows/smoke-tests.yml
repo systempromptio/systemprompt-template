@@ -26,6 +26,7 @@ on:
 jobs:
   version:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       tag: ${{ steps.t.outputs.tag }}
       version: ${{ steps.t.outputs.version }}
@@ -45,8 +46,9 @@ jobs:
       matrix:
         runner: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
       - name: Boot exact published image and test upgrade
@@ -57,7 +59,7 @@ jobs:
           digest=$(docker buildx imagetools inspect "$image" --format '{{.Manifest.Digest}}')
           bash scripts/smoke-image.sh "ghcr.io/systempromptio/systemprompt-template@$digest" "$VERSION"
           bash scripts/smoke-image.sh "ghcr.io/systempromptio/systemprompt-template@$digest" "$VERSION" ghcr.io/systempromptio/systemprompt-template:0.42.1
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: image-smoke-${{ matrix.runner }}
@@ -67,8 +69,9 @@ jobs:
     name: Release tag set + signature
     needs: version
     runs-on: ubuntu-latest
+    timeout-minutes: 50
     steps:
-      - uses: sigstore/cosign-installer@v3
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
       - name: All release tags resolve to one signed multi-arch digest
         env:
           IMAGE: ghcr.io/systempromptio/systemprompt-template
@@ -99,6 +102,7 @@ jobs:
     name: Helm chart serves the release
     needs: [version, release-tags]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Chart appVersion matches the release
         env:
@@ -122,8 +126,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-14]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
       - run: |
@@ -133,6 +138,7 @@ jobs:
   homebrew:
     needs: version
     runs-on: macos-14
+    timeout-minutes: 20
     steps:
       - run: |
           brew tap systempromptio/tap
@@ -146,8 +152,9 @@ jobs:
     name: docker-compose / Coolify template
     needs: version
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
       - name: Boot the Coolify compose and wait for health
@@ -177,8 +184,9 @@ jobs:
     name: canonical one-click compose
     needs: version
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
       - name: Boot canonical compose at the release digest
@@ -190,8 +198,9 @@ jobs:
     name: catalog compose matches root topology
     needs: version
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
       - name: Compare service/volume topology with root docker-compose.yml
@@ -211,6 +220,7 @@ jobs:
     name: Railway template published
     needs: version
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Verify the one-click template still resolves as PUBLISHED
         run: |
@@ -225,8 +235,9 @@ jobs:
     name: Dokploy compose boot and persistence
     needs: version
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
       - name: Boot the Dokploy template at the release version

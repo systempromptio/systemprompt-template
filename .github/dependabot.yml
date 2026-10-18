@@ -1,0 +1,20 @@
+# Action pins are full commit SHAs with a version comment; Dependabot keeps
+# both current. One grouped PR a week onto `next` (the default branch, where
+# every push runs the gates), never onto `main`. Tool versions pinned in the
+# workflows' env blocks (just, nextest, deny, machete) are not visible to it
+# and move by hand.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    target-branch: next
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      github-actions:
+        patterns: ["*"]

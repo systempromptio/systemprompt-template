@@ -30,6 +30,7 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' &&
        startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       packages: write
     steps:
@@ -41,7 +42,7 @@ jobs:
         run: gh api orgs/systempromptio/packages/container/systemprompt-template --silent
 
       - name: Prune old release versions (keep newest 5)
-        uses: snok/container-retention-policy@v3.1.0
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
         with:
           account: systempromptio
           token: ${{ github.token }}
@@ -53,7 +54,7 @@ jobs:
           dry-run: ${{ inputs.dry_run || false }}
 
       - name: Prune stale sha-* development tags
-        uses: snok/container-retention-policy@v3.1.0
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
         with:
           account: systempromptio
           token: ${{ github.token }}
@@ -64,7 +65,7 @@ jobs:
           dry-run: ${{ inputs.dry_run || false }}
 
       - name: Prune untagged manifests
-        uses: snok/container-retention-policy@v3.1.0
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
         with:
           account: systempromptio
           token: ${{ github.token }}

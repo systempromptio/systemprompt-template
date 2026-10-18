@@ -166,7 +166,9 @@ just init-hooks         # once per clone: tracked .githooks/ (pre-commit only)
 Each collector runs every check even after one fails and reports them all.
 `.github/workflows/gates.yml` runs the same tiers independently on every
 `next` push and ordinary PR — static, lint, test (Postgres 18), e2e
-(Playwright), and cargo-audit/deny/machete — and a single **`Gates passed`**
+(Playwright), and supply-chain (cargo-deny, whose advisories check is the one
+advisory source, and cargo-machete, both over the root and `tests/`
+workspaces) — and a single **`Gates passed`**
 job that fails unless every tier succeeded; it is the context the `main`
 ruleset should require. Frozen promotion PRs skip the tiers and verify the
 exact next-push proof instead.
