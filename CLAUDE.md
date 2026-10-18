@@ -191,7 +191,11 @@ run that lost its instrumented binaries reports 0.00%). Raise it with
 `just coverage-baseline`, then `just coverage-badge`; the `coverage-badge.sh`
 gate fails if the README badge and the baseline disagree. Never use
 cargo-llvm-cov (see `scripts/coverage.sh`). `coverage.yml` measures `main`
-and nightly `next`; it does not gate releases. No baseline is recorded yet.
+and nightly `next`; it does not gate releases. No baseline is tracked yet, so
+CI keeps one per ref in the Actions cache (`COVERAGE_BASELINE`,
+`COVERAGE_ESTABLISH`, `COVERAGE_RATCHET` in `scripts/coverage-check.sh`): the
+first run reports and establishes it, later runs ratchet against it and only
+ever raise it. A committed `coverage/baseline.json` takes over from it.
 
 **The schema-upgrade ladder.** `tests/fixtures/schema/release-baseline-<X.Y.Z>.sql`
 holds one recorded schema per release from the floor (0.61.0) up;

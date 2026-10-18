@@ -1,12 +1,18 @@
 name: Coverage
 
-# The coverage floor and ratchet (scripts/coverage-check.sh against the tracked
-# coverage/baseline.json). A measurement, not a gate: an instrumented build of
-# both workspaces plus the full suite is the slowest thing this repo runs, and
-# it never changes a release decision. It runs on the released line, nightly
-# on `next`, and on demand; a trip is a signal to raise tests on `next`, not a
-# block. Until coverage/baseline.json is recorded (`just coverage-baseline`),
-# coverage-check reports the number and fails for want of a baseline.
+# The coverage floor and ratchet (scripts/coverage-check.sh). A measurement,
+# not a gate: an instrumented build of both workspaces plus the full suite is
+# the slowest thing this repo runs, and it never changes a release decision. It
+# runs on the released line, nightly on `next`, and on demand; a trip is a
+# signal to raise tests on `next`, not a block.
+#
+# Baseline: the tracked coverage/baseline.json wins whenever it exists. Until
+# it is committed (`just coverage-baseline`), the job keeps its own baseline in
+# the Actions cache, per measured ref: the first run reports and establishes
+# it, every later run ratchets against it and raises it when a figure improves.
+# The job therefore cannot sit red for want of a file only a person can commit,
+# and a real drop still fails it. A failed run never saves, so a regression can
+# not lower the stored bar.
 
 on:
   workflow_dispatch:
@@ -23,9 +29,10 @@ on:
 concurrency:
   # Scheduled workflows are created from the default branch. Explicitly make
   # that run measure `next`, as promised above, instead of silently measuring
-  # `main` again after the release has already landed.
+  # `main` again after the release has already landed. Never cancelled: a
+  # superseded measurement is still the number for its commit.
   group: coverage-${{ inputs.ref || (github.event_name == 'schedule' && 'next') || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -33,6 +40,12 @@ env:
   CC: clang
   CXX: clang++
   BUILD_NO_COORD: "1"
+  JUST_VERSION: "1.42.4"
+  NEXTEST_VERSION: "0.9.148"
+  MEASURED_REF: ${{ inputs.ref || (github.event_name == 'schedule' && 'next') || github.ref_name }}
+
+permissions:
+  contents: read
 
 jobs:
   coverage:
@@ -41,7 +54,7 @@ jobs:
     # An instrumented build of both workspaces, then the full suite again
     # under it: slower than `test`, and the reason this is its own job rather
     # than a step appended to it.
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       CARGO_INCREMENTAL: "0"
       # Why: instrumenting every crate already inflates each object, and the
@@ -70,50 +83,27 @@ jobs:
           --health-timeout 3s
           --health-retries 10
     steps:
-      # Why: the runner ships ~13 GB free, and the cargo target trees exhaust
-      # it — `just test` began failing with "No space left on device" while
-      # linking the contract crate, which reads as a compile error rather than
-      # as a full disk, and the coverage job builds two instrumented trees on
-      # top of that. Everything removed here is a preinstalled SDK or language
-      # runtime nothing in this repo uses. Ordered roughly by size; `|| true`
-      # throughout because the image's contents drift between runner releases
-      # and a path that has moved must not fail the build.
-      - name: Reclaim runner disk
-        run: |
-          echo "before:"; df -h / | tail -1
-          sudo rm -rf \
-            /usr/local/lib/android \
-            /opt/hostedtoolcache \
-            /usr/share/dotnet \
-            /opt/ghc /usr/local/.ghcup \
-            /usr/share/swift \
-            /usr/local/share/powershell \
-            /usr/share/miniconda \
-            /usr/local/lib/node_modules \
-            /usr/lib/google-cloud-sdk \
-            /opt/microsoft /opt/az /usr/share/az_* \
-            /usr/local/graalvm /usr/share/kotlinc \
-            /usr/local/share/boost /usr/local/julia* \
-            /opt/pipx /usr/local/aws-cli /usr/local/lib/heroku \
-            "${AGENT_TOOLSDIRECTORY:-}" 2>/dev/null || true
-          sudo apt-get clean
-          sudo rm -rf /var/lib/apt/lists/*
-          echo "after:"; df -h / | tail -1
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref || (github.event_name == 'schedule' && 'next') || github.sha }}
+      - uses: ./.github/actions/reclaim-disk
       - uses: ./.github/actions/core-checkout
-      - uses: extractions/setup-just@v4
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: ${{ env.JUST_VERSION }}
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang mold libpq-dev libssl-dev pkg-config python3
+        timeout-minutes: 5
       - run: rustup show
+        timeout-minutes: 5
       # scripts/coverage.sh calls llvm-profdata and llvm-cov out of the
       # toolchain's own sysroot rather than installing cargo-llvm-cov, which
       # re-injects the mold linker flags and silently produces zero profraws.
       - run: rustup component add llvm-tools-preview
-      - uses: taiki-e/install-action@v2
+        timeout-minutes: 5
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
-          tool: cargo-nextest
-      - uses: Swatinem/rust-cache@v2
+          tool: cargo-nextest@${{ env.NEXTEST_VERSION }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           workspaces: |
             . -> coverage-report/target-root
@@ -121,26 +111,96 @@ jobs:
           # The instrumented build is a different rustflags set from `test`,
           # so it must not share that job's cache entry.
           key: coverage
-      # `tee` so the totals survive into the summary below; `pipefail` (set by
-      # the shell default here) keeps the job red when the ratchet trips.
+          cache-on-failure: true
+      - name: Select the baseline
+        id: baseline
+        run: |
+          if git ls-files --error-unmatch coverage/baseline.json >/dev/null 2>&1; then
+            echo "mode=tracked" >> "$GITHUB_OUTPUT"
+            echo "using the tracked coverage/baseline.json"
+          else
+            echo "mode=cached" >> "$GITHUB_OUTPUT"
+            echo "no tracked baseline: establishing/ratcheting one in the Actions cache"
+          fi
+      - name: Restore the cached baseline
+        if: steps.baseline.outputs.mode == 'cached'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .coverage-state/baseline.json
+          key: coverage-baseline-${{ env.MEASURED_REF }}-${{ github.run_id }}
+          restore-keys: coverage-baseline-${{ env.MEASURED_REF }}-
+      # `tee` so the totals survive into the summary below; `pipefail` keeps
+      # the job red when the ratchet trips.
       #
       # The mkdir is load-bearing: the shell opens tee's output file before
       # `just` runs, and on a fresh checkout coverage-report/ does not exist
       # yet. GNU tee then keeps copying to stdout and exits 1 at the very end,
       # which turned four correct 83.86% runs into red jobs whose logs said
       # "coverage-check passed" immediately above the failure.
-      - run: |
+      - name: Measure and check
+        id: check
+        timeout-minutes: 105
+        env:
+          MODE: ${{ steps.baseline.outputs.mode }}
+        run: |
           set -o pipefail
           mkdir -p coverage-report
-          just coverage-check | tee coverage-report/check.txt
+          if [ "$MODE" = cached ]; then
+            export COVERAGE_BASELINE="$PWD/.coverage-state/baseline.json" COVERAGE_ESTABLISH=1 COVERAGE_RATCHET=1
+          fi
+          # Why an inner `timeout` under the step's: it lets the job say that
+          # the run ran out of time, which a step timeout reports only as a
+          # generic failure.
+          set +e
+          timeout --signal=TERM 100m just coverage-check | tee coverage-report/check.txt
+          codes=("${PIPESTATUS[@]}")
+          set -e
+          if [ "${codes[0]}" = 124 ]; then touch coverage-report/timed-out; fi
+          [ "${codes[0]}" = 0 ] || exit "${codes[0]}"
+          exit "${codes[1]}"
+      - name: Save the cached baseline
+        if: success() && steps.baseline.outputs.mode == 'cached'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .coverage-state/baseline.json
+          key: coverage-baseline-${{ env.MEASURED_REF }}-${{ github.run_id }}
       # Why `always()`: the number is most wanted on the run that failed the
       # ratchet, which is exactly when a success-gated step would be skipped.
+      # A timeout is annotated apart from a ratchet trip so the two are never
+      # read as each other.
       - if: always()
+        env:
+          OUTCOME: ${{ steps.check.outcome }}
         run: |
+          if [ -f coverage-report/timed-out ] || [ "$OUTCOME" = cancelled ]; then
+            echo "::error title=Coverage timed out::the instrumented run hit its step timeout; no number was measured — this is not a coverage drop"
+          elif [ "$OUTCOME" = failure ] && ! grep -q '^total:' coverage-report/check.txt 2>/dev/null; then
+            echo "::error title=Coverage did not run::the instrumented build or suite failed before a number was produced — read the step log, this is not a coverage drop"
+          elif [ "$OUTCOME" = failure ]; then
+            echo "::error title=Coverage ratchet tripped::coverage fell below the floor or the baseline (see the summary)"
+          fi
           {
             echo "### Coverage"
             echo
             echo '```'
             cat coverage-report/check.txt 2>/dev/null || echo "no coverage produced"
             echo '```'
+            if [ -f .coverage-state/baseline.json ]; then
+              echo
+              echo "Baseline (Actions cache, ref \`$MEASURED_REF\`):"
+              echo '```json'
+              cat .coverage-state/baseline.json
+              echo '```'
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: coverage-report
+          path: |
+            coverage-report/check.txt
+            coverage-report/report.txt
+            coverage-report/summary.json
+            .coverage-state/baseline.json
+          if-no-files-found: ignore
+          retention-days: 14

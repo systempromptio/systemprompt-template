@@ -227,6 +227,7 @@ extensions/**/.sqlx/
 # Coverage output (scripts/coverage.sh). The tracked ratchet baseline lives in
 # coverage/baseline.json, not here.
 /coverage-report/
+/.coverage-state/
 
 # CI checks systemprompt-core out here (.github/actions/core-checkout); it is
 # core's tree, never ours.

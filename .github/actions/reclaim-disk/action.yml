@@ -1,0 +1,34 @@
+name: Reclaim runner disk
+description: >-
+  Delete the hosted runner's preinstalled SDKs and language runtimes that
+  nothing in this repo uses. The runner ships ~13 GB free and the cargo target
+  trees exhaust it; a full disk fails as a link error ("No space left on
+  device" while linking), not as a full disk. One list, used by every job that
+  compiles, so a path added for one job helps all of them.
+runs:
+  using: composite
+  steps:
+    - name: Reclaim runner disk
+      shell: bash
+      # Why `|| true`: the image's contents drift between runner releases, and
+      # a path that has moved must not fail the build.
+      run: |
+        echo "before:"; df -h / | tail -1
+        sudo rm -rf \
+          /usr/local/lib/android \
+          /opt/hostedtoolcache \
+          /usr/share/dotnet \
+          /opt/ghc /usr/local/.ghcup \
+          /usr/share/swift \
+          /usr/local/share/powershell \
+          /usr/share/miniconda \
+          /usr/local/lib/node_modules \
+          /usr/lib/google-cloud-sdk \
+          /opt/microsoft /opt/az /usr/share/az_* \
+          /usr/local/graalvm /usr/share/kotlinc \
+          /usr/local/share/boost /usr/local/julia* \
+          /opt/pipx /usr/local/aws-cli /usr/local/lib/heroku \
+          "${AGENT_TOOLSDIRECTORY:-}" 2>/dev/null || true
+        sudo docker image prune --all --force >/dev/null 2>&1 || true
+        sudo apt-get clean
+        echo "after:"; df -h / | tail -1

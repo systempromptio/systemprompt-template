@@ -10,12 +10,23 @@
 # `UPDATE_BASELINE=1 scripts/coverage-check.sh` (or `just coverage-baseline`)
 # and commit the rewritten coverage/baseline.json.
 #
+# CI without a tracked baseline (.github/workflows/coverage.yml) must not be
+# red forever for want of a file only a person can commit, so two opt-in modes
+# let it carry its own baseline between runs:
+#   COVERAGE_BASELINE=<path>  read/write this baseline instead of the tracked one
+#   COVERAGE_ESTABLISH=1      no baseline yet: record this measurement as the
+#                             baseline and pass (first run reports and establishes)
+#   COVERAGE_RATCHET=1        after a pass, raise the stored baseline to any
+#                             figure that improved (never lowers it)
+# The tracked coverage/baseline.json, once committed, always wins in CI.
+#
 # Reads coverage-report/summary.json produced by scripts/coverage.sh.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SUMMARY="$ROOT/coverage-report/summary.json"
-BASELINE="$ROOT/coverage/baseline.json"
+TRACKED_BASELINE="$ROOT/coverage/baseline.json"
+BASELINE="${COVERAGE_BASELINE:-$TRACKED_BASELINE}"
 
 if [ ! -f "$SUMMARY" ]; then
     echo "error: $SUMMARY not found — run 'just coverage' first" >&2
@@ -25,12 +36,14 @@ fi
 # Aggregate per-file llvm-cov summaries into per-crate line coverage. Crate
 # key = path relative to the repo root, truncated to the crate directory
 # (extensions/web/admin, extensions/mcp/shared, bridge, src, ...).
-python3 - "$SUMMARY" "$BASELINE" <<'PY'
+python3 - "$SUMMARY" "$BASELINE" "$TRACKED_BASELINE" <<'PY'
 import json, os, re, sys
 
-summary_path, baseline_path = sys.argv[1], sys.argv[2]
+summary_path, baseline_path, tracked_path = sys.argv[1], sys.argv[2], sys.argv[3]
 root = os.path.dirname(os.path.dirname(os.path.abspath(summary_path)))
 update = os.environ.get("UPDATE_BASELINE") == "1"
+establish = os.environ.get("COVERAGE_ESTABLISH") == "1"
+ratchet = os.environ.get("COVERAGE_RATCHET") == "1"
 
 with open(summary_path) as f:
     data = json.load(f)["data"][0]
@@ -98,6 +111,31 @@ if update:
           f"(floor {baseline['floor']}, total {baseline['total']})")
     sys.exit(0)
 
+def write_baseline(path, baseline):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(baseline, f, indent=2)
+        f.write("\n")
+
+if not os.path.exists(baseline_path) and establish:
+    # Why the zero guard: a run that lost its objects reports 0.00%, and
+    # establishing that would make every later run pass trivially.
+    if total <= 0.0:
+        print("refusing to establish a 0.00% baseline: the run produced no coverage data",
+              file=sys.stderr)
+        sys.exit(1)
+    write_baseline(baseline_path, {"floor": 0.0, "total": round(total, 2), "per_crate": per_crate})
+    print(f"::notice title=Coverage baseline established::{total:.2f}% recorded as the "
+          f"first baseline; later runs ratchet against it. Commit it as "
+          f"coverage/baseline.json with 'just coverage-baseline' to make it durable.")
+    print("coverage-check passed (baseline established)")
+    sys.exit(0)
+
+if not os.path.exists(baseline_path) and os.path.abspath(baseline_path) != os.path.abspath(tracked_path):
+    print(f"error: {baseline_path} missing — set COVERAGE_ESTABLISH=1 to record it",
+          file=sys.stderr)
+    sys.exit(1)
+
 if not os.path.exists(baseline_path):
     # The baseline is tracked, so "missing" almost always means it was deleted
     # from the working tree rather than never recorded — a stray `rm -rf
@@ -145,8 +183,19 @@ if failures:
           "and commit coverage/baseline.json.", file=sys.stderr)
     sys.exit(1)
 
+if ratchet:
+    raised = dict(baseline)
+    raised["total"] = max(baseline["total"], round(total, 2))
+    raised["per_crate"] = {
+        crate: max(baseline.get("per_crate", {}).get(crate, 0.0), now)
+        for crate, now in per_crate.items()
+    }
+    if raised != baseline:
+        write_baseline(baseline_path, raised)
+        print(f"baseline ratcheted: total {baseline['total']:.2f}% -> {raised['total']:.2f}%")
+
 better = total - baseline["total"]
-if better > 0.5:
+if better > 0.5 and not ratchet:
     print(f"note: total is {better:.2f}pt above baseline — ratchet up with "
           f"'just coverage-baseline' and commit the result.")
 print("coverage-check passed")
