@@ -685,6 +685,28 @@ prepare:
             rm -rf "{{justfile_directory()}}/$dir/.sqlx"
         fi
     done
+    # The tests/ workspace resolves its macros against the same root cache
+    # (tests/.sqlx is a symlink to ../.sqlx), but its queries are not part of
+    # the root workspace prepare and would be pruned from it. Prepare it into
+    # a scratch cache and merge, so neither workspace's set displaces the other.
+    echo "  Preparing tests/ workspace..."
+    rm "{{justfile_directory()}}/tests/.sqlx"
+    mkdir "{{justfile_directory()}}/tests/.sqlx"
+    restore_tests_link() {
+        rm -rf "{{justfile_directory()}}/tests/.sqlx"
+        ln -s ../.sqlx "{{justfile_directory()}}/tests/.sqlx"
+    }
+    trap restore_tests_link EXIT
+    TESTS_SQLX_PKGS=$(cargo metadata --manifest-path tests/Cargo.toml --format-version 1 --no-deps 2>/dev/null \
+        | jq -r '.packages[] | select(.dependencies[]?.name == "sqlx") | .name' \
+        | sort -u)
+    for pkg in $TESTS_SQLX_PKGS; do
+        cargo clean --manifest-path tests/Cargo.toml -p "$pkg" 2>/dev/null || true
+    done
+    (cd "{{justfile_directory()}}/tests" && cargo sqlx prepare --workspace -- --all-targets)
+    cp "{{justfile_directory()}}/tests/.sqlx/"*.json "{{justfile_directory()}}/.sqlx/"
+    restore_tests_link
+    trap - EXIT
     echo "SQLx cache prepared successfully ($(ls {{justfile_directory()}}/.sqlx/ | wc -l) queries cached)"
 
 # ══════════════════════════════════════════════════════════════════════════════
