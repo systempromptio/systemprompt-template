@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO config_change_audit\n                      (plane, entity, change_kind, before_value, after_value, mode, actor,\n                       reason, declared_hash)\n                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c5980f7ac267402437c01707369bd35846e8766b09006949c73046ca2138ae3d"
+}

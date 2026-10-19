@@ -1,0 +1,143 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, occurred_at, provider_id, issuer, outcome, reason, user_id, email,\n                    external_sub, host(ip) AS \"ip?\", groups_count\n               FROM sso_login_events\n              ORDER BY occurred_at DESC, id DESC\n              LIMIT $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "occurred_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "occurred_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "provider_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "provider_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "issuer",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "issuer"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "outcome",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "outcome"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "reason"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "user_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "email",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "external_sub",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "external_sub"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "ip?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "groups_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "sso_login_events",
+            "name": "groups_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      null,
+      true
+    ]
+  },
+  "hash": "9fc24b86052696bfe52fe586022c5db73ea556afe5b1a513b51792b7d7d8d11e"
+}

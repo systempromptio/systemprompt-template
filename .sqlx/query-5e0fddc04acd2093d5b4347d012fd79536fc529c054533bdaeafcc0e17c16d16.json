@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO bridge_user_host_prefs (user_id, host_id, enabled, updated_at)\n                    SELECT $1, host, true, CURRENT_TIMESTAMP FROM UNNEST($2::text[]) AS host\n                    ON CONFLICT (user_id, host_id)\n                    DO UPDATE SET enabled = true, updated_at = CURRENT_TIMESTAMP\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5e0fddc04acd2093d5b4347d012fd79536fc529c054533bdaeafcc0e17c16d16"
+}

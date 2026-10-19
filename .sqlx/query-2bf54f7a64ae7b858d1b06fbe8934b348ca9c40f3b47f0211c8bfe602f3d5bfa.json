@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE agent_runs\n            SET status = $2, error_class = $3, input_tokens = $4, output_tokens = $5,\n                cost_microdollars = $6, turns = $7, duration_ms = $8,\n                structured_output = $9, exit_code = $10, error = $11, diff_summary = $12,\n                host_session_id = COALESCE($13, host_session_id),\n                finished_at = NOW(), lease_until = NULL\n            WHERE id = $1\n              AND status NOT IN ('succeeded', 'failed', 'cancelled', 'timed_out')\n            RETURNING task_id AS \"task_id: TaskId\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "task_id: TaskId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "task_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int4",
+        "Int8",
+        "Jsonb",
+        "Int4",
+        "Text",
+        "Jsonb",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "2bf54f7a64ae7b858d1b06fbe8934b348ca9c40f3b47f0211c8bfe602f3d5bfa"
+}

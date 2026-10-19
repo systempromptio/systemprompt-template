@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE mcp_tool_executions\n            SET ai_tool_call_id = $2, correlation = $3\n            WHERE mcp_execution_id = $1\n              AND ai_tool_call_id IS NULL\n              AND NOT EXISTS (\n                  SELECT 1 FROM mcp_tool_executions o WHERE o.ai_tool_call_id = $2\n              )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "056a7917bf8a687af171581bed4d6b1d9d4b3a72e0387ab8c00db79079194e62"
+}

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE users\n            SET status = $2, archived_at = NULL, archived_by = NULL,\n                archive_reason = NULL, updated_at = NOW()\n            WHERE id = $1 AND status = $3\n              AND (archived_at IS NULL\n                   OR archived_at > NOW() - make_interval(days => $4::int))\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3ccb3d125ef299455266e2e0e115c80bb69f0db92e5171ef1c8759a558fba156"
+}

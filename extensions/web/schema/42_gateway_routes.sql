@@ -10,6 +10,8 @@
 -- the seed and every sync apply, `dashboard` for the /admin/gateway editor.
 -- `explicit_id` records whether the declaration carried an `id:` key, so the
 -- regenerated file omits an id the loader would synthesise identically.
+-- `fallbacks` is the route's ordered failover chain and `by_scope` its
+-- per-scope chains, both stored as declared (core validates them at boot).
 --
 -- `governance_chain` stages services/governance/config.yaml: one row per
 -- policy in chain order with its raw entry. Core builds the chain from the
@@ -29,8 +31,8 @@ CREATE TABLE IF NOT EXISTS gateway_routes (
     pricing JSONB,
     when_match JSONB,
     requires JSONB,
-    fallback_provider TEXT,
-    fallback_upstream_model TEXT,
+    fallbacks JSONB NOT NULL DEFAULT '[]'::jsonb,
+    by_scope JSONB,
     explicit_id BOOLEAN NOT NULL DEFAULT FALSE,
     source TEXT NOT NULL DEFAULT 'code' CHECK (source IN ('code', 'dashboard')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

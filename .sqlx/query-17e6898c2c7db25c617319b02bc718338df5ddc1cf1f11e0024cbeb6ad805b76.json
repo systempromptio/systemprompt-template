@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE agent_runs\n            SET lease_until = NOW() + make_interval(secs => $3::double precision)\n            WHERE id = $1 AND claimed_by = $2 AND status IN ('preparing', 'running')\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "17e6898c2c7db25c617319b02bc718338df5ddc1cf1f11e0024cbeb6ad805b76"
+}

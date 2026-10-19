@@ -15,7 +15,7 @@ use std::path::Path;
 use serde_yaml::{Mapping, Value};
 use systemprompt_web_shared::error::MarketplaceError;
 
-use crate::types::GatewayRouteView;
+use crate::types::{GatewayRouteView, RouteFallbackView};
 
 use super::matching::synthesize_route_id;
 
@@ -91,8 +91,11 @@ pub fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
         pricing: map.get(Value::from("pricing")).cloned(),
         when: map.get(Value::from("when")).cloned(),
         requires: map.get(Value::from("requires")).cloned(),
-        fallback_provider: text("fallback_provider"),
-        fallback_upstream_model: text("fallback_upstream_model"),
+        fallbacks: map
+            .get(Value::from("fallbacks"))
+            .map(fallbacks_from_yaml)
+            .unwrap_or_default(),
+        by_scope: map.get(Value::from("by_scope")).cloned(),
     })
 }
 
@@ -136,19 +139,58 @@ pub fn route_to_yaml(route: &GatewayRouteView) -> Value {
     if let Some(requires) = &route.requires {
         map.insert(Value::from("requires"), requires.clone());
     }
-    if let Some(fallback) = &route.fallback_provider {
+    if !route.fallbacks.is_empty() {
         map.insert(
-            Value::from("fallback_provider"),
-            Value::from(fallback.clone()),
+            Value::from("fallbacks"),
+            fallbacks_to_yaml(&route.fallbacks),
         );
     }
-    if let Some(model) = &route.fallback_upstream_model {
-        map.insert(
-            Value::from("fallback_upstream_model"),
-            Value::from(model.clone()),
-        );
+    if let Some(by_scope) = &route.by_scope {
+        map.insert(Value::from("by_scope"), by_scope.clone());
     }
     Value::Mapping(map)
+}
+
+#[must_use]
+pub fn fallbacks_from_yaml(value: &Value) -> Vec<RouteFallbackView> {
+    value
+        .as_sequence()
+        .map(|entries| {
+            entries
+                .iter()
+                .filter_map(|entry| {
+                    let provider = entry.get("provider")?.as_str()?.to_owned();
+                    let upstream_model = entry
+                        .get("upstream_model")
+                        .and_then(Value::as_str)
+                        .map(str::to_owned);
+                    Some(RouteFallbackView {
+                        provider,
+                        upstream_model,
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn fallbacks_to_yaml(fallbacks: &[RouteFallbackView]) -> Value {
+    Value::Sequence(
+        fallbacks
+            .iter()
+            .map(|fallback| {
+                let mut entry = Mapping::new();
+                entry.insert(
+                    Value::from("provider"),
+                    Value::from(fallback.provider.clone()),
+                );
+                if let Some(model) = &fallback.upstream_model {
+                    entry.insert(Value::from("upstream_model"), Value::from(model.clone()));
+                }
+                Value::Mapping(entry)
+            })
+            .collect(),
+    )
 }
 
 pub(super) fn ensure_gateway_mut(doc: &mut Value) -> Result<&mut Mapping, MarketplaceError> {

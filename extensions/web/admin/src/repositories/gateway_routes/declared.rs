@@ -4,7 +4,7 @@
 //! Read from the baked services tree — the file the editor writes and core
 //! boots from — and hashed on the parsed routes so a comment or whitespace
 //! edit is not a drift. Every field core's `GatewayRoute` carries is part of
-//! the hash, the fallback pair included.
+//! the hash, the failover and per-scope chains included.
 
 use std::path::Path;
 
@@ -13,7 +13,7 @@ use sha2::{Digest, Sha256};
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::config::gateway::route_from_yaml;
-use crate::types::GatewayRouteView;
+use crate::types::{GatewayRouteView, RouteFallbackView};
 
 pub const GATEWAY_FILE: &str = "ai/gateway.yaml";
 
@@ -57,8 +57,13 @@ pub fn route_fingerprint(route: &GatewayRouteView) -> String {
         block(route.pricing.as_ref()),
         block(route.when.as_ref()),
         block(route.requires.as_ref()),
-        route.fallback_provider.as_deref().unwrap_or_default(),
-        route.fallback_upstream_model.as_deref().unwrap_or_default(),
+        route
+            .fallbacks
+            .iter()
+            .map(RouteFallbackView::describe)
+            .collect::<Vec<_>>()
+            .join(","),
+        block(route.by_scope.as_ref()),
     )
 }
 

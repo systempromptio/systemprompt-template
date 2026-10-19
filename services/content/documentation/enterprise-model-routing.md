@@ -92,9 +92,9 @@ Quota windows are configured per user and instance-wide in `services/gateway/pol
 
 ## Provider failover
 
-A route may name a **`fallback_provider`**, optionally with a
-**`fallback_upstream_model`** when the fallback's model id differs from the
-requested one. The shipped routes declare none, because each provider in the
+A route may list **`fallbacks`**: an ordered chain of
+`{provider, upstream_model}` deployments tried in turn, with `upstream_model`
+set when a deployment's model id differs from the requested one. The shipped routes declare none, because each provider in the
 template's catalog serves only its own models. To serve one model from two
 providers — say Claude from a cloud host with Anthropic's API as the failover —
 declare the second copy in `services/ai/providers.yaml` under a prefixed id
@@ -107,7 +107,8 @@ gateway:
   routes:
   - model_pattern: claude-*
     provider: <primary-provider>
-    fallback_provider: anthropic
+    fallbacks:
+    - provider: anthropic
 ```
 
 The failover finds the twin by its upstream name, ignoring `hidden`, and prices
@@ -116,8 +117,8 @@ the served request from it.
 **When it triggers.** The primary keeps its bounded retry budget for
 transient answers (429, 503). Once that budget is spent, or the primary
 answers any other **5xx**, or the **connection itself fails** (DNS, TLS,
-timeout), the same governed request is re-bound to the fallback provider and
-sent once more under the same retry policy. A 4xx other than 429 — a
+timeout), the same governed request is re-bound to the next deployment in
+`fallbacks` and sent under that deployment's retry policy. A 4xx other than 429 — a
 malformed request, a refused key — never fails over: it is the request that
 is wrong, not the provider. A per-provider **circuit breaker** records the
 outcomes, so a primary that keeps failing is skipped outright and the
@@ -132,14 +133,14 @@ lane is never re-sent — it is bound to the wire the client spoke.
 route's primary and records the provider that actually answered in
 **`served_provider`**, with the request repriced at the serving provider's
 catalog rate. The route-match descriptor gains a `failover:<primary>-><fallback>`
-segment. `systemprompt infra logs audit <request-id>` prints both; the
+segment (`failover:a->b->c` for a longer chain). `systemprompt infra logs audit <request-id>` prints both; the
 Prometheus counter **`gateway_upstream_failovers_total{from,to,reason}`**
 (`reason` is `status_<code>`, `transport` or `circuit_open`) is on
 `/metrics` for alerting.
 
-**What is validated at boot.** The fallback is validated as the route the
-fallback provider will actually serve: it must exist in the registry, differ
-from the primary, reach a priced model (with a declared cache rate), and
+**What is validated at boot.** Each fallback is validated as the route its
+provider will actually serve: it must exist in the registry, not repeat a
+deployment already in the chain, reach a priced model (with a declared cache rate), and
 satisfy the route's `requires:` block. A fallback that cannot be bound at
 request time — credential, adapter, governance, pricing — never makes a
 request worse off: the client sees the primary's own error, exactly as it

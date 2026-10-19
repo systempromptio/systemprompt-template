@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE agent_runs\n            SET status = 'preparing', claimed_by = $2, claimed_at = NOW(),\n                lease_until = NOW() + make_interval(secs => $3::double precision)\n            WHERE id = (\n                SELECT id FROM agent_runs\n                WHERE status = 'queued' AND origin_kind = $1\n                  AND (not_before IS NULL OR not_before <= NOW())\n                ORDER BY created_at\n                LIMIT 1\n                FOR UPDATE SKIP LOCKED\n            )\n            RETURNING id AS \"id: AgentRunId\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: AgentRunId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "030445cdbbec0bea8b1ff6440fc16154abe3a73b7aa45b48f4533dbd0688e573"
+}

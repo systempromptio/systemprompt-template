@@ -16,7 +16,7 @@ use systemprompt::manifest::services::ProviderRegistry;
 use systemprompt::security::authz::{EntityKind, RegisteredEntities};
 use systemprompt_web_shared::error::MarketplaceError;
 
-use crate::types::GatewayRouteView;
+use crate::types::{GatewayRouteView, RouteFallbackView};
 
 pub fn dispatchable_route_ids(services: &ServicesConfig) -> Vec<String> {
     services
@@ -58,8 +58,17 @@ pub fn dispatchable_routes(
                 pricing: None,
                 when: None,
                 requires: None,
-                fallback_provider: route.fallback_provider.map(|p| p.as_str().to_owned()),
-                fallback_upstream_model: route.fallback_upstream_model,
+                fallbacks: route
+                    .fallbacks
+                    .into_iter()
+                    .map(|deployment| RouteFallbackView {
+                        provider: deployment.provider.as_str().to_owned(),
+                        upstream_model: deployment.upstream_model,
+                    })
+                    .collect(),
+                by_scope: route
+                    .by_scope
+                    .and_then(|scoped| serde_yaml::to_value(scoped).ok()),
             })
         })
         .collect())

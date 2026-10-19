@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT a.ai_tool_call_id AS \"ai_tool_call_id!\"\n            FROM mcp_artifacts a\n            JOIN mcp_tool_executions e ON e.mcp_execution_id = a.mcp_execution_id\n            WHERE a.ai_tool_call_id = ANY($1)\n              AND e.ai_tool_call_id = a.ai_tool_call_id\n              AND e.correlation = 'exact'\n              AND a.session_id IS NOT NULL\n              AND a.trace_id IS NOT NULL\n              AND (\n                  a.last_seen_source = 'gateway'\n                  OR (a.last_seen_source IS NULL AND a.source = 'gateway')\n              )\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ai_tool_call_id!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "ai_tool_call_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "8eaf9757e60b4edb00df7b7cdb774d5a71e4dcf629c5da324e7d35dc9415abeb"
+}

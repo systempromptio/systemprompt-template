@@ -35,7 +35,8 @@ pub use dashboard::{
     UserGamificationProfile, WindowedCounts,
 };
 pub use gateway::{
-    GatewayConfigView, GatewayRouteView, ReorderRoutesRequest, UpdateGatewaySettingsRequest,
+    GatewayConfigView, GatewayRouteView, ReorderRoutesRequest, RouteFallbackView,
+    UpdateGatewaySettingsRequest,
 };
 pub use hooks_export::{HookEventType, HookHandler, HooksFile, HttpHook, MatcherGroup};
 pub use jobs::JobSummary;

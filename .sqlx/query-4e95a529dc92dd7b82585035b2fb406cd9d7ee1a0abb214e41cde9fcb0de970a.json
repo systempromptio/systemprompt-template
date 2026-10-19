@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH cleaned AS (\n                UPDATE user_sessions\n                SET is_behavioral_bot = true,\n                    behavioral_bot_reason = 'no_javascript',\n                    behavioral_bot_score = 20\n                WHERE is_bot = false\n                  AND is_ai_crawler = false\n                  AND is_scanner = false\n                  AND is_behavioral_bot = false\n                  AND session_source = 'web'\n                  AND request_count > 0\n                  AND started_at < NOW() - INTERVAL '10 minutes'\n                  AND started_at >= NOW() - INTERVAL '1 day'\n                  AND NOT EXISTS (\n                    SELECT 1 FROM engagement_events e\n                    WHERE e.session_id = user_sessions.session_id AND e.time_on_page_ms > 0\n                  )\n                RETURNING 1\n            )\n            SELECT COUNT(*)::BIGINT as \"count!\" FROM cleaned\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4e95a529dc92dd7b82585035b2fb406cd9d7ee1a0abb214e41cde9fcb0de970a"
+}

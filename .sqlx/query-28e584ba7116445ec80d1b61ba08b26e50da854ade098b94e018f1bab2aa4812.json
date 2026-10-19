@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT COUNT(*) as \"count!\"\n            FROM users u\n            WHERE $1 = ANY(u.roles)\n              AND u.created_at < $2\n              AND NOT u.legal_hold\n              AND NOT EXISTS (\n                  SELECT 1\n                  FROM user_sessions s\n                  WHERE s.user_id = u.id\n                    AND s.ended_at IS NULL\n              )\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "28e584ba7116445ec80d1b61ba08b26e50da854ade098b94e018f1bab2aa4812"
+}

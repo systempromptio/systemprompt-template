@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO sso_login_events\n             (provider_id, issuer, outcome, reason, user_id, email, external_sub, ip,\n              groups_count)\n             VALUES ($1, $2, $3, $4, $5, $6, $7, CAST($8::TEXT AS INET), $9)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4ba1457123764a2cc4a0f91969989c0b4c8f60c1b17d620f9679e570259987fb"
+}

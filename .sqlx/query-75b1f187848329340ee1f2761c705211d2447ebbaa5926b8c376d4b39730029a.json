@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH bounds AS (\n                SELECT to_timestamp(\n                    (floor(extract(epoch FROM now()) / $3::bigint) * $3::bigint)::double precision\n                ) AS window_start\n            ),\n            existing AS (\n                SELECT position FROM governance_rate_charges\n                WHERE call_id = $1 AND bucket_key = $2\n            ),\n            bumped AS (\n                INSERT INTO governance_rate_windows (bucket_key, window_start, hits, expires_at)\n                SELECT $2, b.window_start, 1,\n                       b.window_start + make_interval(secs => ($3::bigint * 2)::double precision)\n                FROM bounds b\n                WHERE NOT EXISTS (SELECT 1 FROM existing)\n                ON CONFLICT (bucket_key, window_start)\n                DO UPDATE SET hits = governance_rate_windows.hits + 1\n                RETURNING hits, expires_at\n            ),\n            recorded AS (\n                INSERT INTO governance_rate_charges (call_id, bucket_key, position, expires_at)\n                SELECT $1, $2, hits, expires_at FROM bumped\n                ON CONFLICT (call_id, bucket_key) DO NOTHING\n            )\n            SELECT COALESCE((SELECT position FROM existing), (SELECT hits FROM bumped))\n                AS \"position!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "position!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "75b1f187848329340ee1f2761c705211d2447ebbaa5926b8c376d4b39730029a"
+}

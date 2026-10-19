@@ -1,0 +1,149 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, plane, entity, change_kind, before_value, after_value, mode, actor,\n                     reason, declared_hash, created_at\n                FROM config_change_audit\n               WHERE plane = $1\n               ORDER BY id DESC\n               LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "plane",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "plane"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "entity",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "entity"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "change_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "change_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "before_value",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "before_value"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "after_value",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "after_value"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "mode",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "mode"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "actor",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "actor"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "reason"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "declared_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "declared_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "config_change_audit",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "28665b1da5924bfad2cabfc7dfc7ce1300651106a34f9dc11cea296aa2b86658"
+}

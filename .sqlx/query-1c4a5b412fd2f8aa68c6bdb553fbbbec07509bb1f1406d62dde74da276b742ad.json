@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO sso_replay_guard (scope, id, expires_at)\n             VALUES ($1, $2, $3)\n             ON CONFLICT (scope, id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1c4a5b412fd2f8aa68c6bdb553fbbbec07509bb1f1406d62dde74da276b742ad"
+}

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT mcp_execution_id AS \"mcp_execution_id!\" FROM mcp_tool_executions WHERE ai_tool_call_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mcp_execution_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "mcp_execution_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f73732e42f4f6e0dc9432300ef850305beaef77def3ac63e58f865595d3515dd"
+}

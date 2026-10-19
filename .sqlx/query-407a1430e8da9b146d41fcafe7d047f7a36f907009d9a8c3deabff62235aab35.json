@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH tasks AS (\n                SELECT agent_name, SUM(task_count) AS task_count,\n                       COALESCE(SUM(task_count) FILTER (WHERE status = 'TASK_STATE_COMPLETED'), 0) AS completed_count,\n                       SUM(exec_sum_ms) AS exec_sum_ms, SUM(exec_n) AS exec_n,\n                       MAX(last_started_at) AS last_active\n                FROM report_agent_task_hourly\n                WHERE bucket >= date_trunc('hour', $1::timestamptz, 'UTC') AND bucket < $2 AND agent_name <> ''\n                GROUP BY agent_name\n            ), costs AS (\n                SELECT agent_name, SUM(cost_microdollars) AS cost\n                FROM report_ai_usage_hourly\n                WHERE bucket >= date_trunc('hour', $1::timestamptz, 'UTC') AND bucket < $2 AND agent_name <> ''\n                GROUP BY agent_name\n            )\n            SELECT\n                t.agent_name as \"agent_name!\",\n                t.task_count::bigint as \"task_count!\",\n                t.completed_count::bigint as \"completed_count!\",\n                COALESCE(t.exec_sum_ms::numeric / NULLIF(t.exec_n, 0), 0)::bigint as \"avg_execution_time_ms!\",\n                COALESCE(c.cost, 0)::bigint as \"total_cost_microdollars!\",\n                t.last_active as \"last_active!\"\n            FROM tasks t\n            LEFT JOIN costs c ON c.agent_name = t.agent_name\n            ORDER BY t.task_count DESC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent_name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "report_agent_task_hourly",
+            "name": "agent_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "task_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "completed_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_execution_time_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_active!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "407a1430e8da9b146d41fcafe7d047f7a36f907009d9a8c3deabff62235aab35"
+}

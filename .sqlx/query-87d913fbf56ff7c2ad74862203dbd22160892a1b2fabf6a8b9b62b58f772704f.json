@@ -1,0 +1,425 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id AS \"id: AgentRunId\", origin_kind, origin_id,\n                   user_id AS \"user_id: UserId\", host, status, request, attempt,\n                   not_before, claimed_by, lease_until, claimed_at, run_dir,\n                   gateway_session_id AS \"gateway_session_id: SessionId\",\n                   api_key_id AS \"api_key_id: ApiKeyId\",\n                   host_session_id AS \"host_session_id: HostSessionId\",\n                   pid, started_at, finished_at, duration_ms, error_class, turns,\n                   input_tokens, output_tokens, cost_microdollars, structured_output,\n                   exit_code, error, diff_summary, cancel_requested_at,\n                   task_id AS \"task_id: TaskId\", context_id AS \"context_id: ContextId\",\n                   created_at, updated_at\n            FROM agent_runs\n            WHERE origin_kind = $1 AND origin_id = $2\n            ORDER BY created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: AgentRunId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "origin_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "origin_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "origin_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "origin_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "host",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "host"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "request",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "request"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "attempt",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "attempt"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "not_before",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "not_before"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "claimed_by",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "claimed_by"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "lease_until",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "lease_until"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "claimed_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "claimed_at"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "run_dir",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "run_dir"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "gateway_session_id: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "gateway_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "api_key_id: ApiKeyId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "api_key_id"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "host_session_id: HostSessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "host_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "pid",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "pid"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "started_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "started_at"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "finished_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "finished_at"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "duration_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "duration_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "error_class",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "error_class"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "turns",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "turns"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "input_tokens",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "output_tokens",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 24,
+        "name": "cost_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 25,
+        "name": "structured_output",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "structured_output"
+          }
+        }
+      },
+      {
+        "ordinal": 26,
+        "name": "exit_code",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "exit_code"
+          }
+        }
+      },
+      {
+        "ordinal": 27,
+        "name": "error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "error"
+          }
+        }
+      },
+      {
+        "ordinal": 28,
+        "name": "diff_summary",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "diff_summary"
+          }
+        }
+      },
+      {
+        "ordinal": 29,
+        "name": "cancel_requested_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "cancel_requested_at"
+          }
+        }
+      },
+      {
+        "ordinal": 30,
+        "name": "task_id: TaskId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "task_id"
+          }
+        }
+      },
+      {
+        "ordinal": 31,
+        "name": "context_id: ContextId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 32,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 33,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "87d913fbf56ff7c2ad74862203dbd22160892a1b2fabf6a8b9b62b58f772704f"
+}

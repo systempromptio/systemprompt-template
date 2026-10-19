@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_consumer_grants(owner_id,resource_id,consumer_id) SELECT $1, resource, $3 FROM UNNEST($2::text[]) AS resource ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "18fdf656f859d4e6c9c910b05bee0a42036a04107e1b9e098661996c1767fc54"
+}

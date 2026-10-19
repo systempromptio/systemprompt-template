@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT MIN(first_at) as \"earliest\", MAX(last_at) as \"latest\"\n        FROM log_rollup_hourly\n        WHERE ($1::TIMESTAMPTZ IS NULL OR bucket >= date_trunc('hour', $1, 'UTC'))\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "earliest",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "latest",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "dac00fa07cfc8e2c24d0851b35e1c160c5befc75a6071223059d6abae8e3dece"
+}

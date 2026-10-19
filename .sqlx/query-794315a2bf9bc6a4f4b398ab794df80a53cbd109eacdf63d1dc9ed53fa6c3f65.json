@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO tool_result_ingest_marks (\n                user_id, scope_id, gateway_conversation_id,\n                last_message_index, boundary_tool_use_id, updated_at\n            )\n            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)\n            ON CONFLICT (user_id, scope_id, gateway_conversation_id) DO UPDATE\n            SET last_message_index = EXCLUDED.last_message_index,\n                boundary_tool_use_id = EXCLUDED.boundary_tool_use_id,\n                updated_at = EXCLUDED.updated_at\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "794315a2bf9bc6a4f4b398ab794df80a53cbd109eacdf63d1dc9ed53fa6c3f65"
+}

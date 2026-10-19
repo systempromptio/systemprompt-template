@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH inserted AS (\n                INSERT INTO user_contexts (context_id, user_id, session_id, name, kind,\n                                           created_at, updated_at)\n                VALUES ($1, $2, $3, $4, $5, $6, $6)\n                ON CONFLICT (context_id) DO NOTHING\n                RETURNING 1\n            ), touched AS (\n                UPDATE user_contexts\n                SET updated_at = $6,\n                    session_id = COALESCE(user_contexts.session_id, $3)\n                WHERE context_id = $1\n                  AND user_id = $2\n                  AND NOT EXISTS (SELECT 1 FROM inserted)\n                  AND (updated_at < $6 - make_interval(secs => $7)\n                       OR (session_id IS NULL AND $3::text IS NOT NULL))\n                RETURNING 1\n            )\n            SELECT (EXISTS (SELECT 1 FROM inserted)\n                    OR EXISTS (SELECT 1 FROM touched)\n                    OR EXISTS (SELECT 1 FROM user_contexts\n                               WHERE context_id = $1 AND user_id = $2)) AS \"owned!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "owned!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8c1f24ef319d1000411d41d2b83b78e6e3d586db899ce5bdb019d044a874e30a"
+}

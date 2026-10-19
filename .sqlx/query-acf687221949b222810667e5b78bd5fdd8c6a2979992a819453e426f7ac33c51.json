@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE sso_state_bindings\n                SET consumed_at = now()\n              WHERE state_hash = $1\n                AND provider_id = $2\n                AND consumed_at IS NULL\n                AND expires_at > now()\n              RETURNING provider_id, return_to, binder_hash, request_id, nonce, pkce_verifier",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "provider_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_state_bindings",
+            "name": "provider_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "return_to",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_state_bindings",
+            "name": "return_to"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "binder_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_state_bindings",
+            "name": "binder_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "request_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_state_bindings",
+            "name": "request_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "nonce",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_state_bindings",
+            "name": "nonce"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "pkce_verifier",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sso_state_bindings",
+            "name": "pkce_verifier"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "acf687221949b222810667e5b78bd5fdd8c6a2979992a819453e426f7ac33c51"
+}

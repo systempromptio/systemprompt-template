@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO sso_state_bindings\n             (state_hash, provider_id, return_to, binder_hash, request_id, nonce,\n              pkce_verifier, created_at, expires_at)\n             VALUES ($1, $2, $3, $4, $5, $6, $7, now(), $8)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "875624df748620b83eb7db977ff6a0095a968667db84d179c33dbed1ee6a36b1"
+}

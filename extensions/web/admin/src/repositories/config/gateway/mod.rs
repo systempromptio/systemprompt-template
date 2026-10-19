@@ -30,4 +30,4 @@ pub use routes::{
     create_route, delete_route, normalise_metadata, reorder_routes, replace_routes, update_route,
     validate_route,
 };
-pub use yaml_io::{read_gateway_file, route_from_yaml, route_to_yaml};
+pub use yaml_io::{fallbacks_from_yaml, read_gateway_file, route_from_yaml, route_to_yaml};

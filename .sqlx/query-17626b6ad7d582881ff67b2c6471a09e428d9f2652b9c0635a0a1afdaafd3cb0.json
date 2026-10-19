@@ -1,0 +1,113 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH upserted AS (\n                INSERT INTO ai_quota_buckets (\n                    id, subject_kind, subject_id, window_seconds, window_start, shard,\n                    requests, input_tokens, output_tokens, cost_microdollars, updated_at\n                )\n                SELECT t.id, t.subject_kind, t.subject_id, t.window_seconds, t.window_start,\n                       t.shard, t.requests, t.input_tokens, t.output_tokens,\n                       t.cost_microdollars, CURRENT_TIMESTAMP\n                FROM UNNEST(\n                    $1::text[], $2::text[], $3::text[], $4::int4[], $5::timestamptz[],\n                    $6::int2[], $7::int8[], $8::int8[], $9::int8[], $10::int8[]\n                ) AS t(id, subject_kind, subject_id, window_seconds, window_start, shard,\n                       requests, input_tokens, output_tokens, cost_microdollars)\n                ORDER BY t.subject_kind, t.subject_id, t.window_seconds, t.window_start, t.shard\n                ON CONFLICT (subject_kind, subject_id, window_seconds, window_start, shard)\n                DO UPDATE\n                SET requests = ai_quota_buckets.requests + EXCLUDED.requests,\n                    input_tokens = ai_quota_buckets.input_tokens + EXCLUDED.input_tokens,\n                    output_tokens = ai_quota_buckets.output_tokens + EXCLUDED.output_tokens,\n                    cost_microdollars =\n                        ai_quota_buckets.cost_microdollars + EXCLUDED.cost_microdollars,\n                    updated_at = CURRENT_TIMESTAMP\n                RETURNING subject_kind, subject_id, window_seconds, window_start, shard,\n                          requests, input_tokens, output_tokens, cost_microdollars\n            )\n            SELECT u.subject_kind AS \"subject_kind!\",\n                   u.subject_id AS \"subject_id!\",\n                   u.window_seconds AS \"window_seconds!\",\n                   u.window_start AS \"window_start!\",\n                   u.shard AS \"shard!\",\n                   (u.requests + COALESCE(o.requests, 0))::int8 AS \"requests!\",\n                   (u.input_tokens + COALESCE(o.input_tokens, 0))::int8 AS \"input_tokens!\",\n                   (u.output_tokens + COALESCE(o.output_tokens, 0))::int8 AS \"output_tokens!\",\n                   (u.cost_microdollars + COALESCE(o.cost_microdollars, 0))::int8\n                       AS \"cost_microdollars!\"\n            FROM upserted u\n            LEFT JOIN LATERAL (\n                SELECT SUM(b.requests) AS requests,\n                       SUM(b.input_tokens) AS input_tokens,\n                       SUM(b.output_tokens) AS output_tokens,\n                       SUM(b.cost_microdollars) AS cost_microdollars\n                FROM ai_quota_buckets b\n                WHERE b.subject_kind = u.subject_kind\n                  AND b.subject_id = u.subject_id\n                  AND b.window_seconds = u.window_seconds\n                  AND b.window_start = u.window_start\n                  AND b.shard <> u.shard\n            ) o ON TRUE\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "subject_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "subject_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "subject_id!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "subject_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "window_seconds!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "window_seconds"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "window_start!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "window_start"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "shard!",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "shard"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "Int4Array",
+        "TimestamptzArray",
+        "Int2Array",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "17626b6ad7d582881ff67b2c6471a09e428d9f2652b9c0635a0a1afdaafd3cb0"
+}

@@ -7,7 +7,7 @@ use systemprompt_web_admin::repositories::gateway_routes::editor::{
     create_route_entry, delete_route_at, reorder_route_positions, update_route_at,
 };
 use systemprompt_web_admin::repositories::gateway_routes::rows::list_gateway_routes;
-use systemprompt_web_admin::types::GatewayRouteView;
+use systemprompt_web_admin::types::{GatewayRouteView, RouteFallbackView};
 
 use crate::tempdb::TempDb;
 
@@ -23,8 +23,11 @@ fn route(id: &str, pattern: &str) -> GatewayRouteView {
         pricing: Some(serde_yaml::from_str("input: 3").expect("pricing yaml")),
         when: Some(serde_yaml::from_str("region: eu").expect("when yaml")),
         requires: Some(serde_yaml::from_str("tier: enterprise").expect("requires yaml")),
-        fallback_provider: Some("openai".into()),
-        fallback_upstream_model: Some("gpt-fixture".into()),
+        fallbacks: vec![RouteFallbackView {
+            provider: "openai".into(),
+            upstream_model: Some("gpt-fixture".into()),
+        }],
+        by_scope: None,
     }
 }
 
@@ -54,8 +57,7 @@ async fn route_editor_preserves_hidden_policy_blocks_and_regenerates_dispatch_or
     partial.pricing = None;
     partial.when = None;
     partial.requires = None;
-    partial.fallback_provider = None;
-    partial.fallback_upstream_model = None;
+    partial.fallbacks.clear();
     partial.extra_headers.clear();
     update_route_at(&db.pool, &gateway, 0, &partial)
         .await
@@ -83,7 +85,7 @@ async fn route_editor_preserves_hidden_policy_blocks_and_regenerates_dispatch_or
     assert_eq!(primary.route.pricing, route("x", "x").pricing);
     assert_eq!(primary.route.when, route("x", "x").when);
     assert_eq!(primary.route.requires, route("x", "x").requires);
-    assert_eq!(primary.route.fallback_provider.as_deref(), Some("openai"));
+    assert_eq!(primary.route.fallbacks, route("x", "x").fallbacks);
     assert_eq!(primary.route.extra_headers["x-tenant"], "acme");
     let rendered = std::fs::read_to_string(&gateway).expect("regenerated gateway");
     assert!(

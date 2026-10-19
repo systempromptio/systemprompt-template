@@ -56,11 +56,11 @@ pub fn summarise_route(route: &GatewayRouteView) -> String {
     if let Some(m) = &route.upstream_model {
         s.push_str(&format!(" as {m}"));
     }
-    if let Some(p) = &route.fallback_provider {
-        s.push_str(&format!(", fallback {p}"));
-        if let Some(m) = &route.fallback_upstream_model {
-            s.push_str(&format!(" as {m}"));
-        }
+    for fallback in &route.fallbacks {
+        s.push_str(&format!(", fallback {}", fallback.describe()));
+    }
+    if route.by_scope.is_some() {
+        s.push_str(", by scope");
     }
     if route.requires.is_some() {
         s.push_str(", requires");
@@ -93,14 +93,8 @@ fn changed_fields(code: &GatewayRouteView, db: &GatewayRouteView) -> Vec<String>
     check("pricing", code.pricing != db.pricing);
     check("when", code.when != db.when);
     check("requires", code.requires != db.requires);
-    check(
-        "fallback_provider",
-        code.fallback_provider != db.fallback_provider,
-    );
-    check(
-        "fallback_upstream_model",
-        code.fallback_upstream_model != db.fallback_upstream_model,
-    );
+    check("fallbacks", code.fallbacks != db.fallbacks);
+    check("by_scope", code.by_scope != db.by_scope);
     out
 }
 

@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH stale AS (\n                SELECT id, attempt < $2 AS retry FROM agent_runs\n                WHERE origin_kind = $1 AND status IN ('preparing', 'running')\n                  AND lease_until < NOW()\n                FOR UPDATE SKIP LOCKED\n            )\n            UPDATE agent_runs r\n            SET status = CASE WHEN s.retry THEN 'queued' ELSE 'failed' END,\n                attempt = CASE WHEN s.retry THEN r.attempt + 1 ELSE r.attempt END,\n                request = CASE WHEN s.retry THEN jsonb_set(\n                    CASE WHEN r.host_session_id IS NULL THEN r.request\n                         ELSE jsonb_set(r.request, '{resume_session_id}', to_jsonb(r.host_session_id))\n                    END,\n                    '{attempt}', to_jsonb(r.attempt + 1)) ELSE r.request END,\n                error_class = CASE WHEN s.retry THEN NULL ELSE 'host_crashed' END,\n                error = CASE WHEN s.retry THEN NULL ELSE 'lease expired on the final attempt' END,\n                finished_at = CASE WHEN s.retry THEN NULL ELSE NOW() END,\n                claimed_by = NULL, claimed_at = NULL, lease_until = NULL, pid = NULL\n            FROM stale s\n            WHERE r.id = s.id\n            RETURNING r.id AS \"id: AgentRunId\", r.status, r.task_id AS \"task_id?: TaskId\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: AgentRunId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "task_id?: TaskId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "task_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "c5e24c85504f994dd58f29bf31e0b5178a26a9685abba2a5768b79fc7a6b3485"
+}

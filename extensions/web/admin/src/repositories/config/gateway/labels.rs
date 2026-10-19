@@ -102,12 +102,22 @@ pub fn get_route_labels(services: &ServicesConfig) -> Result<RouteLabels, Market
                 .as_deref()
                 .map(str::trim)
                 .filter(|n| !n.is_empty());
-            let fallback = route.fallback_provider.as_deref().map(|fp| {
-                let fp_label = derive_provider_label(fp, services.providers.find_provider(fp));
-                match &route.fallback_upstream_model {
-                    Some(model) => format!("{fp_label} as {model}"),
-                    None => fp_label,
-                }
+            let fallback = (!route.fallbacks.is_empty()).then(|| {
+                route
+                    .fallbacks
+                    .iter()
+                    .map(|deployment| {
+                        let label = derive_provider_label(
+                            &deployment.provider,
+                            services.providers.find_provider(&deployment.provider),
+                        );
+                        match &deployment.upstream_model {
+                            Some(model) => format!("{label} as {model}"),
+                            None => label,
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", then ")
             });
             RouteLabel {
                 label: declared.map_or_else(

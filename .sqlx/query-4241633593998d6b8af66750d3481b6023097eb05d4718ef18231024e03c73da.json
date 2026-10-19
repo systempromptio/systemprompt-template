@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE agent_runs SET cancel_requested_at = COALESCE(cancel_requested_at, NOW())\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4241633593998d6b8af66750d3481b6023097eb05d4718ef18231024e03c73da"
+}

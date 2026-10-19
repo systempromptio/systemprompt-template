@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH catalog AS (\n                SELECT encode(sha256(convert_to($3::jsonb::text, 'UTF8')), 'hex') AS sha256\n                WHERE $3::jsonb IS NOT NULL\n            ), inserted AS (\n                INSERT INTO ai_tool_catalogs (sha256, tools)\n                SELECT catalog.sha256, $3 FROM catalog\n                ON CONFLICT (sha256) DO NOTHING\n            )\n            INSERT INTO ai_request_payloads (\n                ai_request_id, prepared_body_sha256, prepared_tools_sha256, created_at, updated_at\n            )\n            VALUES ($1, $2, (SELECT sha256 FROM catalog), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)\n            ON CONFLICT (ai_request_id) DO UPDATE\n            SET prepared_body_sha256 = EXCLUDED.prepared_body_sha256,\n                prepared_tools_sha256 = EXCLUDED.prepared_tools_sha256,\n                updated_at = CURRENT_TIMESTAMP\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0fdf815b046b1a1aa5071abe49c0663afe6a93c0738af1bdf4fb92c3a374be5b"
+}

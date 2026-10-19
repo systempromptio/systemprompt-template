@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT trace_id AS \"trace_id!: TraceId\", first_at AS \"first_timestamp!\",\n                   last_at AS \"last_timestamp!\", agent_name AS \"agent\", status AS \"status!\",\n                   ai_count AS \"ai_requests!\", mcp_count AS \"mcp_calls!\"\n            FROM trace_facts\n            WHERE ($2::timestamptz IS NULL OR last_at >= $2)\n              AND ($1::text IS NULL OR EXISTS (SELECT 1 FROM unnest(tool_names) AS t(name) WHERE t.name ILIKE $1))\n              AND (NOT $3::boolean OR trace_id <> 'system')\n              AND (NOT $3::boolean OR ai_count > 0 OR mcp_count > 0 OR agent_name IS NOT NULL)\n              AND ($4::text IS NULL OR agent_name ILIKE $4)\n              AND ($5::text IS NULL OR LOWER(status) = $5)\n              AND ($6::boolean IS NOT TRUE OR mcp_count > 0)\n            ORDER BY first_at DESC\n            LIMIT $7\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "trace_id!: TraceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trace_facts",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "first_timestamp!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "trace_facts",
+            "name": "first_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "last_timestamp!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "trace_facts",
+            "name": "last_at"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "agent",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trace_facts",
+            "name": "agent_name"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trace_facts",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "ai_requests!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "trace_facts",
+            "name": "ai_count"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "mcp_calls!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "trace_facts",
+            "name": "mcp_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Bool",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ea7dfcadcde62b00e888651b4f67e3430b3753cac1f5b2f6ef0f5f04f22048c6"
+}

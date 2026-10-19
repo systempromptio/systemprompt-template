@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO config_plane_state\n                  (plane, authority, declared_hash, drift_rows, outcome, last_error,\n                   reconciled_at, corrected_at)\n              VALUES ($1, $2, $3, $4, $5, $6, NOW(), CASE WHEN $7 THEN NOW() END)\n              ON CONFLICT (plane) DO UPDATE\n                 SET authority = EXCLUDED.authority,\n                     declared_hash = EXCLUDED.declared_hash,\n                     drift_rows = EXCLUDED.drift_rows,\n                     outcome = EXCLUDED.outcome,\n                     last_error = EXCLUDED.last_error,\n                     reconciled_at = NOW(),\n                     corrected_at = COALESCE(EXCLUDED.corrected_at, config_plane_state.corrected_at)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Text",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2106a6e0b23c9907dba91e48be34e5b3133bca477949a4a0dc543340cad2637b"
+}

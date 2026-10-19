@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(log_count), 0)::BIGINT as \"count!\" FROM log_rollup_hourly",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "352c281e9bfd7887000a9c279caa8ee970d5edc44a8dc69f4f03f524f7a0f49a"
+}

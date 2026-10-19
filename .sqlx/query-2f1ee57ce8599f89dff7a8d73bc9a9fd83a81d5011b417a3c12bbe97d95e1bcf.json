@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_request_messages (id, request_id, role, content, sequence_number, created_at, updated_at)\n            SELECT t.id, $1, t.role, t.content, t.sequence_number, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP\n            FROM UNNEST($2::text[], $3::text[], $4::text[], $5::int4[]) AS t(id, role, content, sequence_number)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f1ee57ce8599f89dff7a8d73bc9a9fd83a81d5011b417a3c12bbe97d95e1bcf"
+}

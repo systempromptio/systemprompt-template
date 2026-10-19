@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            (\n                SELECT\n                    agent_name as \"name!\",\n                    COALESCE(SUM(cost_microdollars), 0)::bigint as \"cost!\",\n                    SUM(request_count)::bigint as \"requests!\",\n                    COALESCE(SUM(tokens), 0)::bigint as \"tokens!\"\n                FROM report_ai_usage_hourly\n                WHERE bucket >= date_trunc('hour', $1::timestamptz, 'UTC') AND bucket < $2\n                  AND NOT synthetic\n                  AND agent_name <> ''\n                GROUP BY agent_name\n                ORDER BY SUM(cost_microdollars) DESC NULLS LAST\n                LIMIT $3\n            )\n            UNION ALL\n            (\n                SELECT\n                    'unattributed' as \"name!\",\n                    COALESCE(SUM(cost_microdollars), 0)::bigint as \"cost!\",\n                    COALESCE(SUM(request_count), 0)::bigint as \"requests!\",\n                    COALESCE(SUM(tokens), 0)::bigint as \"tokens!\"\n                FROM report_ai_usage_hourly\n                WHERE bucket >= date_trunc('hour', $1::timestamptz, 'UTC') AND bucket < $2\n                  AND NOT synthetic\n                  AND agent_name = ''\n                HAVING SUM(request_count) > 0\n            )\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "7c8b50731d4e668d9fec4c74f3a0f1e5a04541bca19208764336ede0e995d7c4"
+}

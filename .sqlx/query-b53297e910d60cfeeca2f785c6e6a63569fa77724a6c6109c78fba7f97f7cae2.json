@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM sso_state_bindings WHERE expires_at < NOW() OR consumed_at IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "b53297e910d60cfeeca2f785c6e6a63569fa77724a6c6109c78fba7f97f7cae2"
+}

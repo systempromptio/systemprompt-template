@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM governance_rate_windows WHERE expires_at < now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "f48375b64b5c38ecb925d9afa6d44af5fa97c24a510771c500094276cfeb9b00"
+}

@@ -92,12 +92,10 @@ pub async fn update_route_at(
     merged.requires = merged.requires.or_else(|| keep.requires.clone());
     // Why: the form renders no failover fields either; a save that omits
     // them must not silently strip a route's fallback.
-    merged.fallback_provider = merged
-        .fallback_provider
-        .or_else(|| keep.fallback_provider.clone());
-    merged.fallback_upstream_model = merged
-        .fallback_upstream_model
-        .or_else(|| keep.fallback_upstream_model.clone());
+    if merged.fallbacks.is_empty() {
+        merged.fallbacks.clone_from(&keep.fallbacks);
+    }
+    merged.by_scope = merged.by_scope.or_else(|| keep.by_scope.clone());
     if merged.extra_headers.is_empty() {
         merged.extra_headers = keep.extra_headers.clone();
     }

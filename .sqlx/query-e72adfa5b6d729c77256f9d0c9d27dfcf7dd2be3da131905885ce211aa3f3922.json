@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)\n        SELECT $1, id, $3, $4\n        FROM UNNEST($2::text[]) AS id\n        ON CONFLICT (entity_type, entity_id) DO UPDATE\n        SET updated_at = NOW()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e72adfa5b6d729c77256f9d0c9d27dfcf7dd2be3da131905885ce211aa3f3922"
+}

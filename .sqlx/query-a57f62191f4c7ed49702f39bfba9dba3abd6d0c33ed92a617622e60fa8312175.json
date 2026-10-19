@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_safety_findings (\n                id, ai_request_id, phase, severity, category, scanner, excerpt, blocked, created_at\n            )\n            SELECT t.id, t.ai_request_id, t.phase, t.severity, t.category, t.scanner, t.excerpt,\n                   t.blocked, CURRENT_TIMESTAMP\n            FROM UNNEST(\n                $1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[],\n                $7::text[], $8::bool[]\n            ) AS t(id, ai_request_id, phase, severity, category, scanner, excerpt, blocked)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "BoolArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a57f62191f4c7ed49702f39bfba9dba3abd6d0c33ed92a617622e60fa8312175"
+}

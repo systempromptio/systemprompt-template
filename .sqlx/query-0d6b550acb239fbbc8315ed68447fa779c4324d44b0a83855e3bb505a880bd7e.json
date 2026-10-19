@@ -1,0 +1,87 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    COALESCE(SUM(request_count), 0)::bigint as \"total!\",\n                    SUM(tokens)::bigint as \"total_tokens\",\n                    SUM(input_tokens)::bigint as \"input_tokens\",\n                    SUM(output_tokens)::bigint as \"output_tokens\",\n                    SUM(reasoning_tokens)::bigint as \"reasoning_tokens\",\n                    SUM(cache_read_tokens)::bigint as \"cache_read_tokens\",\n                    SUM(cache_creation_tokens)::bigint as \"cache_creation_tokens\",\n                    SUM(cost_microdollars)::bigint as \"cost\",\n                    (SUM(latency_sum_ms)::numeric / NULLIF(SUM(latency_n), 0))::float8 as \"avg_latency\",\n                    COALESCE(SUM(cache_hits), 0)::bigint as \"cache_hits!\"\n                FROM report_ai_usage_hourly\n                WHERE bucket >= date_trunc('hour', $1::timestamptz, 'UTC') AND bucket < $2\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_tokens",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "input_tokens",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "output_tokens",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "reasoning_tokens",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "cache_read_tokens",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "cache_creation_tokens",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "cost",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "avg_latency",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "cache_hits!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0d6b550acb239fbbc8315ed68447fa779c4324d44b0a83855e3bb505a880bd7e"
+}

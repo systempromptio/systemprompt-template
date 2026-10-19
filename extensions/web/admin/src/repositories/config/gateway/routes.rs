@@ -100,18 +100,14 @@ pub fn update_route(
             merged.requires = merged
                 .requires
                 .or_else(|| existing.get(Value::from("requires")).cloned());
-            let text = |key: &str| {
-                existing
-                    .get(Value::from(key))
-                    .and_then(Value::as_str)
-                    .map(str::to_owned)
-            };
-            merged.fallback_provider = merged
-                .fallback_provider
-                .or_else(|| text("fallback_provider"));
-            merged.fallback_upstream_model = merged
-                .fallback_upstream_model
-                .or_else(|| text("fallback_upstream_model"));
+            if merged.fallbacks.is_empty()
+                && let Some(fallbacks) = existing.get(Value::from("fallbacks"))
+            {
+                merged.fallbacks = super::yaml_io::fallbacks_from_yaml(fallbacks);
+            }
+            merged.by_scope = merged
+                .by_scope
+                .or_else(|| existing.get(Value::from("by_scope")).cloned());
         }
         routes[index] = route_to_yaml(&merged);
         // Why: an edit adds no field the operator did not write. A route that

@@ -1,0 +1,198 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT k.id, k.user_id, k.name, k.key_prefix, k.key_hash,\n                   k.created_at, k.last_used_at, k.expires_at, k.revoked_at,\n                   k.model_allowlist, k.budget_microdollars, k.max_requests,\n                   k.request_window_seconds, k.purpose,\n                   ARRAY(SELECT s.dimension FROM user_api_key_scopes s\n                         WHERE s.key_id = k.id ORDER BY s.dimension) AS \"scope_dimensions!\",\n                   ARRAY(SELECT s.value FROM user_api_key_scopes s\n                         WHERE s.key_id = k.id ORDER BY s.dimension) AS \"scope_values!\"\n            FROM user_api_keys k\n            WHERE k.key_prefix = $1\n              AND k.revoked_at IS NULL\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "key_prefix",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "key_prefix"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "key_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "key_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "last_used_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "last_used_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "expires_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "expires_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "revoked_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "revoked_at"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "model_allowlist",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "model_allowlist"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "budget_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "budget_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "max_requests",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "max_requests"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "request_window_seconds",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "request_window_seconds"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "purpose",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "purpose"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "scope_dimensions!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
+        "name": "scope_values!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "ab43bba18842b44f6e51ba631f52337a80c1df18382024efc29deedcbb1d6a6b"
+}

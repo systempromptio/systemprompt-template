@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT subject_kind, subject_id,\n                 SUM(requests)::BIGINT AS \"requests!\",\n                 SUM(input_tokens)::BIGINT AS \"input_tokens!\",\n                 SUM(output_tokens)::BIGINT AS \"output_tokens!\",\n                 SUM(cost_microdollars)::BIGINT AS \"cost_microdollars!\",\n                 MAX(updated_at) AS \"updated_at!\"\n            FROM ai_quota_buckets\n           WHERE subject_kind = $1 AND window_seconds = $2 AND window_start = $3\n           GROUP BY subject_kind, subject_id\n           ORDER BY SUM(cost_microdollars) DESC, SUM(requests) DESC, subject_id ASC\n           LIMIT 500",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "subject_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "subject_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "subject_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "subject_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c866ef431602af2f5983c86da2002058ba5cd3a2ec6cb2dc353b61312dd46e1d"
+}

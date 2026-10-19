@@ -1,0 +1,57 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH observed AS (\n                SELECT user_id, COUNT(*)::BIGINT AS requests,\n                       COALESCE(SUM(cost_microdollars), 0)::BIGINT AS cost\n                FROM ai_requests\n                WHERE created_at >= $1 AND created_at < $2\n                  AND status = 'completed' AND synthetic = FALSE\n                GROUP BY user_id\n            ),\n            baseline AS (\n                SELECT user_id, COUNT(*)::BIGINT AS requests,\n                       COALESCE(SUM(cost_microdollars), 0)::BIGINT AS cost\n                FROM ai_requests\n                WHERE created_at >= $1 - INTERVAL '7 days' AND created_at < $1\n                  AND status = 'completed' AND synthetic = FALSE\n                  AND user_id IN (SELECT user_id FROM observed)\n                GROUP BY user_id\n            )\n            SELECT o.user_id AS \"user_id!\",\n                   o.requests AS \"observed_requests!\",\n                   o.cost AS \"observed_cost!\",\n                   COALESCE(b.requests, 0)::BIGINT AS \"baseline_requests!\",\n                   COALESCE(b.cost, 0)::BIGINT AS \"baseline_cost!\"\n            FROM observed o\n            LEFT JOIN baseline b ON b.user_id = o.user_id\n            ORDER BY o.user_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "observed_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "observed_cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "baseline_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "baseline_cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f779a3a25e96576d177bcf0520b236e9e5cbd88d1efabbf6494de72a539a9d42"
+}

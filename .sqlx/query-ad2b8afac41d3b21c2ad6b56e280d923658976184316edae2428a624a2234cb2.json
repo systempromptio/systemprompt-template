@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fingerprint_reputation SET associated_user_ids = array_replace(associated_user_ids, $1, $2) WHERE $1 = ANY(associated_user_ids)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ad2b8afac41d3b21c2ad6b56e280d923658976184316edae2428a624a2234cb2"
+}

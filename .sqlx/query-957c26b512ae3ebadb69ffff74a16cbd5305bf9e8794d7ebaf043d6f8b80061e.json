@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT level as \"level!\", SUM(log_count)::BIGINT as \"count\"\n        FROM log_rollup_hourly\n        WHERE ($1::TIMESTAMPTZ IS NULL OR bucket >= date_trunc('hour', $1, 'UTC'))\n        GROUP BY level\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "level!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "log_rollup_hourly",
+            "name": "level"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "count",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "957c26b512ae3ebadb69ffff74a16cbd5305bf9e8794d7ebaf043d6f8b80061e"
+}

@@ -1,0 +1,110 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT plane, authority, declared_hash, drift_rows, outcome, last_error,\n                     reconciled_at, corrected_at\n                FROM config_plane_state\n               ORDER BY plane",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "plane",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_plane_state",
+            "name": "plane"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "authority",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_plane_state",
+            "name": "authority"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "declared_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_plane_state",
+            "name": "declared_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "drift_rows",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "config_plane_state",
+            "name": "drift_rows"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "outcome",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_plane_state",
+            "name": "outcome"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "last_error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "config_plane_state",
+            "name": "last_error"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "reconciled_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "config_plane_state",
+            "name": "reconciled_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "corrected_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "config_plane_state",
+            "name": "corrected_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "64d8cce78d4050740576543053c0d7fe98c0c4fd2cd4e5e169524ab997873b8a"
+}

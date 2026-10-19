@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE webauthn_credentials SET public_key = $1, last_used_at = $2\n             WHERE credential_id = $3 AND public_key = $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Timestamptz",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "119cb7552fa8cfcd20ea606b835c89a523b49dd0a1968ff3d7ba4c263b279dc9"
+}

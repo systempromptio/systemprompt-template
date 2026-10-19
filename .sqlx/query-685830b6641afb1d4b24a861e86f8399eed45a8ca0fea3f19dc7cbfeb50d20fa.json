@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM services\n            WHERE heartbeat_at < CURRENT_TIMESTAMP - make_interval(secs => $1::double precision)\n              AND NOT EXISTS (\n                  SELECT 1 FROM pg_locks l\n                  WHERE l.locktype = 'advisory'\n                    AND l.granted\n                    AND l.classid = ($2::int)::oid\n                    AND l.objid = (hashtext(services.instance_id))::oid\n                    AND l.objsubid = 2\n              )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "685830b6641afb1d4b24a861e86f8399eed45a8ca0fea3f19dc7cbfeb50d20fa"
+}

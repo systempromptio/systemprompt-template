@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                tool_name as \"tool_name!\",\n                server_name as \"server_name!\",\n                SUM(execution_count)::bigint as \"execution_count!\",\n                COALESCE(SUM(execution_count) FILTER (WHERE status = 'success'), 0)::bigint as \"success_count!\",\n                COALESCE((SUM(exec_sum_ms)::numeric / NULLIF(SUM(exec_n), 0))::float8, 0) as \"avg_time!\",\n                MAX(last_at) as \"last_used!\"\n            FROM report_tool_usage_hourly\n            WHERE bucket >= date_trunc('hour', $1::timestamptz, 'UTC') AND bucket < $2\n              AND server_name NOT IN ('in_process', 'proxy', 'gateway', 'hook_claude_code', 'hook_opencode')\n            GROUP BY tool_name, server_name\n            ORDER BY CASE WHEN SUM(execution_count) > 0\n                THEN COALESCE(SUM(execution_count) FILTER (WHERE status = 'success'), 0)::float / SUM(execution_count)::float\n                ELSE 0 END DESC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "report_tool_usage_hourly",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "server_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "report_tool_usage_hourly",
+            "name": "server_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "execution_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "success_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "avg_time!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_used!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "d11def0986084dfa9ea97c552593103597b71bcda254cc42362852f4f4f40a6d"
+}

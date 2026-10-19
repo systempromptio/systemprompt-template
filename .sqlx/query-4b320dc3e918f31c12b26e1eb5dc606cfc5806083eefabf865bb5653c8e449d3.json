@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE users\n            SET status = $1, archived_at = COALESCE(archived_at, NOW()), updated_at = NOW()\n            WHERE id = ANY($2)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4b320dc3e918f31c12b26e1eb5dc606cfc5806083eefabf865bb5653c8e449d3"
+}

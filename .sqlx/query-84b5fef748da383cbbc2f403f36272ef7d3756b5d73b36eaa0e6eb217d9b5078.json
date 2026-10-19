@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM sso_replay_guard WHERE expires_at < NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "84b5fef748da383cbbc2f403f36272ef7d3756b5d73b36eaa0e6eb217d9b5078"
+}

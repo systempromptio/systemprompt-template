@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO ai_request_messages (request_id, role, content, sequence_number)\n                VALUES ($1, 'assistant', $2, $3)\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a9f1e3b55a027881b5fc79c716859e975f27b14175ec7623e1d7787b7563c850"
+}

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE agent_runs\n            SET status = 'cancelled', error_class = 'ok', error = 'cancelled before start',\n                cancel_requested_at = COALESCE(cancel_requested_at, NOW()), finished_at = NOW()\n            WHERE id = $1 AND status = 'queued'\n            RETURNING task_id AS \"task_id: TaskId\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "task_id: TaskId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "agent_runs",
+            "name": "task_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "81f0e33b2276b027414543b3f86d7d044257fd3e21e6b82c8dab8d17c4a7784e"
+}

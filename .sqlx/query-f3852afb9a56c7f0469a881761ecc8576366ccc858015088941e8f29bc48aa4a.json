@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE ai_request_tool_calls\n            SET mcp_execution_id = NULL, updated_at = NOW()\n            WHERE ai_tool_call_id = $1 AND mcp_execution_id = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f3852afb9a56c7f0469a881761ecc8576366ccc858015088941e8f29bc48aa4a"
+}

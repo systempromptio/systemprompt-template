@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT last_message_index, boundary_tool_use_id\n            FROM tool_result_ingest_marks\n            WHERE user_id = $1 AND scope_id = $2 AND gateway_conversation_id = $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "last_message_index",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "tool_result_ingest_marks",
+            "name": "last_message_index"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "boundary_tool_use_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_result_ingest_marks",
+            "name": "boundary_tool_use_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "ebea4de3313291c9d42e221acbdea32b8e0d4312183bc9bebbd8aa3cdd8899d1"
+}
