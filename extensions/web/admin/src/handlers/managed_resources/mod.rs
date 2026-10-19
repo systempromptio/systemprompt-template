@@ -80,7 +80,7 @@ pub(crate) async fn sync_git(
 ) -> AdminResult<Json<systemprompt::marketplace::managed::GitSyncResult>> {
     require_write_origin(&headers)?;
     if input.source_id != id {
-        return Err(crate::error::AdminError::Conflict(
+        return Err(AdminError::Conflict(
             "Source path and body differ".to_owned(),
         ));
     }

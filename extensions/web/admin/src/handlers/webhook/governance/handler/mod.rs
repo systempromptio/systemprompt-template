@@ -166,6 +166,10 @@ async fn evaluate_and_record(
     Ok(evaluation.decision)
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "axum extractor list; the router decides the arity, not this signature"
+)]
 pub(crate) async fn govern_tool_use(
     State(pool): State<Arc<PgPool>>,
     Extension(session_service): Extension<Arc<SessionCreationService>>,
