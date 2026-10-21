@@ -446,7 +446,7 @@ Conventions (strict — hold every entry to them):
   `components/svg-stacked-chart`): both of its charts are now drawn as columns
   by the live layer from the ordinary line-chart view.
 
-## [0.62.0] - 2026-09-28
+## [0.62.0] - never released (included in 0.70.0)
 
 ### Breaking
 
@@ -499,7 +499,7 @@ Conventions (strict — hold every entry to them):
 - The orphaned evals admin templates (`evals.hbs`, `eval-run-detail.hbs`, `partials/evals/*`) and `css/admin/20-page-evals.css`: core 0.61 retired evals and nothing renders them. The `/admin/evals` contract variants and the never-compiled `evals_repositories.rs` test go with them.
 - `tests/unit/web/src/india_skills.rs`, a test for another deployment's skill inventory.
 
-## [0.61.0] - never released (included in 0.62.0)
+## [0.61.0] - never released (included in 0.70.0)
 
 The workspace moved from 0.49.0 to 0.52.0 (2026-09-14) and to 0.61.0 (2026-09-25) without a tag or image; its changes ship in 0.62.0.
 
