@@ -236,7 +236,7 @@ jobs:
         timeout-minutes: 45
         run: |
           bash scripts/check-core-ref.sh
-          cargo build --locked --bin systemprompt --bin systemprompt-mcp-agent
+          cargo build --locked --workspace --bin systemprompt --bin systemprompt-mcp-agent
       # setup-local brings up its own Docker Postgres, so this job takes no
       # `services:` block: the seed then reads the same profile secrets a
       # developer's machine does. The key is a placeholder and is never used —
@@ -314,7 +314,7 @@ jobs:
           set -euo pipefail
           for w in . tests; do
             echo "==> cargo deny: $w"
-            cargo deny --manifest-path "$w/Cargo.toml" check --disable-fetch
+            cargo deny --offline --manifest-path "$w/Cargo.toml" check
           done
       - run: just machete
         timeout-minutes: 5
