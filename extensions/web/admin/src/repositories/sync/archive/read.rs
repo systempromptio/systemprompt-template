@@ -68,7 +68,7 @@ pub fn unpack_zip(bytes: &[u8]) -> AdminResult<Unpacked> {
         if file.is_dir() {
             continue;
         }
-        let name = file.name().to_owned();
+        let name = file.name()?.into_owned();
         check_path(&name, file.enclosed_name().as_deref())?;
         if file.is_symlink() || file.unix_mode().is_some_and(|m| m & 0o170_000 == 0o120_000) {
             return Err(refuse(&name, "symlink"));

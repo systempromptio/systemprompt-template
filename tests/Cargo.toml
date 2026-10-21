@@ -82,7 +82,7 @@ serde_yaml = { package = "serde_yaml_ng", version = "0.10" }
 clap = { version = "4", features = ["derive"] }
 tempfile = "3"
 async-trait = "0.1"
-zip = { version = "8", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
 # Pinned to the exact version the root workspace pins, so the `ServerHandler`
 # trait the tests bring into scope is the one the MCP crates implement.
 rmcp = { version = "=3.5.1", features = ["server"] }
