@@ -63,7 +63,7 @@ docker compose pull && docker compose up -d     # follow latest
 ```
 
 To pin, set the `image:` line to a version tag, e.g.
-`ghcr.io/systempromptio/systemprompt-template:0.62.0`, and `docker compose up -d`.
+`ghcr.io/systempromptio/systemprompt-template:0.70.0`, and `docker compose up -d`.
 To roll back, set it to the previous version — versioned tags are never
 rewritten. Core migrations are forward-only: roll the image back only to a
 version whose migrations match the database.
