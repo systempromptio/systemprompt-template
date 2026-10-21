@@ -98,7 +98,8 @@
         "mcp_tool_executions_days": 365,
         "outbox_processed_days": 7,
         "ai_request_payload_raw_days": 7,
-        "governance_decisions_days": 180
+        "governance_decisions_days": 180,
+        "archived_users_days": 90
       }
     },
     "services": {
@@ -114,13 +115,22 @@
       "$ref": "#/$defs/StorageConfig",
       "default": {
         "backend": "local",
-        "shared": false
+        "shared": false,
+        "public_read": false,
+        "path_style": false
       }
     },
     "observability": {
       "$ref": "#/$defs/ObservabilityConfig",
       "default": {
-        "otlp": null
+        "otlp": null,
+        "log_format": "text"
+      }
+    },
+    "config_planes": {
+      "$ref": "#/$defs/ConfigPlanesConfig",
+      "default": {
+        "authority": {}
       }
     }
   },
@@ -182,6 +192,10 @@
               "type": "null"
             }
           ]
+        },
+        "migrate_on_boot": {
+          "type": "boolean",
+          "default": true
         }
       },
       "additionalProperties": false,
@@ -190,7 +204,7 @@
       ]
     },
     "PoolConfig": {
-      "description": "Operator-tunable connection-pool sizing.\n\nOmitted fields fall back to the engine defaults (50 connections, 30s\nacquire, 300s idle, 1800s lifetime); set them to fit the pool to the\ndeployment's Postgres `max_connections` and replica count.\n[`crate::profile::Profile::validate`] range-checks the values at bootstrap.",
+      "description": "Operator-tunable connection-pool sizing.\n\nOmitted fields fall back to the engine defaults (50 connections, 30s\nacquire, 300s idle, 1800s lifetime); set them to fit the pool to the\ndeployment's Postgres `max_connections` and replica count.\n`statement_cache_capacity` defaults to 100 prepared statements per\nconnection. 0 is accepted but leaks: sqlx still names every statement and\nnever closes one without a cache, so each backend grows until Postgres runs\nout of memory.\n\n`max_connections_by_role` overrides `max_connections` for the node's\n`server.role`, so one profile can size a horizontally scaled gateway pool\nsmall and the single admin node's pool larger. A Postgres primary must\nadmit `gateway_replicas × (gateway pool + 2) + admin × (admin pool + 2)`\nplus migration and operator sessions; the `+ 2` are the replica-identity\nclaim and the event listener sessions every node holds.\n`session_max_connections` sizes the separate session pool a\n`database_session_url` opens (10 by default): it holds only the claim,\nlistener, job-lock and migration sessions, so it never needs the main\npool's ceiling.\n[`crate::profile::Profile::validate`] range-checks the values at bootstrap.",
       "type": "object",
       "properties": {
         "max_connections": {
@@ -223,6 +237,71 @@
             "null"
           ],
           "format": "uint64",
+          "minimum": 0
+        },
+        "statement_cache_capacity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "max_connections_by_role": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoleMaxConnections"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session_max_connections": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "RoleMaxConnections": {
+      "description": "Per-`server.role` pool ceilings; an omitted role uses\n[`PoolConfig::max_connections`].",
+      "type": "object",
+      "properties": {
+        "all": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "gateway": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "admin": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "runner": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
           "minimum": 0
         }
       },
@@ -302,12 +381,35 @@
           "minimum": 0,
           "default": 256
         },
+        "role": {
+          "$ref": "#/$defs/NodeRole",
+          "default": "all"
+        },
+        "max_in_flight": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 1,
+          "default": null
+        },
         "trusted_proxies": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "default": []
+        },
+        "shutdown": {
+          "$ref": "#/$defs/ShutdownConfig",
+          "default": {
+            "pre_stop_delay_secs": 0,
+            "drain_grace_secs": 10,
+            "child_grace_secs": 5,
+            "background_grace_secs": 5,
+            "forced_exit_grace_secs": 10
+          }
         }
       },
       "additionalProperties": false,
@@ -384,7 +486,55 @@
         "unsafe-url"
       ]
     },
+    "NodeRole": {
+      "description": "The part of the platform a node serves.\n\n`all` is a single-node deployment: every surface, every worker, and the\nextensions' runner services, so one node runs the whole product.\n`gateway` serves only the AI gateway,\nthe bridge consumer surface and the OAuth/discovery routes they depend on,\nand runs no scheduler, MCP or agent processes, so it scales horizontally.\n`admin` serves everything except the gateway and runs the workers.\n`runner` serves only the health, readiness and metrics probes, runs no\nscheduler, MCP or agent processes, and starts the extensions' runner\nservices, so long-running work scales on its own Deployment.",
+      "type": "string",
+      "enum": [
+        "all",
+        "gateway",
+        "admin",
+        "runner"
+      ]
+    },
+    "ShutdownConfig": {
+      "description": "Shutdown deadlines in seconds. The defaults are the historical fixed\nwindows: no pre-stop delay, a 10 s drain, 5 s for children and background\nwork, and a 10 s forced-exit backstop.",
+      "type": "object",
+      "properties": {
+        "pre_stop_delay_secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 0
+        },
+        "drain_grace_secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 10
+        },
+        "child_grace_secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 5
+        },
+        "background_grace_secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 5
+        },
+        "forced_exit_grace_secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 10
+        }
+      },
+      "additionalProperties": false
+    },
     "PathsConfig": {
+      "description": "Filesystem roots for one profile.\n\n`shipped_files` is an optional read-only directory holding the files an\nimage ships under `files/` (CSS, JS, fonts, downloads). `/files/*` reads\n`paths.storage/files` first and falls back to it, so `paths.storage` only\nhas to hold user data and nothing has to be copied onto it at boot.",
       "type": "object",
       "properties": {
         "system": {
@@ -411,6 +561,19 @@
           "default": null
         },
         "geoip_database": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "shipped_files": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data": {
           "type": [
             "string",
             "null"
@@ -454,11 +617,11 @@
         },
         "allow_registration": {
           "type": "boolean",
-          "default": true
+          "default": false
         },
         "allow_dynamic_client_registration": {
           "type": "boolean",
-          "default": true
+          "default": false
         },
         "login_page_url": {
           "type": [
@@ -480,6 +643,9 @@
           "type": "integer",
           "format": "int64",
           "default": 300
+        },
+        "api_keys": {
+          "$ref": "#/$defs/ApiKeyPolicyConfig"
         }
       },
       "additionalProperties": false,
@@ -545,6 +711,21 @@
         "jwks_uri",
         "audience"
       ]
+    },
+    "ApiKeyPolicyConfig": {
+      "description": "Issuance policy for personal access tokens (`security.api_keys`).\n\nWith `max_lifetime_days` set, every issuance path bounds the key: an\nomitted expiry becomes the maximum and a longer one is refused. Unset\nleaves keys without a lifetime ceiling.",
+      "type": "object",
+      "properties": {
+        "max_lifetime_days": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
     },
     "RateLimitsConfig": {
       "description": "Per-route-group request budgets, in requests per second.\n\nEach `*_per_second` field governs one route group:\n\n- `oauth_public` — `/api/v1/core/oauth` public endpoints,\n  `/auth/link-passkey`, and the public gateway session routes under\n  `/api/public/gateway`.\n- `oauth_auth` — the authenticated half of `/api/v1/core/oauth`, plus\n  `/api/v1/core/users`.\n- `contexts` — `/api/v1/core/contexts` and the inbound `/api/v1/webhook`\n  mount.\n- `tasks` — `/api/v1/core/tasks`.\n- `artifacts` — `/api/v1/core/artifacts`.\n- `agent_registry` — `/api/v1/agents/registry`, discovery only, kept apart\n  from `agents_per_second` so listing agents cannot spend an execution\n  budget.\n- `agents` — `/api/v1/agents` execution, and the Slack and Teams inbound\n  mounts that dispatch to an agent.\n- `mcp_registry` — `/api/v1/mcp/registry`, the MCP server catalog, discovery\n  only.\n- `mcp` — `/api/v1/mcp` tool calls, the busiest protocol route group.\n- `stream` — `/api/v1/stream`, long-lived SSE connections, so this is a\n  connection budget rather than a request one and is set high.\n- `content` — `/api/v1/content`, `/api/v1/sync`, `/api/v1/marketplace`,\n  `/api/v1/analytics` and `/track/engagement`.\n- `gateway` — inference traffic under `/v1`: `/v1/messages` and the\n  OpenAI-shaped `/v1/chat/completions`.\n- `bridge_auth` — `/v1/auth/bridge/*`, deliberately separate from\n  `gateway_per_second`: sign-in is low-volume and must stay reachable on an\n  instance whose inference traffic is saturating its own budget. Sharing one\n  bucket let a busy gateway lock every user out of authenticating.\n\n`per_second_budgets` projects those fields as a list; both validators\niterate it rather than naming the fields themselves, which had already let\nthem drift apart and let a zero in an unnamed field through.",
@@ -764,6 +945,26 @@
             }
           ],
           "default": null
+        },
+        "external": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExternalSecretsConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "refresh_secs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0,
+          "default": null
         }
       },
       "additionalProperties": false,
@@ -776,7 +977,8 @@
       "enum": [
         "file",
         "env",
-        "vault"
+        "vault",
+        "external"
       ]
     },
     "SecretsValidationMode": {
@@ -939,6 +1141,27 @@
         "field"
       ]
     },
+    "ExternalSecretsConfig": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "refresh_secs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0,
+          "default": null
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": true
+    },
     "ExtensionsConfig": {
       "type": "object",
       "properties": {
@@ -970,6 +1193,13 @@
           "$ref": "#/$defs/AuditConfig",
           "default": {
             "payload_cap_bytes": 1048576
+          }
+        },
+        "quota": {
+          "$ref": "#/$defs/QuotaConfig",
+          "default": {
+            "shared_subject_shards": 8,
+            "principal_subject_shards": 1
           }
         }
       },
@@ -1041,6 +1271,27 @@
       },
       "additionalProperties": false
     },
+    "QuotaConfig": {
+      "description": "Row sharding for gateway quota windows.\n\nA window keyed by a shared subject (anything other than `user` or\n`api_key`, e.g. an organization or project) is spread over\n`shared_subject_shards` rows so concurrent admissions do not queue on one\nrow lock; per-principal windows use `principal_subject_shards`. Admission\nstill checks the summed total, but each extra shard widens the\nover-admission bound by up to one concurrent reservation. `1` keeps the\nexact single-row behaviour. Both are range-checked by\n[`crate::profile::Profile::validate`].",
+      "type": "object",
+      "properties": {
+        "shared_subject_shards": {
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0,
+          "maximum": 65535,
+          "default": 8
+        },
+        "principal_subject_shards": {
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0,
+          "maximum": 65535,
+          "default": 1
+        }
+      },
+      "additionalProperties": false
+    },
     "JudgeProfile": {
       "type": "object",
       "properties": {
@@ -1052,7 +1303,7 @@
       "additionalProperties": false
     },
     "RetentionConfig": {
-      "description": "Retention windows, in days, for the high-volume operational tables.\n\nEach field names the table it bounds and rows older than the window are\ndeleted, with two exceptions worth knowing:\n\n- `ai_request_messages_days` drops the stored messages and keeps the request\n  row; `None` follows `ai.history.retention_days` from the services\n  configuration instead.\n- `ai_request_payload_raw_days` sets the raw request and response bodies on\n  `ai_request_payloads` to NULL rather than deleting the row; the excerpts,\n  hashes and sizes stay.",
+      "description": "Retention windows, in days, for the high-volume operational tables.\n\nEach field names the table it bounds and rows older than the window are\ndeleted, with two exceptions worth knowing:\n\n- `ai_request_messages_days` drops the stored messages and keeps the request\n  row; `None` follows `ai.history.retention_days` from the services\n  configuration instead.\n- `ai_request_payload_raw_days` sets the raw request and response bodies on\n  `ai_request_payloads` to NULL rather than deleting the row; the excerpts,\n  hashes and sizes stay.\n- `archived_users_days` is how long an archived user (status `deleted`,\n  `archived_at` set) stays restorable before `database_cleanup` purges the\n  account and its rows; an account under legal hold is never purged.",
       "type": "object",
       "properties": {
         "logs_days": {
@@ -1099,6 +1350,12 @@
           "format": "uint32",
           "minimum": 0,
           "default": 180
+        },
+        "archived_users_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 90
         }
       },
       "additionalProperties": false
@@ -1247,7 +1504,7 @@
       ]
     },
     "StorageConfig": {
-      "description": "Where user-visible files are written and whether the root is shared\nbetween replicas.\n\n`shared: true` declares that `paths.storage` is a mount every replica can\nsee; boot warns when the declaration and the observed mount disagree.",
+      "description": "Where user-visible files are written and whether the root is shared\nbetween replicas.\n\n`backend: local` writes under `paths.storage`; `shared: true` declares\nthat root is a mount every replica can see, and boot warns when the\ndeclaration and the observed mount disagree. `backend: gcs` writes to\n`bucket` under `prefix`; `bucket`, `prefix`, `public_read` and\n`credentials` apply to it and to `s3` (gcs credentials default to\nworkload identity; s3 requires a secret). `backend: s3` also reads\n`endpoint` (default: AWS for `region`), `region` (default `us-east-1`)\nand `path_style` (required by most self-hosted S3 implementations).",
       "type": "object",
       "properties": {
         "backend": {
@@ -1257,6 +1514,48 @@
         "shared": {
           "type": "boolean",
           "default": false
+        },
+        "bucket": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "prefix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "public_read": {
+          "type": "boolean",
+          "default": false
+        },
+        "credentials": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GcsCredentials"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "endpoint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path_style": {
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false
@@ -1264,7 +1563,34 @@
     "StorageBackend": {
       "type": "string",
       "enum": [
-        "local"
+        "local",
+        "gcs",
+        "s3"
+      ]
+    },
+    "GcsCredentials": {
+      "description": "How an object-store backend authenticates.\n\nFor `gcs`, `workload_identity` asks the GCE/GKE metadata server for the\ntoken of the service account bound to the workload; `{ secret: NAME }` signs\nwith a service-account key JSON held in the secrets store under `NAME`. For\n`s3` only `{ secret: NAME }` applies, naming a JSON object with\n`access_key_id`, `secret_access_key` and an optional `session_token`.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CredentialsLiteral"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "secret": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "secret"
+          ]
+        }
+      ]
+    },
+    "CredentialsLiteral": {
+      "type": "string",
+      "enum": [
+        "workload_identity"
       ]
     },
     "ObservabilityConfig": {
@@ -1280,6 +1606,10 @@
             }
           ],
           "default": null
+        },
+        "log_format": {
+          "$ref": "#/$defs/LogFormat",
+          "default": "text"
         }
       },
       "additionalProperties": false
@@ -1336,6 +1666,33 @@
       "enum": [
         "traces",
         "logs"
+      ]
+    },
+    "LogFormat": {
+      "type": "string",
+      "enum": [
+        "text",
+        "json"
+      ]
+    },
+    "ConfigPlanesConfig": {
+      "type": "object",
+      "properties": {
+        "authority": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PlaneAuthority"
+          },
+          "default": {}
+        }
+      },
+      "additionalProperties": false
+    },
+    "PlaneAuthority": {
+      "type": "string",
+      "enum": [
+        "file",
+        "db"
       ]
     }
   }
