@@ -296,18 +296,21 @@ jobs:
       - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
           tool: cargo-deny@${{ env.DENY_VERSION }},cargo-machete@${{ env.MACHETE_VERSION }}
-      # Why the retry: the advisory database is a git fetch from GitHub, and a
-      # transient network error there is not a finding. Only the fetch is
+      # Why the retry: the advisory database and crate sources are fetched over
+      # the network, and a transient error there is not a finding. Only the fetch is
       # retried; the check itself runs once, offline, against what was fetched.
-      - name: Fetch the advisory database
-        timeout-minutes: 5
+      - name: Fetch the advisory database and every workspace's crates
+        timeout-minutes: 10
         run: |
-          for attempt in 1 2 3; do
-            cargo deny fetch && exit 0
-            echo "::warning::advisory fetch failed (attempt $attempt); retrying"
-            sleep $((attempt * 10))
+          set -uo pipefail
+          for w in . tests; do
+            for attempt in 1 2 3; do
+              cargo deny --manifest-path "$w/Cargo.toml" fetch && continue 2
+              echo "::warning::cargo deny fetch for $w failed (attempt $attempt); retrying"
+              sleep $((attempt * 10))
+            done
+            exit 1
           done
-          exit 1
       - name: cargo deny (every workspace)
         timeout-minutes: 10
         run: |
