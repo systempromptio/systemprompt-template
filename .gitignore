@@ -232,3 +232,7 @@ extensions/**/.sqlx/
 # CI checks systemprompt-core out here (.github/actions/core-checkout); it is
 # core's tree, never ours.
 .vendor/
+
+# Cargo build output under any target-dir suffix, at any depth
+target-*/
+**/target-*/
