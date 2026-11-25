@@ -222,7 +222,7 @@ echo "  DATABASE POOL STATS"
 echo "=========================================="
 echo ""
 
-DB_URL="$(grep database_url "$PROJECT_DIR/.systemprompt/profiles/local/secrets.json" 2>/dev/null | head -1 | sed 's/.*"database_url".*"\(postgres[^"]*\)".*/\1/' || echo "")"
+DB_URL="$(grep database_url "$PROJECT_DIR/.systemprompt/profiles/${FLAVOUR:-full}/secrets.json" 2>/dev/null | head -1 | sed 's/.*"database_url".*"\(postgres[^"]*\)".*/\1/' || echo "")"
 if [[ -n "$DB_URL" ]]; then
   POOL_TOTAL=$(psql "$DB_URL" -t -c "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database();" 2>/dev/null | tr -d ' ')
   POOL_MAX=$(psql "$DB_URL" -t -c "SHOW max_connections;" 2>/dev/null | tr -d ' ')

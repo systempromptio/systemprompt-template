@@ -13,7 +13,7 @@ It wraps [`systemprompt-core`](https://github.com/systempromptio/systemprompt-co
 ```bash
 git clone https://github.com/systempromptio/systemprompt-template
 cd systemprompt-template
-just setup-local <your-anthropic-api-key>   # builds, runs migrations, starts Postgres
+just setup full --anthropic-key <key>       # builds, runs migrations, starts Postgres
 just start                                  # serves on http://localhost:8080
 ```
 

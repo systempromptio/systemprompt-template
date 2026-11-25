@@ -27,9 +27,9 @@ export { T0 } from './seed/kit';
 export function databaseUrl(): string {
   if (process.env.E2E_DATABASE_URL) return process.env.E2E_DATABASE_URL;
   const secrets = JSON.parse(
-    readFileSync(join(REPO, '.systemprompt', 'profiles', 'local', 'secrets.json'), 'utf8'),
+    readFileSync(join(REPO, '.systemprompt', 'profiles', process.env.FLAVOUR ?? 'full', 'secrets.json'), 'utf8'),
   );
-  if (!secrets.database_url) throw new Error('no database_url in local profile secrets.json');
+  if (!secrets.database_url) throw new Error('no database_url in the flavour profile secrets.json');
   return secrets.database_url;
 }
 

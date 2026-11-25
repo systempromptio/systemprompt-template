@@ -39,7 +39,7 @@ examples/pi/setup.sh
 The script installs Pi (npm), mints a gateway token, installs the provider
 config and the branded `systemprompt` theme, and smoke-tests `/v1/messages`.
 It derives the gateway URL from your active profile
-(`.systemprompt/profiles/local/profile.yaml`), so non-default ports just work.
+(`.systemprompt/profiles/<flavour>/profile.yaml`), so non-default ports just work.
 
 Then:
 

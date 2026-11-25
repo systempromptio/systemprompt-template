@@ -60,16 +60,16 @@ fi
 export RUST_LOG="${RUST_LOG:-warn}"
 
 TOKEN_FILE="$SCRIPT_DIR/.token"
-# Match demo/_common.sh: prefer local, fall back to the container profile.
+# Match demo/_common.sh: prefer the flavour profile, fall back to the container profile.
 if [[ -z "${PROFILE:-}" ]]; then
-  if [[ ! -d "$PROJECT_DIR/.systemprompt/profiles/local" && -d "$PROJECT_DIR/.systemprompt/profiles/docker" ]]; then
+  if [[ ! -d "$PROJECT_DIR/.systemprompt/profiles/${FLAVOUR:-full}" && -d "$PROJECT_DIR/.systemprompt/profiles/docker" ]]; then
     PROFILE=docker
   else
-    PROFILE=local
+    PROFILE="${FLAVOUR:-full}"
   fi
 fi
 # Honour the port configured in the active profile.yaml so preflight works
-# when setup-local was run with non-default ports. Override with BASE_URL env.
+# when `just setup` was run with non-default ports. Override with BASE_URL env.
 _preflight_base_url() {
   local profile_yaml="$PROJECT_DIR/.systemprompt/profiles/$PROFILE/profile.yaml"
   if [[ -f "$profile_yaml" ]]; then
@@ -196,7 +196,7 @@ echo "  How it works:"
 echo "    1. Lists the admins in local PostgreSQL and asks which to act as"
 echo "       (ADMIN_EMAIL selects one non-interactively)"
 echo "    2. Generates JWT signed with local jwt_secret from"
-echo "       .systemprompt/profiles/local/secrets.json"
+echo "       .systemprompt/profiles/${FLAVOUR:-full}/secrets.json"
 echo "    3. Returns admin session token"
 echo ""
 echo "  Everything the demos do is attributed to the selected user, so it"
@@ -374,7 +374,7 @@ echo "  Both rows above are taken from the live JWTs decoded in Steps 2-3."
 echo "  Plugin-identity is carried by the plugin_id claim, not session_id."
 echo ""
 echo "  Both tokens are signed by the jwt_secret in:"
-echo "    .systemprompt/profiles/local/secrets.json"
+echo "    .systemprompt/profiles/${FLAVOUR:-full}/secrets.json"
 echo ""
 echo "  Both carry the same user_id (sub claim), so events from"
 echo "  either token appear under the same user in the dashboard."

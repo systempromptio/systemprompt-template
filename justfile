@@ -4,19 +4,26 @@ set dotenv-load
 # value into two arguments before the CLI ever parses it.
 set positional-arguments
 
-CLI_RELEASE := "target/release/systemprompt"
+# The flavour every build, run and test recipe targets (flavours/index.toml;
+# `just flavours` lists them). Each flavour builds into its own target dir and
+# runs its own profile, so two flavours never invalidate each other's build.
+FLAVOUR := env("FLAVOUR", "full")
+FLAVOUR_PYTHON := env("FLAVOUR_PYTHON", "python3")
+FLAVOUR_TARGET := "target/flavour-" + FLAVOUR
+CLI_RELEASE := FLAVOUR_TARGET + "/release/systemprompt"
+CLI_DEBUG := FLAVOUR_TARGET + "/debug/systemprompt"
 
-# Use newest binary (release vs debug, whichever is most recent)
-CLI := if path_exists("target/release/systemprompt") == "true" { \
-    if path_exists("target/debug/systemprompt") == "true" { \
-        `[ target/release/systemprompt -nt target/debug/systemprompt ] && echo target/release/systemprompt || echo target/debug/systemprompt` \
+# Use newest binary of this flavour (release vs debug, whichever is most recent)
+CLI := if path_exists(CLI_RELEASE) == "true" { \
+    if path_exists(CLI_DEBUG) == "true" { \
+        `f="${FLAVOUR:-full}"; [ "target/flavour-$f/release/systemprompt" -nt "target/flavour-$f/debug/systemprompt" ] && echo "target/flavour-$f/release/systemprompt" || echo "target/flavour-$f/debug/systemprompt"` \
     } else { \
-        "target/release/systemprompt" \
+        CLI_RELEASE \
     } \
-} else if path_exists("target/debug/systemprompt") == "true" { \
-    "target/debug/systemprompt" \
+} else if path_exists(CLI_DEBUG) == "true" { \
+    CLI_DEBUG \
 } else { \
-    "echo 'ERROR: No CLI binary found. Run: just build' && exit 1" \
+    "echo 'ERROR: No " + FLAVOUR + " CLI binary found. Run: just build' && exit 1" \
 }
 
 # Default: run CLI with any arguments
@@ -29,12 +36,12 @@ cli *ARGS:
     set -euo pipefail
     SESSION_FILE="{{justfile_directory()}}/.systemprompt/sessions/index.json"
     if [ -f "$SESSION_FILE" ]; then
-        ACTIVE_KEY=$(jq -r '.active_key // "local"' "$SESSION_FILE")
+        ACTIVE_KEY=$(jq -r '.active_key // "{{FLAVOUR}}"' "$SESSION_FILE")
         export SYSTEMPROMPT_PROFILE=$(jq -r ".sessions[\"$ACTIVE_KEY\"].profile_path // empty" "$SESSION_FILE")
         export SYSTEMPROMPT_AUTH_TOKEN=$(jq -r ".sessions[\"$ACTIVE_KEY\"].session_token // empty" "$SESSION_FILE")
     fi
     if [ -z "${SYSTEMPROMPT_PROFILE:-}" ]; then
-        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/profile.yaml"
+        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/{{FLAVOUR}}/profile.yaml"
     fi
     exec {{CLI}} "$@"
 
@@ -64,7 +71,7 @@ _db-url:
 # Build (Windows) - always uses offline mode
 [windows]
 build *FLAGS:
-    $env:SQLX_OFFLINE="true"; cargo build --workspace {{FLAGS}}
+    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo build --workspace --no-default-features --features "$({{FLAVOUR_PYTHON}} scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Build (Unix) - one build in flight at a time, always of the latest source;
 # cargo's own incremental cache decides how much recompiles. Refuses when the
@@ -93,12 +100,12 @@ _build-uncoordinated *FLAGS:
     export CC="${CC:-clang}"
     export CXX="${CXX:-clang++}"
     export RUSTFLAGS="${RUSTFLAGS:--D warnings}"
-    SQLX_OFFLINE=true cargo build --workspace --locked {{FLAGS}}
+    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo build --workspace --locked --no-default-features --features "$({{FLAVOUR_PYTHON}} scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Clippy (Windows) - always uses offline mode
 [windows]
 clippy *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
-    $env:SQLX_OFFLINE="true"; cargo clippy --workspace {{FLAGS}} -- -D warnings
+    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo clippy --workspace --no-default-features --features "$({{FLAVOUR_PYTHON}} scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
 
 # Clippy (Unix) - single-flight, same coordinator as `just build`
 [unix]
@@ -112,7 +119,7 @@ _clippy-uncoordinated *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
     set -euo pipefail
     export CC="${CC:-clang}"
     export CXX="${CXX:-clang++}"
-    SQLX_OFFLINE=true cargo clippy --workspace --all-targets --locked {{FLAGS}} -- -D warnings
+    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo clippy --workspace --all-targets --locked --no-default-features --features "$({{FLAVOUR_PYTHON}} scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
 
 # Unit tests: extensions/web/admin (main workspace) + the tests/ workspace.
 # If sqlx offline errors appear, run `just prepare` first to refresh .sqlx.
@@ -146,18 +153,18 @@ test-integration:
 _test-integration-uncoordinated:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/local/secrets.json ]; then
+    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/{{FLAVOUR}}/secrets.json ]; then
         SYSTEMPROMPT_TEST_DATABASE_URL=$(python3 -c "
     import json, urllib.parse as up
-    u = up.urlsplit(json.load(open('.systemprompt/profiles/local/secrets.json'))['database_url'])
+    u = up.urlsplit(json.load(open('.systemprompt/profiles/{{FLAVOUR}}/secrets.json'))['database_url'])
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
     # Why: falling through with no URL hands the suites a reason to skip, and a
     # skipped DB tier reports the same green as one that ran every assertion.
     if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ]; then
-        echo "No test database. Set SYSTEMPROMPT_TEST_DATABASE_URL, or run \`just setup-local\`" >&2
-        echo "so .systemprompt/profiles/local/secrets.json carries a database_url." >&2
+        echo "No test database. Set SYSTEMPROMPT_TEST_DATABASE_URL, or run \`just setup {{FLAVOUR}}\`" >&2
+        echo "so .systemprompt/profiles/{{FLAVOUR}}/secrets.json carries a database_url." >&2
         exit 1
     fi
     cargo nextest run --locked --no-fail-fast --manifest-path tests/Cargo.toml --workspace -E 'package(mcp-integration-tests) | package(web-integration-tests) | package(admin-db-core-tests) | package(admin-db-config-tests) | package(gateway-integration-tests) | package(schema-upgrade-tests)'
@@ -173,16 +180,16 @@ test-contract *ARGS:
 _test-contract-uncoordinated *ARGS:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/local/secrets.json ]; then
+    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/{{FLAVOUR}}/secrets.json ]; then
         SYSTEMPROMPT_TEST_DATABASE_URL=$(python3 -c "
     import json, urllib.parse as up
-    u = up.urlsplit(json.load(open('.systemprompt/profiles/local/secrets.json'))['database_url'])
+    u = up.urlsplit(json.load(open('.systemprompt/profiles/{{FLAVOUR}}/secrets.json'))['database_url'])
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
     if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ]; then
-        echo "No test database. Set SYSTEMPROMPT_TEST_DATABASE_URL, or run \`just setup-local\`" >&2
-        echo "so .systemprompt/profiles/local/secrets.json carries a database_url." >&2
+        echo "No test database. Set SYSTEMPROMPT_TEST_DATABASE_URL, or run \`just setup {{FLAVOUR}}\`" >&2
+        echo "so .systemprompt/profiles/{{FLAVOUR}}/secrets.json carries a database_url." >&2
         exit 1
     fi
     # Why: the contract suite self-skips when no database is reachable; this
@@ -217,6 +224,7 @@ lint-gates:
 _lint-gates-uncoordinated:
     #!/usr/bin/env bash
     set -uo pipefail
+    export FLAVOUR_PYTHON="{{FLAVOUR_PYTHON}}"
     gates=(
         check-discarded-results.sh
         check-fail-open.sh
@@ -250,6 +258,7 @@ _lint-gates-uncoordinated:
         check-asset-reachability.sh
         check-workspace-deps.sh
         check-dockerfile-paths.sh
+        check-flavours.sh
         check-dropped-schema.sh
         validate-services.sh
         check-release-tag.sh
@@ -462,9 +471,9 @@ schema-baseline VERSION="":
         core_ref="$(tr -d '[:space:]' < bridge/CORE_REF)"
         cli="{{CLI}}"
     fi
-    container="$(docker compose -p "$(just _project_name local)" -f .systemprompt/docker/local.yaml ps -q postgres)"
+    container="$(docker compose -p "$(just _project_name {{FLAVOUR}})" -f .systemprompt/docker/{{FLAVOUR}}.yaml ps -q postgres)"
     [ -n "$container" ] || { echo "schema-baseline: local Postgres is not running (just db-up)" >&2; exit 1; }
-    base_url="$(jq -r '.database_url' .systemprompt/profiles/local/secrets.json)"
+    base_url="$(jq -r '.database_url' .systemprompt/profiles/{{FLAVOUR}}/secrets.json)"
     scratch="sp_schema_baseline_$$"
     scratch_url="${base_url%/*}/$scratch"
     fixture="tests/fixtures/schema/release-baseline-$version.sql"
@@ -473,7 +482,7 @@ schema-baseline VERSION="":
     trap cleanup EXIT
     docker exec "$container" psql -U systemprompt -d postgres -qc "CREATE DATABASE \"$scratch\""
     echo "schema-baseline: fresh install of $version (core $core_ref) into $scratch"
-    if ! log="$(SYSTEMPROMPT_DATABASE_URL="$scratch_url" "$cli" infra db migrate --profile local 2>&1)"; then
+    if ! log="$(SYSTEMPROMPT_DATABASE_URL="$scratch_url" "$cli" infra db migrate --profile {{FLAVOUR}} 2>&1)"; then
         echo "$log" | tail -30; echo "schema-baseline: fresh install failed" >&2; exit 1
     fi
     {
@@ -596,7 +605,7 @@ lint-no-synthesis:
 prepare:
     #!/usr/bin/env bash
     set -euo pipefail
-    SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
+    SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/{{FLAVOUR}}/secrets.json"
     if [ ! -f "$SECRETS_FILE" ]; then
         echo "Error: No local profile secrets found at $SECRETS_FILE"
         echo "Run 'just db-up' first to start the database"
@@ -623,7 +632,7 @@ prepare:
     # (first-time bootstrap before any build).
     if [ -x "{{CLI}}" ]; then
         echo "Applying pending migrations..."
-        {{CLI}} infra db migrate --profile local
+        {{CLI}} infra db migrate --profile {{FLAVOUR}}
     else
         echo "Warning: no systemprompt binary yet; skipping migrate step."
         echo "  If sqlx prepare fails with 'relation does not exist',"
@@ -713,14 +722,14 @@ prepare:
 # SERVICES & DATABASE
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Start server (always uses local profile)
+# Start server on this flavour's profile (FLAVOUR=<name> just start)
 start:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -f .systemprompt/docker/local.yaml ]; then
-        just db-up local
+    if [ -f .systemprompt/docker/{{FLAVOUR}}.yaml ]; then
+        just db-up {{FLAVOUR}}
     fi
-    exec {{CLI}} infra services start --profile local
+    exec {{CLI}} infra services start --profile {{FLAVOUR}}
 
 # Optional: running server + binary provenance + recent build/lint/test results
 [unix]
@@ -735,17 +744,17 @@ stop:
 start-release:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -f .systemprompt/docker/local.yaml ]; then
-        just db-up local
+    if [ -f .systemprompt/docker/{{FLAVOUR}}.yaml ]; then
+        just db-up {{FLAVOUR}}
     fi
-    exec {{CLI_RELEASE}} infra services start --profile local
+    exec {{CLI_RELEASE}} infra services start --profile {{FLAVOUR}}
 
 # Run migrations
 migrate:
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -z "${SYSTEMPROMPT_PROFILE:-}" ]; then
-        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/profile.yaml"
+        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/{{FLAVOUR}}/profile.yaml"
     fi
     {{CLI}} infra db migrate
 
@@ -768,16 +777,16 @@ _project_name TENANT:
     LEAF=$(basename "{{justfile_directory()}}" | tr '_' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
     printf 'sp-%s-%s-%s\n' "$LEAF" "$HASH" "{{TENANT}}"
 
-# Start PostgreSQL for a specific tenant (default: local)
-db-up TENANT="local":
+# Start PostgreSQL for a specific tenant (default: the flavour)
+db-up TENANT=FLAVOUR:
     docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml up -d
 
 # Stop PostgreSQL for a specific tenant
-db-down TENANT="local":
+db-down TENANT=FLAVOUR:
     docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml down
 
 # Show PostgreSQL logs for a specific tenant
-db-logs TENANT="local":
+db-logs TENANT=FLAVOUR:
     docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml logs -f
 
 # List all tenant databases
@@ -804,244 +813,16 @@ whoami:
 tenant:
     {{CLI}} cloud tenant
 
-# Set up a local-only profile + Docker Postgres (no cloud, no login required).
-# Pass keys as positional args, or leave blank to be prompted interactively:
-#   just setup-local sk-ant-... sk-... AIza...
-# Port and Postgres port can be overridden for running multiple clones on one host:
-#   just setup-local sk-ant-... "" "" 8081 5433
-# A bare re-run preserves the ports chosen at first setup (read back from the
-# profile/compose files), so it never reverts a non-default install to 8080/5432.
-# ADMIN_EMAIL defaults to `git config user.email`.
-setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_PORT="5432" ADMIN_EMAIL="" BUILD="true":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    ROOT="{{justfile_directory()}}"
-    PROFILE_DIR="$ROOT/.systemprompt/profiles/local"
-    DOCKER_DIR="$ROOT/.systemprompt/docker"
-    ANTHROPIC_KEY="{{ANTHROPIC_KEY}}"
-    OPENAI_KEY="{{OPENAI_KEY}}"
-    GEMINI_KEY="{{GEMINI_KEY}}"
-    HTTP_PORT="{{HTTP_PORT}}"
-    PG_PORT="{{PG_PORT}}"
-    ADMIN_EMAIL="{{ADMIN_EMAIL}}"
-    if [ -z "$ADMIN_EMAIL" ]; then
-        ADMIN_EMAIL="$(git config user.email 2>/dev/null || true)"
-    fi
-    if [ -z "$ADMIN_EMAIL" ]; then
-        ADMIN_EMAIL="admin@localhost.localdomain"
-    fi
-    export SYSTEMPROMPT_PROFILE="$PROFILE_DIR/profile.yaml"
-    # Default ports on a re-run mean "keep what I had", not "move me back to
-    # 8080/5432": read the original choice back from the files setup wrote.
-    if [ "$HTTP_PORT" = "8080" ] && [ -f "$PROFILE_DIR/profile.yaml" ]; then
-        SAVED_HTTP="$(sed -n 's/^ *port: //p' "$PROFILE_DIR/profile.yaml" | head -1)"
-        if [ -n "$SAVED_HTTP" ]; then
-            HTTP_PORT="$SAVED_HTTP"
-        fi
-    fi
-    if [ "$PG_PORT" = "5432" ] && [ -f "$DOCKER_DIR/local.yaml" ]; then
-        SAVED_PG="$(sed -n 's/.*"\([0-9][0-9]*\):5432".*/\1/p' "$DOCKER_DIR/local.yaml" | head -1)"
-        if [ -n "$SAVED_PG" ]; then
-            PG_PORT="$SAVED_PG"
-        fi
-    fi
-    # Whether a key was passed as a positional arg. When none is and there is
-    # nothing to preserve, generation still needs a provider: on a TTY we let
-    # `admin setup` drive its own "Select your AI provider" menu (the CLI owns
-    # the prompt); off a TTY we cannot prompt, so keys must come as args. A
-    # developer who keeps .systemprompt/ across reclones re-runs with no args
-    # and is never asked again (the profile.yaml guard below skips generation).
-    HAS_KEY=false
-    if [ -n "$ANTHROPIC_KEY" ] || [ -n "$OPENAI_KEY" ] || [ -n "$GEMINI_KEY" ]; then
-        HAS_KEY=true
-    fi
-    if [ "$HAS_KEY" = false ] && [ ! -f "$PROFILE_DIR/secrets.json" ] && [ ! -t 0 ]; then
-        echo ""
-        echo "================================================================"
-        echo "  setup-local needs an AI provider API key"
-        echo "================================================================"
-        echo ""
-        echo "  Not running on a TTY, so the provider menu can't be shown."
-        echo "  Pass a key as an argument (one of Anthropic, OpenAI, Gemini):"
-        echo "    just setup-local <anthropic_key> [openai_key] [gemini_key]"
-        echo ""
-        exit 1
-    fi
-    if [ ! -x target/debug/systemprompt ] && [ ! -x target/release/systemprompt ]; then
-        echo "Building debug binary..."
-        just build
-    fi
-    # Resolve the binary at runtime: the {{CLI}} variable is evaluated by `just`
-    # at parse time, so on a cold clone (no binary yet) it expands to an error
-    # stub — useless for the bootstrap/keygen calls below, which run only after
-    # the build above has produced the binary.
-    if [ -x target/release/systemprompt ]; then
-        BIN="$ROOT/target/release/systemprompt"
-    else
-        BIN="$ROOT/target/debug/systemprompt"
-    fi
-    mkdir -p "$PROFILE_DIR" "$DOCKER_DIR"
-    # Rewrite the compose file when it exists but pins a different host port.
-    # Guarding only on existence meant a re-run with a new PG_PORT kept the old
-    # mapping, brought Postgres up on the old port, and then waited 60s for the
-    # new one before dying on "Postgres did not become ready" — which names the
-    # symptom and hides the cause.
-    if [ -f "$DOCKER_DIR/local.yaml" ] \
-        && ! grep -q "\"${PG_PORT}:5432\"" "$DOCKER_DIR/local.yaml"; then
-        echo "Docker compose pins a different host port; rewriting for $PG_PORT."
-        echo "Recreating the container so the new mapping takes effect..."
-        docker compose -p "$(just _project_name local)" -f "$DOCKER_DIR/local.yaml" down 2>/dev/null || true
-        rm -f "$DOCKER_DIR/local.yaml"
-    fi
-    if [ ! -f "$DOCKER_DIR/local.yaml" ]; then
-        echo "Writing Docker compose for local Postgres (host port $PG_PORT)..."
-        cat > "$DOCKER_DIR/local.yaml" <<YAML
-    services:
-      postgres:
-        image: postgres:18-alpine
-        restart: unless-stopped
-        environment:
-          POSTGRES_USER: systemprompt
-          POSTGRES_PASSWORD: 123
-          POSTGRES_DB: systemprompt
-        ports:
-          - "${PG_PORT}:5432"
-        volumes:
-          - postgres_data:/var/lib/postgresql
-        healthcheck:
-          test: ["CMD-SHELL", "pg_isready -U systemprompt -d systemprompt"]
-          interval: 5s
-          timeout: 5s
-          retries: 5
-    volumes:
-      postgres_data: {}
-    YAML
-    fi
-    echo "Starting local Postgres via Docker..."
-    just db-up local
-    echo "Waiting for Postgres to accept connections on localhost:${PG_PORT}..."
-    for i in $(seq 1 60); do
-        if (exec 3<>/dev/tcp/127.0.0.1/${PG_PORT}) 2>/dev/null; then
-            exec 3<&- 3>&-
-            # Also confirm the server actually answers pg_isready, not just a half-open socket.
-            CONTAINER=$(docker compose -p "$(just _project_name local)" -f .systemprompt/docker/local.yaml ps -q postgres)
-            if [ -n "$CONTAINER" ] && docker exec "$CONTAINER" pg_isready -U systemprompt -d systemprompt >/dev/null 2>&1; then
-                echo "Postgres is ready."
-                break
-            fi
-        fi
-        if [ "$i" = "60" ]; then
-            echo "ERROR: Postgres did not become ready within 60s." >&2
-            exit 1
-        fi
-        sleep 1
-    done
-    if [ ! -f "$PROFILE_DIR/profile.yaml" ]; then
-        echo "Generating profile + provider registry + secrets via 'admin setup'..."
-        if [ "$HAS_KEY" = true ]; then
-            # Keys supplied as args: fully non-interactive. The default provider
-            # is the first key given, so the generated config (the providers
-            # registry, gateway default, ai/config.yaml) is consistent with the
-            # single key.
-            KEY_ARGS=()
-            DEFAULT_PROVIDER=""
-            if [ -n "$ANTHROPIC_KEY" ]; then KEY_ARGS+=(--anthropic-key "$ANTHROPIC_KEY"); [ -z "$DEFAULT_PROVIDER" ] && DEFAULT_PROVIDER=anthropic; fi
-            if [ -n "$OPENAI_KEY" ]; then KEY_ARGS+=(--openai-key "$OPENAI_KEY"); [ -z "$DEFAULT_PROVIDER" ] && DEFAULT_PROVIDER=openai; fi
-            if [ -n "$GEMINI_KEY" ]; then KEY_ARGS+=(--gemini-key "$GEMINI_KEY"); [ -z "$DEFAULT_PROVIDER" ] && DEFAULT_PROVIDER=gemini; fi
-            "$BIN" admin setup --yes --no-migrate --environment local \
-                --db-host localhost --db-port "$PG_PORT" \
-                --db-user systemprompt --db-password 123 --db-name systemprompt \
-                --admin-email "$ADMIN_EMAIL" \
-                --default-provider "$DEFAULT_PROVIDER" \
-                "${KEY_ARGS[@]}"
-        else
-            # No key arg: let the CLI prompt for which provider to use. DB,
-            # environment, and migrations stay non-interactive (flags + env);
-            # only the provider selection is interactive, and the chosen
-            # provider becomes the default.
-            SYSTEMPROMPT_NON_INTERACTIVE=1 "$BIN" admin setup --no-migrate --environment local \
-                --db-host localhost --db-port "$PG_PORT" \
-                --db-user systemprompt --db-password 123 --db-name systemprompt \
-                --admin-email "$ADMIN_EMAIL"
-        fi
-        if [ "$HTTP_PORT" != "8080" ]; then
-            "$BIN" admin config server set --port "$HTTP_PORT" \
-                --api-server-url "http://localhost:${HTTP_PORT}" \
-                --api-internal-url "http://localhost:${HTTP_PORT}" \
-                --api-external-url "http://localhost:${HTTP_PORT}"
-            # The authz hook URL is an absolute webhook target baked at
-            # `admin setup` time on the default port; re-point it at the
-            # chosen port so the gateway's govern callback reaches this server.
-            "$BIN" admin config governance set --mode webhook \
-                --url "http://localhost:${HTTP_PORT}/api/public/govern/authz"
-            # Tokens carry the issuer, and a validator resolves (issuer, kid)
-            # by fetching that issuer's JWKS. Left on the default port it
-            # points at whatever else owns 8080, so every MCP tool call fails
-            # with "kid does not match any known signing key".
-            "$BIN" admin config security set --jwt-issuer "http://localhost:${HTTP_PORT}"
-            # CORS is seeded on the default port too, so the admin UI served
-            # from the chosen port is refused by its own API.
-            "$BIN" admin config server cors add "http://localhost:${HTTP_PORT}" || true
-            "$BIN" admin config server cors add "http://127.0.0.1:${HTTP_PORT}" || true
-            "$BIN" admin config server cors remove "http://localhost:8080" || true
-            "$BIN" admin config server cors remove "http://127.0.0.1:8080" || true
-        fi
-    elif [ "$HAS_KEY" = true ]; then
-        # Profile generation is one-shot, guarded on profile.yaml. `just db-down`
-        # drops the database but leaves the profile, so a re-run with different
-        # keys would silently keep the old provider registry. Say so loudly and
-        # point at the one command that actually re-provisions.
-        echo ""
-        echo "================================================================"
-        echo "  Existing profile reused — supplied keys were NOT applied"
-        echo "================================================================"
-        echo ""
-        echo "  $PROFILE_DIR/profile.yaml already exists, so 'admin setup' was"
-        echo "  skipped and the provider registry/keys are unchanged."
-        echo "  To re-provision from the keys you just passed:"
-        echo ""
-        echo "    rm -rf \"$PROFILE_DIR\" && just setup-local <keys...> $HTTP_PORT $PG_PORT"
-        echo ""
-    fi
-    # Core refuses to boot without a 64-hex encryption_master_key (0.62.0:
-    # checked at secrets bootstrap, before migrations). admin setup mints one
-    # since 0.62.0; keep an existing key so a local re-run can still open its
-    # journal, and generate one only for profiles created by older releases.
-    python3 - "$PROFILE_DIR/secrets.json" <<'PYTHON'
-    import json
-    import secrets
-    import sys
-    from pathlib import Path
+# The flavours this template builds: name and what each is for
+flavours:
+    @{{FLAVOUR_PYTHON}} scripts/flavour.py table
 
-    path = Path(sys.argv[1])
-    data = json.loads(path.read_text())
-    key = data.get("encryption_master_key", "")
-    if len(key) != 64 or any(char not in "0123456789abcdefABCDEF" for char in key):
-        data["encryption_master_key"] = secrets.token_hex(32)
-        path.write_text(json.dumps(data, indent=2) + "\n")
-    PYTHON
-    mkdir -p "$ROOT/web/dist"
-    # BUILD=false: the caller already built the binaries it runs (the CI e2e
-    # tier builds only the server and the MCP agent, in debug).
-    if [ "{{BUILD}}" = "true" ]; then
-        echo "Building binaries (release, full workspace)..."
-        just build --release
-    else
-        [ -x "$BIN" ] || { echo "setup-local: BUILD=false but $BIN is missing" >&2; exit 1; }
-        echo "Skipping the build (BUILD=false); using $BIN"
-    fi
-    echo "Running database migrations..."
-    just migrate
-    echo "Ensuring bootstrap admin user ($ADMIN_EMAIL)..."
-    "$BIN" admin bootstrap --email "$ADMIN_EMAIL"
-    if [ ! -f "$ROOT/signing_key.pem" ]; then
-        echo "Generating JWT signing key..."
-        "$BIN" admin keys generate --output "$ROOT/signing_key.pem"
-    fi
-    echo "Publishing assets..."
-    just publish
-    echo ""
-    echo "Local setup complete. Run: just start"
+# Local install of one flavour (Docker Postgres, build, profile, migrate,
+# bootstrap, publish for a site): just setup full --anthropic-key sk-ant-...
+# Flags: --openai-key --gemini-key --http-port --pg-port --admin-email
+# --no-build --dry-run. A bare re-run keeps the ports chosen at first setup.
+setup FLAVOUR *ARGS:
+    FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-setup.sh {{FLAVOUR}} {{ARGS}}
 
 # List all tenants
 tenants:
@@ -1125,7 +906,7 @@ publish:
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -z "${SYSTEMPROMPT_PROFILE:-}" ]; then
-        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/profile.yaml"
+        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/{{FLAVOUR}}/profile.yaml"
     fi
     {{CLI}} infra jobs run publish_pipeline
 
@@ -1138,19 +919,29 @@ web-build:
 # DOCKER
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Build Docker image for local testing
-docker-build TAG="local":
-    docker build -f Dockerfile -t systemprompt-template:{{TAG}} .
+# Build one flavour's image as systemprompt-template:<flavour>
+docker-build FLAVOUR=FLAVOUR *ARGS:
+    FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-build.sh {{FLAVOUR}} {{ARGS}}
 
-# Run image locally for testing
-docker-run TAG="local":
-    docker run -p 8080:8080 --env-file .env systemprompt-template:{{TAG}}
+# Build every flavour's image, one after another (one cargo build at a time)
+docker-build-all:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for flavour in $({{FLAVOUR_PYTHON}} scripts/flavour.py list); do
+        FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-build.sh "$flavour"
+    done
 
-# Test build without pushing
-docker-test:
-    just build-all
-    just docker-build test
-    @echo "Docker build successful! Image: systemprompt-template:test"
+# Run one flavour's image with its Postgres (docker-compose.yml, .env)
+docker-run FLAVOUR=FLAVOUR:
+    FLAVOUR={{FLAVOUR}} IMAGE=systemprompt-template:{{FLAVOUR}} docker compose -p sp-{{FLAVOUR}} up
+
+# Boot one flavour's image and assert its flavour.toml [smoke] expectations
+smoke FLAVOUR=FLAVOUR *ARGS:
+    FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-smoke.sh {{FLAVOUR}} {{ARGS}}
+
+# Image, deploy and developer-loop metrics: just metrics full --image --dev
+metrics FLAVOUR=FLAVOUR *ARGS:
+    FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-metrics.sh {{FLAVOUR}} {{ARGS}}
 
 # ══════════════════════════════════════════════════════════════════════════════
 # AIR-GAPPED SCENARIO
@@ -1164,13 +955,12 @@ airgap-up:
     # deploy/scenarios/airgap/.bin/ — `target` is a symlink to a shared cargo
     # cache that buildkit can't follow, so we dereference-copy them in first
     # (mirrors scaled-up).
-    if [[ ! -x target/release/systemprompt || ! -x target/release/systemprompt-mcp-agent ]]; then
+    if [[ ! -x {{FLAVOUR_TARGET}}/release/systemprompt ]]; then
         echo "ERROR: release binaries missing. Run: just build --release" >&2
         exit 1
     fi
     mkdir -p deploy/scenarios/airgap/.bin
-    cp -L target/release/systemprompt           deploy/scenarios/airgap/.bin/systemprompt
-    cp -L target/release/systemprompt-mcp-agent deploy/scenarios/airgap/.bin/systemprompt-mcp-agent
+    cp -L {{FLAVOUR_TARGET}}/release/systemprompt           deploy/scenarios/airgap/.bin/systemprompt
     docker compose -f deploy/scenarios/airgap/docker-compose.airgap.yml up -d --build
 
 # Tear down the air-gap stack and remove its volumes
@@ -1323,13 +1113,12 @@ scaled-up REPLICAS="3":
     set -euo pipefail
     # Stage the host-built binaries into a real dir inside the build context —
     # `target` is a symlink to a shared cargo cache that buildkit can't follow.
-    if [[ ! -x target/release/systemprompt || ! -x target/release/systemprompt-mcp-agent ]]; then
+    if [[ ! -x {{FLAVOUR_TARGET}}/release/systemprompt ]]; then
         echo "ERROR: release binaries missing. Run: just build --release" >&2
         exit 1
     fi
     mkdir -p deploy/scenarios/scaled/.bin
-    cp -L target/release/systemprompt           deploy/scenarios/scaled/.bin/systemprompt
-    cp -L target/release/systemprompt-mcp-agent deploy/scenarios/scaled/.bin/systemprompt-mcp-agent
+    cp -L {{FLAVOUR_TARGET}}/release/systemprompt           deploy/scenarios/scaled/.bin/systemprompt
     docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml up -d --build --scale app={{REPLICAS}}
 
 # Tear down the scaled stack and remove its volumes
@@ -1395,7 +1184,7 @@ record-svgs *NUMBERS:
 #
 # Why the URL is derived and not hardcoded: this recipe pointed at
 # http://localhost:8080 regardless of the profile. On an instance brought up by
-# `just setup-local <keys> <http_port> <pg_port>` that benchmarks nothing, or
+# `just setup <flavour> --http-port N --pg-port N` that benchmarks nothing, or
 # worse, whichever unrelated instance happens to hold 8080 -- and it reports a
 # number either way. The demos already solve this in demo/_common.sh; this reads
 # the same api_server_url.
@@ -1421,15 +1210,15 @@ benchmark REQUESTS="200" CONCURRENCY="100":
     PROFILE_YAML=""
     case "${SYSTEMPROMPT_PROFILE:-}" in
         */*.yaml|*/*.yml) PROFILE_YAML="$SYSTEMPROMPT_PROFILE" ;;
-        "")               PROFILE_YAML="$ROOT/.systemprompt/profiles/local/profile.yaml" ;;
+        "")               PROFILE_YAML="$ROOT/.systemprompt/profiles/{{FLAVOUR}}/profile.yaml" ;;
         *)                PROFILE_YAML="$ROOT/.systemprompt/profiles/${SYSTEMPROMPT_PROFILE}/profile.yaml" ;;
     esac
     # A profile belonging to another checkout describes another server; prefer
     # this one's if the pointed-at file is outside the tree.
     case "$PROFILE_YAML" in
         "$ROOT"/*) ;;
-        *) [ -f "$ROOT/.systemprompt/profiles/local/profile.yaml" ] \
-             && PROFILE_YAML="$ROOT/.systemprompt/profiles/local/profile.yaml" ;;
+        *) [ -f "$ROOT/.systemprompt/profiles/{{FLAVOUR}}/profile.yaml" ] \
+             && PROFILE_YAML="$ROOT/.systemprompt/profiles/{{FLAVOUR}}/profile.yaml" ;;
     esac
     BASE_URL="${BASE_URL:-}"
     if [ -z "$BASE_URL" ] && [ -f "$PROFILE_YAML" ]; then
@@ -1471,7 +1260,7 @@ flake-check:
 # `just schema-baseline` for the new rung, a CHANGELOG entry, `just verify`,
 # push next, and `just release X.Y.Z`. See docs/RELEASING.md.
 #
-# LOCAL-ONLY. The migrate is pinned to `--profile local`: a bare `infra db
+# LOCAL-ONLY. The migrate is pinned to `--profile {{FLAVOUR}}`: a bare `infra db
 # migrate` follows the active CLI session, which can be a cloud profile. A
 # failed migrate stops the bump (no `|| true`).
 core-bump version:
@@ -1481,8 +1270,8 @@ core-bump version:
     cargo update -w
     cargo update -w --manifest-path tests/Cargo.toml
     just db-up
-    cargo run --bin systemprompt -- infra db migrate --profile local
     just build
+    {{CLI}} infra db migrate --profile {{FLAVOUR}}
     just clippy
     @echo "core-bump {{version}} complete — then: just schema-baseline, CHANGELOG, just verify, push next, just release {{version}}"
 
@@ -1575,9 +1364,9 @@ core-checkout MISMATCH="fail":
 
 # Install the compiled gateway binaries from a GitHub Release instead of
 # building them: `systemprompt-gateway-<version>-<target>.tar.gz` (linux-amd64,
-# linux-arm64, darwin-arm64) holds systemprompt and systemprompt-mcp-agent,
-# built by release-gateway.yml. They land in target/release/, where
-# `just start` and setup-local already look, so a clone needs no Rust
+# linux-arm64, darwin-arm64) holds the systemprompt binary,
+# built by release-gateway.yml. They land in target/flavour-<flavour>/release/, where
+# `just start` and `just setup --no-build` already look, so a clone needs no Rust
 # toolchain. Verified against the release's SHA256SUMS.gateway. Default
 # version = the workspace version in Cargo.toml.
 fetch-release VERSION="":
@@ -1598,10 +1387,10 @@ fetch-release VERSION="":
         || { echo "fetch-release: release v$v has no $name (gh auth, or the release does not exist yet)." >&2; exit 1; }
     (cd "$tmp" && grep " $name\$" SHA256SUMS.gateway | { sha256sum -c - 2>/dev/null || shasum -a 256 -c -; })
     tar xzf "$tmp/$name" -C "$tmp"
-    mkdir -p target/release
-    install -m 0755 "$tmp/${name%.tar.gz}"/systemprompt "$tmp/${name%.tar.gz}"/systemprompt-mcp-* target/release/
-    echo "==> installed into target/release/:"; ls -1 target/release/systemprompt target/release/systemprompt-mcp-* | sed 's/^/    /'
-    target/release/systemprompt --version
+    mkdir -p {{FLAVOUR_TARGET}}/release
+    install -m 0755 "$tmp/${name%.tar.gz}"/systemprompt "$tmp/${name%.tar.gz}"/systemprompt-mcp-* {{FLAVOUR_TARGET}}/release/
+    echo "==> installed into {{FLAVOUR_TARGET}}/release/:"; ls -1 {{FLAVOUR_TARGET}}/release/systemprompt {{FLAVOUR_TARGET}}/release/systemprompt-mcp-* | sed 's/^/    /'
+    {{FLAVOUR_TARGET}}/release/systemprompt --version
 
 # Promote the exact green next-push candidate through a frozen PR onto main,
 # then tag the merge (release-gateway.yml runs on the tag). Run it once to open

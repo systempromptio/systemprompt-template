@@ -6,7 +6,7 @@
 # `execute()` call and is the principal recorded in audit rows.
 #
 # No "system" user. No magic strings. `admin` is the bootstrap admin user
-# created at install time (`just setup-local`). Deployments that want a
+# created at install time (`just setup <flavour>`). Deployments that want a
 # different authorizer should change `owner:` to a different admin's username.
 
 scheduler:
