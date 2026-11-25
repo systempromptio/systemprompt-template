@@ -31,18 +31,22 @@ pub(crate) fn entity_access_url(entity_type: &str, entity_id: &str) -> Option<St
     Some(format!("{base}/{}#access", urlencoding::encode(entity_id)))
 }
 
+const ENTITY_ACCESS_PAGES: &[(&str, &str)] = &[
+    #[cfg(feature = "mcp")]
+    ("marketplace", "/admin/marketplaces"),
+    #[cfg(feature = "mcp")]
+    ("plugin", "/admin/plugins"),
+    #[cfg(feature = "mcp")]
+    ("skill", "/admin/skills"),
+    #[cfg(feature = "mcp")]
+    ("mcp_server", "/admin/mcp"),
+    #[cfg(feature = "gateway")]
+    ("gateway_route", "/admin/gateway/routes"),
+];
+
 fn entity_access_base(entity_type: &str) -> Option<&'static str> {
-    match entity_type {
-        #[cfg(feature = "mcp")]
-        "marketplace" => Some("/admin/marketplaces"),
-        #[cfg(feature = "mcp")]
-        "plugin" => Some("/admin/plugins"),
-        #[cfg(feature = "mcp")]
-        "skill" => Some("/admin/skills"),
-        #[cfg(feature = "mcp")]
-        "mcp_server" => Some("/admin/mcp"),
-        #[cfg(feature = "gateway")]
-        "gateway_route" => Some("/admin/gateway/routes"),
-        _ => None,
-    }
+    ENTITY_ACCESS_PAGES
+        .iter()
+        .find(|(kind, _)| *kind == entity_type)
+        .map(|(_, base)| *base)
 }

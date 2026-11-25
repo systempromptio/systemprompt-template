@@ -57,12 +57,14 @@ impl<S: Send + Sync> FromRequestParts<S> for Caller {
 
 // Why: a page handler that also acts on the environment — a form post that
 // renders the page it came from.
+#[cfg(feature = "agents")]
 #[derive(Debug, Clone)]
 pub(crate) struct Console {
     pub(crate) env: AdminEnv,
     pub(crate) page: Page,
 }
 
+#[cfg(feature = "agents")]
 impl<S: Send + Sync> FromRequestParts<S> for Console {
     type Rejection = ExtensionRejection;
 

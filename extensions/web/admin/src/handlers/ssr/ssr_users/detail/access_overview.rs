@@ -198,12 +198,12 @@ async fn catalog_content(
 }
 
 #[cfg(not(feature = "mcp"))]
-async fn catalog_content(
+fn catalog_content(
     _env: &AdminEnv,
     _pool: &PgPool,
     _user_id: &UserId,
-) -> Option<Result<Vec<WorkspaceView>, String>> {
-    None
+) -> std::future::Ready<Option<Result<Vec<WorkspaceView>, String>>> {
+    std::future::ready(None)
 }
 
 #[cfg(feature = "mcp")]
