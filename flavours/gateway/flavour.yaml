@@ -22,6 +22,7 @@ runtime: slim
 
 smoke:
   routes_present:
+    - "/"
     - "/.well-known/jwks.json"
     - "/admin/"
   routes_absent:
@@ -32,6 +33,8 @@ smoke:
     - "/api/v1/agents/registry"
     - "/api/v1/agent-runs"
     - "/api/v1/brain"
+    - "/api/public/connectors"
+    - "/api/public/search"
   cli_groups_present:
     - "admin"
     - "analytics"
@@ -40,7 +43,9 @@ smoke:
     - "plugins"
     - "web"
     - "cloud"
-  cli_groups_absent: []
+    - "build"
+  cli_groups_absent:
+    - "admin agents"
   capabilities:
     - "quota_month_window"
     - "governance_bootstrap"

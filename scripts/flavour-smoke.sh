@@ -157,14 +157,24 @@ while IFS= read -r route; do
     if [ "$code" = 404 ]; then record "route absent $route" pass "$code"; else record "route absent $route" fail "$code"; fi
 done < <(flavour_get "$flavour" smoke.routes_absent)
 
-groups="$(cli --help 2>&1 | awk '/^Commands:/{p=1;next} p&&/^[^ ]/{p=0} p&&NF{print $1}')"
+# A group is a command path: "cloud" is top level, "admin agents" is read
+# from `admin --help`.
+has_group() {
+    local leaf parent
+    leaf="$(printf '%s' "$1" | awk '{print $NF}')"
+    parent="$(printf '%s' "$1" | awk '{$NF=""; print}')"
+    # shellcheck disable=SC2086
+    cli $parent --help 2>&1 \
+        | awk '/^Commands:/{p=1;next} p&&/^[^ ]/{p=0} p&&NF{print $1}' \
+        | grep -qxF "$leaf"
+}
 while IFS= read -r group; do
     [ -n "$group" ] || continue
-    if printf '%s\n' "$groups" | grep -qxF "$group"; then record "cli group $group" pass ""; else record "cli group $group" fail "not in --help"; fi
+    if has_group "$group"; then record "cli group $group" pass ""; else record "cli group $group" fail "not in --help"; fi
 done < <(flavour_get "$flavour" smoke.cli_groups_present)
 while IFS= read -r group; do
     [ -n "$group" ] || continue
-    if printf '%s\n' "$groups" | grep -qxF "$group"; then record "cli group absent $group" fail "in --help"; else record "cli group absent $group" pass ""; fi
+    if has_group "$group"; then record "cli group absent $group" fail "in --help"; else record "cli group absent $group" pass ""; fi
 done < <(flavour_get "$flavour" smoke.cli_groups_absent)
 
 capabilities="$( { cli plugins capabilities; cli plugins capabilities jobs; cli plugins capabilities schemas; cli plugins capabilities roles; } 2>&1 || true)"

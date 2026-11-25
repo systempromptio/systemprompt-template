@@ -44,6 +44,9 @@ smoke:
     - "cloud"
     - "infra"
     - "plugins"
+    - "core"
+    - "web"
+    - "admin agents"
   cli_groups_absent: []
   capabilities:
     - "publish_pipeline"

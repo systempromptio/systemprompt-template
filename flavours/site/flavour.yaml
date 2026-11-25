@@ -31,6 +31,7 @@ smoke:
     - "/api/v1/agents/registry"
     - "/api/v1/agent-runs"
     - "/api/v1/brain"
+    - "/api/public/connectors"
   cli_groups_present:
     - "admin"
     - "analytics"
@@ -38,8 +39,10 @@ smoke:
     - "infra"
     - "plugins"
     - "web"
+    - "build"
   cli_groups_absent:
     - "cloud"
+    - "admin agents"
   capabilities:
     - "publish_pipeline"
   mcp_servers: []
