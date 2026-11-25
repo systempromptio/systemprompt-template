@@ -14,6 +14,14 @@ publish = false
 [package.metadata.cargo-machete]
 ignored = ["systemprompt-extension"]
 
+# One feature per capability a flavour selects; each turns on the matching
+# console page group and the member contributions that need it.
+[features]
+gateway = ["systemprompt-web-admin/gateway"]
+mcp = ["systemprompt-web-admin/mcp"]
+agents = ["mcp", "systemprompt-web-admin/agents"]
+content = ["systemprompt-web-admin/content"]
+
 [lints]
 workspace = true
 

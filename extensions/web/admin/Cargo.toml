@@ -75,6 +75,12 @@ async-trait = { workspace = true }
 # does not ship it. The feature keeps the shared repository files identical
 # across both trees while compiling their dead-in-this-fork queries out.
 governance-ssr = []
+# Console page groups a flavour may leave out. The base console (identity,
+# governance, access control, sync, overview, usage analytics) is always built.
+gateway = []
+mcp = []
+agents = ["mcp"]
+content = []
 
 [lints]
 workspace = true
