@@ -5,7 +5,7 @@
 //! one transaction. The per-conversation record and the daily rollups are
 //! kept, so every figure the console shows outlives the raw rows.
 
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
@@ -33,7 +33,7 @@ impl Job for PluginUsageRetentionJob {
         "plugin_usage_retention"
     }
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
     fn description(&self) -> &'static str {
         "Expires hook events, gateway requests and their evidence older than 90 days"

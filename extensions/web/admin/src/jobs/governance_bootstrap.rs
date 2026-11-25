@@ -34,14 +34,14 @@ use systemprompt::traits::{Job, JobContext, JobResult};
 
 use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
 
-use crate::error::JobError;
-use systemprompt_web_admin::env::AdminEnv;
-use systemprompt_web_admin::repositories::config::gateway::{
+use crate::jobs::error::JobError;
+use crate::env::AdminEnv;
+use crate::repositories::config::gateway::{
     dispatchable_route_ids, registered_routes,
 };
-use systemprompt_web_admin::repositories::config::slack_acl::load_slack_apps;
-use systemprompt_web_admin::repositories::sync::boot::reconcile_all;
-use systemprompt_web_admin::repositories::sync::sources_db::record_service_sources;
+use crate::repositories::config::slack_acl::load_slack_apps;
+use crate::repositories::sync::boot::reconcile_all;
+use crate::repositories::sync::sources_db::record_service_sources;
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -54,7 +54,7 @@ impl Job for GovernanceBootstrapJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {
@@ -85,22 +85,22 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let services_path = env.active_services_root();
 
     let governance = check_governance_config(&services_path)?;
-    check_judge_config(&env);
+    check_judge_config(env);
 
-    let catalog = bootstrap_gateway_entities(db_pool, &env).await?;
+    let catalog = bootstrap_gateway_entities(db_pool, env).await?;
 
     let pool = db_pool.write_pool();
-    let planes = reconcile_all(&env, &pool)
+    let planes = reconcile_all(env, &pool)
         .await
         .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
 
-    let slack_workspaces = load_slack_apps(&env, &pool).await.map_err(JobError::from)?;
+    let slack_workspaces = load_slack_apps(env, &pool).await.map_err(JobError::from)?;
 
     // Why: every skill invocation is credited to the marketplace that owns
     // its plugin and the version that marketplace was serving; ownership and
     // versions come from the composition this process booted on, so they are
     // recorded here.
-    let sources = record_service_sources(&env, &pool)
+    let sources = record_service_sources(env, &pool)
         .await
         .map_err(JobError::from)?;
 

@@ -1,5 +1,6 @@
 //! `copy_extension_assets` job: copies the web member's declared assets into
-//! `web/dist/`, the same declarations `WebExtension::contribute` hands core.
+//! `web/dist/`. The declaration is handed in by `WebExtension::contribute`,
+//! the same one it hands core.
 //!
 //! Runs after the CSS and JS bundle jobs, whose output it picks up.
 
@@ -7,24 +8,34 @@ use std::path::Path;
 use std::sync::Arc;
 
 use systemprompt::config::AppPaths;
-use systemprompt::extension::AssetDefinition;
+use systemprompt::extension::{AssetDefinition, AssetPaths};
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;
 
 const MEMBER_ID: &str = "web";
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct CopyExtensionAssetsJob;
+pub type AssetDeclaration = fn(&dyn AssetPaths) -> Vec<AssetDefinition>;
+
+#[derive(Debug, Clone, Copy)]
+pub struct CopyExtensionAssetsJob {
+    assets: AssetDeclaration,
+}
 
 impl CopyExtensionAssetsJob {
-    pub async fn execute_copy(paths: &AppPaths) -> Result<JobResult, JobError> {
+    #[must_use]
+    pub const fn new(assets: AssetDeclaration) -> Self {
+        Self { assets }
+    }
+
+    pub async fn execute_copy(
+        paths: &AppPaths,
+        declared: Vec<AssetDefinition>,
+    ) -> Result<JobResult, JobError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Copy extension assets job started");
 
-        let mut declared = systemprompt_web_site::assets::web_assets(paths);
-        declared.extend(systemprompt_web_admin::assets::admin_assets(paths));
         let assets: Vec<(&str, AssetDefinition)> = declared
             .into_iter()
             .map(|asset| (MEMBER_ID, asset))
@@ -115,7 +126,7 @@ impl Job for CopyExtensionAssetsJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {
@@ -131,6 +142,6 @@ impl Job for CopyExtensionAssetsJob {
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
         let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
-        Ok(Self::execute_copy(paths).await?)
+        Ok(Self::execute_copy(paths, (self.assets)(paths)).await?)
     }
 }

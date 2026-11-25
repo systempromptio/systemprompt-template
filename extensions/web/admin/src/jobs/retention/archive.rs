@@ -18,7 +18,7 @@ use sqlx::PgPool;
 
 use super::ManagedTable;
 use super::ledger::{ArchiveRecord, record_archive};
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Window {

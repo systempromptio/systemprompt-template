@@ -14,7 +14,7 @@ use saml::{
 use tokio::sync::RwLock;
 
 use super::AdfsError;
-use super::config::AdfsConfig;
+use systemprompt_web_shared::adfs::AdfsConfig;
 
 static IDP_CACHE: LazyLock<RwLock<HashMap<String, Arc<IdpDescriptor>>>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));

@@ -2,7 +2,7 @@
 //! character budget: the opening turns say what was wanted, the closing turns
 //! say how it ended, and the middle is elided when it does not fit.
 
-use systemprompt_web_admin::test_support::{ConversationView, StepView, TurnView};
+use crate::test_support::{ConversationView, StepView, TurnView};
 
 // Why: roughly four characters per token. The budget is on characters because
 // that is what the transcript is made of; the parameter is in tokens because

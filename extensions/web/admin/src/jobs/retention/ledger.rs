@@ -6,7 +6,7 @@ use sqlx::PgPool;
 
 use super::ManagedTable;
 use super::health::HealthReport;
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 #[derive(Debug, Clone)]
 pub(crate) struct TableMeasure {

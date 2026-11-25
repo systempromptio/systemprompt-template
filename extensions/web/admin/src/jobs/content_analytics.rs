@@ -5,8 +5,8 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use crate::error::JobError;
-use systemprompt_web_admin::repositories::analytics::content_rollup::{
+use crate::jobs::error::JobError;
+use crate::repositories::analytics::content_rollup::{
     self, ContentRollupRow, UpsertMetricsParams,
 };
 
@@ -104,7 +104,7 @@ impl Job for ContentAnalyticsAggregationJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

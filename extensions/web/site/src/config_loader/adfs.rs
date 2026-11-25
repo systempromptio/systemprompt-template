@@ -7,6 +7,8 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use systemprompt_web_shared::adfs::{ACS_PATH, AdfsConfig, METADATA_PATH};
+
 use super::{ConfigError, load_config_section};
 
 // Why: the relying-party identifier and the ACS are the instance's own public
@@ -16,7 +18,7 @@ use super::{ConfigError, load_config_section};
 // tracked literal was right on exactly one host and produced AD FS `MSIS7007`
 // on all the others. An explicit value still wins, for a trust registered
 // against a URL this instance does not serve itself under.
-fn derive_saml_urls(config: &mut systemprompt_web_admin::AdfsConfig, api_external_url: &str) {
+fn derive_saml_urls(config: &mut AdfsConfig, api_external_url: &str) {
     if !config.entity_id.is_empty() && !config.acs_url.is_empty() {
         return;
     }
@@ -25,10 +27,10 @@ fn derive_saml_urls(config: &mut systemprompt_web_admin::AdfsConfig, api_externa
         return;
     }
     if config.entity_id.is_empty() {
-        config.entity_id = format!("{base}{}", systemprompt_web_admin::ADFS_METADATA_PATH);
+        config.entity_id = format!("{base}{}", METADATA_PATH);
     }
     if config.acs_url.is_empty() {
-        config.acs_url = format!("{base}{}", systemprompt_web_admin::ADFS_ACS_PATH);
+        config.acs_url = format!("{base}{}", ACS_PATH);
     }
     tracing::info!(
         entity_id = %config.entity_id,
@@ -40,13 +42,13 @@ fn derive_saml_urls(config: &mut systemprompt_web_admin::AdfsConfig, api_externa
 pub(super) fn load_adfs_config(
     services: &Path,
     api_external_url: &str,
-) -> Result<Option<Arc<systemprompt_web_admin::AdfsConfig>>, ConfigError> {
+) -> Result<Option<Arc<AdfsConfig>>, ConfigError> {
     let filename = "adfs.yaml".to_owned();
     let Some(value) = load_config_section(services, &filename)? else {
         return Ok(None);
     };
 
-    let mut config: systemprompt_web_admin::AdfsConfig =
+    let mut config: AdfsConfig =
         serde_yaml::from_value(value).map_err(|e| ConfigError::Parse {
             config_name: filename.clone(),
             message: e.to_string(),

@@ -10,7 +10,7 @@ use systemprompt::ai::{AiMessage, AiRequest, StructuredOutputOptions};
 use systemprompt::identifiers::{Actor, AgentName, ContextId, SessionId, TraceId};
 use systemprompt::models::execution::context::RequestContext;
 
-use crate::JobError;
+use crate::jobs::JobError;
 
 use super::classifier::{ConversationClassifier, JudgeVerdict};
 

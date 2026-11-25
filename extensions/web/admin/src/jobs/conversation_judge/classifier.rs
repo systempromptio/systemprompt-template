@@ -1,6 +1,6 @@
 //! The boundary between the judge's database control flow and AI inference.
 
-use crate::JobError;
+use crate::jobs::JobError;
 
 use super::Classification;
 

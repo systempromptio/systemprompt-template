@@ -14,7 +14,7 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 // Why: observed must exceed baseline * multiplier AND the absolute floor.
 // Errors get the tighter multiplier because an error spike is an incident at
@@ -197,7 +197,7 @@ fn alert(finding: Finding, obs: &HourlyObservation) {
 fn usd(microdollars: i64) -> String {
     format!(
         "${:.2}",
-        systemprompt_web_admin::numeric::to_f64(microdollars) / 1_000_000.0
+        crate::numeric::to_f64(microdollars) / 1_000_000.0
     )
 }
 
@@ -208,7 +208,7 @@ impl Job for UsageAnomalyJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

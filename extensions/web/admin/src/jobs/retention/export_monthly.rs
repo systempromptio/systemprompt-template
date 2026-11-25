@@ -21,7 +21,7 @@ use systemprompt::traits::{Job, JobContext, JobResult};
 use super::archive::{ArchiveTarget, Window, archive_tables, prune_periods};
 use super::ledger::{archive_exists, record_health_report};
 use super::{ROLLUP_TABLES, all_managed, health};
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 const TIER: &str = "monthly";
 
@@ -147,7 +147,7 @@ impl Job for RetentionExportMonthlyJob {
         "retention_export_monthly"
     }
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
     fn description(&self) -> &'static str {
         "Archives last month's rollups to storage/exports/monthly, runs the database health check and vacuums managed tables"

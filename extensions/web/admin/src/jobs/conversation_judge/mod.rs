@@ -33,16 +33,16 @@ use systemprompt::database::DbPool;
 use systemprompt::identifiers::Actor;
 use systemprompt::models::ai::DynAiProvider;
 use systemprompt::traits::{Job, JobContext, JobResult};
-use systemprompt_web_admin::env::AdminEnv;
-use systemprompt_web_admin::repositories::analytics::context_detail::{
+use crate::env::AdminEnv;
+use crate::repositories::analytics::context_detail::{
     list_context_requests, list_messages_for_requests,
 };
-use systemprompt_web_admin::repositories::analytics::context_tool_calls::list_tool_calls_for_requests;
-use systemprompt_web_admin::test_support::{
+use crate::repositories::analytics::context_tool_calls::list_tool_calls_for_requests;
+use crate::test_support::{
     TranscriptOptions, build_conversation, transcript_request_ids,
 };
 
-use crate::JobError;
+use crate::jobs::JobError;
 
 pub use classifier::{ConversationClassifier, JudgeVerdict};
 pub use judge::{Category, Classification, Outcome, classification_schema, parse_classification};
@@ -228,7 +228,7 @@ impl Job for ConversationJudgeJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn schedule(&self) -> &'static str {

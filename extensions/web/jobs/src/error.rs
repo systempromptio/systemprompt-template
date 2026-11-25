@@ -2,7 +2,6 @@
 
 use systemprompt::generator::PublishError;
 use systemprompt::traits::ProviderError;
-use systemprompt_web_admin::repositories::secrets::secret_crypto::SecretCryptoError;
 use systemprompt_web_shared::error::{InfraError, MarketplaceError};
 use thiserror::Error;
 
@@ -10,8 +9,6 @@ use thiserror::Error;
 pub enum JobError {
     #[error(transparent)]
     Identifier(#[from] systemprompt::identifiers::error::IdValidationError),
-    #[error(transparent)]
-    Ai(#[from] systemprompt::ai::error::AiError),
     #[error(transparent)]
     Provider(#[from] ProviderError),
     #[error("Job context missing required value: {0}")]
@@ -22,9 +19,6 @@ pub enum JobError {
 
     #[error("Content error: {0}")]
     Content(#[from] systemprompt::content::ContentError),
-
-    #[error("Secret crypto error: {0}")]
-    SecretCrypto(#[from] SecretCryptoError),
 
     #[error("Format error: {0}")]
     Format(#[from] std::fmt::Error),
@@ -40,9 +34,6 @@ pub enum JobError {
 
     #[error("Pipeline failed: {failed} sub-job(s) reported errors")]
     Pipeline { failed: u64 },
-
-    #[error("AI inference failed: {0}")]
-    Inference(#[from] systemprompt::models::errors::AiInferenceError),
 
     #[error("{0}")]
     Other(String),
@@ -72,11 +63,6 @@ impl From<serde_yaml::Error> for JobError {
     }
 }
 
-impl From<serde_json::Error> for JobError {
-    fn from(e: serde_json::Error) -> Self {
-        Self::Infra(InfraError::from(e))
-    }
-}
 
 impl JobError {
     pub fn config(msg: impl Into<String>) -> Self {

@@ -1,4 +1,7 @@
 //! ADFS SSO connection config, loaded from `services/web/config/adfs.yaml`.
+//!
+//! Shared so the site loader reads it and the admin SAML handlers serve it
+//! without the site depending on the admin plane.
 
 use std::collections::BTreeMap;
 
@@ -8,15 +11,15 @@ use serde::Deserialize;
 // Why: The claim URIs AD FS emits by default for the standard issuance
 // templates. An installation whose issuance rules name them differently
 // overrides them in `adfs.yaml`.
-pub(super) fn default_email_attribute() -> String {
+fn default_email_attribute() -> String {
     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress".to_owned()
 }
 
-pub(super) fn default_name_attribute() -> String {
+fn default_name_attribute() -> String {
     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name".to_owned()
 }
 
-pub(super) fn default_groups_attribute() -> String {
+fn default_groups_attribute() -> String {
     "http://schemas.xmlsoap.org/claims/Group".to_owned()
 }
 
@@ -26,7 +29,7 @@ pub(super) fn default_groups_attribute() -> String {
 // enrol a passkey. No domain is allowed until the operator names the
 // directory's own in `allowed_email_domains`: a shipped default would admit
 // addresses at a domain nobody on this installation chose.
-pub(super) const fn default_allowed_domains() -> Vec<String> {
+const fn default_allowed_domains() -> Vec<String> {
     Vec::new()
 }
 
@@ -35,11 +38,11 @@ pub(super) const fn default_allowed_domains() -> Vec<String> {
 // ADFS the approval is the AD group — a login carrying a mapped group is one
 // IT has already authorised — so an installation that trusts its group map
 // turns this on. Off, SSO only signs in *existing* accounts.
-pub(super) const fn default_auto_provision() -> bool {
+const fn default_auto_provision() -> bool {
     false
 }
 
-pub(super) const fn default_deny_without_group() -> bool {
+const fn default_deny_without_group() -> bool {
     true
 }
 
@@ -47,11 +50,11 @@ pub(super) const fn default_deny_without_group() -> bool {
 // is how most enterprise staff first reach an application. The assertion is
 // verified exactly as a solicited one; only the request-id correlation is
 // absent.
-pub(super) const fn default_allow_idp_initiated() -> bool {
+const fn default_allow_idp_initiated() -> bool {
     true
 }
 
-pub(super) const fn default_clock_skew_seconds() -> u64 {
+const fn default_clock_skew_seconds() -> u64 {
     120
 }
 

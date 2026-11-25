@@ -8,7 +8,7 @@ use systemprompt::traits::{Job, JobContext, JobResult};
 
 use super::all_managed;
 use super::ledger::{measure, record_run, size_days_ago};
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 // Why: growth above a quarter in a week is a change in behaviour, not
 // traffic. The outbox is judged on age, not depth: the consumer drains
@@ -84,7 +84,7 @@ impl Job for RetentionDailyReportJob {
         "retention_daily_report"
     }
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
     fn description(&self) -> &'static str {
         "Records size, dead tuples and oldest row of every retention-managed table and warns on growth"

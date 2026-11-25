@@ -119,7 +119,7 @@ pub fn skills_page_config(services: &Path) -> Option<Arc<SkillsPageConfig>> {
 pub fn adfs_config(
     services: &Path,
     api_external_url: &str,
-) -> Option<Arc<systemprompt_web_admin::AdfsConfig>> {
+) -> Option<Arc<systemprompt_web_shared::adfs::AdfsConfig>> {
     log_and_discard_err(
         load_adfs_config(services, api_external_url),
         "ADFS config error",

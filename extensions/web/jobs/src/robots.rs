@@ -20,7 +20,7 @@ impl Job for RobotsTxtGenerationJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

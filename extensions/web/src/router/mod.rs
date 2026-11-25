@@ -91,7 +91,7 @@ impl WebRuntime {
                 &settings.services_path,
                 &settings.api_external_url,
             )
-            .unwrap_or_else(|| Arc::new(crate::admin::AdfsConfig::disabled())),
+            .unwrap_or_else(|| Arc::new(crate::shared::adfs::AdfsConfig::disabled())),
             write_pool: Arc::clone(&db.write),
             use_https: settings.use_https,
         };

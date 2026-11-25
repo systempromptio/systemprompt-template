@@ -4,10 +4,10 @@
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult, MemberCipher};
-use systemprompt_web_admin::env::AdminEnv;
+use crate::env::AdminEnv;
 
-use crate::error::JobError;
-use systemprompt_web_admin::repositories::secrets::{secret_crypto, secret_keys, secret_migration};
+use crate::jobs::error::JobError;
+use crate::repositories::secrets::{secret_crypto, secret_keys, secret_migration};
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -20,7 +20,7 @@ impl Job for SecretMigrationJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

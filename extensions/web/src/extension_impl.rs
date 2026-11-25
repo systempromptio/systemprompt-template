@@ -88,11 +88,7 @@ impl Extension for WebExtension {
                 public_prefixes: &["/admin/login", "/admin/auth/adfs"],
                 required_scope: "user",
             })
-            .asset_with(|paths: &dyn AssetPaths| {
-                let mut assets = web_assets(paths);
-                assets.extend(crate::admin::assets::admin_assets(paths));
-                assets
-            })
+            .asset_with(declared_assets)
             .conferral(InstallConferral::MemberCipher)
             .conferral(InstallConferral::ShareTokens)
             .conferral(InstallConferral::GitSourceSync)
@@ -137,10 +133,17 @@ impl Extension for WebExtension {
         systemprompt_web_admin::gateway_safety::contribute_scanners(c);
         systemprompt_web_admin::marketplace_filter::contribute_marketplace_filter(c);
         crate::admin::authz::contribute_subject_attributes(c);
-        crate::jobs::contribute_jobs(c);
+        crate::jobs::contribute_jobs(c, declared_assets);
+        crate::admin::jobs::contribute_jobs(c);
         contribute_content(c);
         Ok(())
     }
+}
+
+fn declared_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
+    let mut assets = web_assets(paths);
+    assets.extend(crate::admin::assets::admin_assets(paths));
+    assets
 }
 
 fn services(r: &Resolved<'_>) -> Result<Arc<WebSettings>, FactoryError> {

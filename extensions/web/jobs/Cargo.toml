@@ -4,33 +4,22 @@ version.workspace = true
 license.workspace = true
 edition.workspace = true
 authors.workspace = true
-description = "Scheduled jobs extension for the systemprompt.io template: content generation and maintenance jobs run under the governed scheduler."
+description = "Publish pipeline for the systemprompt.io template: asset copy, content ingestion, prerender, and robots/llms.txt generation under the governed scheduler."
 repository.workspace = true
 homepage.workspace = true
 publish = false
 
 [dependencies]
 systemprompt-web-shared = { workspace = true }
-systemprompt-web-admin = { workspace = true }
 systemprompt-web-content = { workspace = true }
-systemprompt-web-site = { workspace = true }
-# Audit: uses ai, content, database, extension, generator, identifiers, models, traits — requires `full`.
-systemprompt = { workspace = true, features = ["reference"] }
+# Audit: uses config, content, database, extension, generator, identifiers, traits.
+systemprompt = { workspace = true, features = ["config", "database", "content"] }
 sqlx = { workspace = true }
-chrono = { workspace = true }
 tokio = { workspace = true }
 async-trait = { workspace = true }
 tracing = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
 serde_yaml = { workspace = true }
-uuid = { workspace = true }
 thiserror = { workspace = true }
-flate2 = { workspace = true }
-futures-util = { workspace = true }
-sha2 = { workspace = true }
-hex = { workspace = true }
-
 
 [lints]
 workspace = true

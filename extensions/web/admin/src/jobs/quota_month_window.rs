@@ -17,9 +17,9 @@
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
-use systemprompt_web_admin::repositories::gateway_policies::month_window_db::refresh_month_windows;
+use crate::repositories::gateway_policies::month_window_db::refresh_month_windows;
 
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct QuotaMonthWindowJob;
@@ -48,7 +48,7 @@ impl Job for QuotaMonthWindowJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

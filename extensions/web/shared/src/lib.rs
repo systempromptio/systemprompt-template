@@ -17,6 +17,7 @@
 //!   `services/web/config.yaml`.
 //! - [`html_escape`] — escape helper for template-bound strings.
 
+pub mod adfs;
 pub mod config;
 pub mod config_errors;
 pub mod error;
@@ -30,6 +31,8 @@ mod utils;
 pub use ids::{GroupId, MarketplaceId, PluginId, ProjectId, RankTier, TierLevel, TraceId, UserId};
 
 pub use settings::WebSettings;
+
+pub const JOB_TAG: &str = "web-extension";
 pub use utils::html_escape;
 
 pub mod branding {

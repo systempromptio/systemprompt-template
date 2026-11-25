@@ -26,6 +26,7 @@ pub mod event_hub;
 pub(crate) mod export;
 pub mod gateway_entitlement;
 pub mod gateway_safety;
+pub mod jobs;
 pub(crate) mod handlers;
 mod marketplace_context;
 pub mod marketplace_filter;
@@ -45,9 +46,8 @@ use axum::{Extension, Router, middleware as axum_middleware};
 use sqlx::PgPool;
 
 pub use handlers::adfs_auth::{
-    ADFS_ACS_PATH, ADFS_METADATA_PATH, AdfsConfig, AdfsDeps, AdfsError, AssertionClaims, FlowState,
-    clear_state_cookie, group_matches_pattern, permissions_for_roles, read_state_cookie,
-    state_cookie,
+    AdfsDeps, AdfsError, AssertionClaims, FlowState, clear_state_cookie, permissions_for_roles,
+    read_state_cookie, state_cookie,
 };
 pub use handlers::connector_auth::router as connector_api_router;
 pub use handlers::dev_login::{

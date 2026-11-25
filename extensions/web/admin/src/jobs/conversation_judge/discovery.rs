@@ -8,7 +8,7 @@
 use systemprompt::identifiers::ContextId;
 
 use super::repository::ConversationJudgeRepository;
-use crate::JobError;
+use crate::jobs::JobError;
 
 // Why: the sentinel context core pools context-less requests under; never a
 // conversation.

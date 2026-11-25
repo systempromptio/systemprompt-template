@@ -17,8 +17,8 @@ use systemprompt::generator::{
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use super::{
-    BundleAdminCssJob, ContentIngestionJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob,
-    RobotsTxtGenerationJob,
+    AssetDeclaration, BundleAdminCssJob, ContentIngestionJob, CopyExtensionAssetsJob,
+    LlmsTxtGenerationJob, RobotsTxtGenerationJob,
 };
 use crate::error::JobError;
 
@@ -39,10 +39,17 @@ impl PipelineStats {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct PublishPipelineJob;
+#[derive(Debug, Clone, Copy)]
+pub struct PublishPipelineJob {
+    assets: AssetDeclaration,
+}
 
 impl PublishPipelineJob {
+    #[must_use]
+    pub const fn new(assets: AssetDeclaration) -> Self {
+        Self { assets }
+    }
+
     async fn run_ingestion(&self, ctx: &JobContext, stats: &mut PipelineStats) {
         match ContentIngestionJob.execute(ctx).await {
             Ok(result) => {
@@ -77,7 +84,7 @@ impl PublishPipelineJob {
     }
 
     async fn run_asset_copy(&self, paths: &AppPaths, stats: &mut PipelineStats) {
-        match CopyExtensionAssetsJob::execute_copy(paths).await {
+        match CopyExtensionAssetsJob::execute_copy(paths, (self.assets)(paths)).await {
             Ok(result) => {
                 tracing::debug!(
                     copied = result.items_processed.unwrap_or(0),
@@ -189,7 +196,7 @@ impl Job for PublishPipelineJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

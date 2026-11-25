@@ -10,7 +10,7 @@ use sqlx::PgPool;
 
 use super::all_managed;
 use super::ledger::measure;
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub(crate) enum Rank {

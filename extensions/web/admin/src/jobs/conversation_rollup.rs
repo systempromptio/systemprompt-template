@@ -12,7 +12,7 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ConversationRollupJob;
@@ -50,7 +50,7 @@ impl Job for ConversationRollupJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

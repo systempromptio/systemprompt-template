@@ -7,7 +7,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::ContextId;
 
 use super::judge::Classification;
-use crate::JobError;
+use crate::jobs::JobError;
 
 // Why: A claim on one conversation for the length of one judge call.
 #[derive(Debug, Clone)]

@@ -14,15 +14,15 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult};
-use systemprompt_web_admin::repositories::access_control::validity::delete_expired_rules;
-use systemprompt_web_admin::repositories::devices::certs::revoke_expired_device_certs;
-use systemprompt_web_admin::repositories::scope::defaults::recompute_scope_defaults_for_user;
-use systemprompt_web_admin::repositories::scope::expiry::revoke_expired_memberships;
-use systemprompt_web_admin::repositories::users::revocation::revoke_user_access;
-use systemprompt_web_admin::repositories::users::roles;
-use systemprompt_web_admin::types::{ROLES_MANAGE, has_any};
+use crate::repositories::access_control::validity::delete_expired_rules;
+use crate::repositories::devices::certs::revoke_expired_device_certs;
+use crate::repositories::scope::defaults::recompute_scope_defaults_for_user;
+use crate::repositories::scope::expiry::revoke_expired_memberships;
+use crate::repositories::users::revocation::revoke_user_access;
+use crate::repositories::users::roles;
+use crate::types::{ROLES_MANAGE, has_any};
 
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct AccessExpiryJob;
@@ -113,7 +113,7 @@ impl Job for AccessExpiryJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

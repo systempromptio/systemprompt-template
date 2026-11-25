@@ -20,7 +20,7 @@ use systemprompt::traits::{Job, JobContext, JobResult};
 use super::RAW_TABLES;
 use super::archive::{ArchiveTarget, Window, archive_tables, prune_periods};
 use super::ledger::archive_exists;
-use crate::error::JobError;
+use crate::jobs::error::JobError;
 
 const TIER: &str = "weekly";
 const DEFAULT_KEEP_WEEKS: i64 = 26;
@@ -117,7 +117,7 @@ impl Job for RetentionExportWeeklyJob {
         "retention_export_weekly"
     }
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
     fn description(&self) -> &'static str {
         "Archives the previous ISO week of raw request, session and governance rows to storage/exports/weekly"

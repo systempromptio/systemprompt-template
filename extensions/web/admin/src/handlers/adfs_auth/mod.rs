@@ -8,14 +8,13 @@
 //!   audience, destination, validity window, replay), maps the AD group
 //!   attribute to roles, resolves the identity, and mints the session.
 //!
-//! Module layout: [`config`] (the loaded YAML), [`provider`] (the SP and `IdP`
-//! descriptors built from it), [`start`] (the redirect), [`callback`] (the
+//! Module layout: the loaded YAML is `systemprompt_web_shared::adfs`;
+//! [`provider`] (the SP and `IdP` descriptors built from it), [`start`] (the redirect), [`callback`] (the
 //! ACS handler), [`identity`] (claim gating + federated resolution),
 //! [`session`] (the session JWT mint and cookie shared by every browser
 //! sign-in, the development login link included).
 
 mod callback;
-mod config;
 mod identity;
 mod provider;
 mod session;
@@ -29,13 +28,10 @@ use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
 use sqlx::PgPool;
+use systemprompt_web_shared::adfs::AdfsConfig;
 
 
 pub(crate) use callback::adfs_callback;
-pub use config::{
-    ACS_PATH as ADFS_ACS_PATH, AdfsConfig, METADATA_PATH as ADFS_METADATA_PATH,
-    group_matches_pattern,
-};
 pub use identity::AssertionClaims;
 pub use session::permissions_for_roles;
 pub(crate) use session::{SessionSubject, mint_session, session_cookie};

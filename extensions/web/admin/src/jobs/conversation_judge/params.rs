@@ -3,7 +3,7 @@
 use systemprompt::identifiers::ContextId;
 use systemprompt::traits::JobContext;
 
-use crate::JobError;
+use crate::jobs::JobError;
 
 /// Tunables accepted from the scheduler entry or a manual job invocation.
 #[doc(hidden)]

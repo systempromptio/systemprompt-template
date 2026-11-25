@@ -9,8 +9,8 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use crate::error::JobError;
-use systemprompt_web_admin::repositories::dashboard::usage_rollups;
+use crate::jobs::error::JobError;
+use crate::repositories::dashboard::usage_rollups;
 
 // Why: yesterday and today — late-arriving events for the previous UTC day
 // are still folded in on the next run after midnight.
@@ -42,7 +42,7 @@ impl Job for UsageDailyRollupJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

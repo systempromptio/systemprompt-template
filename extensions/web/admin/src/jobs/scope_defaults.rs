@@ -10,8 +10,8 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use crate::error::JobError;
-use systemprompt_web_admin::repositories::scope::defaults;
+use crate::jobs::error::JobError;
+use crate::repositories::scope::defaults;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ScopeDefaultsJob;
@@ -35,7 +35,7 @@ impl Job for ScopeDefaultsJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![crate::registry::JOB_TAG]
+        vec![systemprompt_web_shared::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {
