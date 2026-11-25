@@ -51,3 +51,4 @@ smoke:
     - "governance_bootstrap"
   mcp_servers: []
   models_endpoint: true
+  root_redirect: "/admin/"

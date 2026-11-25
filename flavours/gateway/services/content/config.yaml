@@ -1,0 +1,5 @@
+# gateway serves no content. Core's config loader requires this file and a
+# skills/ directory for every composition (infra/config path_validation.rs and
+# config_loader.rs), so the flavour declares an empty catalog rather than
+# shipping the site's sources.
+content_sources: {}

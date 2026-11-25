@@ -39,6 +39,9 @@ SMOKE = {
     "mcp_servers": list,
     "models_endpoint": bool,
 }
+OPTIONAL_SMOKE = {
+    "root_redirect": str,
+}
 RUNTIMES = ("slim", "full")
 
 
@@ -122,6 +125,9 @@ def check():
         smoke = data.get("smoke", {})
         for key, kind in SMOKE.items():
             if not isinstance(smoke.get(key), kind):
+                problems.append(f"flavours/{name}: 'smoke.{key}' must be a {kind.__name__}")
+        for key, kind in OPTIONAL_SMOKE.items():
+            if key in smoke and not isinstance(smoke[key], kind):
                 problems.append(f"flavours/{name}: 'smoke.{key}' must be a {kind.__name__}")
         if data.get("name") != name:
             problems.append(f"flavours/{name}: name is '{data.get('name')}'")
