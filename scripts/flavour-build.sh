@@ -38,7 +38,11 @@ if [ "$(bash scripts/core-patch.sh status)" = live ]; then
     [ -n "$core_rel" ] || { echo "core patch is live but names no systemprompt path" >&2; exit 1; }
     core_path="${CORE_PATH:-$FLAVOUR_ROOT/$core_rel}"
     [ -d "$core_path/systemprompt" ] || { echo "no core checkout at $core_path (set CORE_PATH)" >&2; exit 1; }
-    args+=(--build-context "core=$core_path" --build-arg "CORE_MOUNT=$(realpath -m "/src/$core_rel")")
+    core_stage="$FLAVOUR_ROOT/target/core-context"
+    mkdir -p "$core_stage"
+    git -C "$core_path" ls-files -z --cached --others --exclude-standard \
+        | rsync -a --delete --from0 --files-from=- "$core_path/" "$core_stage/"
+    args+=(--build-context "core=$core_stage" --build-arg "CORE_MOUNT=$(realpath -m "/src/$core_rel")")
     echo "core: patched to $core_path, mounted at $(realpath -m "/src/$core_rel")"
 fi
 if [ -n "$target" ]; then args+=(--target "$target"); fi
