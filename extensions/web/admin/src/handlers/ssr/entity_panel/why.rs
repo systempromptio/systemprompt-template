@@ -5,6 +5,8 @@
 //! email, matched against every account. The query string is the only
 //! input, so the explainer is a plain GET form and a link someone can send.
 
+use crate::env::AdminEnv;
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
@@ -68,7 +70,12 @@ fn bands_of(explanation: &Explanation) -> Vec<WhyBandView> {
         .collect()
 }
 
-pub(super) async fn why(pool: &PgPool, query: &str, entity: (&str, &str)) -> WhyView {
+pub(super) async fn why(
+    env: &AdminEnv,
+    pool: &PgPool,
+    query: &str,
+    entity: (&str, &str),
+) -> WhyView {
     let mut view = WhyView {
         query: query.to_owned(),
         found: false,
@@ -81,7 +88,7 @@ pub(super) async fn why(pool: &PgPool, query: &str, entity: (&str, &str)) -> Why
     let Some((user_id, label)) = find_person(pool, query).await else {
         return view;
     };
-    let explained = explain_for_user(pool, &user_id, entity.0, entity.1)
+    let explained = explain_for_user(env, pool, &user_id, entity.0, entity.1)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "entity panel: explanation failed"))
         .ok()

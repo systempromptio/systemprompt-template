@@ -218,21 +218,10 @@ impl From<systemprompt::governance::authz::AuthzError> for AdminError {
     }
 }
 
-impl From<systemprompt::models::errors::GlobalConfigError> for AdminError {
-    fn from(value: systemprompt::models::errors::GlobalConfigError) -> Self {
-        Self::Internal(Box::new(value))
-    }
-}
 
-impl From<systemprompt::config::ProfileBootstrapError> for AdminError {
-    fn from(value: systemprompt::config::ProfileBootstrapError) -> Self {
-        Self::Internal(Box::new(value))
-    }
-}
-
-impl From<systemprompt::loader::ConfigLoadError> for AdminError {
-    fn from(value: systemprompt::loader::ConfigLoadError) -> Self {
-        Self::Internal(Box::new(value))
+impl From<systemprompt::governance::authz::RuleTypeError> for AdminError {
+    fn from(value: systemprompt::governance::authz::RuleTypeError) -> Self {
+        Self::invalid("rule type", value)
     }
 }
 

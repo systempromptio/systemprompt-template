@@ -5,6 +5,8 @@
 //! or a bad secret pattern is refused here with core's message. Hashed on
 //! the parsed chain so a comment edit is not a drift.
 
+use crate::env::AdminEnv;
+
 use std::path::Path;
 
 use sha2::{Digest, Sha256};
@@ -123,6 +125,6 @@ pub fn load_declared_chain(services_path: &Path) -> AdminResult<DeclaredChain> {
         .map_err(|e| AdminError::invalid("governance/config.yaml could not be parsed", e))
 }
 
-pub fn declared_chain_now() -> AdminResult<DeclaredChain> {
-    load_declared_chain(&crate::repositories::gateway_policies::declared::services_root()?)
+pub fn declared_chain_now(env: &AdminEnv) -> AdminResult<DeclaredChain> {
+    load_declared_chain(&crate::repositories::gateway_policies::declared::services_root(env)?)
 }

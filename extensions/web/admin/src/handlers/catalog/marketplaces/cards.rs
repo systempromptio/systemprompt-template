@@ -1,6 +1,8 @@
 //! One card per marketplace: the manifest, who reaches it, and where it came
 //! from.
 
+use crate::env::AdminEnv;
+
 use std::collections::HashMap;
 
 use sqlx::PgPool;
@@ -34,9 +36,9 @@ pub(super) struct CardInputs<'a> {
     pub versions: &'a HashMap<String, String>,
 }
 
-pub(super) fn card_views(inputs: &CardInputs<'_>) -> Vec<MarketplaceCardView> {
+pub(super) fn card_views(env: &AdminEnv, inputs: &CardInputs<'_>) -> Vec<MarketplaceCardView> {
     // Why: discard-ok: an unreadable profile leaves every card as base
-    let sources = build_sources()
+    let sources = build_sources(env)
         .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: sources unreadable"))
         .ok();
     inputs

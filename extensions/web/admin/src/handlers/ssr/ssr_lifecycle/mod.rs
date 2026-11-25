@@ -7,6 +7,8 @@
 //! report's ranked findings. Deletion itself is core's `database_cleanup`;
 //! its windows and last run are shown on `/admin/configuration`.
 
+use crate::env::AdminEnv;
+
 mod view;
 
 use std::sync::Arc;
@@ -16,8 +18,6 @@ use axum::http::header;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::config::{AppPaths, ProfileBootstrap};
-use systemprompt::loader::ServicesBootstrap;
 
 use self::view::{ArchivePeriodView, LifecycleFindingView, MeasureView, build_view};
 use super::configuration::retention::{RetentionView, retention_view};
@@ -52,6 +52,7 @@ struct LifecyclePageData {
 
 pub(crate) async fn lifecycle_page(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -59,9 +60,8 @@ pub(crate) async fn lifecycle_page(
     if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
-    let profile = ProfileBootstrap::get().map_err(AdminError::internal)?;
-    let ai_history_days = ServicesBootstrap::get().map_or(30, |s| s.ai.history.retention_days);
-    let retention = retention_view(&pool, &profile.retention, ai_history_days).await?;
+    let ai_history_days = env.services().ai.history.retention_days;
+    let retention = retention_view(&pool, &env.config().retention, ai_history_days).await?;
     let measures = list_latest_retention_runs(&pool).await?;
     let archives = list_retention_archives(&pool).await?;
     let health = find_latest_health_report(&pool).await?;
@@ -103,6 +103,7 @@ pub(crate) async fn lifecycle_page(
 // steered outside the exports directory.
 pub(crate) async fn lifecycle_archive_download(
     Extension(user_ctx): Extension<UserContext>,
+    Extension(env): Extension<AdminEnv>,
     Path((tier, period, file)): Path<(String, String, String)>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_console {
@@ -111,14 +112,8 @@ pub(crate) async fn lifecycle_archive_download(
     if !view::valid_tier(&tier) || !view::valid_period(&period) || !view::valid_file(&file) {
         return Err(AdminError::NotFound("No such archive".to_owned()).into());
     }
-    let profile = ProfileBootstrap::get().map_err(AdminError::internal)?;
-    let paths = AppPaths::from_profile(
-        &profile.paths,
-        profile.path_resolution(),
-        systemprompt::loader::ServicesRootBootstrap::get().map(|root| root.path.as_path()),
-    )
-    .map_err(AdminError::internal)?;
-    let path = paths
+    let path = env
+        .paths()
         .storage()
         .exports()
         .join(&tier)

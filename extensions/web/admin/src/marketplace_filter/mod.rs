@@ -9,15 +9,19 @@
 //! **explicit allow**: if neither path grants access, the item is dropped
 //! (see `services/access-control/rules.yaml`).
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
-use systemprompt::governance::authz::AccessControlRepository;
+use systemprompt::extension::{Contributions, FactoryError, Resolved};
+use systemprompt::governance::authz::{AccessControlRepository, SubjectSourceCell};
 use systemprompt::identifiers::UserId;
+use systemprompt::manifest::services::InstallServicesView;
+use systemprompt::marketplace::contract::MarketplaceSlot;
 use systemprompt::marketplace::{
     KeepSetsSubject, MarketplaceCandidate, MarketplaceFilter, MarketplaceFilterError, keep_sets,
-    register_marketplace_filter,
 };
 
 use crate::authz::{dimensions, subject_attributes_for};
@@ -27,23 +31,38 @@ use crate::repositories::users::queries::find_user_access_profile;
 pub struct TemplateMarketplaceFilter {
     pool: Arc<PgPool>,
     repo: AccessControlRepository,
+    subjects: SubjectSourceCell,
+    services: InstallServicesView,
+}
+
+pub fn contribute_marketplace_filter(c: &mut Contributions<'_>) {
+    c.slot::<MarketplaceSlot>().filter(|r: &Resolved<'_>| {
+        let filter: Arc<dyn MarketplaceFilter> = Arc::new(TemplateMarketplaceFilter::new(
+            r.get::<DbPool>()?.pool(),
+            r.get::<SubjectSourceCell>()?,
+            r.get::<InstallServicesView>()?,
+        ));
+        Ok::<_, FactoryError>(filter)
+    });
 }
 
 impl TemplateMarketplaceFilter {
-    #[expect(
-        clippy::unnecessary_wraps,
-        reason = "core's registered marketplace-filter factory requires a fallible signature"
-    )]
-    pub fn from_db(db: &DbPool) -> Result<Arc<dyn MarketplaceFilter>, MarketplaceFilterError> {
-        let pool = db.pool();
-        Ok(Arc::new(Self::from_pool(pool)))
-    }
-
-    pub(crate) fn from_pool(pool: Arc<PgPool>) -> Self {
+    #[must_use]
+    pub fn new(
+        pool: Arc<PgPool>,
+        subjects: SubjectSourceCell,
+        services: InstallServicesView,
+    ) -> Self {
         Self {
             repo: AccessControlRepository::from_pool(Arc::clone(&pool)),
             pool,
+            subjects,
+            services,
         }
+    }
+
+    pub(crate) fn from_env(pool: Arc<PgPool>, env: &AdminEnv) -> Self {
+        Self::new(pool, env.subjects().clone(), env.services_view().clone())
     }
 
     async fn user_roles(&self, user_id: &UserId) -> Result<Vec<String>, MarketplaceFilterError> {
@@ -65,9 +84,11 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
         mut candidate: MarketplaceCandidate,
     ) -> Result<MarketplaceCandidate, MarketplaceFilterError> {
         let roles = self.user_roles(user_id).await?;
-        let attributes = subject_attributes_for(self.pool.as_ref(), user_id)
+        let attributes = subject_attributes_for(&self.subjects, user_id)
             .await
             .map_err(|e| MarketplaceFilterError::Backend(Box::new(e)))?;
+        let dimensions =
+            dimensions(&self.subjects).map_err(|e| MarketplaceFilterError::Backend(Box::new(e)))?;
         let mut keep = keep_sets(
             &self.repo,
             &candidate,
@@ -75,7 +96,7 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
                 user_id,
                 roles: &roles,
                 attributes: &attributes,
-                dimensions: dimensions(self.pool.as_ref()),
+                dimensions: &dimensions,
             },
         )
         .await?;
@@ -84,9 +105,13 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
         // server access control admitted is still withheld until the person's
         // connection to it is ready — visibly, so a missing server on a bridge
         // is traceable to the sub-condition that failed.
-        let connections = crate::services::connector_accounts::get_connections(&self.pool, user_id)
-            .await
-            .map_err(|e| MarketplaceFilterError::Backend(Box::new(e)))?;
+        let connections = crate::services::connector_accounts::get_connections(
+            &self.pool,
+            &self.services.config(),
+            user_id,
+        )
+        .await
+        .map_err(|e| MarketplaceFilterError::Backend(Box::new(e)))?;
         let diagnostics = &mut candidate.diagnostics;
         keep.mcp_servers.retain(|id| {
             let Some(connection) = connections
@@ -126,5 +151,3 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
         Ok(candidate)
     }
 }
-
-register_marketplace_filter!(TemplateMarketplaceFilter::from_db, priority = 100);

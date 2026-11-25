@@ -7,8 +7,8 @@ impl From<ManagedError> for AdminError {
     fn from(error: ManagedError) -> Self {
         match error {
             ManagedError::Unavailable => Self::NotFound("Resource unavailable".to_owned()),
-            ManagedError::Invalid(message) => Self::Unprocessable(message),
-            ManagedError::Conflict(message) => Self::Conflict(message),
+            ManagedError::Invalid { reason } => Self::Unprocessable(reason.to_owned()),
+            ManagedError::Conflict { reason } => Self::Conflict(reason.to_owned()),
             other => Self::internal(other),
         }
     }

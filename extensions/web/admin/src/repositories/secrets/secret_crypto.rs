@@ -1,8 +1,13 @@
-//! AES-GCM primitives and master key loading for secret storage.
+//! ChaCha20-Poly1305 primitives for secret storage, and the key wrap.
+//!
+//! A user's data encryption key is wrapped under the web member's conferred
+//! cipher (`MemberCipher`): a key derived for this member, which no other
+//! member's cipher opens. The member never holds the master key.
 
 use chacha20poly1305::aead::rand_core::RngCore;
 use chacha20poly1305::aead::{Aead, KeyInit, OsRng};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
+use systemprompt::traits::{MemberCipher, MemberCipherError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum SecretCryptoError {
@@ -10,8 +15,8 @@ pub enum SecretCryptoError {
     EncryptionFailed(String),
     #[error("Decryption failed: {0}")]
     DecryptionFailed(String),
-    #[error("Master key not configured")]
-    MasterKeyMissing,
+    #[error("Key wrap failed")]
+    Wrap(#[source] MemberCipherError),
     #[error("Invalid key material")]
     InvalidKeyMaterial,
     #[error("Database error: {0}")]
@@ -56,27 +61,34 @@ pub fn decrypt(
         .map_err(|e| SecretCryptoError::DecryptionFailed(e.to_string()))
 }
 
-pub fn load_master_key() -> Result<[u8; 32], SecretCryptoError> {
-    // Why: both `.ok()` carve-outs are missing-is-normal; an exhausted chain
-    // becomes `MasterKeyMissing` rather than surfacing either lookup error.
-    let hex_key = std::env::var("ENCRYPTION_MASTER_KEY")
-        .ok()
-        .or_else(|| {
-            systemprompt::config::SecretsBootstrap::get()
-                .ok()
-                .and_then(|s| s.get("encryption_master_key").cloned())
+pub fn wrap_dek(cipher: &dyn MemberCipher, dek: &[u8; 32]) -> Result<Vec<u8>, SecretCryptoError> {
+    seal_bytes(cipher, dek)
+}
+
+pub fn unwrap_dek(
+    cipher: &dyn MemberCipher,
+    wrapped: &[u8],
+) -> Result<[u8; 32], SecretCryptoError> {
+    open_bytes(cipher, wrapped)?
+        .try_into()
+        .map_err(|v: Vec<u8>| {
+            tracing::warn!(len = v.len(), "Unwrapped DEK is not 32 bytes");
+            SecretCryptoError::InvalidKeyMaterial
         })
-        .ok_or(SecretCryptoError::MasterKeyMissing)?;
+}
 
-    let bytes = hex::decode(hex_key.trim()).map_err(|e| {
-        tracing::warn!(error = %e, "Master key is not valid hex");
-        SecretCryptoError::InvalidKeyMaterial
-    })?;
+pub fn seal_bytes(
+    cipher: &dyn MemberCipher,
+    plaintext: &[u8],
+) -> Result<Vec<u8>, SecretCryptoError> {
+    cipher
+        .seal(&hex::encode(plaintext))
+        .map(String::into_bytes)
+        .map_err(SecretCryptoError::Wrap)
+}
 
-    let key: [u8; 32] = bytes.try_into().map_err(|v: Vec<u8>| {
-        tracing::warn!(len = v.len(), "Master key hex did not decode to 32 bytes");
-        SecretCryptoError::InvalidKeyMaterial
-    })?;
-
-    Ok(key)
+pub fn open_bytes(cipher: &dyn MemberCipher, sealed: &[u8]) -> Result<Vec<u8>, SecretCryptoError> {
+    let sealed = std::str::from_utf8(sealed).map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
+    let hex_plain = cipher.open(sealed).map_err(SecretCryptoError::Wrap)?;
+    hex::decode(hex_plain).map_err(|_| SecretCryptoError::InvalidKeyMaterial)
 }

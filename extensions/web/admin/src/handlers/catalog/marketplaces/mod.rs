@@ -7,6 +7,8 @@
 //! `services/marketplaces/*/config.yaml`; who reaches one is read and edited
 //! on its own detail page, in the shared "Who gets this" panel.
 
+use crate::env::AdminEnv;
+
 mod cards;
 mod data;
 mod kpis;
@@ -67,6 +69,7 @@ fn console_only(user_ctx: &UserContext) -> AdminHtmlResult<()> {
 }
 
 pub(crate) async fn marketplaces_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -74,21 +77,25 @@ pub(crate) async fn marketplaces_page(
     Query(query): Query<super::CatalogListQuery>,
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
-    let path = shared::get_services_path()?;
+    let path = shared::get_services_path(&env)?;
     let manifests = data::load_manifests(&pool, &path).await;
-    let audience = data::audience_matrix(&pool, &manifests, &known_roles()).await;
+    let audience = data::audience_matrix(&env, &pool, &manifests, &known_roles()).await;
     let grants = data::group_grants(&pool).await;
-    let plugin_catalog = crate::repositories::marketplace::plugins::list_plugin_catalog(&path)
-        .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: plugin catalog failed"))
-        .unwrap_or_default();
+    let plugin_catalog =
+        crate::repositories::marketplace::plugins::list_plugin_catalog(&env, &path)
+            .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: plugin catalog failed"))
+            .unwrap_or_default();
     let versions = cards::current_hashes(&pool).await;
-    let marketplaces = cards::card_views(&cards::CardInputs {
-        manifests: &manifests,
-        audience: &audience,
-        grants: &grants,
-        plugin_catalog: &plugin_catalog,
-        versions: &versions,
-    });
+    let marketplaces = cards::card_views(
+        &env,
+        &cards::CardInputs {
+            manifests: &manifests,
+            audience: &audience,
+            grants: &grants,
+            plugin_catalog: &plugin_catalog,
+            versions: &versions,
+        },
+    );
 
     // Why: two views rather than two tables stacked. The estate-wide matrix is
     // a different question from the listing — "who reaches what across all of
@@ -168,6 +175,7 @@ pub(super) fn skills_of(
 }
 
 pub(crate) async fn marketplace_detail_page(
+    Extension(env): Extension<AdminEnv>,
     shell: Page,
     State(pool): State<Arc<PgPool>>,
     Path(marketplace_id): Path<MarketplaceId>,
@@ -179,7 +187,7 @@ pub(crate) async fn marketplace_detail_page(
         marketplace: mkt_ctx,
     } = shell;
     console_only(&user_ctx)?;
-    let path = shared::get_services_path()?;
+    let path = shared::get_services_path(&env)?;
     let manifests = data::load_manifests(&pool, &path).await;
     let manifest = manifests
         .iter()
@@ -189,6 +197,7 @@ pub(crate) async fn marketplace_detail_page(
 
     let page_url = view::marketplace_url(marketplace_id.as_str());
     let access = build_entity_panel(
+        &env,
         &pool,
         PanelRequest {
             entity_type: data::MARKETPLACE_ENTITY,
@@ -203,9 +212,10 @@ pub(crate) async fn marketplace_detail_page(
 
     let plugins = member_links(&manifest.plugins, plugin_url);
     let mcp_servers = member_links(&manifest.mcp_servers, mcp_url);
-    let plugin_catalog = crate::repositories::marketplace::plugins::list_plugin_catalog(&path)
-        .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: plugin catalog failed"))
-        .unwrap_or_default();
+    let plugin_catalog =
+        crate::repositories::marketplace::plugins::list_plugin_catalog(&env, &path)
+            .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: plugin catalog failed"))
+            .unwrap_or_default();
     let skills = skills_of(&plugin_catalog, &manifest.plugins);
 
     let page = MarketplaceDetailData {

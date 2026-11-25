@@ -8,6 +8,8 @@
 //! the JS module `components/sp-sync-plane.js` know only the view built
 //! here, so a page adds the component with one call and one partial.
 
+use crate::env::AdminEnv;
+
 pub(crate) mod view;
 
 use sqlx::PgPool;
@@ -51,12 +53,13 @@ pub(crate) fn applied_view(
 }
 
 pub(crate) async fn plane_card(
+    env: &AdminEnv,
     pool: &PgPool,
     plane: &dyn SyncPlane,
     from: DeclarationSource<'_>,
     opts: &PlaneCardOpts<'_>,
 ) -> AdminResult<PlaneCardView> {
-    let drift = plane.drift_from(pool, from).await?;
+    let drift = plane.drift_from(env, pool, from).await?;
     let state = find_sync_state(pool, plane.id()).await?;
     let mut rows = drift.rows;
     if let Some((kind, id)) = opts.entity_filter.split_once('/') {
@@ -97,6 +100,7 @@ pub(crate) async fn plane_card(
 // Why: the owner-page case — disk declaration, the plane's own apply, export
 // offered.
 pub(crate) async fn plane_card_by_id(
+    env: &AdminEnv,
     pool: &PgPool,
     plane_id: &str,
     entity_filter: &str,
@@ -110,7 +114,7 @@ pub(crate) async fn plane_card_by_id(
         show_export: true,
         source_label: None,
     };
-    plane_card(pool, plane.as_ref(), DeclarationSource::Disk, &opts)
+    plane_card(env, pool, plane.as_ref(), DeclarationSource::Disk, &opts)
         .await
         .map(Some)
 }

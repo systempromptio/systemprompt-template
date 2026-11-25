@@ -5,10 +5,8 @@
 //! The response shape is enforced by the provider API through the JSON schema
 //! below; parsing here only normalises what came back.
 
-use std::sync::Arc;
-
 use serde::{Deserialize, Serialize};
-use systemprompt::ai::{AiMessage, AiRequest, AiService, StructuredOutputOptions};
+use systemprompt::ai::{AiMessage, AiRequest, StructuredOutputOptions};
 use systemprompt::identifiers::{Actor, AgentName, ContextId, SessionId, TraceId};
 use systemprompt::models::execution::context::RequestContext;
 
@@ -248,7 +246,7 @@ pub(super) fn job_context_id() -> ContextId {
 }
 
 pub(super) struct Judge {
-    pub(super) ai: Arc<AiService>,
+    pub(super) ai: systemprompt::models::ai::DynAiProvider,
     pub(super) actor: Actor,
     pub(super) provider: String,
     pub(super) model: String,

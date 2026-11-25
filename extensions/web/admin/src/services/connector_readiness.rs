@@ -1,12 +1,14 @@
 //! Whether a connection will carry a person's calls, and the live check a
 //! session-attested connector runs in place of an OAuth probe.
 
+use crate::env::AdminEnv;
+
 use std::time::Instant;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::mcp::services::client::{
-    McpConnectionResult, validate_connection_by_url, validate_connection_with_auth,
+    McpConnectionResult, validate_connection, validate_connection_by_url,
 };
 use systemprompt::models::auth::Permission;
 use systemprompt::models::mcp::McpServerType;
@@ -76,15 +78,16 @@ impl Connection {
 // scope the caller signed in with and whether the server answers, reported in
 // the same steps the Connectors page draws for an OAuth probe.
 pub(crate) async fn probe_session_connection(
+    env: &AdminEnv,
     pool: &PgPool,
     user: &UserId,
     provider: &Provider,
 ) -> AdminResult<VerificationReport> {
+    let services = env.services();
     let scopes = provider
-        .session_scopes()
+        .session_scopes(&services)
         .ok_or_else(|| AdminError::BadRequest("Not a session-attested connector".into()))?;
-    let server = systemprompt::loader::ServicesBootstrap::get()
-        .map_err(AdminError::internal)?
+    let server = services
         .mcp_servers
         .get(provider.slug())
         .filter(|server| server.enabled)
@@ -114,11 +117,10 @@ pub(crate) async fn probe_session_connection(
         |error: systemprompt::mcp::McpDomainError| AdminError::Upstream(error.to_string());
     let probe: AdminResult<McpConnectionResult> =
         match (server.server_type, server.port, server.endpoint.as_deref()) {
-            (McpServerType::Internal, Some(port), _) => validate_connection_with_auth(
+            (McpServerType::Internal, Some(port), _) => validate_connection(
                 &systemprompt::identifiers::ServiceName::new(provider.slug()),
                 "127.0.0.1",
                 port,
-                true,
             )
             .await
             .map_err(upstream),

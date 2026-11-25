@@ -18,6 +18,8 @@
 //! default to refusing text, so a plane that has not opted in still
 //! compiles and still syncs from disk.
 
+use crate::env::AdminEnv;
+
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -159,9 +161,10 @@ pub trait SyncPlane: Send + Sync {
     fn runtime_note(&self) -> Option<&'static str> {
         None
     }
-    async fn drift(&self, pool: &PgPool) -> AdminResult<PlaneDrift>;
+    async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift>;
     async fn apply(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
@@ -171,13 +174,14 @@ pub trait SyncPlane: Send + Sync {
     // scoped caller can never reach a plane-wide write by accident.
     async fn apply_scoped(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
         scope: EntityScope<'_>,
     ) -> AdminResult<ApplyOutcome> {
         match scope {
-            EntityScope::All => self.apply(pool, mode, actor).await,
+            EntityScope::All => self.apply(env, pool, mode, actor).await,
             EntityScope::Entities(_) => Err(AdminError::Unprocessable(format!(
                 "the {} plane cannot be applied for single entities",
                 self.label()
@@ -185,7 +189,7 @@ pub trait SyncPlane: Send + Sync {
         }
     }
     // Why: `None` for a plane whose declaration has no file form.
-    async fn export(&self, pool: &PgPool) -> AdminResult<Option<Export>>;
+    async fn export(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<Option<Export>>;
 
     // Why: the page the plane's data lives on — where its Sync tab is. The
     // configuration page and an import preview link there.
@@ -198,24 +202,26 @@ pub trait SyncPlane: Send + Sync {
     // `sync_state` for `Text`.
     async fn drift_from(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         from: DeclarationSource<'_>,
     ) -> AdminResult<PlaneDrift> {
         match from {
-            DeclarationSource::Disk => self.drift(pool).await,
+            DeclarationSource::Disk => self.drift(env, pool).await,
             DeclarationSource::Text(_) => Err(self.text_unsupported()),
         }
     }
 
     async fn apply_from(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
         from: DeclarationSource<'_>,
     ) -> AdminResult<ApplyOutcome> {
         match from {
-            DeclarationSource::Disk => self.apply(pool, mode, actor).await,
+            DeclarationSource::Disk => self.apply(env, pool, mode, actor).await,
             DeclarationSource::Text(_) => Err(self.text_unsupported()),
         }
     }

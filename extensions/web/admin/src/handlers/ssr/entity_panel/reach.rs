@@ -6,6 +6,8 @@
 //! resolver cannot be asked about without a real account — a person, a
 //! connected server, a linked org — are listed from their allow rules.
 
+use crate::env::AdminEnv;
+
 use sqlx::PgPool;
 
 use super::view::{OptionView, ReachView, SubjectOptions};
@@ -20,6 +22,7 @@ use crate::types::access_control::AccessDecision;
 const RESOLVED_BANDS: [&str; 3] = ["group", "project", "role"];
 
 pub(super) async fn resolved_reach(
+    env: &AdminEnv,
     pool: &PgPool,
     entity: (&str, &str),
     subjects: &SubjectOptions,
@@ -40,7 +43,7 @@ pub(super) async fn resolved_reach(
         entity.0.to_owned(),
         vec![(entity.1.to_owned(), entity.1.to_owned(), None)],
     );
-    let resolved = resolve_subject_matrices(pool, &only, &[section])
+    let resolved = resolve_subject_matrices(env, pool, &only, &[section])
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "entity panel: reach failed to resolve"))
         .unwrap_or_default();

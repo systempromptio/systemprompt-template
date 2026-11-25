@@ -1,6 +1,7 @@
 //! Bounded OAuth exchanges; provider bodies and credentials never enter logs.
 
 use super::{Consent, Grant, Provider, config};
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -57,6 +58,7 @@ pub(super) fn atlassian_endpoint(value: &str) -> AdminResult<()> {
 }
 
 async fn registration(
+    env: &AdminEnv,
     provider: Provider,
     callback: &str,
 ) -> AdminResult<(Registration, String, String)> {
@@ -66,8 +68,8 @@ async fn registration(
         )),
         Provider::Github => Ok((
             Registration {
-                client_id: ClientId::new(config::secret("github_mcp_client_id")?),
-                client_secret: config::secret("github_mcp_client_secret")?,
+                client_id: ClientId::new(config::secret(env.secrets(), "github_mcp_client_id")?),
+                client_secret: config::secret(env.secrets(), "github_mcp_client_secret")?,
             },
             "https://github.com/login/oauth/authorize".into(),
             "https://github.com/login/oauth/access_token".into(),
@@ -106,21 +108,25 @@ async fn registration(
     }
 }
 
-pub async fn authorize(consent: Consent<'_>, provider: Provider) -> AdminResult<(String, Grant)> {
-    if !provider.configured() {
+pub async fn authorize(
+    env: &AdminEnv,
+    consent: Consent<'_>,
+    provider: Provider,
+) -> AdminResult<(String, Grant)> {
+    if !provider.configured(&env.services()) {
         return Err(AdminError::Unavailable("Connector not configured".into()));
     }
     if matches!(provider, Provider::Generic(_)) {
-        return super::generic::authorize(consent, provider).await;
+        return super::generic::authorize(env, consent, provider).await;
     }
     let Consent {
         user,
         state,
         verifier,
     } = consent;
-    let callback = provider.callback()?;
+    let callback = provider.callback(&env.config().api_external_url);
     let (registration, authorize, token_endpoint) =
-        registration(provider.clone(), &callback).await?;
+        registration(env, provider.clone(), &callback).await?;
     let mut url = reqwest::Url::parse(&authorize).map_err(AdminError::internal)?;
     url.query_pairs_mut().extend_pairs([
         ("client_id", registration.client_id.as_str()),
@@ -135,7 +141,7 @@ pub async fn authorize(consent: Consent<'_>, provider: Provider) -> AdminResult<
     ]);
     if provider == Provider::Atlassian {
         url.query_pairs_mut()
-            .append_pair("resource", &provider.endpoint())
+            .append_pair("resource", &provider.endpoint(&env.services()))
             .append_pair("scope", super::discovery::ATLASSIAN_SCOPES);
     }
     Ok((

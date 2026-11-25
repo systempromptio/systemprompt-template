@@ -12,7 +12,6 @@ use std::sync::Arc;
 use sqlx::PgPool;
 use systemprompt::governance::authz::{Decision, DecisionTag};
 use systemprompt::identifiers::{PluginId, SessionId};
-use systemprompt::oauth::SessionCreationService;
 
 /// Anthropic-mandated wire enum for `permissionDecision`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -74,6 +73,6 @@ pub(super) struct AuthDenialParams<'a> {
     // answered with a `PreToolUse` denial it has to reinterpret.
     pub hook_event_name: &'static str,
     pub plugin_id: Option<&'a PluginId>,
-    pub session_service: &'a Arc<SessionCreationService>,
+    pub users: &'a Arc<dyn systemprompt::traits::UserProvider>,
     pub headers: &'a HeaderMap,
 }

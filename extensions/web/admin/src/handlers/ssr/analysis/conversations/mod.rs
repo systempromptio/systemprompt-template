@@ -15,6 +15,8 @@
 //! request; every unjudged row offers a Judge button; the latest global AI
 //! report sits in a banner under the header.
 
+use crate::env::AdminEnv;
+
 pub(crate) mod charts;
 mod context;
 mod continuation;
@@ -45,6 +47,7 @@ use crate::repositories::analysis::conversations::{
     ConversationAnalysisFilter, ConversationAnalysisPage, load_conversation_analysis_page,
 };
 use crate::repositories::scope::ScopeRequest;
+use axum::Extension;
 
 use crate::handlers::ssr::list_view::DEFAULT_PAGE_SIZE;
 use context::{ConversationsPageInputs, build_context};
@@ -52,6 +55,7 @@ pub(crate) use judge_all::judge_all;
 use query::{BASE_URL, ConversationAnalysisQuery};
 
 pub(crate) async fn page(
+    Extension(env): Extension<AdminEnv>,
     shell: Page,
     State(pool): State<Arc<PgPool>>,
     Query(params): Query<ConversationAnalysisQuery>,
@@ -119,7 +123,7 @@ pub(crate) async fn page(
             scope_filter,
             report_banner,
             can_judge: shell.user.is_console,
-            manual_judge: !crate::handlers::ssr::analysis::judge_mode::automatic(),
+            manual_judge: !crate::handlers::ssr::analysis::judge_mode::automatic(&env),
         },
     );
     Ok(crate::handlers::ssr::render_typed_page(

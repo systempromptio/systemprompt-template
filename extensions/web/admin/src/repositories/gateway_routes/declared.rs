@@ -6,6 +6,8 @@
 //! edit is not a drift. Every field core's `GatewayRoute` carries is part of
 //! the hash, the failover and per-scope chains included.
 
+use crate::env::AdminEnv;
+
 use std::path::Path;
 
 use serde_yaml::Value;
@@ -125,18 +127,14 @@ pub fn load_declared_routes(services_path: &Path) -> AdminResult<DeclaredRoutes>
 // content-addressed overlay the next refresh replaces, and this is the one
 // file the console writes back, so declaration and runtime must be the
 // same path.
-pub fn baked_services_path() -> AdminResult<std::path::PathBuf> {
-    Ok(std::path::PathBuf::from(
-        &systemprompt::config::ProfileBootstrap::get()?
-            .paths
-            .services,
-    ))
+pub fn baked_services_path(env: &AdminEnv) -> AdminResult<std::path::PathBuf> {
+    Ok(env.baked_services_root())
 }
 
-pub fn gateway_file_path() -> AdminResult<std::path::PathBuf> {
-    Ok(baked_services_path()?.join(GATEWAY_FILE))
+pub fn gateway_file_path(env: &AdminEnv) -> AdminResult<std::path::PathBuf> {
+    Ok(baked_services_path(env)?.join(GATEWAY_FILE))
 }
 
-pub fn declared_routes_now() -> AdminResult<DeclaredRoutes> {
-    load_declared_routes(&baked_services_path()?)
+pub fn declared_routes_now(env: &AdminEnv) -> AdminResult<DeclaredRoutes> {
+    load_declared_routes(&baked_services_path(env)?)
 }

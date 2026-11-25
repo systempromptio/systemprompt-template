@@ -38,9 +38,7 @@ pub(crate) fn load_skills_page_config(
 }
 
 #[doc(hidden)]
-pub fn read_skills_dir(
-    skills_dir: &std::path::Path,
-) -> Result<Option<std::fs::ReadDir>, ConfigError> {
+pub fn read_skills_dir(skills_dir: &Path) -> Result<Option<std::fs::ReadDir>, ConfigError> {
     match std::fs::read_dir(skills_dir) {
         Ok(entries) => Ok(Some(entries)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {

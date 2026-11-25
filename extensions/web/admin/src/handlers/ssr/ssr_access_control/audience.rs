@@ -11,6 +11,8 @@
 //! the same resolved cells, so a filtered grid and its inspector never
 //! disagree.
 
+use crate::env::AdminEnv;
+
 use std::collections::HashMap;
 
 use sqlx::PgPool;
@@ -249,6 +251,7 @@ fn row_groups(rows: Vec<AcAudienceRowView>) -> Vec<AcAudienceRowGroupView> {
 }
 
 pub(super) async fn grid(
+    env: &AdminEnv,
     pool: &PgPool,
     audience: Audience,
     sections: &[SectionInput],
@@ -258,7 +261,7 @@ pub(super) async fn grid(
     if audience.subjects.is_empty() || sections.is_empty() {
         return AudienceGridView::default();
     }
-    let resolved = resolve_subject_matrices(pool, &audience.subjects, sections)
+    let resolved = resolve_subject_matrices(env, pool, &audience.subjects, sections)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "access-control: audience grid failed"))
         .unwrap_or_default();

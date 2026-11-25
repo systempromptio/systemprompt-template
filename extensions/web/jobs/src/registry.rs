@@ -9,11 +9,10 @@ use systemprompt::extension::Contributions;
 use crate::usage_anomaly::UsageAnomalyJob;
 use crate::{
     AccessExpiryJob, BundleAdminCssJob, ContentAnalyticsAggregationJob, ContentIngestionJob,
-    ContentPrerenderJob, ConversationJudgeJob, ConversationRollupJob, CopyExtensionAssetsJob,
-    GovernanceBootstrapJob, LlmsTxtGenerationJob, PluginUsageRetentionJob, PublishPipelineJob,
-    QuotaMonthWindowJob, RetentionDailyReportJob, RetentionExportMonthlyJob,
-    RetentionExportWeeklyJob, RobotsTxtGenerationJob, ScopeDefaultsJob, SecretMigrationJob,
-    SitemapGenerationJob, UsageDailyRollupJob,
+    ConversationJudgeJob, ConversationRollupJob, CopyExtensionAssetsJob, GovernanceBootstrapJob,
+    LlmsTxtGenerationJob, PluginUsageRetentionJob, PublishPipelineJob, QuotaMonthWindowJob,
+    RetentionDailyReportJob, RetentionExportMonthlyJob, RetentionExportWeeklyJob,
+    RobotsTxtGenerationJob, ScopeDefaultsJob, SecretMigrationJob, UsageDailyRollupJob,
 };
 
 pub const JOB_TAG: &str = "web-extension";
@@ -23,7 +22,6 @@ pub fn contribute_jobs(c: &mut Contributions<'_>) {
         .job(BundleAdminCssJob)
         .job(ContentAnalyticsAggregationJob)
         .job(ContentIngestionJob)
-        .job(ContentPrerenderJob)
         .job(ConversationJudgeJob)
         .job(ConversationRollupJob)
         .job(CopyExtensionAssetsJob)
@@ -38,7 +36,6 @@ pub fn contribute_jobs(c: &mut Contributions<'_>) {
         .job(RobotsTxtGenerationJob)
         .job(ScopeDefaultsJob)
         .job(SecretMigrationJob)
-        .job(SitemapGenerationJob)
         .job(UsageAnomalyJob)
         .job(UsageDailyRollupJob);
 }

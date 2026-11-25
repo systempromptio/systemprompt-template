@@ -1,6 +1,8 @@
 //! Account identity for generic connectors, read from the issuer's OIDC
 //! `userinfo` endpoint when the descriptor asks for it.
 
+use crate::env::AdminEnv;
+
 use super::Grant;
 use crate::error::{AdminError, AdminResult};
 // JSON: OIDC userinfo is an open claim set; only `sub`, `email` and `name`
@@ -8,19 +10,23 @@ use crate::error::{AdminError, AdminResult};
 use serde_json::Value;
 use systemprompt::models::mcp::deployment::ConnectorIdentity;
 
-pub(super) async fn generic_identity(http: &reqwest::Client, grant: &mut Grant) -> AdminResult<()> {
+pub(super) async fn generic_identity(
+    env: &AdminEnv,
+    http: &reqwest::Client,
+    grant: &mut Grant,
+) -> AdminResult<()> {
     let wants_userinfo = grant
         .provider
-        .settings()
+        .settings(&env.services())
         .is_some_and(|settings| settings.identity == Some(ConnectorIdentity::Userinfo));
     if !wants_userinfo {
         return Ok(());
     }
-    let metadata = super::generic_discovery::metadata(http, &grant.provider).await?;
+    let metadata = super::generic_discovery::metadata(env, http, &grant.provider).await?;
     let endpoint = metadata.userinfo_endpoint.as_deref().ok_or_else(|| {
         AdminError::Unavailable("OAuth issuer publishes no userinfo endpoint".into())
     })?;
-    let url = super::generic_discovery::trusted_endpoint(&grant.provider, endpoint)?;
+    let url = super::generic_discovery::trusted_endpoint(env, &grant.provider, endpoint)?;
     let response = http
         .get(url)
         .bearer_auth(&grant.access_token)

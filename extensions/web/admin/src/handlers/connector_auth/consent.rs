@@ -1,17 +1,18 @@
 //! Browser consent bound to the initiating login and connection generation.
 
 use super::live_user;
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::users::{
     connector_accounts as accounts, connector_credentials as credentials,
 };
 use crate::services::connector_accounts as service;
 use crate::services::connector_oauth::{self as oauth, Consent, Provider};
-use axum::Json;
 use axum::extract::{Path, Query, State};
 use axum::http::HeaderMap;
 use axum::http::header::CACHE_CONTROL;
 use axum::response::{IntoResponse, Redirect, Response};
+use axum::{Extension, Json};
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
@@ -26,12 +27,13 @@ pub(super) struct Start {
 }
 
 pub(super) async fn start(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Path(provider): Path<Provider>,
     headers: HeaderMap,
     Query(params): Query<Start>,
 ) -> AdminResult<Response> {
-    let user = live_user(&pool, &headers, false).await?;
+    let user = live_user(&env, &pool, &headers, false).await?;
     if params
         .expected_user
         .is_some_and(|id| id != user.user_id.as_str())
@@ -40,13 +42,14 @@ pub(super) async fn start(
             "Sign in to the same Systemprompt account as your bridge".into(),
         ));
     }
-    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    service::require_entitlement(&pool, &env.services(), &user.user_id, provider.clone()).await?;
     let mut tx = pool.begin().await?;
     let account = accounts::get_locked_account(&mut tx, &user.user_id, provider.slug()).await?;
     tx.commit().await?;
     let state = URL_SAFE_NO_PAD.encode(rand::rng().random::<[u8; 32]>());
     let verifier = URL_SAFE_NO_PAD.encode(rand::rng().random::<[u8; 32]>());
     let (url, mut grant) = oauth::authorize(
+        &env,
         Consent {
             user: user.user_id.as_str(),
             state: &state,
@@ -63,7 +66,7 @@ pub(super) async fn start(
         &user.user_id,
         provider.slug(),
         &state,
-        &oauth::seal(&grant)?,
+        &oauth::seal(env.cipher()?, &grant)?,
     )
     .await?;
     Ok(([(CACHE_CONTROL, "no-store")], Redirect::to(&url)).into_response())
@@ -77,28 +80,30 @@ pub(super) struct Callback {
 }
 
 pub(super) async fn callback(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Path(provider): Path<Provider>,
     headers: HeaderMap,
     Query(params): Query<Callback>,
 ) -> AdminResult<Response> {
-    complete(&pool, provider, &headers, params).await
+    complete(&env, &pool, provider, &headers, params).await
 }
 
 async fn complete(
+    env: &AdminEnv,
     pool: &PgPool,
     provider: Provider,
     headers: &HeaderMap,
     params: Callback,
 ) -> AdminResult<Response> {
-    let user = live_user(pool, headers, false).await?;
-    service::require_entitlement(pool, &user.user_id, provider.clone()).await?;
+    let user = live_user(env, pool, headers, false).await?;
+    service::require_entitlement(pool, &env.services(), &user.user_id, provider.clone()).await?;
     let row = credentials::consume_state(pool, &user.user_id, provider.slug(), &params.state)
         .await?
         .ok_or_else(|| {
             AdminError::Unauthorized("Connector consent expired or already consumed".into())
         })?;
-    let mut grant = oauth::open(&row, &user.user_id, &provider)?;
+    let mut grant = oauth::open(env, &row, &user.user_id, &provider)?;
     if grant.session != user.session_id.as_ref().map(ToString::to_string) {
         return Err(AdminError::Unauthorized(
             "Login changed during connector consent".into(),
@@ -110,18 +115,18 @@ async fn complete(
     let code = params
         .code
         .ok_or_else(|| AdminError::BadRequest("Consent code missing".into()))?;
-    oauth::exchange(&mut grant, &code).await?;
-    if let Err(error) = oauth::verify::verify(&mut grant).await {
+    oauth::exchange(env, &mut grant, &code).await?;
+    if let Err(error) = oauth::verify::verify(env, &mut grant).await {
         if !matches!(error, AdminError::Unauthorized(_)) {
-            live_user(pool, headers, false).await?;
-            super::store_pending_verification(pool, &user.user_id, &grant).await?;
+            live_user(env, pool, headers, false).await?;
+            super::store_pending_verification(env, pool, &user.user_id, &grant).await?;
         }
         return Err(error);
     }
     // Why: Recheck revocation after the network exchange, before persisting a
     // grant.
-    live_user(pool, headers, false).await?;
-    super::store_verified(pool, &user.user_id, &grant).await?;
+    live_user(env, pool, headers, false).await?;
+    super::store_verified(env, pool, &user.user_id, &grant).await?;
     tracing::info!(user_id = %user.user_id, provider = provider.slug(), "connector_connected");
     Ok((
         [(CACHE_CONTROL, "no-store")],
@@ -131,14 +136,16 @@ async fn complete(
 }
 
 pub(super) async fn token(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Path(provider): Path<Provider>,
     headers: HeaderMap,
 ) -> AdminResult<Response> {
-    super::require_broker(&headers)?;
-    let user = live_user(&pool, &headers, false).await?;
-    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
-    let access_token = oauth::verified_token(&pool, &user.user_id, provider.clone(), false).await?;
+    super::require_broker(&env, &headers)?;
+    let user = live_user(&env, &pool, &headers, false).await?;
+    service::require_entitlement(&pool, &env.services(), &user.user_id, provider.clone()).await?;
+    let access_token =
+        oauth::verified_token(&env, &pool, &user.user_id, provider.clone(), false).await?;
     // Why: The descriptor uses an empty scheme: the trusted adapter supplies the
     // complete header so personal Atlassian tokens can use Basic authentication.
     Ok((

@@ -6,6 +6,8 @@
 //! chips on this page say what a member would actually reach rather than what
 //! a rule table happens to mention.
 
+use crate::env::AdminEnv;
+
 use std::collections::HashMap;
 
 use sqlx::PgPool;
@@ -24,7 +26,7 @@ pub(super) struct Listing {
     pub unkeyed_people: i64,
 }
 
-pub(super) async fn load_listing(pool: &PgPool, window_days: i32) -> Listing {
+pub(super) async fn load_listing(env: &AdminEnv, pool: &PgPool, window_days: i32) -> Listing {
     let loaded: Vec<GroupUsageRow> = list_groups_with_usage(pool, window_days)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "group usage listing failed"))
@@ -37,7 +39,7 @@ pub(super) async fn load_listing(pool: &PgPool, window_days: i32) -> Listing {
         loaded.into_iter().partition(|g| g.id == UNATTRIBUTED_ROW);
     let remainder = remainder.into_iter().next();
 
-    let marketplaces = load_group_marketplaces(pool, &groups).await;
+    let marketplaces = load_group_marketplaces(env, pool, &groups).await;
     let unkeyed_people = count_unkeyed_people(pool).await;
     let remainder_requests = remainder.as_ref().map_or(0, |r| r.requests);
     let instance_requests: i64 =
@@ -148,10 +150,11 @@ async fn count_unkeyed_people(pool: &PgPool) -> i64 {
 // The catalog is read once and shared: it comes off disk, and re-reading it
 // per group would turn a page render into one filesystem walk per row.
 async fn load_group_marketplaces(
+    env: &AdminEnv,
     pool: &PgPool,
     groups: &[GroupUsageRow],
 ) -> HashMap<String, Vec<MemberSetChipView>> {
-    let section: Vec<(String, String, Option<String>)> = load_marketplaces()
+    let section: Vec<(String, String, Option<String>)> = load_marketplaces(env)
         .into_iter()
         .map(|m| (m.id.to_string(), m.name, None))
         .collect();
@@ -164,11 +167,12 @@ async fn load_group_marketplaces(
         .map(|g| repositories::users::access_control::group_subject(&g.id))
         .collect();
     let sections = vec![("marketplace".to_owned(), "Marketplaces".to_owned(), section)];
-    let matrices =
-        repositories::users::access_control::resolve_subject_matrices(pool, &subjects, &sections)
-            .await
-            .inspect_err(|e| tracing::warn!(error = %e, "group marketplace resolve failed"))
-            .unwrap_or_default();
+    let matrices = repositories::users::access_control::resolve_subject_matrices(
+        env, pool, &subjects, &sections,
+    )
+    .await
+    .inspect_err(|e| tracing::warn!(error = %e, "group marketplace resolve failed"))
+    .unwrap_or_default();
     groups
         .iter()
         .zip(matrices)

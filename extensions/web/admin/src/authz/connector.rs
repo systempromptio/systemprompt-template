@@ -11,10 +11,10 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt::governance::authz::{
-    AuthzError, RuleType, SubjectAttributeProvider, SubjectDimension,
-};
+use systemprompt::governance::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
 use systemprompt::identifiers::UserId;
+use systemprompt::manifest::services::InstallServicesView;
+use systemprompt::traits::authz::SubjectAttributeError;
 
 use crate::services::connector_accounts::Connection;
 
@@ -44,12 +44,13 @@ pub fn connector_dimension() -> SubjectDimension {
 #[derive(Debug)]
 pub struct ConnectorAttributeProvider {
     pool: Arc<PgPool>,
+    services: InstallServicesView,
 }
 
 impl ConnectorAttributeProvider {
     #[must_use]
-    pub const fn new(pool: Arc<PgPool>) -> Self {
-        Self { pool }
+    pub const fn new(pool: Arc<PgPool>, services: InstallServicesView) -> Self {
+        Self { pool, services }
     }
 }
 
@@ -59,10 +60,14 @@ impl SubjectAttributeProvider for ConnectorAttributeProvider {
         connector_dimension()
     }
 
-    async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, AuthzError> {
-        let snapshot = crate::services::connector_accounts::get_connections(&self.pool, user_id)
-            .await
-            .map_err(|e| AuthzError::Validation(e.to_string()))?;
+    async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, SubjectAttributeError> {
+        let snapshot = crate::services::connector_accounts::get_connections(
+            &self.pool,
+            &self.services.config(),
+            user_id,
+        )
+        .await
+        .map_err(|e| SubjectAttributeError::Lookup(Box::new(e)))?;
         Ok(snapshot
             .connections
             .into_iter()

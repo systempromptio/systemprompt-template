@@ -67,9 +67,9 @@ pub async fn resolve_secrets_for_plugin(
     pool: &PgPool,
     user_id: &UserId,
     plugin_id: &PluginId,
-    master_key: &[u8; 32],
+    cipher: &dyn systemprompt::traits::MemberCipher,
 ) -> Result<HashMap<String, String>, MarketplaceError> {
-    let dek = secret_keys::get_or_create_user_dek(pool, user_id, master_key)
+    let dek = secret_keys::get_or_create_user_dek(pool, user_id, cipher)
         .await
         .map_err(|e| MarketplaceError::Crypto(e.to_string()))?;
 

@@ -6,6 +6,8 @@
 //! `Serialize` page structs lives in [`super::view_models`]; handlers own
 //! request flow.
 
+use crate::env::AdminEnv;
+
 use std::collections::HashMap;
 
 use crate::repositories;
@@ -41,8 +43,12 @@ fn to_entity_refs(
         .collect()
 }
 
-pub(super) fn load_catalog(services_path: &std::path::Path, roles: &[String]) -> Catalog {
-    let plugins = repositories::marketplace::plugins::list_plugin_catalog(services_path)
+pub(super) fn load_catalog(
+    env: &AdminEnv,
+    services_path: &std::path::Path,
+    roles: &[String],
+) -> Catalog {
+    let plugins = repositories::marketplace::plugins::list_plugin_catalog(env, services_path)
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to load plugin catalog");
             Vec::new()
@@ -73,7 +79,7 @@ pub(super) fn load_catalog(services_path: &std::path::Path, roles: &[String]) ->
     }
 
     let (skill_map, _agent_map, mcp_map) =
-        repositories::marketplace::plugin_maps::build_entity_plugin_maps(services_path);
+        repositories::marketplace::plugin_maps::build_entity_plugin_maps(env, services_path);
 
     Catalog {
         plugins,

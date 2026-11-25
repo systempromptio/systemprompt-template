@@ -11,8 +11,9 @@
 use chrono::Utc;
 use rmcp::model::CallToolResult;
 use serde_json::{Value as JsonValue, json};
+use systemprompt::extension::mcp::artifacts::IngestRequest;
 use systemprompt::identifiers::McpExecutionId;
-use systemprompt::mcp::{ArtifactIngest, IngestRequest, MAX_PAYLOAD_BYTES};
+use systemprompt::mcp::{ArtifactIngest, MAX_PAYLOAD_BYTES};
 use systemprompt::models::artifacts::CliArtifact;
 use systemprompt::models::execution::context::RequestContext;
 use systemprompt::models::mcp::ExecutionSource;

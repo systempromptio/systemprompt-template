@@ -1648,13 +1648,6 @@ e2e-gate:
     fi
     {{just_executable()}} e2e --project chromium
 
-# Print a short-lived login link for an active user on a local development profile.
-dev-login USER:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    export SYSTEMPROMPT_PROFILE="${SYSTEMPROMPT_PROFILE:-{{justfile_directory()}}/.systemprompt/profiles/local/profile.yaml}"
-    exec {{CLI}} plugins run dev-login "{{USER}}"
-
 # Focused functional regression checks for shared dashboard changes.
 test-dashboard stage="all":
     @scripts/build-coordinator.sh run test-dashboard "{{stage}}" -- bash scripts/test-dashboard.sh "{{stage}}"

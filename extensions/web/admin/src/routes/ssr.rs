@@ -10,6 +10,7 @@ use tower_http::normalize_path::NormalizePathLayer;
 use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
 use super::ssr_redirects;
+use crate::env::AdminEnv;
 use crate::handlers::adfs_auth::AdfsDeps;
 use systemprompt::database::DbPool;
 
@@ -19,6 +20,7 @@ pub fn admin_ssr_router(
     engine: AdminTemplateEngine,
     sso_deps: AdfsDeps,
     owner: systemprompt::identifiers::UserId,
+    env: &AdminEnv,
 ) -> Router {
     let managed = Arc::new(super::managed_state::ManagedState::new(db, owner));
     let inner = overview_routes()
@@ -49,7 +51,7 @@ pub fn admin_ssr_router(
         ))
         .with_state(Arc::clone(&pool));
 
-    let combined = public_routes(Arc::clone(&pool))
+    let combined = public_routes(Arc::clone(&pool), env)
         .layer(Extension(engine))
         .layer(Extension(sso_deps))
         .with_state(pool)
@@ -62,7 +64,7 @@ pub fn admin_ssr_router(
     )
 }
 
-fn public_routes(pool: Arc<PgPool>) -> Router<Arc<PgPool>> {
+fn public_routes(pool: Arc<PgPool>, env: &AdminEnv) -> Router<Arc<PgPool>> {
     let login = Router::new()
         .route("/login", get(handlers::ssr::login_page))
         .layer(axum_middleware::from_fn_with_state(
@@ -72,14 +74,14 @@ fn public_routes(pool: Arc<PgPool>) -> Router<Arc<PgPool>> {
     let routes = login
         .route("/auth/adfs/start", get(handlers::adfs_auth::adfs_start))
         .route("/auth/adfs/acs", post(handlers::adfs_auth::adfs_callback));
-    dev_login_routes(routes)
+    dev_login_routes(routes, env)
 }
 
 // Why: the developer login link is mounted, not merely refused, only on a
 // development non-cloud profile — production has no route to hit, so there is
 // nothing there to misconfigure open.
-fn dev_login_routes(router: Router<Arc<PgPool>>) -> Router<Arc<PgPool>> {
-    if !handlers::dev_login::dev_login_enabled() {
+fn dev_login_routes(router: Router<Arc<PgPool>>, env: &AdminEnv) -> Router<Arc<PgPool>> {
+    if !handlers::dev_login::dev_login_enabled(env) {
         return router;
     }
     router.route(

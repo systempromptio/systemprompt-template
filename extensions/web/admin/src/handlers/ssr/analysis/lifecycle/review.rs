@@ -1,6 +1,8 @@
 //! The two review writes behind the publication page: deciding an upstream
 //! withdrawal proposal, and recording a manual review that publishes.
 
+use crate::env::AdminEnv;
+
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::shared::require_write_origin;
 use crate::routes::managed_state::ManagedState;
@@ -21,6 +23,7 @@ pub(crate) struct WithdrawalForm {
 }
 
 pub(crate) async fn decide_withdrawal(
+    Extension(env): Extension<AdminEnv>,
     Extension(user): Extension<UserContext>,
     Extension(managed): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
@@ -29,7 +32,7 @@ pub(crate) async fn decide_withdrawal(
     if !user.is_admin {
         return Err(AdminError::Forbidden("Administrator review required".to_owned()).into());
     }
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     managed
         .repository
         .decide_withdrawal_proposal(
@@ -55,6 +58,7 @@ pub(crate) struct ReviewForm {
 }
 
 pub(crate) async fn review(
+    Extension(env): Extension<AdminEnv>,
     Extension(user): Extension<UserContext>,
     Extension(managed): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
@@ -63,7 +67,7 @@ pub(crate) async fn review(
     if !user.is_admin {
         return Err(AdminError::Forbidden("Administrator review required".to_owned()).into());
     }
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     let action = match form.action.as_str() {
         "initial_adoption" => PublicationAction::InitialAdoption,
         "withdraw" => PublicationAction::Withdraw,
@@ -85,6 +89,7 @@ pub(crate) async fn review(
                 operation_key: form.operation_key,
                 comparison_evidence,
                 limitations: form.limitations,
+                cohort: None,
             },
         )
         .await?;

@@ -3,22 +3,17 @@
 use async_trait::async_trait;
 // JSON: template context crosses the extender trait as a Value.
 use serde_json::Value;
-use systemprompt::manifest::Config;
 use systemprompt::template_provider::{ExtenderContext, TemplateDataExtender};
 
-#[derive(Debug, Clone, Copy)]
-pub struct OrgUrlExtender;
+#[derive(Debug, Clone)]
+pub struct OrgUrlExtender {
+    org_url: String,
+}
 
 impl OrgUrlExtender {
     #[must_use]
-    pub const fn new() -> Self {
-        Self
-    }
-}
-
-impl Default for OrgUrlExtender {
-    fn default() -> Self {
-        Self::new()
+    pub const fn new(org_url: String) -> Self {
+        Self { org_url }
     }
 }
 
@@ -42,11 +37,7 @@ impl TemplateDataExtender for OrgUrlExtender {
         // JSON: required by trait contract
         data: &mut Value,
     ) -> Result<(), systemprompt::traits::ProviderError> {
-        // Why: lint-ok: error-adapt — core's ProviderError::Internal(String) is the
-        // trait's only failure channel; the nearby format! builds URLs, not errors.
-        let config = Config::get()
-            .map_err(|e| systemprompt::traits::ProviderError::Internal(Box::new(e)))?;
-        let org_url = &config.api_external_url;
+        let org_url = &self.org_url;
 
         let default_image = format!("{org_url}/files/images/logo.png");
         let org_logo = format!("{org_url}/files/images/logo.svg");

@@ -7,7 +7,7 @@ use systemprompt::identifiers::{PluginId, UserId};
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::secrets::secret_audit::{self, AuditLogRow};
-use crate::repositories::secrets::{secret_crypto, secret_keys, secret_resolve};
+use crate::repositories::secrets::{secret_keys, secret_resolve};
 
 pub(crate) async fn create_resolution_token(
     pool: &PgPool,
@@ -20,6 +20,7 @@ pub(crate) async fn create_resolution_token(
 
 pub(crate) async fn resolve_secrets(
     pool: &PgPool,
+    cipher: &dyn systemprompt::traits::MemberCipher,
     plugin_id: &PluginId,
     raw_token: &str,
 ) -> AdminResult<HashMap<String, String>> {
@@ -34,10 +35,8 @@ pub(crate) async fn resolve_secrets(
         return Err(AdminError::Forbidden("Token plugin mismatch".to_owned()));
     }
 
-    let master_key = secret_crypto::load_master_key()?;
-
     let secrets =
-        secret_resolve::resolve_secrets_for_plugin(pool, &user_id, plugin_id, &master_key).await?;
+        secret_resolve::resolve_secrets_for_plugin(pool, &user_id, plugin_id, cipher).await?;
     Ok(secrets)
 }
 
@@ -52,11 +51,11 @@ pub(crate) async fn list_audit_log(
 
 pub(crate) async fn rotate_user_keys(
     pool: &PgPool,
+    cipher: &dyn systemprompt::traits::MemberCipher,
     user_id: &UserId,
     plugin_id: &PluginId,
 ) -> AdminResult<()> {
-    let master_key = secret_crypto::load_master_key()?;
-    secret_keys::rotate_user_dek(pool, user_id, &master_key).await?;
+    secret_keys::rotate_user_dek(pool, user_id, cipher).await?;
 
     if let Err(e) = secret_audit::insert_audit_entry(pool, user_id, plugin_id, "rotated").await {
         tracing::warn!(error = %e, "Failed to insert secret audit log");

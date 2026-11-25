@@ -1,6 +1,8 @@
 //! Governance webhook entrypoint: authenticate, evaluate the policy chain, and
 //! record an audit row before returning the `PreToolUse` decision.
 
+use crate::env::AdminEnv;
+
 mod authn;
 mod denial;
 mod governed;
@@ -15,19 +17,17 @@ use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use sqlx::PgPool;
 use systemprompt::governance::authz::Decision;
-use systemprompt::governance::policy::types::AccessScope;
 use systemprompt::governance::policy::{
-    AgentScope, AuditOrigin, AuditTarget, DecisionAudit, GovernedInput, GovernedTarget,
-    PolicyContext, PrincipalSnapshot, RateChargeSubject, RateWindowRepository, record_decision,
+    AccessScope, AgentScope, AuditOrigin, AuditTarget, DecisionAudit, GovernanceEngine,
+    GovernedInput, GovernedTarget, PolicyRequest, PrincipalSnapshot, record_decision,
 };
 use systemprompt::identifiers::{CallId, ClientId, PluginId, SessionId, UserId};
-use systemprompt::oauth::SessionCreationService;
+use systemprompt::traits::ConfigWatch;
 
 use crate::authz::AccountStanding;
 use crate::repositories::dashboard::usage_aggregations::ingestion;
 use crate::types::webhook::{GovernQuery, HookEventPayload};
 
-use super::engine::engine;
 use super::types::AuthDenialParams;
 
 use authn::{authenticate_request, deny_for_auth_failure};
@@ -102,36 +102,24 @@ struct Governed<'a> {
 // an out-of-process agent has no second enforcement point to inherit from.
 async fn evaluate_and_record(
     pool: &PgPool,
-    rate_windows: &RateWindowRepository,
+    engine: &GovernanceEngine,
     governed: Governed<'_>,
-    denial: &AuthDenialParams<'_>,
 ) -> Result<Decision, &'static str> {
     let call_id = CallId::generate();
-    let engine = engine(rate_windows).map_err(|error| {
-        tracing::error!(error = %error, "governance engine unavailable");
-        spawn_auth_denial(denial, "Governance engine unavailable");
-        "Governance engine unavailable"
-    })?;
-    let rate_counts = engine
-        .charge_rate_windows(RateChargeSubject {
-            session: governed.session_id,
-            user: &governed.user_id,
-            call: &call_id,
+    let evaluation = engine
+        .charge_and_evaluate(PolicyRequest {
+            target: governed.target.clone(),
+            agent_scope: AgentScope::User {
+                user_id: governed.user_id.clone(),
+            },
+            access_scope: governed.access_scope,
+            roles: &governed.roles,
+            session_id: governed.session_id,
+            user_id: &governed.user_id,
+            input: governed.input,
+            call_id: &call_id,
         })
         .await;
-    let evaluation = engine.evaluate(&PolicyContext {
-        target: governed.target.clone(),
-        agent_scope: AgentScope::User {
-            user_id: governed.user_id.clone(),
-        },
-        access_scope: governed.access_scope,
-        roles: &governed.roles,
-        session_id: governed.session_id,
-        user_id: &governed.user_id,
-        input: governed.input,
-        call_id: &call_id,
-        rate_counts: &rate_counts,
-    });
     let audit = DecisionAudit {
         id: uuid::Uuid::new_v4().to_string(),
         call_id,
@@ -172,8 +160,9 @@ async fn evaluate_and_record(
 )]
 pub(crate) async fn govern_tool_use(
     State(pool): State<Arc<PgPool>>,
-    Extension(session_service): Extension<Arc<SessionCreationService>>,
-    Extension(rate_windows): Extension<RateWindowRepository>,
+    Extension(users): Extension<Arc<dyn systemprompt::traits::UserProvider>>,
+    Extension(governance): Extension<ConfigWatch<GovernanceEngine>>,
+    Extension(env): Extension<AdminEnv>,
     headers: HeaderMap,
     Query(query): Query<GovernQuery>,
     // JSON: protocol boundary — the third-party hook envelope, parsed into typed
@@ -201,11 +190,11 @@ pub(crate) async fn govern_tool_use(
         tool_name: target.as_str(),
         hook_event_name: response_event,
         plugin_id,
-        session_service: &session_service,
+        users: &users,
         headers: &headers,
     };
 
-    let principal = match authenticate_request(&headers, &denial_params) {
+    let principal = match authenticate_request(&env, &headers, &denial_params).await {
         Ok(p) => p,
         Err(e) => return e.into_response(),
     };
@@ -237,7 +226,8 @@ pub(crate) async fn govern_tool_use(
         _claimed: claimed,
         plugin_id,
     };
-    match evaluate_and_record(&pool, &rate_windows, governed, &denial_params).await {
+    let engine = governance.get();
+    match evaluate_and_record(&pool, &engine, governed).await {
         Ok(decision) => build_response(&decision, response_event),
         Err(reason) => build_response(&deny_for_auth_failure(reason), response_event),
     }

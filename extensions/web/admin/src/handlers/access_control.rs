@@ -12,6 +12,7 @@ use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
 use systemprompt::identifiers::UserId;
 
 use crate::activity::{self, ActivityEntity, NewActivity};
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
@@ -46,13 +47,14 @@ pub(crate) async fn list_access_rules_handler(
 }
 
 pub(crate) async fn update_entity_rules_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<UpdateEntityRulesRequest>,
 ) -> AdminResult<Response> {
     let kind = editable_entity_kind(&entity_type)?;
-    registered_routes_from_services()?.require(kind, &entity_id)?;
+    registered_routes_from_services(&env).require(kind, &entity_id)?;
     require_band_justification(&body.rules)?;
 
     let rules =
@@ -75,12 +77,13 @@ pub(crate) async fn update_entity_rules_handler(
 }
 
 pub(crate) async fn bulk_assign_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<BulkAssignRequest>,
 ) -> AdminResult<Response> {
     // Why: every entity is checked before any is written, so a bad id in the
     // batch rejects the whole request rather than half-applying it.
-    let registered = registered_routes_from_services()?;
+    let registered = registered_routes_from_services(&env);
     let entities = body
         .entities
         .iter()
@@ -120,7 +123,8 @@ pub(crate) fn require_band_justification(
 }
 
 fn editable_entity_kind(entity_type: &str) -> AdminResult<EntityKind> {
-    let kind = EntityKind::from_str(entity_type)?;
+    let kind =
+        EntityKind::from_str(entity_type).map_err(|e| AdminError::invalid("entity type", e))?;
     if matches!(
         kind,
         EntityKind::Plugin
@@ -145,28 +149,31 @@ fn registered_entity(
     entity_type: &str,
     entity_id: &str,
 ) -> AdminResult<(EntityKind, String)> {
-    let kind = EntityKind::from_str(entity_type)?;
+    let kind =
+        EntityKind::from_str(entity_type).map_err(|e| AdminError::invalid("entity type", e))?;
     registered.require(kind, entity_id)?;
     Ok((kind, entity_id.to_owned()))
 }
 
 pub(crate) async fn user_matrix_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Path(user_id): Path<String>,
 ) -> AdminResult<Response> {
-    let services_path = shared::get_services_path()?;
+    let services_path = shared::get_services_path(&env)?;
 
-    let sections = build_matrix_sections(&services_path);
+    let sections = build_matrix_sections(&env, &services_path);
 
     let user_id = UserId::new(user_id);
     let matrix =
-        repositories::users::access_control::resolve_user_matrix(&pool, &user_id, sections)
+        repositories::users::access_control::resolve_user_matrix(&env, &pool, &user_id, sections)
             .await?
             .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
     Ok(Json(matrix).into_response())
 }
 
 pub(crate) fn build_matrix_sections(
+    env: &AdminEnv,
     services_path: &std::path::Path,
 ) -> Vec<repositories::users::access_control::SectionInput> {
     // Why: each source is best-effort — a config that fails to load is skipped
@@ -174,7 +181,7 @@ pub(crate) fn build_matrix_sections(
     let mut sections: Vec<repositories::users::access_control::SectionInput> = Vec::new();
 
     let marketplace_rows: Vec<(String, String, Option<String>)> =
-        crate::services::marketplaces::load_marketplaces()
+        crate::services::marketplaces::load_marketplaces(env)
             .into_iter()
             .map(|m| (m.id.to_string(), m.name, Some(m.description)))
             .collect();
@@ -186,7 +193,7 @@ pub(crate) fn build_matrix_sections(
         ));
     }
 
-    match repositories::config::gateway::get_route_labels_from_services() {
+    match repositories::config::gateway::get_route_labels_from_services(env) {
         Err(e) => {
             // Why: skipping the section keeps the rest of the matrix rendering,
             // but a dropped gateway section is indistinguishable from a
@@ -206,13 +213,14 @@ pub(crate) fn build_matrix_sections(
         },
     }
 
-    push_catalog_sections(services_path, &mut sections);
+    push_catalog_sections(env, services_path, &mut sections);
     sections
 }
 
 // Why: the four catalog-backed sections split off so each half of the matrix
 // stays inside the line budget; the best-effort skip rule is unchanged.
 fn push_catalog_sections(
+    env: &AdminEnv,
     services_path: &std::path::Path,
     sections: &mut Vec<repositories::users::access_control::SectionInput>,
 ) {
@@ -233,7 +241,7 @@ fn push_catalog_sections(
     }
     let admin_roles = vec!["admin".to_owned()];
     if let Ok(plugins) =
-        repositories::marketplace::plugins::list_plugins_for_roles(services_path, &admin_roles)
+        repositories::marketplace::plugins::list_plugins_for_roles(env, services_path, &admin_roles)
     {
         let rows: Vec<(String, String, Option<String>)> = plugins
             .into_iter()

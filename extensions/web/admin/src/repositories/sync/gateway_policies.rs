@@ -10,6 +10,8 @@
 //! `/admin/gateway/policies` is the other writer; what it changes shows
 //! here as drift until it is exported or overwritten.
 
+use crate::env::AdminEnv;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
 
@@ -38,8 +40,11 @@ pub struct GatewayPoliciesPlane;
 
 // Why: no file is a legitimate declaration of "no policies" — core boots
 // permissive on it — so it is an empty set, not an error.
-fn declared_policies_from(from: DeclarationSource<'_>) -> AdminResult<DeclaredPolicies> {
-    let Some(yaml) = read_or_text(from, POLICIES_FILE)? else {
+fn declared_policies_from(
+    env: &AdminEnv,
+    from: DeclarationSource<'_>,
+) -> AdminResult<DeclaredPolicies> {
+    let Some(yaml) = read_or_text(env, from, POLICIES_FILE)? else {
         return Ok(DeclaredPolicies::default());
     };
     parse_declared_policies(&yaml)
@@ -120,17 +125,18 @@ impl SyncPlane for GatewayPoliciesPlane {
         "/admin/gateway/policies"
     }
 
-    async fn drift(&self, pool: &PgPool) -> AdminResult<PlaneDrift> {
-        self.drift_from(pool, DeclarationSource::Disk).await
+    async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift> {
+        self.drift_from(env, pool, DeclarationSource::Disk).await
     }
 
     async fn drift_from(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         from: DeclarationSource<'_>,
     ) -> AdminResult<PlaneDrift> {
         let in_db = usize::try_from(count_policies(pool).await?).unwrap_or(0);
-        let declared = match declared_policies_from(from) {
+        let declared = match declared_policies_from(env, from) {
             Ok(d) => d,
             Err(e) => {
                 return Ok(PlaneDrift {
@@ -185,22 +191,24 @@ impl SyncPlane for GatewayPoliciesPlane {
 
     async fn apply(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        self.apply_from(pool, mode, actor, DeclarationSource::Disk)
+        self.apply_from(env, pool, mode, actor, DeclarationSource::Disk)
             .await
     }
 
     async fn apply_from(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
         from: DeclarationSource<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        let declared = declared_policies_from(from)?;
+        let declared = declared_policies_from(env, from)?;
         let existing = list_policies(pool).await?;
         let mut outcome = ApplyOutcome::default();
         for entry in &declared.entries {
@@ -240,14 +248,14 @@ impl SyncPlane for GatewayPoliciesPlane {
                 declared_hash: &declared.declared_hash(),
                 mode: actor.recorded_mode(mode),
                 actor: actor.as_str(),
-                from: applied_from(),
+                from: applied_from(env),
             },
         )
         .await?;
         Ok(outcome)
     }
 
-    async fn export(&self, pool: &PgPool) -> AdminResult<Option<Export>> {
+    async fn export(&self, _env: &AdminEnv, pool: &PgPool) -> AdminResult<Option<Export>> {
         let rows = list_policies(pool).await?;
         Ok(Some(Export {
             filename: "policies.yaml",

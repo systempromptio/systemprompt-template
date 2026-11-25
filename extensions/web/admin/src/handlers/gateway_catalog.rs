@@ -9,6 +9,8 @@
 //!   `governance_decisions` rows for any request that should not have been
 //!   allowed. Acts as a redundancy check that core enforcement actually fired.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::Json;
@@ -45,6 +47,7 @@ pub(crate) struct CatalogResponse {
 
 pub(crate) async fn for_user_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id): Path<String>,
 ) -> AdminResult<Response> {
@@ -55,7 +58,7 @@ pub(crate) async fn for_user_handler(
     // Why: the per-user catalog is what a client UI renders, so it lists only
     // routes whose provider is advertised. A `surface: backend` provider is
     // reachable through an upstream rewrite and never by name.
-    let routes = repositories::config::gateway::client_facing_routes_from_services()
+    let routes = repositories::config::gateway::client_facing_routes_from_services(&env)
         .map_err(AdminError::internal)?;
 
     let user_roles = repositories::users::queries::find_user_access_profile(&pool, &user_id)
@@ -63,17 +66,19 @@ pub(crate) async fn for_user_handler(
         .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?
         .roles;
 
-    let routes = collect_allowed_routes(&pool, &routes, &user_id, &user_roles).await?;
+    let routes = collect_allowed_routes(&env, &pool, &routes, &user_id, &user_roles).await?;
     Ok(Json(CatalogResponse { user_id, routes }).into_response())
 }
 
 async fn collect_allowed_routes(
+    env: &AdminEnv,
     pool: &PgPool,
     routes: &[GatewayRouteView],
     user_id: &UserId,
     user_roles: &[String],
 ) -> AdminResult<Vec<CatalogEntry>> {
-    let attributes = subject_attributes_for(pool, user_id).await?;
+    let attributes = subject_attributes_for(env.subjects(), user_id).await?;
+    let dimensions = dimensions(env.subjects())?;
     let mut allowed = Vec::with_capacity(routes.len());
     for route in routes {
         let route_id = RouteId::new(route.id.clone());
@@ -98,7 +103,7 @@ async fn collect_allowed_routes(
             default_included,
             parents: &[],
             attributes: &attributes,
-            dimensions: dimensions(pool),
+            dimensions: &dimensions,
         })
         .permits()
         {
@@ -132,6 +137,7 @@ pub(crate) struct DetectResponse {
 // Why: detection is admin-triggered rather than scheduled, so decisions for
 // denied combinations only appear once someone runs it.
 pub(crate) async fn detect_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     axum::extract::Query(query): axum::extract::Query<DetectQuery>,
@@ -141,9 +147,9 @@ pub(crate) async fn detect_handler(
     if !user_ctx.is_admin {
         return Err(AdminError::Forbidden("Admin only".to_owned()));
     }
-    let routes = repositories::config::gateway::dispatchable_routes_from_services()
+    let routes = repositories::config::gateway::dispatchable_routes_from_services(&env)
         .map_err(AdminError::internal)?;
-    let emitted = detect_after_the_fact(&pool, &routes, query.since_minutes).await?;
+    let emitted = detect_after_the_fact(&env, &pool, &routes, query.since_minutes).await?;
     Ok(Json(DetectResponse {
         emitted,
         since_minutes: query.since_minutes,
@@ -160,11 +166,13 @@ struct AclDetectAudit<'a> {
 }
 
 pub(crate) async fn detect_after_the_fact(
+    env: &AdminEnv,
     pool: &PgPool,
     routes: &[GatewayRouteView],
     since_minutes: i64,
 ) -> Result<usize, sqlx::Error> {
     let rows = acl_detect::list_recent_unrejected_requests(pool, since_minutes).await?;
+    let dimensions = dimensions(env.subjects())?;
 
     let mut emitted = 0usize;
     for row in rows {
@@ -178,7 +186,7 @@ pub(crate) async fn detect_after_the_fact(
             continue;
         };
         let user_roles = profile.roles;
-        let attributes = subject_attributes_for(pool, &UserId::new(&row.user_id)).await?;
+        let attributes = subject_attributes_for(env.subjects(), &UserId::new(&row.user_id)).await?;
         let route_id = RouteId::new(route.id.clone());
         let rules = gateway_acl::list_rules_for_route(pool, &route_id).await?;
         let default_included = gateway_acl::find_entity(pool, &route_id)
@@ -194,7 +202,7 @@ pub(crate) async fn detect_after_the_fact(
             default_included,
             parents: &[],
             attributes: &attributes,
-            dimensions: dimensions(pool),
+            dimensions: &dimensions,
         }) {
             let decision_id = uuid::Uuid::new_v4().to_string();
             let reason_str = reason.to_string();

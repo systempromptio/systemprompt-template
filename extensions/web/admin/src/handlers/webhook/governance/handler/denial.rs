@@ -9,7 +9,7 @@ use systemprompt::governance::policy::{
 use systemprompt::identifiers::CallId;
 use systemprompt::traits::SessionAnalytics;
 
-use systemprompt::governance::policy::types::AccessScope;
+use systemprompt::governance::policy::AccessScope;
 
 use super::super::types::AuthDenialParams;
 use super::authn::deny_for_auth_failure;
@@ -34,7 +34,7 @@ pub(super) fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let session_id = params.session_id.clone();
     let tool_name = params.tool_name.to_owned();
     let plugin_id = params.plugin_id.cloned();
-    let session_service = Arc::clone(params.session_service);
+    let users = Arc::clone(params.users);
     let headers = params.headers.clone();
 
     tokio::spawn(async move {
@@ -48,8 +48,11 @@ pub(super) fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             preferred_locale: header_str(&headers, header::ACCEPT_LANGUAGE),
             ..SessionAnalytics::default()
         };
-        let user_id = match session_service.ensure_anonymous_user(&analytics).await {
-            Ok((uid, _fingerprint)) => uid,
+        let user_id = match users
+            .create_anonymous(&analytics.compute_fingerprint())
+            .await
+        {
+            Ok(user) => user.id,
             Err(e) => {
                 tracing::error!(
                     target: "governance.audit.write_failed",

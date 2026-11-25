@@ -4,10 +4,8 @@
 //! when it is on (production) verdicts simply arrive and the pages show
 //! only the circles.
 
-use systemprompt::config::ProfileBootstrap;
+use crate::env::AdminEnv;
 
-// Why: a profile that cannot be read is treated as manual, so the buttons
-// are there rather than a page that can never request a verdict.
-pub(crate) fn automatic() -> bool {
-    ProfileBootstrap::get().is_ok_and(|p| p.judge.automatic)
+pub(crate) fn automatic(env: &AdminEnv) -> bool {
+    env.profile().judge_automatic
 }

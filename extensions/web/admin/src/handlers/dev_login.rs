@@ -10,6 +10,8 @@
 //! person does. The code itself is issued by the
 //! `dev-login` CLI extension, which applies the same gate before it writes.
 
+use crate::env::AdminEnv;
+
 use axum::Extension;
 use axum::extract::Query;
 use axum::extract::rejection::QueryRejection;
@@ -17,7 +19,6 @@ use axum::http::HeaderMap;
 use axum::http::header::SET_COOKIE;
 use axum::response::{IntoResponse, Redirect, Response};
 use serde::Deserialize;
-use systemprompt::config::ProfileBootstrap;
 use systemprompt::manifest::profile::{Environment, ProfileType};
 
 use super::adfs_auth::{AdfsDeps, SessionSubject, mint_session, session_cookie};
@@ -36,9 +37,8 @@ pub const fn dev_login_allowed(environment: Environment, target: ProfileType) ->
 
 // Why: fails closed. A process that cannot read its profile does not get a
 // password-free door on the strength of a default.
-pub fn dev_login_enabled() -> bool {
-    ProfileBootstrap::get()
-        .is_ok_and(|profile| dev_login_allowed(profile.runtime.environment, profile.target))
+pub fn dev_login_enabled(env: &AdminEnv) -> bool {
+    dev_login_allowed(env.profile().environment, env.profile().target)
 }
 
 pub fn dev_login_url(api_external_url: &str, code: &str) -> String {
@@ -57,7 +57,6 @@ pub(crate) struct DevLoginParams {
 // is the only place the browser can usefully land.
 pub(crate) async fn dev_login_redeem(
     Extension(deps): Extension<AdfsDeps>,
-    headers: HeaderMap,
     params: Result<Query<DevLoginParams>, QueryRejection>,
 ) -> Response {
     // Why: lint-ok: http-error — a redirect, not an error envelope.
@@ -76,19 +75,18 @@ pub(crate) async fn dev_login_redeem(
 
     let user_id = user.user_id.clone();
     let email = user.email.clone();
-    let (jwt, max_age) =
-        match mint_session(&deps.session_service, &SessionSubject::from(user), &headers).await {
-            Ok(minted) => minted,
-            Err(e) => {
-                tracing::error!(error = %e, user_id = %user_id, "dev login session mint failed");
-                return invalid();
-            },
-        };
+    let (jwt, max_age) = match mint_session(&SessionSubject::from(user)) {
+        Ok(minted) => minted,
+        Err(e) => {
+            tracing::error!(error = %e, user_id = %user_id, "dev login session mint failed");
+            return invalid();
+        },
+    };
 
     tracing::info!(user_id = %user_id, email = %email, "dev login code redeemed");
 
     let mut out = HeaderMap::new();
-    if let Ok(val) = session_cookie(&jwt, max_age).parse() {
+    if let Ok(val) = session_cookie(&jwt, max_age, deps.use_https).parse() {
         out.append(SET_COOKIE, val);
     }
     (out, Redirect::to("/admin")).into_response()

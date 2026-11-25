@@ -9,7 +9,7 @@
 
 use chrono::Utc;
 use serde::Deserialize;
-use systemprompt::governance::authz::DASHBOARD_SOURCE;
+use systemprompt::governance::authz::CONSOLE_SOURCE_PREFIX;
 
 use super::bands::{band_label, band_rank, chips, resolution};
 use super::summary::{self, options};
@@ -73,7 +73,7 @@ impl AcQuery {
 }
 
 fn rule_view(row: &LedgerRuleRow) -> AcRuleView {
-    let dashboard = row.source == DASHBOARD_SOURCE;
+    let dashboard = row.source.starts_with(CONSOLE_SOURCE_PREFIX);
     AcRuleView {
         band: row.rule_type.clone(),
         band_label: band_label(&row.rule_type),

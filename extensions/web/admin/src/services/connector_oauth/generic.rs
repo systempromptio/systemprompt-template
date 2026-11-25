@@ -1,6 +1,8 @@
 //! OAuth for configured MCP resources with explicitly trusted authorization
 //! origins.
 
+use crate::env::AdminEnv;
+
 use super::generic_discovery::{bounded_json, metadata, trusted_endpoint};
 pub use super::generic_discovery::{same_issuer, validate_endpoint};
 use super::transport::client;
@@ -19,23 +21,23 @@ struct Registration {
     client_secret: String,
 }
 
-pub fn binding(provider: &Provider) -> AdminResult<String> {
+pub fn binding(env: &AdminEnv, provider: &Provider) -> AdminResult<String> {
     let settings = provider
-        .settings()
+        .settings(&env.services())
         .ok_or_else(|| AdminError::Unavailable("OAuth setup required".into()))?;
-    let bytes =
-        serde_json::to_vec(&(provider.endpoint(), settings)).map_err(AdminError::internal)?;
+    let bytes = serde_json::to_vec(&(provider.endpoint(&env.services()), settings))
+        .map_err(AdminError::internal)?;
     Ok(URL_SAFE_NO_PAD.encode(Sha256::digest(bytes)))
 }
 
-pub fn validate_grant(grant: &Grant) -> AdminResult<()> {
+pub fn validate_grant(env: &AdminEnv, grant: &Grant) -> AdminResult<()> {
     if matches!(grant.provider, Provider::Generic(_)) {
-        if grant.configuration_binding != binding(&grant.provider)? {
+        if grant.configuration_binding != binding(env, &grant.provider)? {
             return Err(AdminError::Unauthorized(
                 "Connector configuration changed; reconnect required".into(),
             ));
         }
-        trusted_endpoint(&grant.provider, &grant.token_endpoint)?;
+        trusted_endpoint(env, &grant.provider, &grant.token_endpoint)?;
     }
     Ok(())
 }
@@ -49,14 +51,19 @@ pub struct Consent<'a> {
     pub verifier: String,
 }
 
-pub async fn authorize(consent: Consent<'_>, provider: Provider) -> AdminResult<(String, Grant)> {
-    let callback = provider.callback()?;
-    authorize_with_client(consent, provider, &callback, &client()?).await
+pub async fn authorize(
+    env: &AdminEnv,
+    consent: Consent<'_>,
+    provider: Provider,
+) -> AdminResult<(String, Grant)> {
+    let callback = provider.callback(&env.config().api_external_url);
+    authorize_with_client(env, consent, provider, &callback, &client()?).await
 }
 
 // Why: the callback and transport are injectable so the OAuth boundary can be
 // exercised against a local server in tests.
 pub async fn authorize_with_client(
+    env: &AdminEnv,
     consent: Consent<'_>,
     provider: Provider,
     callback: &str,
@@ -68,22 +75,22 @@ pub async fn authorize_with_client(
         verifier,
     } = consent;
     let settings = provider
-        .settings()
+        .settings(&env.services())
         .ok_or_else(|| AdminError::Unavailable("OAuth setup required".into()))?;
     if settings.adapter != "generic" {
         return Err(AdminError::Unavailable(
             "Unsupported connector adapter".into(),
         ));
     }
-    let meta = metadata(http, &provider).await?;
+    let meta = metadata(env, http, &provider).await?;
     let scope = settings.scopes.join(" ");
-    let (registration, method) = register_client(&provider, &meta, callback, http).await?;
+    let (registration, method) = register_client(env, &provider, &meta, callback, http).await?;
     if registration.client_id.as_str().is_empty() {
         return Err(AdminError::Unavailable(
             "OAuth client registration has no identifier".into(),
         ));
     }
-    let mut url = trusted_endpoint(&provider, &meta.authorization_endpoint)?;
+    let mut url = trusted_endpoint(env, &provider, &meta.authorization_endpoint)?;
     url.query_pairs_mut().extend_pairs([
         ("response_type", "code"),
         ("client_id", registration.client_id.as_str()),
@@ -96,14 +103,14 @@ pub async fn authorize_with_client(
                 .encode(Sha256::digest(verifier.as_bytes()))
                 .as_str(),
         ),
-        ("resource", provider.endpoint().as_str()),
+        ("resource", provider.endpoint(&env.services()).as_str()),
         ("scope", scope.as_str()),
     ]);
     url.query_pairs_mut()
         .extend_pairs(settings.authorization_params.iter());
     let grant = Grant {
         user: user.into(),
-        configuration_binding: binding(&provider)?,
+        configuration_binding: binding(env, &provider)?,
         authorization_issuer: meta.issuer,
         token_auth_method: method.into(),
         provider,
@@ -126,9 +133,13 @@ pub async fn authorize_with_client(
     Ok((url.into(), grant))
 }
 
-pub async fn validate_refresh(grant: &Grant, http: &reqwest::Client) -> AdminResult<()> {
-    validate_grant(grant)?;
-    let metadata = metadata(http, &grant.provider).await?;
+pub async fn validate_refresh(
+    env: &AdminEnv,
+    grant: &Grant,
+    http: &reqwest::Client,
+) -> AdminResult<()> {
+    validate_grant(env, grant)?;
+    let metadata = metadata(env, http, &grant.provider).await?;
     if (metadata.issuer.as_str(), metadata.token_endpoint.as_str())
         != (
             grant.authorization_issuer.as_str(),
@@ -143,20 +154,21 @@ pub async fn validate_refresh(grant: &Grant, http: &reqwest::Client) -> AdminRes
 }
 
 async fn register_client(
+    env: &AdminEnv,
     provider: &Provider,
     meta: &super::generic_discovery::AuthorizationMetadata,
     callback: &str,
     http: &reqwest::Client,
 ) -> AdminResult<(Registration, &'static str)> {
     let settings = provider
-        .settings()
+        .settings(&env.services())
         .ok_or_else(|| AdminError::Unavailable("OAuth setup required".into()))?;
     let scope = settings.scopes.join(" ");
     let registration = if let Some(key) = &settings.client_id_secret {
         let secret = settings
             .client_secret
             .as_deref()
-            .map(config::secret)
+            .map(|name| config::secret(env.secrets(), name))
             .transpose()?
             .unwrap_or_default();
         let method = if secret.is_empty() {
@@ -172,7 +184,7 @@ async fn register_client(
         };
         (
             Registration {
-                client_id: ClientId::new(config::secret(key)?),
+                client_id: ClientId::new(config::secret(env.secrets(), key)?),
                 client_secret: secret,
             },
             method,
@@ -182,7 +194,7 @@ async fn register_client(
             AdminError::Unavailable("Configure an OAuth client for this server".into())
         })?;
         let response = http
-            .post(trusted_endpoint(provider, endpoint)?)
+            .post(trusted_endpoint(env, provider, endpoint)?)
             .json(&serde_json::json!({
                 "client_name": "Systemprompt", "redirect_uris": [callback],
                 "grant_types": ["authorization_code", "refresh_token"], "response_types": ["code"],

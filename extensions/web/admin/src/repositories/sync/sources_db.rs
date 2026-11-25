@@ -7,13 +7,12 @@
 //! decides it — a bundle owns what its manifest says, the base owns the
 //! rest — so the answer here is the answer the loader gave.
 
+use crate::env::AdminEnv;
+
 use std::collections::BTreeMap;
 
 use sqlx::{PgPool, Postgres, Transaction};
-use systemprompt::config::ProfileBootstrap;
 use systemprompt::identifiers::MarketplaceId;
-use systemprompt::loader::ConfigLoader;
-use systemprompt::loader::services_root::ServicesRootBootstrap;
 use systemprompt::manifest::services::ServicesConfig;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -37,19 +36,17 @@ struct Owned {
     marketplace: Option<MarketplaceId>,
 }
 
-pub async fn record_service_sources(pool: &PgPool) -> Result<SourcesRecorded, MarketplaceError> {
-    let sources = build_sources().map_err(|e| MarketplaceError::Internal(e.to_string()))?;
-    let services = ConfigLoader::load().map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+pub async fn record_service_sources(
+    env: &AdminEnv,
+    pool: &PgPool,
+) -> Result<SourcesRecorded, MarketplaceError> {
+    let sources = build_sources(env).map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+    let services = env.services();
     let owned = owned_ids(&sources, &services);
     // Why: the composed root is what consumers are served, so it is what a
     // version hashes — the baked tree alone would miss every bundled
     // marketplace.
-    let root = ServicesRootBootstrap::active_root_or(
-        &ProfileBootstrap::get()
-            .map_err(|e| MarketplaceError::Internal(e.to_string()))?
-            .paths
-            .services,
-    );
+    let root = env.active_services_root();
     let versions = compute_marketplace_versions(&root, &services, &sources);
 
     let mut tx = pool.begin().await?;

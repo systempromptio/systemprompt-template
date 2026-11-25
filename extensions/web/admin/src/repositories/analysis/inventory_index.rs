@@ -6,6 +6,8 @@
 //! persisted. It describes the catalog as placed today; historical placement is
 //! not a retained dimension.
 
+use crate::env::AdminEnv;
+
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -37,12 +39,12 @@ pub struct InventoryIndex {
 
 impl InventoryIndex {
     #[must_use]
-    pub fn build(services_path: &Path) -> Self {
+    pub fn build(env: &AdminEnv, services_path: &Path) -> Self {
         let marketplaces = list_marketplace_configs(services_path).unwrap_or_else(|error| {
             tracing::warn!(error = %error, "marketplace manifests unavailable for analysis");
             Vec::new()
         });
-        let (plugins_by_skill, _agents, _mcp) = build_entity_plugin_maps(services_path);
+        let (plugins_by_skill, _agents, _mcp) = build_entity_plugin_maps(env, services_path);
         let mut marketplaces_by_plugin: HashMap<String, Vec<MarketplaceRef>> = HashMap::new();
         for marketplace in &marketplaces {
             for plugin in &marketplace.plugins {
@@ -151,6 +153,7 @@ const AUDIENCE_CONCURRENCY: usize = 8;
 // a connected server reaches exactly the people holding that connection;
 // group and role bands alone would count it as reaching nobody.
 pub async fn get_marketplace_audience(
+    env: &AdminEnv,
     pool: &PgPool,
     manifests: &[MarketplaceConfigSummary],
 ) -> Result<MarketplaceAudience, sqlx::Error> {
@@ -159,7 +162,7 @@ pub async fn get_marketplace_audience(
     )
     .fetch_all(pool)
     .await?;
-    let subjects = gather_subjects(pool, members).await?;
+    let subjects = gather_subjects(env, members).await?;
     let sections: Vec<SectionInput> = vec![(
         MARKETPLACE_ENTITY.to_owned(),
         "Marketplaces".to_owned(),
@@ -168,7 +171,7 @@ pub async fn get_marketplace_audience(
             .map(|m| (m.id.as_str().to_owned(), m.name.clone(), None))
             .collect(),
     )];
-    let resolved = resolve_subject_matrices(pool, &subjects, &sections).await?;
+    let resolved = resolve_subject_matrices(env, pool, &subjects, &sections).await?;
     let mut users_by_marketplace: HashMap<String, HashSet<UserId>> = manifests
         .iter()
         .map(|m| (m.id.as_str().to_owned(), HashSet::new()))
@@ -189,17 +192,17 @@ pub async fn get_marketplace_audience(
 }
 
 async fn gather_subjects(
-    pool: &PgPool,
+    env: &AdminEnv,
     members: Vec<MembershipRow>,
 ) -> Result<Vec<MatrixSubject>, sqlx::Error> {
     let mut subjects = Vec::with_capacity(members.len());
     for chunk in members.chunks(AUDIENCE_CONCURRENCY) {
         let mut set = tokio::task::JoinSet::new();
         for member in chunk {
-            let pool = pool.clone();
+            let env = env.clone();
             let user_id = member.user_id.clone();
             let roles = member.roles.clone();
-            set.spawn(async move { user_subject(&pool, &user_id, roles).await });
+            set.spawn(async move { user_subject(&env, &user_id, roles).await });
         }
         while let Some(joined) = set.join_next().await {
             let subject = joined.map_err(|e| sqlx::Error::Protocol(e.to_string()))??;

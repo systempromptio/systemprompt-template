@@ -6,6 +6,8 @@
 //! queue what they can see. The next `conversation_judge` tick claims manual
 //! rows whatever the profile's automatic switch says.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::extract::{Form, Query, State};
@@ -24,6 +26,7 @@ use crate::repositories::analysis::conversations::{
     load_conversation_analysis_page,
 };
 use crate::repositories::scope::ScopeRequest;
+use axum::Extension;
 
 use super::query::{BASE_URL, ConversationAnalysisQuery};
 
@@ -69,6 +72,7 @@ fn params_from(form: &JudgeAllForm) -> Result<ConversationAnalysisQuery, AdminEr
 }
 
 pub(crate) async fn judge_all(
+    Extension(env): Extension<AdminEnv>,
     shell: Page,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
@@ -77,7 +81,7 @@ pub(crate) async fn judge_all(
     if !shell.user.is_console {
         return Err(AdminError::Forbidden("Console access required".into()).into());
     }
-    crate::handlers::shared::require_write_origin(&headers)?;
+    crate::handlers::shared::require_write_origin(&env, &headers)?;
     let params = params_from(&form)?;
     let request = ScopeRequest::from_query(
         &shell.user,

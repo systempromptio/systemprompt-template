@@ -16,6 +16,8 @@
 //! This instance has no marketplace participant tier, so the page is the
 //! console's alone and every write on it is an administrator's.
 
+use crate::env::AdminEnv;
+
 mod access_review;
 mod view;
 
@@ -94,14 +96,15 @@ fn tabs(active: SyncTab, attention: usize) -> Vec<TabLinkView> {
 
 // Why: an unreadable profile or cache is the panel's headline, not a
 // 500 — the rest of the page still renders.
-fn visible_sources() -> (SourcesView, Option<String>) {
-    match build_sources() {
+fn visible_sources(env: &AdminEnv) -> (SourcesView, Option<String>) {
+    match build_sources(env) {
         Ok(s) => (s, None),
         Err(e) => (empty_sources(), Some(e.to_string())),
     }
 }
 
 pub(crate) async fn sync_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -111,11 +114,11 @@ pub(crate) async fn sync_page(
     if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Console access required.".to_owned()).into());
     }
-    let (sources, sources_unreadable) = visible_sources();
+    let (sources, sources_unreadable) = visible_sources(&env);
     let history = list_sync_history(&pool, SyncHistoryScope::All, HISTORY_LIMIT).await?;
     let tab = SyncTab::parse(query.tab.as_deref());
     let access_review = if tab == SyncTab::Access {
-        Some(access_review::access_review(&pool).await?)
+        Some(access_review::access_review(&env, &pool).await?)
     } else {
         None
     };
@@ -146,7 +149,7 @@ pub(crate) async fn sync_page(
         access_review,
         docs_url: DOCS_URL,
         configuration_url: "/admin/configuration",
-        observability_url: crate::handlers::ssr::ssr_observability::PAGE_URL,
+        observability_url: "/admin/system/observability",
         export_zip_url: EXPORT_ZIP_URL,
         import_url: IMPORT_URL,
         composed_hash: sources.composed_hash.as_deref().and_then(HashView::of),

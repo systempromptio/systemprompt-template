@@ -1,6 +1,8 @@
 //! `MANIFEST.yaml`: what an export was taken from, so an import can say
 //! where its archive came from and a reader can tell two exports apart.
 
+use crate::env::AdminEnv;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -53,12 +55,13 @@ impl std::fmt::Debug for ExportedPlane<'_> {
 }
 
 pub async fn build_manifest(
+    env: &AdminEnv,
     pool: &PgPool,
     actor: &str,
     exported: &[ExportedPlane<'_>],
 ) -> AdminResult<ArchiveManifest> {
     // Why: discard-ok: an unreadable profile or cache leaves the hashes blank
-    let sources = build_sources()
+    let sources = build_sources(env)
         .inspect_err(|e| tracing::warn!(error = %e, "sync export: sources unreadable"))
         .ok();
     let mut planes = Vec::with_capacity(exported.len());

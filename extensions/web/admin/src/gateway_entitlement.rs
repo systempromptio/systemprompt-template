@@ -10,15 +10,24 @@
 use sqlx::PgPool;
 use systemprompt::extension::{GatewayDenyReason, GatewayGuardRequest, GatewayRequestGuard};
 use systemprompt::governance::authz::resolver::{ResolveInput, resolve};
-use systemprompt::governance::authz::{Decision, EntityRef};
+use systemprompt::governance::authz::{Decision, EntityRef, SubjectSourceCell};
 use systemprompt::identifiers::{RouteId, UserId};
 use systemprompt::traits::DatabaseHandle;
 
 use crate::authz;
 use crate::repositories::config::gateway_acl;
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct RouteEntitlementGuard;
+#[derive(Debug, Clone)]
+pub struct RouteEntitlementGuard {
+    subjects: SubjectSourceCell,
+}
+
+impl RouteEntitlementGuard {
+    #[must_use]
+    pub const fn new(subjects: SubjectSourceCell) -> Self {
+        Self { subjects }
+    }
+}
 
 #[async_trait::async_trait]
 impl GatewayRequestGuard for RouteEntitlementGuard {
@@ -41,7 +50,7 @@ impl GatewayRequestGuard for RouteEntitlementGuard {
         let pool = database.pool();
         let user_id = UserId::new(request.user_id.to_owned());
         let route_id = RouteId::new(route_id);
-        let decision = resolve_route(pool.as_ref(), &route_id, &user_id)
+        let decision = resolve_route(pool.as_ref(), &self.subjects, &route_id, &user_id)
             .await
             .map_err(|error| {
                 tracing::error!(%error, %user_id, %route_id, "authorization_unavailable");
@@ -67,6 +76,7 @@ impl GatewayRequestGuard for RouteEntitlementGuard {
 
 async fn resolve_route(
     pool: &PgPool,
+    subjects: &SubjectSourceCell,
     route_id: &RouteId,
     user_id: &UserId,
 ) -> Result<Decision, sqlx::Error> {
@@ -77,7 +87,8 @@ async fn resolve_route(
         .await
         .inspect_err(|e| tracing::warn!(error = %e, %route_id, "route rule lookup failed"))?;
     let user_roles = load_roles(pool, user_id).await?;
-    let attributes = authz::subject_attributes_for(pool, user_id).await?;
+    let attributes = authz::subject_attributes_for(subjects, user_id).await?;
+    let dimensions = authz::dimensions(subjects)?;
 
     let entity_ref = EntityRef::GatewayRoute(route_id.clone());
 
@@ -89,7 +100,7 @@ async fn resolve_route(
         default_included: entity.map(|e| e.default_included),
         parents: &[],
         attributes: &attributes,
-        dimensions: authz::dimensions(pool),
+        dimensions: &dimensions,
     }))
 }
 

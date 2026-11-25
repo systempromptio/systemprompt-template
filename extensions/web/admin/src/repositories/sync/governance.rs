@@ -10,6 +10,8 @@
 //! Parsing goes through core's own parser, so nothing the console stages
 //! is something the boot would refuse.
 
+use crate::env::AdminEnv;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
 
@@ -134,9 +136,9 @@ impl SyncPlane for GovernancePlane {
         Some(RUNTIME_NOTE)
     }
 
-    async fn drift(&self, pool: &PgPool) -> AdminResult<PlaneDrift> {
+    async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift> {
         let in_db = usize::try_from(count_chain_policies(pool).await?).unwrap_or(0);
-        let declared = match declared_chain_now() {
+        let declared = match declared_chain_now(env) {
             Ok(d) => d,
             Err(e) => {
                 return Ok(PlaneDrift {
@@ -191,11 +193,12 @@ impl SyncPlane for GovernancePlane {
 
     async fn apply(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        let declared = declared_chain_now()?;
+        let declared = declared_chain_now(env)?;
         let existing = list_chain_policies(pool).await?;
         let mut outcome = ApplyOutcome::default();
         if mode == SyncMode::Overwrite || find_chain_settings(pool).await?.is_none() {
@@ -234,14 +237,14 @@ impl SyncPlane for GovernancePlane {
                 declared_hash: &declared.declared_hash(),
                 mode: actor.recorded_mode(mode),
                 actor: actor.as_str(),
-                from: applied_from(),
+                from: applied_from(env),
             },
         )
         .await?;
         Ok(outcome)
     }
 
-    async fn export(&self, pool: &PgPool) -> AdminResult<Option<Export>> {
+    async fn export(&self, _env: &AdminEnv, pool: &PgPool) -> AdminResult<Option<Export>> {
         let staged = staged_now(pool).await?;
         Ok(Some(Export {
             filename: "config.yaml",

@@ -2,6 +2,8 @@
 //! entity's own page URL, so the "Why?" form and every access link stay on
 //! the page the reader is already looking at.
 
+use crate::env::AdminEnv;
+
 use sqlx::PgPool;
 
 use super::view;
@@ -9,6 +11,7 @@ use crate::handlers::ssr::entity_panel::{EntityAccessView, PanelRequest, build_e
 use crate::types::{ENTITY_PLUGIN, ENTITY_SKILL, UserContext};
 
 pub(crate) async fn panel(
+    env: &AdminEnv,
     pool: &PgPool,
     user_ctx: &UserContext,
     entity: (&str, &str),
@@ -20,6 +23,7 @@ pub(crate) async fn panel(
         _ => view::mcp_url(entity.1),
     };
     build_entity_panel(
+        env,
         pool,
         PanelRequest {
             entity_type: entity.0,

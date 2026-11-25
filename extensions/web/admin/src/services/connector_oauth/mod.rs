@@ -1,6 +1,8 @@
 //! Hosted MCP authorization, with encrypted user-bound grants and locked
 //! refresh.
 
+use crate::env::AdminEnv;
+
 mod account_state;
 pub mod config;
 pub mod discovery;
@@ -28,6 +30,7 @@ pub use report::{VerificationReport, VerificationStep};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt::traits::MemberCipher;
 pub use transport::{authorize, exchange, exchange_with_client, refresh_with_client};
 
 // Why: Debug output must never reveal credentials; serialization is only for
@@ -74,24 +77,21 @@ impl std::fmt::Debug for Grant {
     }
 }
 
-pub fn seal(grant: &Grant) -> AdminResult<EncryptedGrant> {
-    let key = secret_crypto::load_master_key()?;
-    let nonce = secret_crypto::generate_nonce();
+pub fn seal(cipher: &dyn MemberCipher, grant: &Grant) -> AdminResult<EncryptedGrant> {
     let bytes = serde_json::to_vec(grant).map_err(AdminError::internal)?;
     Ok(EncryptedGrant {
-        ciphertext: secret_crypto::encrypt(&key, &nonce, &bytes)?,
-        nonce: nonce.to_vec(),
+        ciphertext: secret_crypto::seal_bytes(cipher, &bytes)?,
+        nonce: Vec::new(),
     })
 }
 
-pub fn open(row: &EncryptedGrant, user: &UserId, provider: &Provider) -> AdminResult<Grant> {
-    let key = secret_crypto::load_master_key()?;
-    let nonce = row
-        .nonce
-        .as_slice()
-        .try_into()
-        .map_err(AdminError::internal)?;
-    let bytes = secret_crypto::decrypt(&key, &nonce, &row.ciphertext)?;
+pub fn open(
+    env: &AdminEnv,
+    row: &EncryptedGrant,
+    user: &UserId,
+    provider: &Provider,
+) -> AdminResult<Grant> {
+    let bytes = secret_crypto::open_bytes(env.cipher()?, &row.ciphertext)?;
     let grant: Grant = serde_json::from_slice(&bytes).map_err(AdminError::internal)?;
     // Why: Bind the encrypted payload as well as the database key to its principal.
     if grant.user != user.as_str() || grant.provider.slug() != provider.slug() {
@@ -99,7 +99,7 @@ pub fn open(row: &EncryptedGrant, user: &UserId, provider: &Provider) -> AdminRe
             "Connector credential owner mismatch".into(),
         ));
     }
-    generic::validate_grant(&grant)?;
+    generic::validate_grant(env, &grant)?;
     Ok(grant)
 }
 
@@ -107,31 +107,34 @@ pub fn open(row: &EncryptedGrant, user: &UserId, provider: &Provider) -> AdminRe
 // lock. One account-locked transaction keeps refresh, generation checks and
 // error-state commits together.
 pub async fn verified_token(
+    env: &AdminEnv,
     pool: &PgPool,
     user: &UserId,
     provider: Provider,
     probe: bool,
 ) -> AdminResult<String> {
     let mut report = VerificationReport::for_provider(provider.slug());
-    resolve_token(pool, user, provider, probe, &mut report).await
+    resolve_token(env, pool, user, provider, probe, &mut report).await
 }
 
 // Why: a probe that fails at a stage is a result, not an error — the page
 // shows which stage. Only a failure before the first stage (no grant, not
 // configured) propagates as an error.
 pub async fn probe_connection(
+    env: &AdminEnv,
     pool: &PgPool,
     user: &UserId,
     provider: Provider,
 ) -> AdminResult<VerificationReport> {
     let mut report = VerificationReport::for_provider(provider.slug());
-    match resolve_token(pool, user, provider, true, &mut report).await {
+    match resolve_token(env, pool, user, provider, true, &mut report).await {
         Err(error) if report.steps.is_empty() => Err(error),
         Ok(_) | Err(_) => Ok(report.finish()),
     }
 }
 
 async fn resolve_token(
+    env: &AdminEnv,
     pool: &PgPool,
     user: &UserId,
     provider: Provider,
@@ -139,7 +142,7 @@ async fn resolve_token(
     report: &mut VerificationReport,
 ) -> AdminResult<String> {
     use crate::repositories::users::connector_accounts as accounts;
-    if !provider.configured() {
+    if !provider.configured(&env.services()) {
         return Err(AdminError::Unavailable("Connector not configured".into()));
     }
     let mut tx = pool.begin().await?;
@@ -160,7 +163,7 @@ async fn resolve_token(
         ));
     }
     let mut grant = match row {
-        Some(row) => match open_or_flag(&mut tx, user, &provider, &row, &mut account).await {
+        Some(row) => match open_or_flag(env, &mut tx, user, &provider, &row, &mut account).await {
             Ok(grant) => grant,
             Err(error) => {
                 tx.commit().await?;
@@ -174,14 +177,14 @@ async fn resolve_token(
         },
     };
     let refresh = grant.auth_method == "oauth" && grant.expires_at <= Utc::now().timestamp() + 120;
-    let result = refresh_and_verify(&mut grant, refresh, probe, report).await;
+    let result = refresh_and_verify(env, &mut grant, refresh, probe, report).await;
     if let Err(error) = result {
-        record_grant_failure(&mut tx, user, &mut account, &grant, &error).await?;
+        record_grant_failure(env, &mut tx, user, &mut account, &grant, &error).await?;
         tx.commit().await?;
         return Err(error);
     }
     if refresh || probe {
-        repo::store(&mut tx, user, provider.slug(), &seal(&grant)?).await?;
+        repo::store(&mut tx, user, provider.slug(), &seal(env.cipher()?, &grant)?).await?;
     }
     if probe {
         apply_verification(&mut account, &grant);
@@ -195,6 +198,7 @@ async fn resolve_token(
 }
 
 async fn refresh_and_verify(
+    env: &AdminEnv,
     grant: &mut Grant,
     refresh: bool,
     verify: bool,
@@ -202,7 +206,7 @@ async fn refresh_and_verify(
 ) -> AdminResult<()> {
     let started = std::time::Instant::now();
     let outcome = if refresh {
-        transport::refresh(grant)
+        transport::refresh(env, grant)
             .await
             .map(|()| "Access token refreshed".to_owned())
     } else {
@@ -211,16 +215,16 @@ async fn refresh_and_verify(
     report.record("token", started, &outcome);
     outcome?;
     if verify {
-        verify::verify_reporting(grant, &transport::client()?, report).await?;
+        verify::verify_reporting(env, grant, &transport::client()?, report).await?;
     }
     Ok(())
 }
 
 // Why: Token-refresh transport seam used by the external integration tests.
 #[doc(hidden)]
-pub async fn refresh_at(grant: &mut Grant, endpoint: &str) -> AdminResult<()> {
+pub async fn refresh_at(env: &AdminEnv, grant: &mut Grant, endpoint: &str) -> AdminResult<()> {
     let previous = std::mem::replace(&mut grant.token_endpoint, endpoint.to_owned());
-    let result = transport::refresh(grant).await;
+    let result = transport::refresh(env, grant).await;
     grant.token_endpoint = previous;
     result
 }

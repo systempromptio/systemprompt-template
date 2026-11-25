@@ -11,6 +11,8 @@
 //! group's band on its Access tab, a person's overrides on theirs. Reading
 //! here is the CONSOLE tier so a project manager can audit.
 
+use crate::env::AdminEnv;
+
 mod audience;
 mod audience_filter;
 mod audience_focus;
@@ -100,8 +102,8 @@ struct TabBody {
 // Why: labels are a courtesy, not a gate — an unreadable gateway file still
 // leaves every route addressable by id, and is logged rather than 500ing
 // the audit page.
-fn route_labels() -> RouteLabels {
-    get_route_labels_from_services()
+fn route_labels(env: &AdminEnv) -> RouteLabels {
+    get_route_labels_from_services(env)
         .inspect_err(|e| tracing::warn!(error = %e, "access-control: route labels unavailable"))
         .unwrap_or_default()
 }
@@ -109,8 +111,11 @@ fn route_labels() -> RouteLabels {
 // Why: the file failing to load is reported on the page, not as a 500.
 // The rules that ARE enforced are still worth showing while the operator
 // fixes the declaration.
-async fn declared_drift(pool: &PgPool) -> (Option<DriftReport>, usize, Option<String>) {
-    match declared_now().await {
+async fn declared_drift(
+    env: &AdminEnv,
+    pool: &PgPool,
+) -> (Option<DriftReport>, usize, Option<String>) {
+    match declared_now(env).await {
         Ok(declared) => match drift_now(pool, &declared).await {
             Ok(drift) => (Some(drift), declared.rule_count(), None),
             Err(e) => (None, declared.rule_count(), Some(e.to_string())),
@@ -120,6 +125,7 @@ async fn declared_drift(pool: &PgPool) -> (Option<DriftReport>, usize, Option<St
 }
 
 async fn tab_body(
+    env: &AdminEnv,
     pool: &PgPool,
     services_path: &std::path::Path,
     tab: AcTab,
@@ -131,8 +137,8 @@ async fn tab_body(
         AcTab::Audience => {
             let audience = audience::audience(pool).await;
             body.audiences = audience.columns.len();
-            let sections = build_matrix_sections(services_path);
-            body.audience = audience::grid(pool, audience, &sections, query, ledger).await;
+            let sections = build_matrix_sections(env, services_path);
+            body.audience = audience::grid(env, pool, audience, &sections, query, ledger).await;
         },
         AcTab::Person => {
             body.person = Some(person::build(pool, query.q.as_deref()).await);
@@ -145,6 +151,7 @@ async fn tab_body(
 }
 
 pub(crate) async fn access_control_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -167,7 +174,7 @@ pub(crate) async fn access_control_page(
         let target = format!("/admin/users/{}?tab=access", urlencoding::encode(user));
         return Ok(Redirect::to(&target).into_response());
     }
-    let services_path = shared::get_services_path()?;
+    let services_path = shared::get_services_path(&env)?;
 
     let stats = data::load_stats(&pool).await;
     let ledger_rows = list_ledger_rules(&pool)
@@ -176,9 +183,9 @@ pub(crate) async fn access_control_page(
         .unwrap_or_default();
     let open_entities = count_open_entities(&pool).await?;
 
-    let (drift, declared_count, declared_unreadable) = declared_drift(&pool).await;
-    let body = tab_body(&pool, &services_path, tab, &query, &ledger_rows).await?;
-    let labels = route_labels();
+    let (drift, declared_count, declared_unreadable) = declared_drift(&env, &pool).await;
+    let body = tab_body(&env, &pool, &services_path, tab, &query, &ledger_rows).await?;
+    let labels = route_labels(&env);
 
     let capped = i64::try_from(ledger_rows.len()).unwrap_or(i64::MAX) >= RULE_CAP;
     let entities = entities::build(

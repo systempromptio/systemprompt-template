@@ -9,6 +9,8 @@
 //! and every export leaves an activity row, awaited inline so the audit trail
 //! exists by the time the response does.
 
+use crate::env::AdminEnv;
+
 mod archive;
 mod refresh;
 
@@ -111,8 +113,12 @@ fn plane_or_404(id: &str) -> AdminResult<Box<dyn SyncPlane>> {
     find_plane(id).ok_or_else(|| AdminError::NotFound(format!("no sync plane '{id}'")))
 }
 
-pub(crate) async fn plane_status(pool: &PgPool, plane: &dyn SyncPlane) -> AdminResult<PlaneStatus> {
-    let drift = plane.drift(pool).await?;
+pub(crate) async fn plane_status(
+    env: &AdminEnv,
+    pool: &PgPool,
+    plane: &dyn SyncPlane,
+) -> AdminResult<PlaneStatus> {
+    let drift = plane.drift(env, pool).await?;
     let state = find_sync_state(pool, plane.id()).await?;
     Ok(PlaneStatus {
         id: plane.id(),
@@ -125,11 +131,14 @@ pub(crate) async fn plane_status(pool: &PgPool, plane: &dyn SyncPlane) -> AdminR
     })
 }
 
-pub(crate) async fn status_handler(State(pool): State<Arc<PgPool>>) -> AdminResult<Response> {
-    let sources = build_sources()?;
+pub(crate) async fn status_handler(
+    Extension(env): Extension<AdminEnv>,
+    State(pool): State<Arc<PgPool>>,
+) -> AdminResult<Response> {
+    let sources = build_sources(&env)?;
     let mut out = Vec::new();
     for plane in planes() {
-        out.push(plane_status(&pool, plane.as_ref()).await?);
+        out.push(plane_status(&env, &pool, plane.as_ref()).await?);
     }
     Ok(Json(StatusResponse {
         sources,
@@ -139,14 +148,16 @@ pub(crate) async fn status_handler(State(pool): State<Arc<PgPool>>) -> AdminResu
 }
 
 pub(crate) async fn drift_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Path(plane): Path<String>,
 ) -> AdminResult<Response> {
     let plane = plane_or_404(&plane)?;
-    Ok(Json(plane.drift(&pool).await?).into_response())
+    Ok(Json(plane.drift(&env, &pool).await?).into_response())
 }
 
 pub(crate) async fn apply_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(plane): Path<String>,
@@ -156,7 +167,13 @@ pub(crate) async fn apply_handler(
     let scope = authorise_scope(&user_ctx, &body.entities)?;
     let reason = required_reason(body.reason.as_deref())?;
     let outcome = plane
-        .apply_scoped(&pool, body.mode, Actor::User(&user_ctx.user_id), scope)
+        .apply_scoped(
+            &env,
+            &pool,
+            body.mode,
+            Actor::User(&user_ctx.user_id),
+            scope,
+        )
         .await?;
     activity::record(
         &pool,
@@ -173,7 +190,7 @@ pub(crate) async fn apply_handler(
         ),
     )
     .await;
-    let drift_after = plane.drift(&pool).await?;
+    let drift_after = plane.drift(&env, &pool).await?;
     Ok(Json(ApplyResponse {
         plane: plane.id(),
         mode: body.mode,
@@ -206,12 +223,13 @@ pub(crate) async fn keep_handler(
 }
 
 pub(crate) async fn export_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(plane): Path<String>,
 ) -> AdminResult<Response> {
     let plane = plane_or_404(&plane)?;
-    let Some(export) = plane.export(&pool).await? else {
+    let Some(export) = plane.export(&env, &pool).await? else {
         return Err(AdminError::NotFound(format!(
             "plane '{}' has no file form to export",
             plane.id()

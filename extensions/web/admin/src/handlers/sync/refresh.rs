@@ -17,7 +17,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use systemprompt::api::routes::admin::services::ServicesRefresh;
+use systemprompt::api::ServicesRefresh;
 
 use crate::activity::{self, NewActivity};
 use crate::error::{AdminError, AdminResult};

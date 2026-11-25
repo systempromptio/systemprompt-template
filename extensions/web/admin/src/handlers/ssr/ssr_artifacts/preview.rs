@@ -7,6 +7,8 @@
 //! page is served for same-origin framing only and with a sandboxing CSP,
 //! because an artifact body is third-party content.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
@@ -14,9 +16,9 @@ use axum::http::{HeaderValue, header};
 use axum::response::{Html, IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::extension::FrameOptionsOverride;
-use systemprompt::identifiers::{ArtifactId, ContextId};
+use systemprompt::identifiers::{ArtifactId, ContextId, TaskId};
 use systemprompt::manifest::profile::FrameOptions;
-use systemprompt::mcp::services::ui_renderer::{RenderTarget, artifact_ui_resource};
+use systemprompt::models::a2a::{Artifact, ArtifactMetadata, Part};
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::page::Page;
@@ -24,6 +26,7 @@ use crate::repositories::analytics::artifacts::find_artifact;
 
 pub(crate) async fn artifact_preview(
     shell: Page,
+    axum::Extension(env): axum::Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Path(artifact_id): Path<ArtifactId>,
 ) -> AdminHtmlResult<Response> {
@@ -42,16 +45,26 @@ pub(crate) async fn artifact_preview(
         .context_id
         .clone()
         .unwrap_or_else(ContextId::generate);
-    let target = RenderTarget {
-        artifact_id: &artifact_id,
-        artifact_type: &detail.artifact_type,
-        payload: body,
-        context_id,
-        title: detail.artifact_title.clone(),
-    };
-    let html = match artifact_ui_resource(&target) {
-        Ok(resource) => resource.html,
-        Err(error) => {
+    let rendered = env.artifact_ui().and_then(|renderer| {
+        let data = body.as_object()?.clone();
+        let artifact = Artifact {
+            id: artifact_id.clone(),
+            title: detail.artifact_title.clone(),
+            description: None,
+            parts: vec![Part::data(serde_json::Value::Object(data))],
+            extensions: Vec::new(),
+            metadata: ArtifactMetadata::new(
+                detail.artifact_type.clone(),
+                context_id,
+                TaskId::generate(),
+            ),
+        };
+        Some(renderer.render(&artifact))
+    });
+    let html = match rendered {
+        Some(Ok(resource)) => resource.html,
+        None => json_preview(body),
+        Some(Err(error)) => {
             tracing::debug!(%error, artifact_id = %artifact_id, "artifact has no UI renderer; previewing as JSON");
             json_preview(body)
         },

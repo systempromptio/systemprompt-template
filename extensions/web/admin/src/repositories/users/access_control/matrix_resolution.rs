@@ -70,6 +70,11 @@ pub(super) fn resolve_effective_with(
             default_included: Some(cell.default_included),
             attributes: cell.attributes,
             dimensions: cell.dimensions,
+            facts: systemprompt::governance::authz::DecisionFacts {
+                model: None,
+                provider: None,
+                folder_ancestors: &[],
+            },
         },
     );
 

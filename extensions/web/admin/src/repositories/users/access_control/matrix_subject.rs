@@ -12,6 +12,8 @@
 //! account: `UserId` values are emails or directory identifiers, and `group:`
 //! is not a legal prefix for either.
 
+use crate::env::AdminEnv;
+
 use sqlx::PgPool;
 use systemprompt::governance::authz::{RuleType, SubjectAttributes};
 use systemprompt::identifiers::UserId;
@@ -65,24 +67,25 @@ pub fn role_subject(role: &str) -> MatrixSubject {
 // Why: The real subject behind a signed-in account: its own id, roles, and
 // every registered dimension's values gathered from the database.
 pub async fn user_subject(
-    pool: &PgPool,
+    env: &AdminEnv,
     user_id: &UserId,
     roles: Vec<String>,
 ) -> Result<MatrixSubject, sqlx::Error> {
     Ok(MatrixSubject {
         id: user_id.clone(),
         roles,
-        attributes: subject_attributes_for(pool, user_id).await?,
+        attributes: subject_attributes_for(env.subjects(), user_id).await?,
     })
 }
 
 // Why: Resolve one subject against the supplied entity sections.
 pub async fn resolve_subject_matrix(
+    env: &AdminEnv,
     pool: &PgPool,
     subject: &MatrixSubject,
     sections: Vec<SectionInput>,
 ) -> Result<Vec<MatrixSection>, sqlx::Error> {
-    resolve_sections_for(pool, subject, sections).await
+    resolve_sections_for(env, pool, subject, sections).await
 }
 
 // Why: Resolve many subjects against the same sections, reading the rule table
@@ -90,14 +93,15 @@ pub async fn resolve_subject_matrix(
 // the same question of every group and every role, so the single-subject call
 // in a loop would re-read both tables for each row.
 pub async fn resolve_subject_matrices(
+    env: &AdminEnv,
     pool: &PgPool,
     subjects: &[MatrixSubject],
     sections: &[SectionInput],
 ) -> Result<Vec<Vec<MatrixSection>>, sqlx::Error> {
-    let inputs = resolution_inputs(pool).await?;
-    let dimensions = crate::authz::dimensions(pool);
+    let inputs = resolution_inputs(env, pool).await?;
+    let dimensions = crate::authz::dimensions(env.subjects())?;
     Ok(subjects
         .iter()
-        .map(|subject| sections_with(&inputs, dimensions, subject, sections.to_vec()))
+        .map(|subject| sections_with(&inputs, &dimensions, subject, sections.to_vec()))
         .collect())
 }

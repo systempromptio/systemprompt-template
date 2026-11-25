@@ -5,13 +5,12 @@
 //! block, and the agents block. Falls back to empty defaults on failure so a
 //! missing section renders as an empty card rather than a page-level error.
 
-use std::path::PathBuf;
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::config::ProfileBootstrap;
 use systemprompt::identifiers::{TenantId, UserId};
-use systemprompt::manifest::Config;
 use uuid::Uuid;
 
 use crate::repositories::bridge::{BridgeIdentityRow, find_bridge_user};
@@ -116,44 +115,43 @@ pub(super) fn build_usage(sections: UsageSections) -> ProfileUsage {
     }
 }
 
-pub(crate) fn read_config_strings() -> (Option<String>, Option<String>) {
-    Config::get().map_or((None, None), |c| {
-        (
-            Some(c.jwt_issuer.clone()),
-            Some(c.api_external_url.trim_end_matches('/').to_owned()),
-        )
-    })
+pub(crate) fn read_config_strings(env: &AdminEnv) -> (Option<String>, Option<String>) {
+    (
+        Some(env.config().jwt_issuer.clone()),
+        Some(
+            env.config()
+                .api_external_url
+                .trim_end_matches('/')
+                .to_owned(),
+        ),
+    )
 }
 
-pub(super) fn read_tenant_id() -> Option<TenantId> {
-    let bootstrap = ProfileBootstrap::get().ok()?;
-    bootstrap
-        .cloud
-        .as_ref()
-        .and_then(|cloud| cloud.tenant_id.clone())
+pub(super) fn read_tenant_id(env: &AdminEnv) -> Option<TenantId> {
+    env.profile().cloud_tenant_id.clone()
 }
 
-pub(super) fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
-    let profile = ProfileBootstrap::get().ok()?;
-    let services = systemprompt::loader::ServicesBootstrap::get().ok()?;
+pub(super) fn build_bridge_profile_block(env: &AdminEnv) -> Option<BridgeProfileBlock> {
+    let services = env.services();
     let gateway = services.gateway_config().filter(|g| g.enabled)?;
 
-    let base = profile.server.api_external_url.trim_end_matches('/');
+    let base = env.config().api_external_url.trim_end_matches('/');
     let prefix = gateway.inference_path_prefix.trim_end_matches('/');
     let inference_gateway_base_url = format!("{base}{prefix}");
 
-    let models: Vec<String> = services
-        .providers
-        .advertised_model_ids(&[])
-        .into_iter()
+    let models: Vec<String> = env
+        .services_view()
+        .catalog()
+        .advertised_models(None)
+        .map(|model| model.id.as_str().to_owned())
         .collect::<std::collections::BTreeSet<_>>()
         .into_iter()
         .collect();
 
-    let organization_uuid = profile
-        .cloud
+    let organization_uuid = env
+        .profile()
+        .cloud_tenant_id
         .as_ref()
-        .and_then(|cloud| cloud.tenant_id.as_ref())
         .map(canonicalize_org_uuid);
 
     let models_count = models.len();
@@ -175,11 +173,8 @@ fn canonicalize_org_uuid(tenant_id: &TenantId) -> String {
     Uuid::new_v5(&Uuid::NAMESPACE_OID, s.as_bytes()).to_string()
 }
 
-pub(super) fn build_agents_block() -> AgentsBlock {
-    let services_path = match ProfileBootstrap::get() {
-        Ok(p) => PathBuf::from(&p.paths.services),
-        Err(_) => return AgentsBlock::default(),
-    };
+pub(super) fn build_agents_block(env: &AdminEnv) -> AgentsBlock {
+    let services_path = env.baked_services_root();
 
     let agents = match crate::repositories::config::agents::list_configured_agents(&services_path) {
         Ok(a) => a,
@@ -219,11 +214,12 @@ pub(super) fn build_agents_block() -> AgentsBlock {
 // rather than reading the YAML audience. A user whose group grants a
 // marketplace and whose per-user rule denies it must see it absent here.
 pub(super) async fn build_marketplaces(
+    env: &AdminEnv,
     pool: &PgPool,
     user_id: &UserId,
     roles: Vec<String>,
 ) -> crate::error::AdminResult<Vec<ProfileMarketplaceView>> {
-    let Ok(services_path) = crate::handlers::shared::get_services_path() else {
+    let Ok(services_path) = crate::handlers::shared::get_services_path(env) else {
         return Ok(Vec::new());
     };
     let manifests =
@@ -242,9 +238,9 @@ pub(super) async fn build_marketplaces(
     let sections = vec![("marketplace".to_owned(), "Marketplaces".to_owned(), rows)];
 
     let subject =
-        crate::repositories::users::access_control::user_subject(pool, user_id, roles).await?;
+        crate::repositories::users::access_control::user_subject(env, user_id, roles).await?;
     let resolved = crate::repositories::users::access_control::resolve_subject_matrix(
-        pool, &subject, sections,
+        env, pool, &subject, sections,
     )
     .await?;
 

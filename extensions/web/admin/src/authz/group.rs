@@ -3,10 +3,9 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt::governance::authz::{
-    AuthzError, RuleType, SubjectAttributeProvider, SubjectDimension,
-};
+use systemprompt::governance::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
 use systemprompt::identifiers::UserId;
+use systemprompt::traits::authz::SubjectAttributeError;
 use systemprompt_web_shared::GroupId;
 
 use crate::authz::primary::lead_with_primary;
@@ -59,16 +58,18 @@ impl SubjectAttributeProvider for GroupAttributeProvider {
 
     // Why: the primary group leads so the quota bucket and the cost
     // attribution key are the same group — see `authz::primary`.
-    async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, AuthzError> {
+    async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, SubjectAttributeError> {
         let ids: Vec<String> =
             crate::repositories::groups::members::list_group_ids_for_user(&self.pool, user_id)
-                .await?
+                .await
+                .map_err(|e| SubjectAttributeError::Lookup(Box::new(e)))?
                 .into_iter()
                 .map(|id| id.as_str().to_owned())
                 .collect();
         let primary =
             crate::repositories::scope::defaults::find_scope_defaults(&self.pool, user_id)
-                .await?
+                .await
+                .map_err(|e| SubjectAttributeError::Lookup(Box::new(e)))?
                 .and_then(|d| d.primary_group_id);
         Ok(lead_with_primary(
             primary.as_ref().map(GroupId::as_str),

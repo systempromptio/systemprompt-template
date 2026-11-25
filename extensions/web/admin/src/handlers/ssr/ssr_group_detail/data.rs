@@ -4,6 +4,8 @@
 //! exception — they are three cheap reads that must be right on every tab, or
 //! the strip would advertise an empty tab as full.
 
+use crate::env::AdminEnv;
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
@@ -216,14 +218,18 @@ pub(super) async fn load_mappings(pool: &PgPool, group_id: &GroupId) -> Vec<Grou
 // Why: The Access tab: every catalog entity resolved for a subject holding only
 // this group's membership, plus the group's own rules so the toggles can
 // show `inherit` where no rule of its own exists.
-pub(super) async fn load_access(pool: &PgPool, group_id: &GroupId) -> Vec<AccessSectionView> {
-    let Ok(services_path) = crate::handlers::shared::get_services_path() else {
+pub(super) async fn load_access(
+    env: &AdminEnv,
+    pool: &PgPool,
+    group_id: &GroupId,
+) -> Vec<AccessSectionView> {
+    let Ok(services_path) = crate::handlers::shared::get_services_path(env) else {
         tracing::warn!("services path unavailable; group access matrix skipped");
         return Vec::new();
     };
-    let mut sections = crate::handlers::access_control::build_matrix_sections(&services_path);
+    let mut sections = crate::handlers::access_control::build_matrix_sections(env, &services_path);
     if !sections.iter().any(|(kind, _, _)| kind == "marketplace") {
-        let rows: Vec<(String, String, Option<String>)> = load_marketplaces()
+        let rows: Vec<(String, String, Option<String>)> = load_marketplaces(env)
             .into_iter()
             .map(|m| (m.id.to_string(), m.name, Some(m.description)))
             .collect();
@@ -235,7 +241,7 @@ pub(super) async fn load_access(pool: &PgPool, group_id: &GroupId) -> Vec<Access
 
     let subject = repositories::users::access_control::group_subject(group_id.as_str());
     let resolved =
-        repositories::users::access_control::resolve_subject_matrix(pool, &subject, sections)
+        repositories::users::access_control::resolve_subject_matrix(env, pool, &subject, sections)
             .await
             .inspect_err(|e| tracing::warn!(error = %e, "group access matrix failed"))
             .unwrap_or_default();

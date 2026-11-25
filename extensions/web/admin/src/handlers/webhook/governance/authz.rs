@@ -12,6 +12,8 @@
 //! dimension this extension declares in [`crate::authz`] — today that means a
 //! `group` rule binds here, not just in the access matrix.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::Json;
@@ -28,7 +30,10 @@ use systemprompt::governance::authz::{
 };
 
 use crate::authz::{dimensions, subject_attributes_for};
-use systemprompt::governance::authz::{GovernanceDecisionRecord, insert_governance_decision};
+use axum::Extension;
+use systemprompt::governance::authz::{
+    DecisionFacts, GovernanceDecisionRecord, insert_governance_decision,
+};
 
 const POLICY_NAME: &str = "authz";
 
@@ -55,12 +60,12 @@ async fn audit_unavailable(pool: &PgPool, req: &AuthzRequest) {
     audit_decision(pool, req, &[], None, &decision).await;
 }
 
-async fn parent_index(repo: &AccessControlRepository) -> Result<ParentChainIndex, Response> {
-    let services = systemprompt::loader::ServicesBootstrap::get().map_err(|error| {
-        tracing::error!(%error, "authorization_unavailable: services");
-        unavailable()
-    })?;
-    ParentChainIndex::load(repo, Arc::new(ChainSources::from_services(services)))
+async fn parent_index(
+    env: &AdminEnv,
+    repo: &AccessControlRepository,
+) -> Result<ParentChainIndex, Response> {
+    let services = env.services();
+    ParentChainIndex::load(repo, Arc::new(ChainSources::from_services(&services)))
         .await
         .map_err(|error| {
             tracing::error!(%error, "authorization_unavailable: parent policies");
@@ -172,6 +177,7 @@ async fn audit_decision(
 
 pub(crate) async fn govern_authz(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Json(mut req): Json<AuthzRequest>,
 ) -> Response {
     // Why: lint-ok: http-error — a hook answers 200 with a decision; an error
@@ -186,7 +192,7 @@ pub(crate) async fn govern_authz(
         },
     };
 
-    let chains = match parent_index(&repo).await {
+    let chains = match parent_index(&env, &repo).await {
         Ok(chains) => chains,
         Err(response) => {
             audit_unavailable(&pool, &req).await;
@@ -197,7 +203,15 @@ pub(crate) async fn govern_authz(
     // Why: resolved by lookup rather than read off the request, so a group
     // change or a revocation binds on the next call instead of waiting for the
     // caller's token to refresh.
-    let attributes = match subject_attributes_for(&pool, &req.user_id).await {
+    let dimensions = match dimensions(env.subjects()) {
+        Ok(dimensions) => dimensions,
+        Err(error) => {
+            tracing::error!(%error, trace_id = %req.trace_id, "authorization_unavailable: dimensions");
+            audit_unavailable(&pool, &req).await;
+            return unavailable();
+        },
+    };
+    let attributes = match subject_attributes_for(env.subjects(), &req.user_id).await {
         Ok(attributes) => attributes,
         Err(error) => {
             tracing::error!(%error, user_id = %req.user_id, trace_id = %req.trace_id, "authorization_unavailable: attributes");
@@ -228,7 +242,12 @@ pub(crate) async fn govern_authz(
             user_roles: &req.roles,
             default_included: entity.as_ref().map(|e| e.default_included),
             attributes: &attributes,
-            dimensions: dimensions(&pool),
+            dimensions: &dimensions,
+            facts: DecisionFacts {
+                model: None,
+                provider: None,
+                folder_ancestors: &[],
+            },
         },
     );
 

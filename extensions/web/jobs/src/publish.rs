@@ -3,18 +3,22 @@
 //! Order is load-bearing — bundles must exist before assets are copied, and
 //! content must be ingested before it can be prerendered. A failing sub-job is
 //! recorded and the pipeline continues, so one broken stage does not block the
-//! rest.
+//! rest. The sitemap and RSS feed are not generated: core's generators read
+//! the full runtime configuration, which no job context holds.
 
 use std::sync::Arc;
 
 use systemprompt::config::AppPaths;
+use systemprompt::content::ContentHooks;
 use systemprompt::database::DbPool;
-use systemprompt::generator::{generate_feed, organize_dist_assets, prerender_pages};
+use systemprompt::generator::{
+    PrerenderEnv, PrerenderSettings, organize_dist_assets, prerender_content, prerender_pages,
+};
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use super::{
-    BundleAdminCssJob, ContentIngestionJob, ContentPrerenderJob, CopyExtensionAssetsJob,
-    LlmsTxtGenerationJob, RobotsTxtGenerationJob, SitemapGenerationJob,
+    BundleAdminCssJob, ContentIngestionJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob,
+    RobotsTxtGenerationJob,
 };
 use crate::error::JobError;
 
@@ -90,45 +94,43 @@ impl PublishPipelineJob {
     }
 
     async fn run_prerender(&self, ctx: &JobContext, stats: &mut PipelineStats) {
-        match ContentPrerenderJob.execute(ctx).await {
-            Ok(_result) => {
-                tracing::debug!("Content prerender completed");
-                stats.record_success();
-            },
-            Err(e) => {
-                tracing::error!(error = %e, "Content prerender failed");
-                stats.record_failure();
-            },
+        let outcome = async {
+            let db_pool = Arc::clone(ctx.get::<DbPool>()?);
+            let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
+            let settings = ctx.get::<PrerenderSettings>()?;
+            let hooks = Arc::clone(ctx.get::<Arc<ContentHooks>>()?);
+            let content_repo = systemprompt::content::ContentRepository::new(&db_pool);
+            let env = PrerenderEnv {
+                settings,
+                paths,
+                hooks: &hooks,
+                state: ctx.dependencies(),
+            };
+            prerender_content(Arc::clone(&db_pool), content_repo, env)
+                .await
+                .map_err(|e| JobError::other(e.to_string()))?;
+            let content_repo = systemprompt::content::ContentRepository::new(&db_pool);
+            let env = PrerenderEnv {
+                settings,
+                paths,
+                hooks: &hooks,
+                state: ctx.dependencies(),
+            };
+            prerender_pages(db_pool, content_repo, env)
+                .await
+                .map_err(|e| JobError::other(e.to_string()))
         }
-    }
-
-    async fn run_page_prerender(
-        &self,
-        paths: &AppPaths,
-        db_pool: &DbPool,
-        stats: &mut PipelineStats,
-    ) {
-        let content_repo = systemprompt::content::ContentRepository::new(db_pool);
-        match prerender_pages(Arc::clone(db_pool), content_repo, paths).await {
+        .await;
+        match outcome {
             Ok(results) => {
-                tracing::debug!(page_count = results.len(), "Page prerendering completed");
+                tracing::debug!(
+                    page_count = results.len(),
+                    "Content and page prerender completed"
+                );
                 stats.record_success();
             },
             Err(e) => {
-                tracing::error!(error = %e, "Page prerendering failed");
-                stats.record_failure();
-            },
-        }
-    }
-
-    async fn run_sitemap(&self, ctx: &JobContext, stats: &mut PipelineStats) {
-        match SitemapGenerationJob.execute(ctx).await {
-            Ok(_result) => {
-                tracing::debug!("Sitemap generation completed");
-                stats.record_success();
-            },
-            Err(e) => {
-                tracing::error!(error = %e, "Sitemap generation failed");
+                tracing::error!(error = %e, "Prerender failed");
                 stats.record_failure();
             },
         }
@@ -147,24 +149,6 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_feed(&self, paths: &AppPaths, db_pool: &DbPool, stats: &mut PipelineStats) {
-        let content_repo = systemprompt::content::ContentRepository::new(db_pool);
-        match generate_feed(content_repo, paths).await {
-            Ok(()) => {
-                tracing::debug!("RSS feed generation completed");
-                stats.record_success();
-            },
-            Err(e) if e.to_string().contains("No RSS feeds generated") => {
-                tracing::debug!("RSS feed generation skipped: no RssFeedProvider registered");
-                stats.record_success();
-            },
-            Err(e) => {
-                tracing::error!(error = %e, "RSS feed generation failed");
-                stats.record_failure();
-            },
-        }
-    }
-
     async fn run_robots_txt(&self, ctx: &JobContext, stats: &mut PipelineStats) {
         match RobotsTxtGenerationJob.execute(ctx).await {
             Ok(_result) => {
@@ -178,17 +162,9 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_derived_files(
-        &self,
-        ctx: &JobContext,
-        paths: &AppPaths,
-        db_pool: &DbPool,
-        stats: &mut PipelineStats,
-    ) {
-        self.run_sitemap(ctx, stats).await;
+    async fn run_derived_files(&self, ctx: &JobContext, stats: &mut PipelineStats) {
         self.run_llms_txt(ctx, stats).await;
         self.run_robots_txt(ctx, stats).await;
-        self.run_feed(paths, db_pool, stats).await;
     }
 
     async fn run_asset_organization(&self, paths: &AppPaths, stats: &mut PipelineStats) {
@@ -217,7 +193,7 @@ impl Job for PublishPipelineJob {
     }
 
     fn description(&self) -> &'static str {
-        "Full content publishing pipeline: ingestion, assets, prerender, pages, sitemap, robots.txt, RSS, llms.txt"
+        "Content publishing pipeline: ingestion, assets, prerender, pages, robots.txt, llms.txt"
     }
 
     fn schedule(&self) -> &'static str {
@@ -235,7 +211,6 @@ impl PublishPipelineJob {
     async fn execute_inner(&self, ctx: &JobContext) -> Result<JobResult, JobError> {
         let start_time = std::time::Instant::now();
 
-        let db_pool = ctx.get::<DbPool>()?;
         let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
 
         tracing::info!(actor = %ctx.actor().user_id.as_str(), "Publish pipeline started");
@@ -246,9 +221,7 @@ impl PublishPipelineJob {
         self.run_bundle_admin_css(paths, &mut stats).await;
         self.run_asset_copy(paths, &mut stats).await;
         self.run_prerender(ctx, &mut stats).await;
-        self.run_page_prerender(paths, db_pool, &mut stats).await;
-        self.run_derived_files(ctx, paths, db_pool, &mut stats)
-            .await;
+        self.run_derived_files(ctx, &mut stats).await;
         stats.record_success();
         self.run_asset_organization(paths, &mut stats).await;
 

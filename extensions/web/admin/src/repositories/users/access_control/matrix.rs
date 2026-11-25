@@ -9,6 +9,8 @@
 //! `MatrixSource::layer` names which band decided, mapped back from the
 //! resolver's `MatchedBy` / `DenyReason`.
 
+use crate::env::AdminEnv;
+
 use std::collections::HashMap;
 
 use super::matrix_resolution::{MatrixCell, resolve_effective_with};
@@ -66,14 +68,16 @@ pub struct MatrixSource {
 pub type SectionInput = (String, String, Vec<(String, String, Option<String>)>);
 
 pub async fn filter_catalog_for_user(
+    env: &AdminEnv,
     pool: &PgPool,
     user_id: &UserId,
     sections_in: Vec<SectionInput>,
 ) -> Result<Option<UserMatrix>, sqlx::Error> {
-    resolve_user_matrix(pool, user_id, sections_in).await
+    resolve_user_matrix(env, pool, user_id, sections_in).await
 }
 
 pub async fn resolve_user_matrix(
+    env: &AdminEnv,
     pool: &PgPool,
     user_id: &UserId,
     sections_in: Vec<SectionInput>,
@@ -83,8 +87,8 @@ pub async fn resolve_user_matrix(
     };
     // Why: the same lookup the enforcement webhook performs, so the matrix and
     // the decision see identical subject values.
-    let subject = user_subject(pool, user_id, user.roles.clone()).await?;
-    let sections = resolve_sections_for(pool, &subject, sections_in).await?;
+    let subject = user_subject(env, user_id, user.roles.clone()).await?;
+    let sections = resolve_sections_for(env, pool, &subject, sections_in).await?;
     Ok(Some(UserMatrix { user, sections }))
 }
 
@@ -92,6 +96,7 @@ pub async fn resolve_user_matrix(
 // role. The subject abstraction is what lets the audience matrix ask the
 // question of a group without inventing a second resolver.
 pub(super) async fn resolve_sections_for(
+    env: &AdminEnv,
     pool: &PgPool,
     subject: &MatrixSubject,
     sections_in: Vec<SectionInput>,
@@ -99,13 +104,9 @@ pub(super) async fn resolve_sections_for(
     if sections_in.is_empty() {
         return Ok(Vec::new());
     }
-    let inputs = resolution_inputs(pool).await?;
-    Ok(sections_with(
-        &inputs,
-        dimensions(pool),
-        subject,
-        sections_in,
-    ))
+    let inputs = resolution_inputs(env, pool).await?;
+    let dimensions = dimensions(env.subjects())?;
+    Ok(sections_with(&inputs, &dimensions, subject, sections_in))
 }
 
 // Why: The rule set and entity defaults every cell resolves against. Loaded
@@ -118,16 +119,18 @@ pub(super) struct ResolutionInputs {
     pub(super) chains: systemprompt::governance::authz::ParentChainIndex,
 }
 
-pub(super) async fn resolution_inputs(pool: &PgPool) -> Result<ResolutionInputs, sqlx::Error> {
+pub(super) async fn resolution_inputs(
+    env: &AdminEnv,
+    pool: &PgPool,
+) -> Result<ResolutionInputs, sqlx::Error> {
     use systemprompt::governance::authz::{
         AccessControlRepository, ChainSources, ParentChainIndex,
     };
-    let services = systemprompt::loader::ServicesBootstrap::get()
-        .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+    let services = env.services();
     let repo = AccessControlRepository::from_pool(std::sync::Arc::new(pool.clone()));
     let chains = ParentChainIndex::load(
         &repo,
-        std::sync::Arc::new(ChainSources::from_services(services)),
+        std::sync::Arc::new(ChainSources::from_services(&services)),
     )
     .await
     .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;

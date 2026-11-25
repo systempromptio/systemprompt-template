@@ -14,6 +14,8 @@
 //! `pricing`/`when`/`requires` blocks the form does not render are carried
 //! through untouched. The page never writes YAML itself.
 
+use crate::env::AdminEnv;
+
 mod models;
 mod route_detail;
 mod rows;
@@ -129,6 +131,7 @@ fn console_only(user_ctx: &UserContext) -> AdminHtmlResult<()> {
 }
 
 pub(crate) async fn gateway_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -137,17 +140,17 @@ pub(crate) async fn gateway_page(
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
 
-    let (config, load_error) = match super::super::gateway_config_view(&pool).await {
+    let (config, load_error) = match super::super::gateway_config_view(&env, &pool).await {
         Ok(config) => (config, String::new()),
         Err(e) => (GatewayConfigView::default(), e.to_string()),
     };
     let (resolved, catalog_error) =
-        match repositories::config::gateway::dispatchable_routes_from_services() {
+        match repositories::config::gateway::dispatchable_routes_from_services(&env) {
             Ok(routes) => (routes, String::new()),
             Err(e) => (Vec::new(), e.to_string()),
         };
 
-    let labels: RouteLabels = get_route_labels_from_services()
+    let labels: RouteLabels = get_route_labels_from_services(&env)
         .inspect_err(|e| tracing::warn!(error = %e, "gateway: route labels unavailable"))
         .unwrap_or_default();
     let surfaces = load_surfaces(&labels);

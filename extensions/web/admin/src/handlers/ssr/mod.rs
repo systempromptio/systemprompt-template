@@ -3,6 +3,8 @@
 //! Each module owns one page: it builds a typed template context and renders a
 //! `.hbs` template from `storage/files/admin/templates/` at request time.
 
+use crate::env::AdminEnv;
+
 use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use crate::types::UserContext;
@@ -127,6 +129,7 @@ struct LoginContext<'a> {
 
 pub(crate) async fn login_page(
     user_ctx: Option<Extension<UserContext>>,
+    Extension(env): Extension<AdminEnv>,
     Extension(engine): Extension<AdminTemplateEngine>,
     Extension(sso_deps): Extension<crate::handlers::adfs_auth::AdfsDeps>,
     Query(params): Query<LoginParams>,
@@ -147,7 +150,7 @@ pub(crate) async fn login_page(
         shell: branding_context(&engine),
         redirect_encoded,
         sso_enabled: sso_deps.config.is_usable(),
-        dev_login_enabled: crate::handlers::dev_login::dev_login_enabled(),
+        dev_login_enabled: crate::handlers::dev_login::dev_login_enabled(&env),
     };
     let html = engine.render("login", &ctx)?;
     Ok(Html(html).into_response())
@@ -171,8 +174,5 @@ pub(crate) use ssr_artifacts::{artifact_detail_page, artifact_preview, artifacts
 pub(crate) use ssr_connect::connect_page;
 pub(crate) use ssr_connectors::connectors_page;
 pub(crate) use ssr_lifecycle::{lifecycle_archive_download, lifecycle_page};
-pub(crate) use ssr_observability::{
-    export_now as observability_export_now, observability_page,
-    test_connection as observability_test_connection,
-};
+pub(crate) use ssr_observability::observability_page;
 pub(crate) use ssr_tools::tools_page;

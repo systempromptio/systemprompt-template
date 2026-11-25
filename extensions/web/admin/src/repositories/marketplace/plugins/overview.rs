@@ -1,6 +1,8 @@
 //! Role-scoped marketplace views: counts and overviews filtered by the
 //! caller's roles, plus the (currently empty) onboarding config map.
 
+use crate::env::AdminEnv;
+
 
 use systemprompt::identifiers::McpServerId;
 
@@ -21,13 +23,15 @@ pub struct MarketplaceCounts {
 }
 
 pub fn list_plugins_for_roles(
+    env: &AdminEnv,
     services_path: &Path,
     roles: &[String],
 ) -> Result<Vec<PluginOverview>, MarketplaceError> {
-    list_plugins_for_roles_full(services_path, roles)
+    list_plugins_for_roles_full(env, services_path, roles)
 }
 
 pub fn list_plugins_for_roles_full(
+    env: &AdminEnv,
     services_path: &Path,
     roles: &[String],
 ) -> Result<Vec<PluginOverview>, MarketplaceError> {
@@ -35,7 +39,7 @@ pub fn list_plugins_for_roles_full(
     let agents_path = services_path.join("agents");
     let is_admin = crate::types::roles_grant_manage(roles);
     let mut overviews = Vec::new();
-    for (_id, plugin) in plugin_loader::load_all_plugins()? {
+    for (_id, plugin) in plugin_loader::load_all_plugins(env)? {
         if !plugin.base.enabled && !is_admin {
             continue;
         }
@@ -67,15 +71,16 @@ pub fn list_plugins_for_roles_full(
 }
 
 pub async fn list_plugins_for_user(
+    env: &AdminEnv,
     pool: &sqlx::PgPool,
     services_path: &Path,
     user: &systemprompt::identifiers::UserId,
 ) -> Result<Vec<PluginOverview>, crate::error::AdminError> {
     use systemprompt::governance::authz::EntityKind;
-    let mut plugins = list_plugins_for_roles_full(services_path, &["admin".to_owned()])
+    let mut plugins = list_plugins_for_roles_full(env, services_path, &["admin".to_owned()])
         .map_err(crate::error::AdminError::internal)?;
     plugins.retain(|p| p.enabled);
-    let access = crate::authz::catalog::CatalogAccess::load(pool, user).await?;
+    let access = crate::authz::catalog::CatalogAccess::load(env, pool, user).await?;
     let ids = plugins.iter().map(|p| p.id.clone()).collect::<Vec<_>>();
     let permitted = access.allowed(EntityKind::Plugin, &ids).await?;
     plugins.retain(|p| permitted.contains(&p.id));

@@ -69,7 +69,7 @@ pub async fn upsert_rule(
             rule_value,
             access,
             justification: None,
-            source: systemprompt::governance::authz::DASHBOARD_SOURCE,
+            source: crate::authz::CONSOLE_SOURCE,
         })
         .await
         .map_err(|e| map_err(&e))

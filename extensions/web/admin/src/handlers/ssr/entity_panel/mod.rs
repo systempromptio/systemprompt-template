@@ -8,6 +8,8 @@
 //! way. Every read is best-effort: a part that cannot load leaves its own
 //! empty state instead of failing the page it sits on.
 
+use crate::env::AdminEnv;
+
 mod reach;
 mod rules;
 pub(crate) mod view;
@@ -106,8 +108,12 @@ fn subject_names(options: &SubjectOptions) -> HashMap<(String, String), String> 
 
 // Why: the file failing to load is the panel's own notice, not a 500 — the
 // rules that are enforced are still worth reading while someone fixes it.
-async fn review_for(pool: &PgPool, key: &str) -> Result<Option<ReviewedEntity>, String> {
-    let declared = declared_now().await.map_err(|e| e.to_string())?;
+async fn review_for(
+    env: &AdminEnv,
+    pool: &PgPool,
+    key: &str,
+) -> Result<Option<ReviewedEntity>, String> {
+    let declared = declared_now(env).await.map_err(|e| e.to_string())?;
     let drift = drift_now(pool, &declared)
         .await
         .map_err(|e| e.to_string())?;
@@ -119,7 +125,11 @@ async fn review_for(pool: &PgPool, key: &str) -> Result<Option<ReviewedEntity>, 
         .find(|r| r.review.key == key))
 }
 
-pub(crate) async fn build_entity_panel(pool: &PgPool, req: PanelRequest<'_>) -> EntityAccessView {
+pub(crate) async fn build_entity_panel(
+    env: &AdminEnv,
+    pool: &PgPool,
+    req: PanelRequest<'_>,
+) -> EntityAccessView {
     let key = format!("{}/{}", req.entity_type, req.entity_id);
     let ledger = list_ledger_rules(pool)
         .await
@@ -139,14 +149,14 @@ pub(crate) async fn build_entity_panel(pool: &PgPool, req: PanelRequest<'_>) -> 
         });
     let subjects = subject_options(pool).await;
     let mut reaches =
-        reach::resolved_reach(pool, (req.entity_type, req.entity_id), &subjects).await;
+        reach::resolved_reach(env, pool, (req.entity_type, req.entity_id), &subjects).await;
     reaches.extend(reach::ruled_reach(&rows));
-    let (review, drift_unreadable) = match review_for(pool, &key).await {
+    let (review, drift_unreadable) = match review_for(env, pool, &key).await {
         Ok(review) => (review, None),
         Err(e) => (None, Some(e)),
     };
     let why = match req.why.map(str::trim).filter(|w| !w.is_empty()) {
-        Some(q) => Some(why::why(pool, q, (req.entity_type, req.entity_id)).await),
+        Some(q) => Some(why::why(env, pool, q, (req.entity_type, req.entity_id)).await),
         None => None,
     };
     EntityAccessView {

@@ -5,12 +5,13 @@
 //! split into three families:
 //!
 //! - **Publish pipeline** ([`PublishPipelineJob`]) — runs at server startup and
-//!   orchestrates ACL/profile/config bootstrap, asset copy, content ingestion,
-//!   prerender, sitemap/robots/llms.txt generation, and secret migration.
-//!   Sub-jobs are individually addressable via the CLI for targeted re-runs.
-//! - **Build helpers** ([`BundleAdminCssJob`], [`CopyExtensionAssetsJob`],
-//!   [`ContentPrerenderJob`]) — emit the static surface under `web/dist/`
-//!   consumed by the SSR layer.
+//!   orchestrates asset copy, content ingestion, prerender, and robots/llms.txt
+//!   generation. Sub-jobs are individually addressable via the CLI for targeted
+//!   re-runs.
+//! - **Build helpers** ([`BundleAdminCssJob`], [`CopyExtensionAssetsJob`]) —
+//!   emit the static surface under `web/dist/` consumed by the SSR layer.
+//!   Content prerendering is core's `content_prerender` job; the pipeline runs
+//!   the same prerender out of turn.
 //! - **Analytics / housekeeping** ([`ContentAnalyticsAggregationJob`],
 //!   [`SecretMigrationJob`]) — periodic rollups and one-shot migrations.
 //! - **Data lifecycle** ([`RetentionDailyReportJob`],
@@ -33,14 +34,12 @@ mod copy_assets;
 mod governance_bootstrap;
 mod ingestion;
 mod llms_txt;
-mod prerender;
 mod publish;
 mod quota_month_window;
 mod retention;
 mod robots;
 mod scope_defaults;
 mod secret_migration;
-mod sitemap;
 mod usage_anomaly;
 mod usage_retention;
 mod usage_rollup;
@@ -57,14 +56,12 @@ pub use copy_assets::CopyExtensionAssetsJob;
 pub use governance_bootstrap::GovernanceBootstrapJob;
 pub use ingestion::ContentIngestionJob;
 pub use llms_txt::LlmsTxtGenerationJob;
-pub use prerender::ContentPrerenderJob;
 pub use publish::PublishPipelineJob;
 pub use quota_month_window::QuotaMonthWindowJob;
 pub use retention::{RetentionDailyReportJob, RetentionExportMonthlyJob, RetentionExportWeeklyJob};
 pub use robots::RobotsTxtGenerationJob;
 pub use scope_defaults::ScopeDefaultsJob;
 pub use secret_migration::SecretMigrationJob;
-pub use sitemap::SitemapGenerationJob;
 pub use usage_retention::PluginUsageRetentionJob;
 pub use usage_rollup::UsageDailyRollupJob;
 

@@ -20,15 +20,6 @@ pub enum JobError {
     #[error("Configuration error: {0}")]
     Config(String),
 
-    #[error("Configuration error: {0}")]
-    CoreConfig(#[from] systemprompt::models::errors::GlobalConfigError),
-
-    #[error("Profile error: {0}")]
-    Profile(#[from] systemprompt::config::ProfileBootstrapError),
-
-    #[error("Services config error: {0}")]
-    Services(#[from] systemprompt::loader::ConfigLoadError),
-
     #[error("Content error: {0}")]
     Content(#[from] systemprompt::content::ContentError),
 
@@ -49,6 +40,9 @@ pub enum JobError {
 
     #[error("Pipeline failed: {failed} sub-job(s) reported errors")]
     Pipeline { failed: u64 },
+
+    #[error("AI inference failed: {0}")]
+    Inference(#[from] systemprompt::models::errors::AiInferenceError),
 
     #[error("{0}")]
     Other(String),

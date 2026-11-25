@@ -5,6 +5,8 @@
 //! resolved from `services/` on disk and cached process-wide for
 //! `MARKETPLACE_CACHE_TTL` to keep the filesystem walk off the hot path.
 
+use crate::env::AdminEnv;
+
 use super::types::{MarketplaceContext, UserContext};
 use axum::Extension;
 use axum::extract::{Request, State};
@@ -16,12 +18,14 @@ use std::sync::Arc;
 pub(crate) async fn marketplace_context_middleware(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
+    Extension(env): Extension<AdminEnv>,
     mut request: Request,
     next: Next,
 ) -> Response {
     let result = async {
-        let path = crate::handlers::shared::get_services_path()?;
+        let path = crate::handlers::shared::get_services_path(&env)?;
         let plugins = crate::repositories::marketplace::plugins::list_plugins_for_user(
+            &env,
             &pool,
             &path,
             &user_ctx.user_id,
@@ -42,10 +46,11 @@ pub(crate) async fn marketplace_context_middleware(
             .into_response();
         },
     };
-    let site_url = systemprompt::manifest::Config::get().map_or_else(
-        |_| String::new(),
-        |c| c.api_external_url.trim_end_matches('/').to_owned(),
-    );
+    let site_url = env
+        .config()
+        .api_external_url
+        .trim_end_matches('/')
+        .to_owned();
 
     let ctx = MarketplaceContext {
         user_id: user_ctx.user_id.clone(),

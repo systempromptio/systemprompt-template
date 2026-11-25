@@ -4,10 +4,10 @@
 //! declares through the same door, and hashed on the parsed content so a
 //! comment or a whitespace edit is not a drift.
 
+use crate::env::AdminEnv;
+
 use sha2::{Digest, Sha256};
-use systemprompt::config::ProfileBootstrap;
 use systemprompt::gateway::{GATEWAY_POLICIES_FILE, GatewayPolicyConfig, GatewayPolicyEntry};
-use systemprompt::loader::services_root::ServicesRootBootstrap;
 
 use super::month_window::normalise_spec;
 use crate::error::AdminResult;
@@ -62,9 +62,6 @@ pub fn parse_declared_policies(yaml: &str) -> Result<DeclaredPolicies, String> {
     })
 }
 
-pub fn services_root() -> AdminResult<std::path::PathBuf> {
-    let profile = ProfileBootstrap::get()?;
-    Ok(ServicesRootBootstrap::active_root_or(
-        &profile.paths.services,
-    ))
+pub fn services_root(env: &AdminEnv) -> AdminResult<std::path::PathBuf> {
+    Ok(env.active_services_root())
 }

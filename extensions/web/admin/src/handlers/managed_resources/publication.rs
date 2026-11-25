@@ -11,19 +11,21 @@ use systemprompt::marketplace::managed::{
     DistributionClaim, InstallationReceipt, InstallationReceiptRequest,
 };
 
+use crate::env::AdminEnv;
 use crate::error::AdminResult;
 use crate::handlers::shared::require_write_origin;
 use crate::routes::managed_state::ManagedState;
 use crate::types::UserContext;
 
 pub(crate) async fn create_candidate(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ResourceRevisionId>,
     headers: HeaderMap,
     Json(input): Json<systemprompt::marketplace::managed::TextCandidate>,
 ) -> AdminResult<(StatusCode, Json<ResourceRevisionId>)> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     Ok((
         StatusCode::CREATED,
         Json(
@@ -78,6 +80,7 @@ pub(crate) async fn bundle(
 }
 
 pub(crate) async fn publish(
+    Extension(env): Extension<AdminEnv>,
     Extension(user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
@@ -91,7 +94,7 @@ pub(crate) async fn publish(
             "Administrator publication review required".to_owned(),
         ));
     }
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     let decision = state
         .repository
         .review_and_publish(&state.owner, &user.user_id, &input)
@@ -167,12 +170,13 @@ pub(crate) struct ClaimDistribution {
 }
 
 pub(crate) async fn claim_distribution(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
     Json(input): Json<ClaimDistribution>,
 ) -> AdminResult<Json<Option<DistributionClaim>>> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     Ok(Json(
         state
             .repository
@@ -190,12 +194,13 @@ pub(crate) struct CompleteDistribution {
 }
 
 pub(crate) async fn complete_distribution(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
     Json(input): Json<CompleteDistribution>,
 ) -> AdminResult<StatusCode> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     state
         .repository
         .complete_distribution(
@@ -209,12 +214,13 @@ pub(crate) async fn complete_distribution(
 }
 
 pub(crate) async fn installation_receipt(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
     Json(input): Json<InstallationReceiptRequest>,
 ) -> AdminResult<(StatusCode, Json<InstallationReceipt>)> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     Ok((
         StatusCode::CREATED,
         Json(

@@ -11,6 +11,8 @@
 //! plugin ↔ member relationship in both directions. The plugin and skill pages
 //! are strictly read-only: operators edit `services/*.yaml` and restart.
 
+use crate::env::AdminEnv;
+
 mod access;
 mod data;
 mod entries;
@@ -77,6 +79,7 @@ async fn visibility_inputs(
 }
 
 pub(crate) async fn plugins_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -84,9 +87,9 @@ pub(crate) async fn plugins_page(
     axum::extract::Query(query): axum::extract::Query<CatalogListQuery>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
-    let path = shared::get_services_path()?;
+    let path = shared::get_services_path(&env)?;
 
-    let catalog = data::load_catalog(&path, &user_ctx.roles);
+    let catalog = data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_PLUGIN).await;
     let (manifests, rules) = visibility_inputs(&pool, &path).await;
     let mut plugins = view_models::plugin_rows(
@@ -155,6 +158,7 @@ pub(crate) async fn plugins_page(
     reason = "axum extractor list; the router decides the arity, not this signature"
 )]
 pub(crate) async fn plugin_detail_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -163,15 +167,16 @@ pub(crate) async fn plugin_detail_page(
     axum::extract::Query(query): axum::extract::Query<view::PanelQuery>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
-    let path = shared::get_services_path()?;
+    let path = shared::get_services_path(&env)?;
 
-    let catalog = data::load_catalog(&path, &user_ctx.roles);
+    let catalog = data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_PLUGIN).await;
     let assignment_count = counts.get(plugin_id.as_str()).copied().unwrap_or(0);
     let mut page = view_models::plugin_detail(&catalog, &plugin_id, assignment_count)
         .ok_or_else(|| AdminError::NotFound("No such plugin.".to_owned()))?;
     page.access = Some(
         access::panel(
+            &env,
             &pool,
             &user_ctx,
             (ENTITY_PLUGIN, plugin_id.as_str()),
@@ -189,6 +194,7 @@ pub(crate) async fn plugin_detail_page(
 }
 
 pub(crate) async fn skills_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -196,9 +202,9 @@ pub(crate) async fn skills_page(
     axum::extract::Query(query): axum::extract::Query<CatalogListQuery>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
-    let path = shared::get_services_path()?;
+    let path = shared::get_services_path(&env)?;
 
-    let catalog = data::load_catalog(&path, &user_ctx.roles);
+    let catalog = data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_SKILL).await;
     let (manifests, rules) = visibility_inputs(&pool, &path).await;
     let mut skills = view_models::skill_rows(
@@ -257,6 +263,7 @@ pub(crate) async fn skills_page(
     reason = "axum extractor list; the router decides the arity, not this signature"
 )]
 pub(crate) async fn skill_detail_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -265,9 +272,9 @@ pub(crate) async fn skill_detail_page(
     axum::extract::Query(query): axum::extract::Query<view::PanelQuery>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
-    let path = shared::get_services_path()?;
+    let path = shared::get_services_path(&env)?;
 
-    let catalog = data::load_catalog(&path, &user_ctx.roles);
+    let catalog = data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_SKILL).await;
     let assignment_count = counts.get(&skill_id).copied().unwrap_or(0);
     let skill = systemprompt::identifiers::SkillId::new(&skill_id);
@@ -275,6 +282,7 @@ pub(crate) async fn skill_detail_page(
         .ok_or_else(|| AdminError::NotFound("No such skill.".to_owned()))?;
     page.access = Some(
         access::panel(
+            &env,
             &pool,
             &user_ctx,
             (ENTITY_SKILL, skill_id.as_str()),

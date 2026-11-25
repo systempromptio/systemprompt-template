@@ -10,6 +10,8 @@
 //! is never a query parameter: its `plugin:skill` key is the path, the same
 //! identity the hook events carry.
 
+use crate::env::AdminEnv;
+
 mod context;
 mod figures;
 mod runs;
@@ -34,6 +36,7 @@ use crate::repositories::analysis::skills::{
     list_skill_conversations_paged, list_skill_daily, list_skill_runs,
 };
 use crate::repositories::scope::ScopeRequest;
+use axum::Extension;
 
 use context::{SkillRead, build_context};
 
@@ -144,6 +147,7 @@ impl SkillDetailQuery {
 }
 
 pub(crate) async fn skill_page(
+    Extension(env): Extension<AdminEnv>,
     shell: Page,
     State(pool): State<Arc<PgPool>>,
     Path(skill): Path<String>,
@@ -165,7 +169,7 @@ pub(crate) async fn skill_page(
         end,
         subject_ids: scope.as_sql().map(<[String]>::to_vec),
     };
-    let index = InventoryIndex::build(&crate::handlers::shared::get_services_path()?);
+    let index = InventoryIndex::build(&env, &crate::handlers::shared::get_services_path(&env)?);
     let run_filter = SkillRunFilter {
         marketplace: None,
         skill: Some(skill.skill.clone()),
@@ -181,7 +185,7 @@ pub(crate) async fn skill_page(
             PAGE_SIZE,
             query.page() * PAGE_SIZE
         ),
-        get_marketplace_audience(&pool, &index.marketplaces),
+        get_marketplace_audience(&env, &pool, &index.marketplaces),
         list_skill_runs(&pool, &window, &run_filter, RUNS_READ),
     );
     let (facts, daily, breakdown, (conversations, total), audience, runs) =
@@ -202,7 +206,7 @@ pub(crate) async fn skill_page(
             conversations: &conversations,
             runs: &runs,
             total,
-            can_judge: shell.user.is_console && !super::judge_mode::automatic(),
+            can_judge: shell.user.is_console && !super::judge_mode::automatic(&env),
         },
     );
     Ok(crate::handlers::ssr::render_typed_page(

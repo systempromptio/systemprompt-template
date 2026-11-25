@@ -9,6 +9,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::ContextId;
 
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminHtmlResult, AdminResult};
 use crate::handlers::ssr::format::{format_cost, relative_time};
 use crate::handlers::ssr::ssr_helpers::render_typed_page;
@@ -75,12 +76,13 @@ fn side_call_note(summary: &ConversationSummary) -> Option<String> {
 }
 
 pub(crate) async fn profile_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
 ) -> AdminHtmlResult<Response> {
-    let data = bridge_profile::build_bridge_profile_data(pool, &user_ctx).await?;
+    let data = bridge_profile::build_bridge_profile_data(&env, pool, &user_ctx).await?;
     let conversations = &data.usage.conversations;
     let recent_conversations: Vec<_> = conversations.recent.iter().map(conversation_view).collect();
     let view = ProfilePageView {
@@ -106,10 +108,11 @@ pub(crate) async fn profile_page(
 // parameter to tamper with. Redeeming it yields a durable PAT signing in as
 // that user, so it is issued only on an explicit request.
 pub(crate) async fn issue_bridge_code(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> AdminResult<Response> {
-    let (_, gateway_url) = bridge_profile::read_config_strings();
+    let (_, gateway_url) = bridge_profile::read_config_strings(&env);
     let block = bridge_profile::issue_bridge_connect(&pool, &user_ctx, gateway_url.as_deref())
         .await
         // Why: Unavailable, not Internal — the usual cause is no configured

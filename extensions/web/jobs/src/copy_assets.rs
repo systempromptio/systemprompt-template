@@ -1,4 +1,5 @@
-//! `copy_extension_assets` job: copies every registered asset into `web/dist/`.
+//! `copy_extension_assets` job: copies the web member's declared assets into
+//! `web/dist/`, the same declarations `WebExtension::contribute` hands core.
 //!
 //! Runs after the CSS and JS bundle jobs, whose output it picks up.
 
@@ -6,10 +7,12 @@ use std::path::Path;
 use std::sync::Arc;
 
 use systemprompt::config::AppPaths;
-use systemprompt::extension::{AssetDefinition, ExtensionRegistry};
+use systemprompt::extension::AssetDefinition;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;
+
+const MEMBER_ID: &str = "web";
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CopyExtensionAssetsJob;
@@ -20,8 +23,12 @@ impl CopyExtensionAssetsJob {
 
         tracing::info!("Copy extension assets job started");
 
-        let registry = ExtensionRegistry::discover().map_err(|e| JobError::other(e.to_string()))?;
-        let assets = registry.all_required_assets(paths);
+        let mut declared = systemprompt_web_site::assets::web_assets(paths);
+        declared.extend(systemprompt_web_admin::assets::admin_assets(paths));
+        let assets: Vec<(&str, AssetDefinition)> = declared
+            .into_iter()
+            .map(|asset| (MEMBER_ID, asset))
+            .collect();
 
         if assets.is_empty() {
             let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);

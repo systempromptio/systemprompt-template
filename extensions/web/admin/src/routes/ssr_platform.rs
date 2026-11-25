@@ -76,20 +76,8 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
             "/gateway/policies/delete",
             post(handlers::ssr::delete_gateway_policy),
         )
-        // Why: the exporter is core's `otlp_export` job and its config is a
-        // profile block; this page shows both and triggers the job out of
-        // turn. It lives beside Sync because that is where the declared
-        // config is read from.
         .route(
             "/system/observability",
             get(handlers::ssr::observability_page),
-        )
-        .route(
-            "/system/observability/export",
-            post(handlers::ssr::observability_export_now),
-        )
-        .route(
-            "/system/observability/test",
-            post(handlers::ssr::observability_test_connection),
         )
 }

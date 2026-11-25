@@ -1,16 +1,16 @@
-//! Git-source orchestration failures retain their HTTP classification.
+//! Git-source sync failures retain their HTTP classification.
 
 use super::AdminError;
+use systemprompt::traits::GitSourceSyncError;
 
-impl From<systemprompt::system::managed::OrchestrationError> for AdminError {
-    fn from(error: systemprompt::system::managed::OrchestrationError) -> Self {
-        use systemprompt::system::managed::OrchestrationError;
+impl From<GitSourceSyncError> for AdminError {
+    fn from(error: GitSourceSyncError) -> Self {
         match error {
-            OrchestrationError::Managed(error) => error.into(),
-            error @ (OrchestrationError::CredentialUnresolved
-            | OrchestrationError::NotGitSource) => Self::Conflict(error.to_string()),
-            error @ (OrchestrationError::InventoryLoad(_)
-            | OrchestrationError::CredentialsUnavailable(_)) => Self::internal(error),
+            error @ (GitSourceSyncError::CredentialUnavailable
+            | GitSourceSyncError::NotGitSource) => Self::Conflict(error.to_string()),
+            error @ (GitSourceSyncError::Audit(_) | GitSourceSyncError::Failed(_)) => {
+                Self::internal(error)
+            },
         }
     }
 }

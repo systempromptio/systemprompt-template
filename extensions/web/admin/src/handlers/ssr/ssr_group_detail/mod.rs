@@ -8,6 +8,8 @@
 //! the Access and Mappings tabs, because those would edit a subject that can
 //! never hold a rule.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::extract::{Path, Query, State};
@@ -19,6 +21,7 @@ use systemprompt_web_shared::GroupId;
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::repositories;
 use crate::types::UserContext;
+use axum::Extension;
 
 use super::people_chart::daily_requests_chart;
 use super::people_view;
@@ -39,6 +42,7 @@ pub(crate) struct TabQuery {
 }
 
 pub(crate) async fn group_detail_page(
+    Extension(env): Extension<AdminEnv>,
     shell: Page,
     State(pool): State<Arc<PgPool>>,
     Path(group_id): Path<GroupId>,
@@ -82,7 +86,7 @@ pub(crate) async fn group_detail_page(
         },
         overview: load_overview(&pool, &group_id, active).await,
         members: load_members(&pool, &group_id, active, &shell.user).await,
-        access: load_access(&pool, &group_id, active).await,
+        access: load_access(&env, &pool, &group_id, active).await,
         projects: load_projects(&pool, &group_id, active).await,
         mappings: load_mappings(&pool, &group_id, active, &shell.user).await,
         active_tab: active.to_owned(),
@@ -176,6 +180,7 @@ async fn assign_targets(pool: &PgPool) -> Vec<MemberSetChipView> {
 }
 
 async fn load_access(
+    env: &AdminEnv,
     pool: &PgPool,
     group_id: &GroupId,
     active: &str,
@@ -183,7 +188,7 @@ async fn load_access(
     if active != tabs::ACCESS {
         return None;
     }
-    Some(data::load_access(pool, group_id).await)
+    Some(data::load_access(env, pool, group_id).await)
 }
 
 async fn load_projects(

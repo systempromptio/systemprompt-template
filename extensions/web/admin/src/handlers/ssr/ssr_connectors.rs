@@ -3,6 +3,8 @@
 //! the same snapshot the browser then polls; `connectors.js` re-renders the
 //! groups in place and keeps each card's static "about" block.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::extract::{Extension, State};
@@ -129,14 +131,17 @@ fn summarise(connections: &[Connection]) -> ConnectorsSummary {
     summary
 }
 
-fn group(connections: &[Connection]) -> Vec<GroupView> {
+fn group(
+    services: &systemprompt::manifest::services::ServicesConfig,
+    connections: &[Connection],
+) -> Vec<GroupView> {
     GROUPS
         .iter()
         .map(|(key, title, note)| {
             let cards: Vec<_> = connections
                 .iter()
                 .filter(|c| group_key(c) == *key)
-                .map(card)
+                .map(|c| card(services, c))
                 .collect();
             GroupView {
                 key,
@@ -151,12 +156,13 @@ fn group(connections: &[Connection]) -> Vec<GroupView> {
 }
 
 pub(crate) async fn connectors_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
 ) -> AdminHtmlResult<Response> {
-    let snapshot = get_connections(&pool, &user_ctx.user_id).await?;
+    let snapshot = get_connections(&pool, &env.services(), &user_ctx.user_id).await?;
     let connections = snapshot.connections;
     let view = ConnectorsPageView {
         page: "connectors",
@@ -165,7 +171,7 @@ pub(crate) async fn connectors_page(
         user_id: user_ctx.user_id.clone(),
         summary: summarise(&connections),
         has_connectors: !connections.is_empty(),
-        groups: group(&connections),
+        groups: group(&env.services(), &connections),
         breadcrumbs: vec![
             BreadcrumbView::link("Account", "/admin/profile"),
             BreadcrumbView::current("Connectors"),

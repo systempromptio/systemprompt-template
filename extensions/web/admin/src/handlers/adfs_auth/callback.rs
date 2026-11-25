@@ -25,7 +25,7 @@ use super::provider::{idp_descriptor, service_provider};
 use super::session::{SessionSubject, mint_session, session_cookie};
 use super::{
     AdfsDeps, AdfsError, FlowState, clear_state_cookie, login_error, read_state_cookie,
-    sanitize_redirect, use_https,
+    sanitize_redirect,
 };
 
 // Why: an assertion presented twice inside its validity window is a replay,
@@ -61,7 +61,7 @@ pub(crate) async fn adfs_callback(
         return login_error("error");
     };
     match run_callback(&deps, &headers, form).await {
-        Ok(login) => success_response(&login),
+        Ok(login) => success_response(&login, deps.use_https),
         Err(reason) => login_error(reason),
     }
 }
@@ -99,13 +99,7 @@ async fn run_callback(
     let claims = AssertionClaims::from_identity(&identity);
     let resolved = resolve_identity(deps, &idp, &claims).await?;
 
-    let (jwt, max_age) = mint_session(
-        &deps.session_service,
-        &SessionSubject::from(&resolved),
-        headers,
-    )
-    .await
-    .map_err(|e| {
+    let (jwt, max_age) = mint_session(&SessionSubject::from(&resolved)).map_err(|e| {
         tracing::error!(error = %e, "Failed to mint session for ADFS user");
         "error"
     })?;
@@ -195,12 +189,12 @@ async fn verify_response(
 /// Build the cookie-setting redirect for a successful login: clear the spent
 /// state cookie and set the session `access_token`.
 // Why: lint-ok: http-error — builds the success redirect, not an error.
-fn success_response(login: &SuccessfulLogin) -> Response {
+fn success_response(login: &SuccessfulLogin, secure: bool) -> Response {
     let mut out = HeaderMap::new();
-    if let Ok(val) = clear_state_cookie(use_https()).parse() {
+    if let Ok(val) = clear_state_cookie(secure).parse() {
         out.append(SET_COOKIE, val);
     }
-    if let Ok(val) = session_cookie(&login.jwt, login.max_age).parse() {
+    if let Ok(val) = session_cookie(&login.jwt, login.max_age, secure).parse() {
         out.append(SET_COOKIE, val);
     }
     (out, Redirect::to(&login.redirect_to)).into_response()

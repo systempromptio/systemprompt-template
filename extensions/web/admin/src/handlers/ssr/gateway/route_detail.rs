@@ -5,6 +5,8 @@
 //! `gateway_route/*`, which the declared set expands to every dispatchable
 //! route; a rule written here names this route alone and is a console rule.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::extract::{Path, Query, State};
@@ -19,6 +21,7 @@ use crate::handlers::ssr::page::Page;
 use crate::handlers::ssr::ssr_helpers::render_typed_page;
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::config::gateway::get_route_labels_from_services;
+use axum::Extension;
 
 use super::ENTITY_GATEWAY_ROUTE;
 
@@ -49,6 +52,7 @@ struct GatewayRoutePageData {
 }
 
 pub(crate) async fn gateway_route_page(
+    Extension(env): Extension<AdminEnv>,
     shell: Page,
     State(pool): State<Arc<PgPool>>,
     Path(route_id): Path<RouteId>,
@@ -57,7 +61,7 @@ pub(crate) async fn gateway_route_page(
     if !shell.user.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
-    let labels = get_route_labels_from_services()
+    let labels = get_route_labels_from_services(&env)
         .inspect_err(|e| tracing::warn!(error = %e, "gateway route: labels unavailable"))
         .unwrap_or_default();
     let route = labels
@@ -67,6 +71,7 @@ pub(crate) async fn gateway_route_page(
         .ok_or_else(|| AdminError::NotFound("No such gateway route.".to_owned()))?;
     let page_url = format!("{ROUTES_URL}/{}", urlencoding::encode(route_id.as_str()));
     let access = build_entity_panel(
+        &env,
         &pool,
         PanelRequest {
             entity_type: ENTITY_GATEWAY_ROUTE,

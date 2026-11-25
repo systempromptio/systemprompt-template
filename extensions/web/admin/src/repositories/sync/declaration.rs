@@ -6,6 +6,8 @@
 //! through the same door. Uploaded text skips both: it is the declaration,
 //! whole, and the plane parses it as it would the file.
 
+use crate::env::AdminEnv;
+
 use std::path::PathBuf;
 
 use super::plane::DeclarationSource;
@@ -15,13 +17,14 @@ use crate::repositories::gateway_policies::declared::services_root;
 // Why: `None` only for an absent file on disk; uploaded text is always the
 // whole declaration.
 pub fn read_or_text(
+    env: &AdminEnv,
     from: DeclarationSource<'_>,
     source_file: &'static str,
 ) -> AdminResult<Option<String>> {
     match from {
         DeclarationSource::Text(text) => Ok(Some(text.to_owned())),
         DeclarationSource::Disk => {
-            let path: PathBuf = services_root()?.join(source_file);
+            let path: PathBuf = services_root(env)?.join(source_file);
             match std::fs::read_to_string(&path) {
                 Ok(s) => Ok(Some(s)),
                 Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),

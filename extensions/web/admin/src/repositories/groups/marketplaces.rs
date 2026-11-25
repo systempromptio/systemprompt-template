@@ -74,7 +74,7 @@ pub async fn set_group_marketplaces(
             rule_value: group_id.as_str(),
             access: Access::Allow,
             justification: Some(JUSTIFICATION),
-            source: systemprompt::governance::authz::DASHBOARD_SOURCE,
+            source: crate::authz::CONSOLE_SOURCE,
         })
         .await
         .map_err(AdminError::internal)?;

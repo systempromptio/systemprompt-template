@@ -2,6 +2,8 @@
 //! row per entity, each settled on its own — apply code, keep the database,
 //! or export — with the whole-plane card below for the rare wholesale move.
 
+use crate::env::AdminEnv;
+
 use serde::Serialize;
 use sqlx::PgPool;
 
@@ -39,21 +41,21 @@ fn rows(list: Vec<ReviewedEntity>) -> Vec<ReviewRowView> {
         .collect()
 }
 
-async fn split(pool: &PgPool) -> Result<ReviewSplit, String> {
-    let declared = declared_now().await.map_err(|e| e.to_string())?;
+async fn split(env: &AdminEnv, pool: &PgPool) -> Result<ReviewSplit, String> {
+    let declared = declared_now(env).await.map_err(|e| e.to_string())?;
     let drift = drift_now(pool, &declared)
         .await
         .map_err(|e| e.to_string())?;
     reviews_for(pool, &drift).await.map_err(|e| e.to_string())
 }
 
-pub(super) async fn access_review(pool: &PgPool) -> AdminResult<AccessReviewView> {
+pub(super) async fn access_review(env: &AdminEnv, pool: &PgPool) -> AdminResult<AccessReviewView> {
     let mut view = AccessReviewView {
         export_url: format!("/api/public/admin/sync/planes/{PLANE_ID}/export"),
-        plane: plane_card_by_id(pool, PLANE_ID, "").await?,
+        plane: plane_card_by_id(env, pool, PLANE_ID, "").await?,
         ..AccessReviewView::default()
     };
-    match split(pool).await {
+    match split(env, pool).await {
         Ok(split) => {
             view.not_live_count = split.pending.iter().filter(|r| r.review.not_live).count();
             view.pending_count = split.pending.len();

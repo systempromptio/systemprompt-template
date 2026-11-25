@@ -7,9 +7,7 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::governance::authz::{
-    AccessControlRepository, AuthzError, DASHBOARD_SOURCE, EntityKind,
-};
+use systemprompt::governance::authz::{AccessControlRepository, AuthzError, EntityKind};
 
 use crate::types::access_control::{
     AccessControlRule, AccessControlRuleInput, AccessDecision, RuleType,
@@ -151,7 +149,7 @@ async fn replace_rules(
             rule.rule_value,
             access_str,
             rule.justification.as_deref().map(str::trim).filter(|j| !j.is_empty()),
-            DASHBOARD_SOURCE,
+            crate::authz::CONSOLE_SOURCE,
         )
         .execute(&mut **tx)
         .await?;

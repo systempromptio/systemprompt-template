@@ -4,14 +4,13 @@
 //! Ownership is decided at composition and recorded in each bundle's
 //! manifest as the files it carries; the base owns whatever no bundle
 //! does. A directory kind can be both — `skills/` holds the base's skills
-//! and a kit's — and the page says so rather than picking one.
+//! and a kit's — and the page says so rather than picking one. The bundle
+//! cache is not readable by an install member, so the page is handed no
+//! bundle files and attributes every row to the base.
 
 use serde::Serialize;
-use systemprompt::config::ProfileBootstrap;
-use systemprompt::loader::bundle::{BundleCache, cache_root};
 
 use super::sources::SourcesView;
-use crate::error::AdminResult;
 
 pub const BASE_SOURCE: &str = "base";
 
@@ -46,28 +45,6 @@ impl Provenance {
 pub struct BundleFiles {
     pub name: String,
     pub paths: Vec<String>,
-}
-
-pub fn active_bundle_files() -> AdminResult<Vec<BundleFiles>> {
-    let profile = ProfileBootstrap::get()?;
-    let cache = BundleCache::new(cache_root(profile));
-    let state = cache.read_state();
-    Ok(state
-        .sources
-        .iter()
-        .filter_map(|(name, active)| {
-            let manifest = cache.read_manifest(name, &active.content_hash).ok()?;
-            Some(BundleFiles {
-                name: name.clone(),
-                paths: manifest
-                    .manifest
-                    .files
-                    .into_iter()
-                    .map(|f| f.path)
-                    .collect(),
-            })
-        })
-        .collect())
 }
 
 fn under(path: &str, rel: &str, is_dir: bool) -> bool {

@@ -33,7 +33,7 @@ pub fn base_tree_hash(root: &Path) -> Option<String> {
         return Some(hash.clone());
     }
     let files = collect_files(root, BUNDLE_ALLOWED_DIRS).ok()?;
-    let hash = ServicesBundleManifest::compute_content_hash(&files);
+    let hash = ServicesBundleManifest::compute_content_hash(&files).to_string();
     if let Ok(mut guard) = cache.lock() {
         *guard = Some((fingerprint, hash.clone()));
     }
@@ -63,7 +63,7 @@ pub fn subtree_hash(root: &Path, rel: &str, is_dir: bool) -> Option<SubtreeHash>
         }]
     };
     (!files.is_empty()).then(|| SubtreeHash {
-        hash: ServicesBundleManifest::compute_content_hash(&files),
+        hash: ServicesBundleManifest::compute_content_hash(&files).to_string(),
         files: files.len(),
     })
 }

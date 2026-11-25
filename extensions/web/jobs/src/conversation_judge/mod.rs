@@ -29,11 +29,11 @@ mod transcript;
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::config::ProfileBootstrap;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::Actor;
-use systemprompt::system::AppContext;
+use systemprompt::models::ai::DynAiProvider;
 use systemprompt::traits::{Job, JobContext, JobResult};
+use systemprompt_web_admin::env::AdminEnv;
 use systemprompt_web_admin::repositories::analytics::context_detail::{
     list_context_requests, list_messages_for_requests,
 };
@@ -240,16 +240,14 @@ impl Job for ConversationJudgeJob {
         ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
         let db = ctx.get::<DbPool>()?;
-        let app = ctx.get::<Arc<AppContext>>()?;
         let params = JudgeParams::from_context(ctx)?;
-        let automatic = ProfileBootstrap::get()
-            .map_err(JobError::from)?
-            .judge
-            .automatic;
-        let Some(ai) = app.ai_service_arc() else {
-            return Ok(
-                JobResult::success().with_message("no AI provider is configured; judge idle")
-            );
+        let automatic = ctx.get::<AdminEnv>()?.profile().judge_automatic;
+        // Why: the process's AI provider is sealed to core members; a job
+        // context that does not hold it leaves the judge idle, as a
+        // composition without an AI provider always has.
+        let Ok(ai) = ctx.get::<DynAiProvider>().map(Arc::clone) else {
+            return Ok(JobResult::success()
+                .with_message("no AI provider is available to this job; judge idle"));
         };
         let judge = judge::Judge {
             ai,

@@ -13,18 +13,18 @@
 //! knows (`user_id`, `email`, `display_name`, `provider`, `roles`) so they
 //! land in typed slots rather than the passthrough map.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::Json;
-use axum::extract::State;
+use axum::extract::{Extension, State};
 use axum::http::HeaderMap;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
-use systemprompt::manifest::Config;
 use systemprompt::models::auth::JwtAudience;
-use systemprompt::oauth::validate_jwt_token;
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories;
@@ -96,16 +96,13 @@ const fn unix(ts: DateTime<Utc>) -> i64 {
 
 pub(crate) async fn bridge_whoami_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     headers: HeaderMap,
 ) -> AdminResult<Json<BridgeWhoamiResponse>> {
     let token = extract_token_from_headers(&headers)?;
-    let jwt_issuer = Config::get()?.jwt_issuer.clone();
-    let claims = validate_jwt_token(&token, &jwt_issuer, BRIDGE_AUDIENCES).map_err(|e| {
-        tracing::warn!(error = %e, "bridge whoami: token rejected");
-        AdminError::Unauthorized("Invalid or expired token".to_owned())
-    })?;
+    let (claims, _) = crate::services::auth::verify_bearer(&env, &token, BRIDGE_AUDIENCES).await?;
 
-    let user_id = UserId::new(claims.sub.clone());
+    let user_id = claims.user_id.clone();
     let envelope = repositories::users::queries::find_identity_envelope(&pool, &user_id)
         .await?
         .ok_or_else(|| AdminError::NotFound(format!("User not found: {}", user_id.as_str())))?;
@@ -119,7 +116,9 @@ pub(crate) async fn bridge_whoami_handler(
 
     let is_admin = crate::types::roles_grant_manage(&envelope.roles);
 
-    let connections = crate::services::connector_accounts::get_connections(&pool, &user_id).await?;
+    let connections =
+        crate::services::connector_accounts::get_connections(&pool, &env.services(), &user_id)
+            .await?;
     Ok(Json(BridgeWhoamiResponse {
         connections,
         // Why: named for the mechanism that authenticated them, not for the
@@ -142,11 +141,14 @@ pub(crate) async fn bridge_whoami_handler(
         directory_linked_unix: envelope.linked_at.map(unix),
         directory_last_seen_unix: envelope.last_seen_at.map(unix),
         directory_groups: adfs_groups,
-        token_issuer: claims.iss,
-        token_audiences: claims.aud.iter().map(|a| a.as_str().to_owned()).collect(),
+        token_issuer: env.config().jwt_issuer.clone(),
+        token_audiences: BRIDGE_AUDIENCES
+            .iter()
+            .map(|a| a.as_str().to_owned())
+            .collect(),
         token_scope: claims.scope.iter().map(ToString::to_string).collect(),
-        token_issued_unix: claims.iat,
+        token_issued_unix: claims.auth_time,
         token_expires_unix: claims.exp,
-        login_session: claims.session_id,
+        login_session: Some(claims.session_id),
     }))
 }

@@ -30,8 +30,6 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
 use sqlx::PgPool;
 
-use systemprompt::manifest::Config;
-use systemprompt::oauth::SessionCreationService;
 
 pub(crate) use callback::adfs_callback;
 pub use config::{
@@ -66,7 +64,7 @@ pub enum AdfsError {
 pub struct AdfsDeps {
     pub config: Arc<AdfsConfig>,
     pub write_pool: Arc<PgPool>,
-    pub session_service: Arc<SessionCreationService>,
+    pub use_https: bool,
 }
 
 impl std::fmt::Debug for AdfsDeps {
@@ -77,24 +75,8 @@ impl std::fmt::Debug for AdfsDeps {
     }
 }
 
-// Why: Whether this instance is served over https, which decides both the
-// `Secure` attribute and the `SameSite` value below. Unreadable config fails
-// closed to `true`: a cookie the browser drops is safer than one sent in clear.
-pub(crate) fn use_https() -> bool {
-    match Config::get() {
-        Ok(c) => c.use_https,
-        Err(e) => {
-            tracing::error!(
-                error = %e,
-                "config unavailable while setting session cookie; defaulting to Secure — the cookie will be dropped by browsers on plain http"
-            );
-            true
-        },
-    }
-}
-
-pub(crate) fn secure_flag() -> &'static str {
-    if use_https() { "; Secure" } else { "" }
+pub(crate) const fn secure_flag(secure: bool) -> &'static str {
+    if secure { "; Secure" } else { "" }
 }
 
 // Why: Reject anything that isn't a same-site absolute path, to avoid

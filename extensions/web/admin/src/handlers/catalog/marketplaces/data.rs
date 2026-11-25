@@ -7,6 +7,8 @@
 //! the per-user matrix uses, so a cell here and a decision at the enforcement
 //! point cannot disagree.
 
+use crate::env::AdminEnv;
+
 use std::collections::HashMap;
 use std::path::Path;
 use systemprompt::identifiers::MarketplaceId;
@@ -78,6 +80,7 @@ fn cells_of(sections: Vec<MatrixSection>) -> Vec<AudienceCellView> {
 // here; the role rows are the baseline that a group row either widens or
 // leaves alone.
 pub(super) async fn audience_matrix(
+    env: &AdminEnv,
     pool: &PgPool,
     manifests: &[MarketplaceConfigSummary],
     roles: &[String],
@@ -98,7 +101,7 @@ pub(super) async fn audience_matrix(
         labels.push((role.clone(), "role"));
     }
 
-    let resolved = resolve_subject_matrices(pool, &subjects, &section_input(manifests))
+    let resolved = resolve_subject_matrices(env, pool, &subjects, &section_input(manifests))
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "audience matrix failed to resolve"))
         .unwrap_or_default();

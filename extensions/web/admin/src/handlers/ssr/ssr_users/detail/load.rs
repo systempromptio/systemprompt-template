@@ -4,6 +4,8 @@
 //! empty panel rather than taking the page down: the header already answers
 //! "who is this account", which is most of why the page was opened.
 
+use crate::env::AdminEnv;
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
@@ -130,9 +132,9 @@ pub(super) struct AccessData {
 // enforcement webhook use, so a cell here is the decision the gateway makes.
 // The rule list is read a second time to find this person's own rule per
 // entity, which the resolved matrix reports only as "decided by user".
-pub(super) async fn load_access(pool: &PgPool, user_id: &UserId) -> AccessData {
-    let overview = super::access_overview::load(pool, user_id).await;
-    let Ok(services_path) = crate::handlers::shared::get_services_path() else {
+pub(super) async fn load_access(env: &AdminEnv, pool: &PgPool, user_id: &UserId) -> AccessData {
+    let overview = super::access_overview::load(env, pool, user_id).await;
+    let Ok(services_path) = crate::handlers::shared::get_services_path(env) else {
         tracing::warn!("services path unavailable; user access matrix skipped");
         return AccessData {
             overview,
@@ -141,9 +143,9 @@ pub(super) async fn load_access(pool: &PgPool, user_id: &UserId) -> AccessData {
             rules: Vec::new(),
         };
     };
-    let sections = crate::handlers::access_control::build_matrix_sections(&services_path);
+    let sections = crate::handlers::access_control::build_matrix_sections(env, &services_path);
     let (matrix, rules) = tokio::join!(
-        repositories::users::access_control::resolve_user_matrix(pool, user_id, sections),
+        repositories::users::access_control::resolve_user_matrix(env, pool, user_id, sections),
         repositories::users::access_control::list_all_rules(pool),
     );
     AccessData {

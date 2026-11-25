@@ -11,6 +11,8 @@
 //! is the same figure the Conversations page shows for the same conversation.
 //! Only the active tab's data is read.
 
+use crate::env::AdminEnv;
+
 mod activity;
 mod adoption;
 mod context;
@@ -36,6 +38,7 @@ use crate::repositories::analysis::skills::{
     SkillListFilter, SkillSort, SkillWindow, list_marketplace_adoption, list_skill_facts,
 };
 use crate::repositories::scope::ScopeRequest;
+use axum::Extension;
 
 use context::{SkillsPageInputs, SkillsRead, build_context};
 pub(crate) use rows::skill_row_view;
@@ -206,6 +209,7 @@ impl SkillsQuery {
 }
 
 pub(crate) async fn page(
+    Extension(env): Extension<AdminEnv>,
     shell: Page,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<SkillsQuery>,
@@ -237,7 +241,7 @@ pub(crate) async fn page(
         offset: 0,
         skills: None,
     };
-    let index = InventoryIndex::build(&crate::handlers::shared::get_services_path()?);
+    let index = InventoryIndex::build(&env, &crate::handlers::shared::get_services_path(&env)?);
     let (rows, adoption, audience) = tokio::join!(
         list_skill_facts(&pool, &window, &filter),
         async {
@@ -247,7 +251,7 @@ pub(crate) async fn page(
                 Ok(Vec::new())
             }
         },
-        get_marketplace_audience(&pool, &index.marketplaces),
+        get_marketplace_audience(&env, &pool, &index.marketplaces),
     );
     let (rows, adoption, audience) = (rows?, adoption?, audience?);
     let report_banner = crate::handlers::ssr::analysis::reports::banner::report_banner(

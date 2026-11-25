@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
+use crate::env::AdminEnv;
 use crate::repositories::marketplace::plugin_resolvers::resolve_all_plugin_skill_ids;
 
 pub type PluginEntry = Arc<(String, String)>;
@@ -12,6 +13,7 @@ pub type EntityPluginMap = HashMap<String, Vec<PluginEntry>>;
 
 #[must_use]
 pub fn build_entity_plugin_maps(
+    env: &AdminEnv,
     services_path: &Path,
 ) -> (EntityPluginMap, EntityPluginMap, EntityPluginMap) {
     let skills_path = services_path.join("skills");
@@ -20,7 +22,7 @@ pub fn build_entity_plugin_maps(
     let mut agent_map: EntityPluginMap = HashMap::new();
     let mut mcp_map: EntityPluginMap = HashMap::new();
 
-    let Ok(plugins) = super::plugin_loader::load_all_plugins() else {
+    let Ok(plugins) = super::plugin_loader::load_all_plugins(env) else {
         return (skill_map, agent_map, mcp_map);
     };
 

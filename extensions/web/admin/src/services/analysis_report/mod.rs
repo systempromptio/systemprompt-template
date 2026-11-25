@@ -6,6 +6,8 @@
 //! structured-output call to the judge's model, audited under a job actor
 //! (`analysis_report`) so the call is never counted as a conversation.
 
+use crate::env::AdminEnv;
+
 mod prompt;
 
 use std::sync::Arc;
@@ -13,7 +15,6 @@ use std::sync::Arc;
 use sqlx::PgPool;
 use systemprompt::ai::{AiMessage, AiRequest, AiService, StructuredOutputOptions};
 use systemprompt::identifiers::{Actor, AgentName, ContextId, SessionId, TraceId, UserId};
-use systemprompt::loader::ConfigLoader;
 use systemprompt::models::execution::context::RequestContext;
 
 use crate::error::{AdminError, AdminResult};
@@ -42,30 +43,28 @@ impl ReportModel {
     // Why: the judge's model, so every AI reading of the record is written
     // by the same model: the `conversation_judge` scheduler entry's
     // parameters, else the default provider's default model.
-    pub(crate) fn configured() -> AdminResult<Self> {
-        let services = ConfigLoader::load().map_err(AdminError::internal)?;
+    pub(crate) fn configured(env: &AdminEnv) -> AdminResult<Self> {
+        let services = env.services();
         let judge = services
             .scheduler
             .as_ref()
             .and_then(|s| s.jobs.iter().find(|j| j.name == "conversation_judge"));
-        let provider = judge
-            .and_then(|j| j.parameters.get("provider").cloned())
-            .filter(|p| !p.is_empty())
-            .unwrap_or_else(|| services.ai.default_provider.clone());
+        let catalog = env.services_view().catalog();
         let model = judge
             .and_then(|j| j.parameters.get("model").cloned())
             .filter(|m| !m.is_empty())
+            .or_else(|| catalog.default_model().map(|m| m.as_str().to_owned()))
+            .ok_or_else(|| AdminError::internal("no judge model and no catalog default model"))?;
+        let provider = judge
+            .and_then(|j| j.parameters.get("provider").cloned())
+            .filter(|p| !p.is_empty())
             .or_else(|| {
-                services
-                    .ai
-                    .providers
-                    .get(&provider)
-                    .map(|p| p.default_model.clone())
-                    .filter(|m| !m.is_empty())
+                catalog
+                    .deployments(&model)
+                    .first()
+                    .map(|hop| hop.provider.as_str().to_owned())
             })
-            .ok_or_else(|| {
-                AdminError::internal(format!("no model is configured for provider {provider}"))
-            })?;
+            .ok_or_else(|| AdminError::internal(format!("no provider deploys model {model}")))?;
         Ok(Self { provider, model })
     }
 }
@@ -147,6 +146,7 @@ async fn call_model(
 // as generated or as failed with the reason the page shows. Runs on a
 // spawned task, so every outcome is recorded rather than returned.
 pub(crate) async fn generate_report(
+    env: AdminEnv,
     pool: Arc<PgPool>,
     ai: Option<Arc<AiService>>,
     requested_by: UserId,
@@ -157,7 +157,7 @@ pub(crate) async fn generate_report(
         None => Err(AdminError::internal(
             "no AI provider is configured on this instance, so a report cannot be written",
         )),
-        Some(ai) => match ReportModel::configured() {
+        Some(ai) => match ReportModel::configured(&env) {
             Err(error) => Err(error),
             Ok(model) => {
                 let grant = Grant {

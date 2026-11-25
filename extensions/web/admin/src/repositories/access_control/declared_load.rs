@@ -15,10 +15,11 @@
 //! marketplace that does not exist" — the wrong file blamed for the wrong
 //! reason, on every entity of the page.
 
+use crate::env::AdminEnv;
+
 use std::path::Path;
 
 use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
-use systemprompt::loader::ConfigLoader;
 use systemprompt_web_shared::error::MarketplaceError;
 
 use super::declared::{DeclaredInputs, DeclaredSet, build_declared_set};
@@ -66,8 +67,8 @@ pub fn build_declared_from_doc(
 // `rules.yaml` is read from, so a kit's marketplace validates the moment its
 // bundle is active, without a restart. The loader's cache is keyed by root,
 // so this is a read of the composition, not a parse per request.
-pub fn marketplace_ids_from_services() -> Result<Vec<String>, MarketplaceError> {
-    let services = ConfigLoader::load()?;
+pub fn marketplace_ids_from_services(env: &AdminEnv) -> Result<Vec<String>, MarketplaceError> {
+    let services = env.services();
     Ok(services
         .marketplaces
         .keys()

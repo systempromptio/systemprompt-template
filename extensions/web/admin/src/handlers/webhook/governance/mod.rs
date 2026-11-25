@@ -5,7 +5,6 @@
 //! audited with a trace id whether it allows or denies.
 
 mod authz;
-pub(crate) mod engine;
 mod handler;
 mod types;
 

@@ -11,6 +11,8 @@
 //! direction, and a console route from the previous image is *In database,
 //! not in code* until it is applied or exported.
 
+use crate::env::AdminEnv;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
 
@@ -185,9 +187,9 @@ impl SyncPlane for GatewayRoutesPlane {
         Some(RUNTIME_NOTE)
     }
 
-    async fn drift(&self, pool: &PgPool) -> AdminResult<PlaneDrift> {
+    async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift> {
         let in_db = usize::try_from(count_gateway_routes(pool).await?).unwrap_or(0);
-        let declared = match declared_routes_now() {
+        let declared = match declared_routes_now(env) {
             Ok(d) => d,
             Err(e) => {
                 return Ok(PlaneDrift {
@@ -241,18 +243,19 @@ impl SyncPlane for GatewayRoutesPlane {
 
     async fn apply(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        let declared = declared_routes_now()?;
+        let declared = declared_routes_now(env)?;
         let outcome = write_declared(pool, &declared, mode).await?;
         // Why: the boot seed came from the file, so the file already says
         // what the rows say; rewriting it would only strip its inline
         // comments. A person's apply may have kept console rows the file
         // lacks, and those must reach the file core boots from.
         if matches!(actor, Actor::User(_)) {
-            regenerate_gateway_file(pool, &gateway_file_path()?).await?;
+            regenerate_gateway_file(pool, &gateway_file_path(env)?).await?;
         }
         record_applied(
             pool,
@@ -261,16 +264,16 @@ impl SyncPlane for GatewayRoutesPlane {
                 declared_hash: &declared.declared_hash(),
                 mode: actor.recorded_mode(mode),
                 actor: actor.as_str(),
-                from: applied_from(),
+                from: applied_from(env),
             },
         )
         .await?;
         Ok(outcome)
     }
 
-    async fn export(&self, pool: &PgPool) -> AdminResult<Option<Export>> {
+    async fn export(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<Option<Export>> {
         let rows = list_gateway_routes(pool).await?;
-        let file = std::fs::read_to_string(gateway_file_path()?)
+        let file = std::fs::read_to_string(gateway_file_path(env)?)
             .map_err(|e| crate::error::AdminError::invalid("gateway.yaml could not be read", e))?;
         let body = render_routes_export(&file, &rows).map_err(|e| {
             crate::error::AdminError::invalid("gateway.yaml could not be rendered", e)

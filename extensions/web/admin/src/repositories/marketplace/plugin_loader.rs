@@ -2,15 +2,14 @@
 
 use std::path::PathBuf;
 
-use systemprompt::config::ProfileBootstrap;
 use systemprompt::manifest::PluginConfigFile;
 
+use crate::env::AdminEnv;
 use crate::types::PlatformPluginConfig;
 use systemprompt_web_shared::error::MarketplaceError;
 
-fn plugins_dir() -> Result<PathBuf, MarketplaceError> {
-    let profile = ProfileBootstrap::get()?;
-    Ok(PathBuf::from(&profile.paths.services).join("plugins"))
+fn plugins_dir(env: &AdminEnv) -> PathBuf {
+    env.baked_services_root().join("plugins")
 }
 
 fn parse_plugin_config_file(path: &std::path::Path) -> Result<PluginConfigFile, MarketplaceError> {
@@ -20,16 +19,19 @@ fn parse_plugin_config_file(path: &std::path::Path) -> Result<PluginConfigFile, 
         .map_err(|e| MarketplaceError::config_file(path.display().to_string(), e))
 }
 
-pub(crate) fn load_all_plugins() -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
-    Ok(load_all_plugins_with_paths()?
+pub(crate) fn load_all_plugins(
+    env: &AdminEnv,
+) -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
+    Ok(load_all_plugins_with_paths(env)?
         .into_iter()
         .map(|(id, cfg, _path)| (id, cfg))
         .collect())
 }
 
-pub(crate) fn load_all_plugins_with_paths()
--> Result<Vec<(String, PlatformPluginConfig, String)>, MarketplaceError> {
-    let dir = plugins_dir()?;
+pub(crate) fn load_all_plugins_with_paths(
+    env: &AdminEnv,
+) -> Result<Vec<(String, PlatformPluginConfig, String)>, MarketplaceError> {
+    let dir = plugins_dir(env);
     if !dir.exists() {
         return Ok(Vec::new());
     }

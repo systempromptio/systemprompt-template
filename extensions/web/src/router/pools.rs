@@ -6,9 +6,7 @@ use std::sync::Arc;
 use systemprompt::database::{Database, DbPool};
 use systemprompt::extension::prelude::{MissingDependency, Resolved};
 use systemprompt::manifest::services::SystemAdmin;
-use systemprompt::oauth::SessionCreationService;
 use systemprompt::prelude::PgPool;
-use systemprompt::users::{SessionRepository, UserService};
 
 pub(crate) struct DbHandles {
     pub owner: systemprompt::identifiers::UserId,
@@ -29,22 +27,11 @@ impl DbHandles {
             Arc::clone(&read),
             Some(Arc::clone(&write)),
         ));
-        Some(Self {
+        Ok(Self {
             read,
             write,
             db,
             owner: r.get::<SystemAdmin>()?.id().clone(),
         })
     }
-}
-
-pub(crate) fn build_session_service(db: &DbHandles) -> Arc<SessionCreationService> {
-    let dbpool = Arc::clone(&db.db);
-    let user_repo = systemprompt::users::UserRepository::new(&dbpool);
-    let user = UserService::new(Arc::new(user_repo));
-    let sessions = SessionRepository::new(&dbpool);
-    Arc::new(SessionCreationService::new(
-        Arc::new(sessions),
-        Arc::new(user),
-    ))
 }

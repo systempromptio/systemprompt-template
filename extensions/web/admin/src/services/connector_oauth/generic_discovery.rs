@@ -1,5 +1,6 @@
 //! Trusted OAuth discovery and bounded metadata parsing.
 use super::Provider;
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use serde::Deserialize;
 use url::Url;
@@ -40,11 +41,19 @@ pub fn same_issuer(advertised: &str, declared: &str) -> bool {
         && b.fragment().is_none()
 }
 
-pub(super) fn trusted_endpoint(provider: &Provider, value: &str) -> AdminResult<Url> {
+pub(super) fn trusted_endpoint(
+    env: &AdminEnv,
+    provider: &Provider,
+    value: &str,
+) -> AdminResult<Url> {
     let settings = provider
-        .settings()
+        .settings(&env.services())
         .ok_or_else(|| AdminError::Unavailable("OAuth setup required".into()))?;
-    validate_endpoint(&provider.endpoint(), &settings.authorization_origins, value)
+    validate_endpoint(
+        &provider.endpoint(&env.services()),
+        &settings.authorization_origins,
+        value,
+    )
 }
 
 pub fn validate_endpoint(resource: &str, origins: &[String], value: &str) -> AdminResult<Url> {
@@ -75,12 +84,13 @@ pub fn validate_endpoint(resource: &str, origins: &[String], value: &str) -> Adm
 }
 
 async fn read<T: serde::de::DeserializeOwned>(
+    env: &AdminEnv,
     http: &reqwest::Client,
     provider: &Provider,
     url: &str,
 ) -> AdminResult<T> {
     let response = http
-        .get(trusted_endpoint(provider, url)?)
+        .get(trusted_endpoint(env, provider, url)?)
         .send()
         .await
         .map_err(|_redacted_error| AdminError::Unavailable("OAuth discovery unavailable".into()))?;
@@ -111,22 +121,24 @@ pub(super) async fn bounded_json<T: serde::de::DeserializeOwned>(
 }
 
 pub(super) async fn metadata(
+    env: &AdminEnv,
     http: &reqwest::Client,
     provider: &Provider,
 ) -> AdminResult<AuthorizationMetadata> {
-    let resource_url = trusted_endpoint(provider, &provider.endpoint())?;
+    let resource_url = trusted_endpoint(env, provider, &provider.endpoint(&env.services()))?;
     let mut discovery = resource_url.clone();
     discovery.set_path(&format!(
         "/.well-known/oauth-protected-resource{}",
         resource_url.path().trim_end_matches('/')
     ));
     discovery.set_query(None);
-    let resource: Resource = if let Ok(resource) = read(http, provider, discovery.as_str()).await {
-        resource
-    } else {
-        discovery.set_path("/.well-known/oauth-protected-resource");
-        read(http, provider, discovery.as_str()).await?
-    };
+    let resource: Resource =
+        if let Ok(resource) = read(env, http, provider, discovery.as_str()).await {
+            resource
+        } else {
+            discovery.set_path("/.well-known/oauth-protected-resource");
+            read(env, http, provider, discovery.as_str()).await?
+        };
     if Url::parse(&resource.resource).ok().as_ref() != Some(&resource_url) {
         return Err(AdminError::Unavailable(
             "OAuth protected resource mismatch".into(),
@@ -136,7 +148,7 @@ pub(super) async fn metadata(
         .authorization_servers
         .first()
         .ok_or_else(|| AdminError::Unavailable("OAuth issuer missing".into()))?;
-    let issuer_url = trusted_endpoint(provider, issuer)?;
+    let issuer_url = trusted_endpoint(env, provider, issuer)?;
     let mut endpoint = issuer_url.clone();
     endpoint.set_path(&format!(
         "/.well-known/oauth-authorization-server{}",
@@ -144,14 +156,14 @@ pub(super) async fn metadata(
     ));
     endpoint.set_query(None);
     let result: AuthorizationMetadata =
-        if let Ok(value) = read(http, provider, endpoint.as_str()).await {
+        if let Ok(value) = read(env, http, provider, endpoint.as_str()).await {
             value
         } else {
             endpoint.set_path(&format!(
                 "{}/.well-known/openid-configuration",
                 issuer_url.path().trim_end_matches('/')
             ));
-            read(http, provider, endpoint.as_str()).await?
+            read(env, http, provider, endpoint.as_str()).await?
         };
     if !same_issuer(&result.issuer, issuer)
         || !result
@@ -163,7 +175,7 @@ pub(super) async fn metadata(
             "OAuth issuer mismatch or PKCE S256 unavailable".into(),
         ));
     }
-    trusted_endpoint(provider, &result.authorization_endpoint)?;
-    trusted_endpoint(provider, &result.token_endpoint)?;
+    trusted_endpoint(env, provider, &result.authorization_endpoint)?;
+    trusted_endpoint(env, provider, &result.token_endpoint)?;
     Ok(result)
 }

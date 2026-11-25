@@ -83,12 +83,6 @@ pub enum MarketplaceError {
         source: Box<dyn std::error::Error + Send + Sync>,
     },
 
-    #[error("Profile error: {0}")]
-    Profile(#[from] systemprompt::config::ProfileBootstrapError),
-
-    #[error("Services config error: {0}")]
-    Services(#[from] systemprompt::loader::ConfigLoadError),
-
     #[error(transparent)]
     Infra(#[from] InfraError),
 }
@@ -116,8 +110,6 @@ impl ExtensionError for MarketplaceError {
             Self::Conflict(_) => "CONFLICT",
             Self::Crypto(_) => "CRYPTO_ERROR",
             Self::ConfigFile { .. } => "CONFIG_FILE_ERROR",
-            Self::Profile(_) => "PROFILE_ERROR",
-            Self::Services(_) => "SERVICES_CONFIG_ERROR",
             Self::Infra(e) => e.code(),
         }
     }
@@ -127,12 +119,9 @@ impl ExtensionError for MarketplaceError {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::Conflict(_) => StatusCode::CONFLICT,
-            Self::Internal(_)
-            | Self::Crypto(_)
-            | Self::ConfigFile { .. }
-            | Self::Profile(_)
-            | Self::Services(_)
-            | Self::Infra(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Internal(_) | Self::Crypto(_) | Self::ConfigFile { .. } | Self::Infra(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            },
         }
     }
 

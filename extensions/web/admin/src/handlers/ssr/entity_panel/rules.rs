@@ -4,7 +4,8 @@
 
 use std::collections::HashMap;
 
-use systemprompt::governance::authz::{DASHBOARD_SOURCE, YAML_SOURCE};
+use crate::authz::CONSOLE_SOURCE as DASHBOARD_SOURCE;
+use systemprompt::governance::authz::SERVICES_SOURCE as YAML_SOURCE;
 
 use super::view::{BandRulesView, PanelRuleView};
 use crate::repositories::access_control::rules::LedgerRuleRow;

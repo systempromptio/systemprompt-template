@@ -4,6 +4,7 @@ mod account;
 mod consent;
 mod identity;
 
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::users::extract_mcp_accessor_user;
 use crate::repositories::users::{
@@ -38,9 +39,9 @@ pub fn router(pool: Arc<PgPool>) -> Router {
 }
 
 // Why: only the gateway's credential broker may read a per-user bearer.
-fn require_broker(headers: &HeaderMap) -> AdminResult<()> {
+fn require_broker(env: &AdminEnv, headers: &HeaderMap) -> AdminResult<()> {
     use sha2::{Digest, Sha256};
-    let expected = oauth::config::secret("mcp_credential_broker_secret")?;
+    let expected = oauth::config::secret(env.secrets(), "mcp_credential_broker_secret")?;
     let presented = headers
         .get("x-systemprompt-credential-broker")
         .and_then(|v| v.to_str().ok())
@@ -54,6 +55,7 @@ fn require_broker(headers: &HeaderMap) -> AdminResult<()> {
 }
 
 async fn live_user(
+    env: &AdminEnv,
     pool: &PgPool,
     headers: &HeaderMap,
     mutation: bool,
@@ -65,10 +67,7 @@ async fn live_user(
             .get("origin")
             .and_then(|h| h.to_str().ok())
             .ok_or_else(|| AdminError::Forbidden("Same-origin request required".into()))?;
-        let base = systemprompt::manifest::Config::get()?
-            .api_external_url
-            .clone();
-        let expected = url::Url::parse(&base)
+        let expected = url::Url::parse(&env.config().api_external_url)
             .map_err(AdminError::internal)?
             .origin()
             .ascii_serialization();
@@ -78,7 +77,7 @@ async fn live_user(
             ));
         }
     }
-    let user = extract_mcp_accessor_user(headers)?;
+    let user = extract_mcp_accessor_user(env, headers).await?;
     let session = user
         .session_id
         .as_ref()
@@ -91,24 +90,8 @@ async fn live_user(
     Ok(user)
 }
 
-async fn store_verified(pool: &PgPool, user: &UserId, grant: &oauth::Grant) -> AdminResult<()> {
-    let mut tx = pool.begin().await?;
-    let mut row = accounts::get_locked_account(&mut tx, user, grant.provider.slug()).await?;
-    if row.generation != grant.generation {
-        return Err(AdminError::Conflict(
-            "Connection changed during authorization; start again".into(),
-        ));
-    }
-    credentials::store(&mut tx, user, grant.provider.slug(), &oauth::seal(grant)?).await?;
-    account::apply_verified(&mut row, grant);
-    row.generation += 1;
-    accounts::update_account(&mut tx, user, &row).await?;
-    accounts::delete_pending(&mut tx, user, grant.provider.slug()).await?;
-    tx.commit().await?;
-    Ok(())
-}
-
-async fn store_pending_verification(
+async fn store_verified(
+    env: &AdminEnv,
     pool: &PgPool,
     user: &UserId,
     grant: &oauth::Grant,
@@ -120,7 +103,41 @@ async fn store_pending_verification(
             "Connection changed during authorization; start again".into(),
         ));
     }
-    credentials::store(&mut tx, user, grant.provider.slug(), &oauth::seal(grant)?).await?;
+    credentials::store(
+        &mut tx,
+        user,
+        grant.provider.slug(),
+        &oauth::seal(env.cipher()?, grant)?,
+    )
+    .await?;
+    account::apply_verified(&mut row, grant);
+    row.generation += 1;
+    accounts::update_account(&mut tx, user, &row).await?;
+    accounts::delete_pending(&mut tx, user, grant.provider.slug()).await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+async fn store_pending_verification(
+    env: &AdminEnv,
+    pool: &PgPool,
+    user: &UserId,
+    grant: &oauth::Grant,
+) -> AdminResult<()> {
+    let mut tx = pool.begin().await?;
+    let mut row = accounts::get_locked_account(&mut tx, user, grant.provider.slug()).await?;
+    if row.generation != grant.generation {
+        return Err(AdminError::Conflict(
+            "Connection changed during authorization; start again".into(),
+        ));
+    }
+    credentials::store(
+        &mut tx,
+        user,
+        grant.provider.slug(),
+        &oauth::seal(env.cipher()?, grant)?,
+    )
+    .await?;
     row.status = "verification_required".into();
     row.auth_method = Some(grant.auth_method.clone());
     row.account_id = None;

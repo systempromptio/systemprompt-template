@@ -7,10 +7,9 @@
 //! would read it off the user's row instead.
 
 use async_trait::async_trait;
-use systemprompt::governance::authz::{
-    AuthzError, RuleType, SubjectAttributeProvider, SubjectDimension,
-};
+use systemprompt::governance::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
 use systemprompt::identifiers::UserId;
+use systemprompt::traits::authz::SubjectAttributeError;
 
 const ORGANIZATION_SLUG: &str = "organization";
 
@@ -45,7 +44,7 @@ impl SubjectAttributeProvider for OrganizationAttributeProvider {
         organization_dimension()
     }
 
-    async fn values_for(&self, _user_id: &UserId) -> Result<Vec<String>, AuthzError> {
+    async fn values_for(&self, _user_id: &UserId) -> Result<Vec<String>, SubjectAttributeError> {
         Ok(vec![ORGANIZATION_DEFAULT.to_owned()])
     }
 }

@@ -16,10 +16,10 @@
 //! file. Export renders the database for copy-out only; the instance never
 //! writes into `services/`.
 
+use crate::env::AdminEnv;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
-use systemprompt::config::ProfileBootstrap;
-use systemprompt::loader::services_root::ServicesRootBootstrap;
 
 use super::access_control_rows::{awaiting_rows, rows};
 use super::plane::{
@@ -46,18 +46,20 @@ pub const PLANE_ID: &str = "access_control";
 #[derive(Debug, Clone, Copy, Default)]
 pub struct AccessControlPlane;
 
-pub async fn declared_now() -> AdminResult<DeclaredSet> {
-    declared_from(DeclarationSource::Disk).await
+pub async fn declared_now(env: &AdminEnv) -> AdminResult<DeclaredSet> {
+    declared_from(env, DeclarationSource::Disk).await
 }
 
-pub async fn declared_from(from: DeclarationSource<'_>) -> AdminResult<DeclaredSet> {
-    let registered = registered_routes_from_services()?;
-    let marketplace_ids = marketplace_ids_from_services()
+pub async fn declared_from(
+    env: &AdminEnv,
+    from: DeclarationSource<'_>,
+) -> AdminResult<DeclaredSet> {
+    let registered = registered_routes_from_services(env);
+    let marketplace_ids = marketplace_ids_from_services(env)
         .map_err(|source| AdminError::invalid("services tree could not be composed", source))?;
     let loaded = match from {
         DeclarationSource::Disk => {
-            let profile = ProfileBootstrap::get()?;
-            let services_path = ServicesRootBootstrap::active_root_or(&profile.paths.services);
+            let services_path = env.active_services_root();
             load_declared_set(&services_path, &marketplace_ids, &registered).await
         },
         DeclarationSource::Text(text) => match parse_rules_doc(text) {
@@ -75,9 +77,9 @@ pub async fn drift_now(pool: &PgPool, declared: &DeclaredSet) -> AdminResult<Dri
 }
 
 #[must_use]
-pub fn applied_from() -> AppliedFrom {
+pub fn applied_from(env: &AdminEnv) -> AppliedFrom {
     // Why: discard-ok: an unreadable profile or cache records no hashes
-    let sources = super::sources::build_sources().ok();
+    let sources = super::sources::build_sources(env).ok();
     AppliedFrom {
         base_tree_hash: sources.as_ref().and_then(|s| s.base.tree_hash.clone()),
         composed_hash: sources.and_then(|s| s.composed_hash),
@@ -144,6 +146,7 @@ impl From<&DriftCounts> for ActionCounts {
 impl AccessControlPlane {
     async fn record(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         declared: &DeclaredSet,
         mode: SyncMode,
@@ -156,7 +159,7 @@ impl AccessControlPlane {
                 declared_hash: &declared.declared_hash(),
                 mode: actor.recorded_mode(mode),
                 actor: actor.as_str(),
-                from: applied_from(),
+                from: applied_from(env),
             },
         )
         .await?;
@@ -186,17 +189,18 @@ impl SyncPlane for AccessControlPlane {
         "/admin/access-control"
     }
 
-    async fn drift(&self, pool: &PgPool) -> AdminResult<PlaneDrift> {
-        self.drift_from(pool, DeclarationSource::Disk).await
+    async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift> {
+        self.drift_from(env, pool, DeclarationSource::Disk).await
     }
 
     async fn drift_from(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         from: DeclarationSource<'_>,
     ) -> AdminResult<PlaneDrift> {
         let in_db = usize::try_from(count_band_rules(pool).await?).unwrap_or(0);
-        let declared = match declared_from(from).await {
+        let declared = match declared_from(env, from).await {
             Ok(d) => d,
             Err(e) => return Ok(unreadable_declaration(in_db, &e)),
         };
@@ -226,45 +230,50 @@ impl SyncPlane for AccessControlPlane {
 
     async fn apply(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        self.apply_from(pool, mode, actor, DeclarationSource::Disk)
+        self.apply_from(env, pool, mode, actor, DeclarationSource::Disk)
             .await
     }
 
     async fn apply_scoped(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
         scope: EntityScope<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        let declared = declared_now().await?;
+        let declared = declared_now(env).await?;
         let outcome = apply_sync_scoped(pool, &declared, mode, scope).await?;
-        self.record(pool, &declared, mode, actor).await?;
+        self.record(env, pool, &declared, mode, actor).await?;
         Ok(outcome)
     }
 
     async fn apply_from(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
         from: DeclarationSource<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        let declared = declared_from(from).await?;
+        let declared = declared_from(env, from).await?;
         let outcome = apply_sync(pool, &declared, mode).await?;
-        self.record(pool, &declared, mode, actor).await?;
+        self.record(env, pool, &declared, mode, actor).await?;
         Ok(outcome)
     }
 
-    async fn export(&self, pool: &PgPool) -> AdminResult<Option<Export>> {
+    async fn export(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<Option<Export>> {
         let rules = list_band_rules(pool).await?;
         let entities = list_entity_defaults(pool).await?;
-        let owners_or_none_when_unreadable =
-            declared_now().await.map(|d| d.owners).unwrap_or_default();
+        let owners_or_none_when_unreadable = declared_now(env)
+            .await
+            .map(|d| d.owners)
+            .unwrap_or_default();
         Ok(Some(Export {
             filename: "rules.yaml",
             content_type: "application/yaml; charset=utf-8",

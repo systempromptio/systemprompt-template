@@ -1,5 +1,7 @@
 //! HTTP handlers for plugin environment variables.
 
+use crate::env::AdminEnv;
+use axum::Extension;
 use std::sync::Arc;
 
 use axum::Json;
@@ -8,7 +10,6 @@ use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use systemprompt::config::ProfileBootstrap;
 
 use systemprompt::identifiers::{PluginId, UserId};
 
@@ -20,6 +21,7 @@ use super::responses::PluginEnvResponse;
 
 pub(crate) async fn list_plugin_env_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Path(plugin_id): Path<PluginId>,
     headers: HeaderMap,
     Query(query): Query<UserQuery>,
@@ -27,7 +29,8 @@ pub(crate) async fn list_plugin_env_handler(
     // Why: cookie absence is the "logged-out" branch, not an error — the
     // handler falls through to `resolve_principal` to honour the explicit
     // `user_id` query parameter.
-    let cookie_uid = super::extract_user_from_cookie(&headers)
+    let cookie_uid = super::extract_user_from_cookie(&env, &headers)
+        .await
         .ok()
         .map(|s| s.user_id);
     let Some(user_id) = resolve_principal(
@@ -44,7 +47,7 @@ pub(crate) async fn list_plugin_env_handler(
     // export of a bundle whose required secrets were never collected — a gate
     // failing open. A genuinely absent config is a different thing and still
     // answers `Ok(vec![])` below, so the no-configuration case is untouched.
-    let definitions = load_plugin_variable_defs(&plugin_id)?;
+    let definitions = load_plugin_variable_defs(&env, &plugin_id)?;
 
     let stored =
         repositories::marketplace::plugin_env::list_plugin_env_vars(&pool, &user_id, &plugin_id)
@@ -81,10 +84,10 @@ pub fn resolve_principal(
 }
 
 fn load_plugin_variable_defs(
+    env: &AdminEnv,
     plugin_id: &PluginId,
 ) -> Result<Vec<PluginVariableDef>, systemprompt_web_shared::error::MarketplaceError> {
-    let services_path =
-        ProfileBootstrap::get().map(|p| std::path::PathBuf::from(&p.paths.services))?;
+    let services_path = env.baked_services_root();
     let config_path = services_path
         .join("plugins")
         .join(plugin_id.as_str())

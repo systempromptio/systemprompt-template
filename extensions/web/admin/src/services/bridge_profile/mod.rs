@@ -4,6 +4,8 @@
 //! so the SSR profile page and (future) `/v1/bridge/profile/usage` endpoint
 //! render the same data from the same source.
 
+use crate::env::AdminEnv;
+
 mod assemble;
 
 use std::sync::Arc;
@@ -178,6 +180,7 @@ pub(crate) async fn issue_bridge_connect(
 // fail — the bridge does the same so missing data renders as empty cards rather
 // than a page-level error.
 pub(crate) async fn build_bridge_profile_data(
+    env: &AdminEnv,
     pool: Arc<PgPool>,
     user_ctx: &UserContext,
 ) -> crate::error::AdminResult<BridgeProfilePageData> {
@@ -199,8 +202,8 @@ pub(crate) async fn build_bridge_profile_data(
         .flatten()
         .and_then(|env| env.idp_issuer.map(|_| "adfs".to_owned()));
 
-    let (jwt_issuer, gateway_url) = read_config_strings();
-    let bridge_profile = build_bridge_profile_block();
+    let (jwt_issuer, gateway_url) = read_config_strings(env);
+    let bridge_profile = build_bridge_profile_block(env);
     // Why: the page only offers the button; `issue_bridge_connect` answers it,
     // so no credential is assembled into page data.
     let bridge_connect_available = gateway_url.is_some();
@@ -209,7 +212,7 @@ pub(crate) async fn build_bridge_profile_data(
         email: user_ctx.email.as_str().to_owned(),
         display_name,
         user_id: user_ctx.user_id.clone(),
-        tenant_id: read_tenant_id(),
+        tenant_id: read_tenant_id(env),
         provider,
         roles: user_ctx.roles.clone(),
         jwt_issuer,
@@ -218,8 +221,8 @@ pub(crate) async fn build_bridge_profile_data(
     };
 
     let usage = build_usage(sections);
-    let mut agents = build_agents_block();
-    let access = crate::authz::catalog::CatalogAccess::load(&pool, &user_id).await?;
+    let mut agents = build_agents_block(env);
+    let access = crate::authz::catalog::CatalogAccess::load(env, &pool, &user_id).await?;
     let ids = agents
         .items
         .iter()
@@ -234,9 +237,10 @@ pub(crate) async fn build_bridge_profile_data(
         .retain(|a| a.enabled && allowed.contains(&a.id));
     agents.total = agents.items.len() as i64;
     agents.enabled = agents.total;
-    let marketplaces = build_marketplaces(&pool, &user_id, user_ctx.roles.clone()).await?;
+    let marketplaces = build_marketplaces(env, &pool, &user_id, user_ctx.roles.clone()).await?;
 
-    let connections = Some(super::connector_accounts::get_connections(&pool, &user_id).await?);
+    let connections =
+        Some(super::connector_accounts::get_connections(&pool, &env.services(), &user_id).await?);
     Ok(BridgeProfilePageData {
         connections,
         marketplaces_count: marketplaces.len(),

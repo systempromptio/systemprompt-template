@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use systemprompt::identifiers::AgentId;
 
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
@@ -16,10 +17,11 @@ use crate::types::UserContext;
 use super::responses::AgentsListResponse;
 
 pub(crate) async fn list_agents_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
 ) -> AdminResult<Response> {
-    let services_path = shared::get_services_path()?;
+    let services_path = shared::get_services_path(&env)?;
     let agents = repositories::config::agents::list_configured_agents(&services_path)
         .map_err(AdminError::internal)?;
     // Why: `admin`, not `is_console`. The unfiltered list includes
@@ -28,7 +30,7 @@ pub(crate) async fn list_agents_handler(
     if user_ctx.is_admin {
         return Ok(Json(AgentsListResponse { agents }).into_response());
     }
-    let access = crate::authz::catalog::CatalogAccess::load(&pool, &user_ctx.user_id).await?;
+    let access = crate::authz::catalog::CatalogAccess::load(&env, &pool, &user_ctx.user_id).await?;
     let ids = agents
         .iter()
         .filter(|a| a.enabled)
@@ -44,8 +46,11 @@ pub(crate) async fn list_agents_handler(
     Ok(Json(AgentsListResponse { agents: filtered }).into_response())
 }
 
-pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> AdminResult<Response> {
-    let services_path = shared::get_services_path()?;
+pub(crate) async fn get_agent_handler(
+    Extension(env): Extension<AdminEnv>,
+    Path(agent_id): Path<String>,
+) -> AdminResult<Response> {
+    let services_path = shared::get_services_path(&env)?;
     let agent = repositories::config::agents::find_agent(&services_path, &AgentId::new(agent_id))
         .map_err(AdminError::internal)?
         .ok_or_else(|| AdminError::NotFound("Agent not found".to_owned()))?;

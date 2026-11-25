@@ -8,6 +8,8 @@
 //! `reconnect_required` with a named reason, so the profile page explains it
 //! before anyone tries a tool.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::Json;
@@ -32,6 +34,7 @@ pub(crate) struct ReprovisionResponse {
 }
 
 pub(crate) async fn reprovision_connector_handler(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(provider): Path<String>,
@@ -40,7 +43,7 @@ pub(crate) async fn reprovision_connector_handler(
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
     let provider = Provider::try_from(provider).map_err(AdminError::BadRequest)?;
-    if !provider.configured() || !provider.requires_auth() {
+    if !provider.configured(&env.services()) || !provider.requires_auth(&env.services()) {
         return Err(AdminError::NotFound(
             "No authenticated connector with this id".to_owned(),
         ));

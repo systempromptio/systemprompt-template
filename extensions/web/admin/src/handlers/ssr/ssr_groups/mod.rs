@@ -10,6 +10,8 @@
 //! That is the property the page is built around: a group listing whose
 //! numbers do not add up to anything cannot answer "where did the money go".
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::extract::{Extension, Query, State};
@@ -56,6 +58,7 @@ fn tabs(on_sync: bool) -> Vec<TabLinkView> {
 }
 
 pub(crate) async fn groups_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -68,7 +71,7 @@ pub(crate) async fn groups_page(
 
     let on_sync = is_sync_tab(query.tab.as_deref());
     let sync = if on_sync {
-        plane_card_by_id(&pool, repositories::sync::groups::PLANE_ID, "").await?
+        plane_card_by_id(&env, &pool, repositories::sync::groups::PLANE_ID, "").await?
     } else {
         None
     };
@@ -79,7 +82,7 @@ pub(crate) async fn groups_page(
     let dir = sorting::direction(query.dir.as_deref());
 
     let source = sorting::source_filter(query.source.as_deref());
-    let mut listing = data::load_listing(&pool, window_days).await;
+    let mut listing = data::load_listing(&env, &pool, window_days).await;
     sorting::apply(&mut listing.rows, sort, dir);
 
     // Why: the tiles are computed before the source filter is applied. They

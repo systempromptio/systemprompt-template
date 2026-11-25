@@ -13,9 +13,7 @@ use saml::{Binding, Dispatch, StartLogin};
 use serde::Deserialize;
 
 use super::provider::{idp_descriptor, service_provider};
-use super::{
-    AdfsDeps, FlowState, login_error, random_url_safe, sanitize_redirect, state_cookie, use_https,
-};
+use super::{AdfsDeps, FlowState, login_error, random_url_safe, sanitize_redirect, state_cookie};
 
 #[derive(Deserialize)]
 pub(crate) struct StartParams {
@@ -81,7 +79,7 @@ pub(crate) async fn adfs_start(
     };
 
     let mut headers = HeaderMap::new();
-    if let Ok(val) = state_cookie(&flow, use_https()).parse() {
+    if let Ok(val) = state_cookie(&flow, deps.use_https).parse() {
         headers.insert(SET_COOKIE, val);
     }
     (headers, Redirect::to(target.as_str())).into_response()

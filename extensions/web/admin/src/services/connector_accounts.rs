@@ -7,6 +7,7 @@ use chrono::Utc;
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt::manifest::services::ServicesConfig;
 use systemprompt::models::auth::Permission;
 
 pub(crate) use super::connector_readiness::probe_session_connection;
@@ -73,16 +74,16 @@ pub(super) async fn load_entitlement(pool: &PgPool, user: &UserId) -> AdminResul
 impl Entitlement {
     // Why: a session-attested server lists the scopes; every other provider
     // is open to any active account.
-    fn permits(&self, provider: &Provider) -> bool {
+    fn permits(&self, services: &ServicesConfig, provider: &Provider) -> bool {
         self.active
             && provider
-                .session_scopes()
+                .session_scopes(services)
                 .is_none_or(|scopes| scopes_granted(&self.roles, scopes))
     }
 }
 
-fn not_entitled_message(provider: &Provider) -> &'static str {
-    if provider.is_session_attested() {
+fn not_entitled_message(services: &ServicesConfig, provider: &Provider) -> &'static str {
+    if provider.is_session_attested(services) {
         "This connector is not open to your account"
     } else {
         "An active account is required to connect providers"
@@ -91,6 +92,7 @@ fn not_entitled_message(provider: &Provider) -> &'static str {
 
 pub(crate) async fn require_entitlement(
     pool: &PgPool,
+    services: &ServicesConfig,
     user: &UserId,
     provider: Provider,
 ) -> AdminResult<()> {
@@ -100,15 +102,16 @@ pub(crate) async fn require_entitlement(
             "An active account is required to connect providers".into(),
         ));
     }
-    if !entitlement.permits(&provider) {
+    if !entitlement.permits(services, &provider) {
         return Err(AdminError::Forbidden(
-            not_entitled_message(&provider).into(),
+            not_entitled_message(services, &provider).into(),
         ));
     }
     Ok(())
 }
 
 fn actions_for(
+    services: &ServicesConfig,
     provider: &Provider,
     row: Option<&repo::ProviderConnection>,
     status: &str,
@@ -116,9 +119,9 @@ fn actions_for(
     entitled: bool,
 ) -> Vec<String> {
     let mut actions = Vec::new();
-    if configured && entitled && provider.is_session_attested() {
+    if configured && entitled && provider.is_session_attested(services) {
         actions.push("test".into());
-    } else if configured && entitled && provider.requires_auth() {
+    } else if configured && entitled && provider.requires_auth(services) {
         actions.push(
             if status == "connected" {
                 "reconnect"
@@ -141,14 +144,15 @@ fn actions_for(
 }
 
 fn describe(
+    services: &ServicesConfig,
     provider: &Provider,
     row: Option<&repo::ProviderConnection>,
     entitlement: &Entitlement,
 ) -> Connection {
-    let configured = provider.configured();
-    let entitled = entitlement.permits(provider);
-    let session_attested = provider.is_session_attested();
-    let status = if configured && !provider.requires_auth() {
+    let configured = provider.configured(services);
+    let entitled = entitlement.permits(services, provider);
+    let session_attested = provider.is_session_attested(services);
+    let status = if configured && !provider.requires_auth(services) {
         "no_auth_required"
     } else if configured && session_attested {
         if entitled {
@@ -163,8 +167,8 @@ fn describe(
     };
     Connection {
         provider: provider.slug().into(),
-        display_name: provider.display_name(),
-        requires_auth: provider.requires_auth(),
+        display_name: provider.display_name(services),
+        requires_auth: provider.requires_auth(services),
         session_attested,
         configured,
         entitled,
@@ -187,14 +191,17 @@ fn describe(
         } else {
             row.and_then(|r| r.verified_at.map(|t| t.to_rfc3339()))
         },
-        actions: actions_for(provider, row, status, configured, entitled),
+        actions: actions_for(services, provider, row, status, configured, entitled),
     }
 }
 
-pub async fn get_connections(pool: &PgPool, user: &UserId) -> AdminResult<ConnectionSnapshot> {
+pub async fn get_connections(
+    pool: &PgPool,
+    services: &ServicesConfig,
+    user: &UserId,
+) -> AdminResult<ConnectionSnapshot> {
     let rows = repo::list_accounts(pool, user).await?;
     let entitlement = load_entitlement(pool, user).await?;
-    let services = systemprompt::loader::ServicesBootstrap::get().map_err(AdminError::internal)?;
     let mut ids = services
         .mcp_servers
         .iter()
@@ -210,7 +217,7 @@ pub async fn get_connections(pool: &PgPool, user: &UserId) -> AdminResult<Connec
     for id in ids {
         let provider = Provider::try_from(id).map_err(AdminError::BadRequest)?;
         let row = rows.iter().find(|r| r.provider == provider.slug());
-        connections.push(describe(&provider, row, &entitlement));
+        connections.push(describe(services, &provider, row, &entitlement));
     }
     Ok(ConnectionSnapshot {
         version: 1,

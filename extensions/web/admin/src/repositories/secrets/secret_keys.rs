@@ -2,13 +2,14 @@
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt::traits::MemberCipher;
 
 use crate::repositories::secrets::secret_crypto::{self, SecretCryptoError};
 
 pub async fn get_or_create_user_dek(
     pool: &PgPool,
     user_id: &UserId,
-    master_key: &[u8; 32],
+    cipher: &dyn MemberCipher,
 ) -> Result<[u8; 32], SecretCryptoError> {
     let row = sqlx::query!(
         "SELECT encrypted_dek, dek_nonce FROM user_encryption_keys WHERE user_id = $1",
@@ -19,21 +20,12 @@ pub async fn get_or_create_user_dek(
     .map_err(|e| SecretCryptoError::Database(e.to_string()))?;
 
     if let Some(row) = row {
-        let nonce: [u8; 12] = row.dek_nonce.try_into().map_err(|v: Vec<u8>| {
-            tracing::warn!(len = v.len(), "Stored DEK nonce is not 12 bytes");
-            SecretCryptoError::InvalidKeyMaterial
-        })?;
-        let plaintext = secret_crypto::decrypt(master_key, &nonce, &row.encrypted_dek)?;
-        let dek: [u8; 32] = plaintext.try_into().map_err(|v: Vec<u8>| {
-            tracing::warn!(len = v.len(), "Decrypted DEK is not 32 bytes");
-            SecretCryptoError::InvalidKeyMaterial
-        })?;
-        return Ok(dek);
+        return secret_crypto::unwrap_dek(cipher, &row.encrypted_dek);
     }
 
     let dek = secret_crypto::generate_dek();
-    let nonce = secret_crypto::generate_nonce();
-    let encrypted_dek = secret_crypto::encrypt(master_key, &nonce, &dek)?;
+    let nonce: [u8; 0] = [];
+    let encrypted_dek = secret_crypto::wrap_dek(cipher, &dek)?;
     let id = uuid::Uuid::new_v4().to_string();
 
     sqlx::query!(
@@ -56,13 +48,13 @@ pub async fn get_or_create_user_dek(
 pub async fn rotate_user_dek(
     pool: &PgPool,
     user_id: &UserId,
-    master_key: &[u8; 32],
+    cipher: &dyn MemberCipher,
 ) -> Result<(), SecretCryptoError> {
-    let old_dek = get_or_create_user_dek(pool, user_id, master_key).await?;
+    let old_dek = get_or_create_user_dek(pool, user_id, cipher).await?;
 
     let new_dek = secret_crypto::generate_dek();
-    let new_dek_nonce = secret_crypto::generate_nonce();
-    let encrypted_new_dek = secret_crypto::encrypt(master_key, &new_dek_nonce, &new_dek)?;
+    let new_dek_nonce: [u8; 0] = [];
+    let encrypted_new_dek = secret_crypto::wrap_dek(cipher, &new_dek)?;
 
     let mut tx = pool
         .begin()

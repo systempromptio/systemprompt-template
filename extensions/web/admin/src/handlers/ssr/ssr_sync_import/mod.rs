@@ -9,6 +9,8 @@
 //! projected planes the archive did not carry are named so a partial
 //! archive is never mistaken for a full one.
 
+use crate::env::AdminEnv;
+
 mod view;
 
 use std::sync::Arc;
@@ -58,6 +60,7 @@ fn kpis(cards: &[PlaneCardView], other: usize) -> Vec<PreviewKpiView> {
 }
 
 pub(crate) async fn import_preview_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -86,7 +89,14 @@ pub(crate) async fn import_preview_page(
                     source_label: Some("the archive"),
                 };
                 cards.push(
-                    plane_card(&pool, plane.as_ref(), DeclarationSource::Text(text), &opts).await?,
+                    plane_card(
+                        &env,
+                        &pool,
+                        plane.as_ref(),
+                        DeclarationSource::Text(text),
+                        &opts,
+                    )
+                    .await?,
                 );
             },
             None => absent.push(AbsentPlaneView {

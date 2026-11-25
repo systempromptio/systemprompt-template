@@ -1,8 +1,10 @@
-//! `secret_migration` job: re-encrypts plaintext secrets under the master key.
+//! `secret_migration` job: encrypts plaintext secrets under each user's data
+//! key, which is wrapped by the web member's conferred cipher.
 
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
-use systemprompt::traits::{Job, JobContext, JobResult};
+use systemprompt::traits::{Job, JobContext, JobResult, MemberCipher};
+use systemprompt_web_admin::env::AdminEnv;
 
 use crate::error::JobError;
 use systemprompt_web_admin::repositories::secrets::{secret_crypto, secret_keys, secret_migration};
@@ -39,10 +41,11 @@ impl Job for SecretMigrationJob {
 async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let start = std::time::Instant::now();
 
-    let Ok(master_key) = secret_crypto::load_master_key() else {
-        return Ok(JobResult::success().with_stats(0, 0).with_duration(0));
+    let env = ctx.get::<AdminEnv>()?;
+    let Ok(cipher) = env.cipher() else {
+        return Ok(JobResult::success()
+            .with_message("the member cipher is not held by this host; nothing migrated"));
     };
-
     let db = ctx.get::<DbPool>()?;
 
     let pool = db.pool();
@@ -60,7 +63,8 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
             .with_duration(duration_ms));
     }
 
-    let (success_count, error_count) = migrate_secrets(&pool, &rows, &master_key, actor_user).await;
+    let (success_count, error_count) =
+        migrate_secrets(&pool, &rows, cipher, actor_user).await;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
@@ -80,14 +84,14 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 async fn migrate_secrets(
     pool: &std::sync::Arc<sqlx::PgPool>,
     rows: &[secret_migration::UnencryptedSecret],
-    master_key: &[u8; 32],
+    cipher: &dyn MemberCipher,
     actor: &UserId,
 ) -> (u64, u64) {
     let mut success_count = 0u64;
     let mut error_count = 0u64;
 
     for row in rows {
-        let result = encrypt_and_store_secret(pool, row, master_key, actor).await;
+        let result = encrypt_and_store_secret(pool, row, cipher, actor).await;
 
         match result {
             Ok(()) => {
@@ -107,11 +111,10 @@ async fn migrate_secrets(
 async fn encrypt_and_store_secret(
     pool: &std::sync::Arc<sqlx::PgPool>,
     row: &secret_migration::UnencryptedSecret,
-    master_key: &[u8; 32],
+    cipher: &dyn MemberCipher,
     actor: &UserId,
 ) -> Result<(), JobError> {
-    let dek =
-        secret_keys::get_or_create_user_dek(pool, &UserId::new(&row.user_id), master_key).await?;
+    let dek = secret_keys::get_or_create_user_dek(pool, &UserId::new(&row.user_id), cipher).await?;
 
     let nonce = secret_crypto::generate_nonce();
     let encrypted = secret_crypto::encrypt(&dek, &nonce, row.var_value.as_bytes())?;

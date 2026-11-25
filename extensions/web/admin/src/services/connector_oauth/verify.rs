@@ -1,6 +1,8 @@
 //! Read-only provider identity and MCP protocol verification before connection
 //! use.
 
+use crate::env::AdminEnv;
+
 use super::report::VerificationReport;
 use super::response::{body, tool_error};
 use super::transport::client;
@@ -10,13 +12,14 @@ use serde_json::{Value, json};
 use std::time::Instant;
 
 async fn rpc(
+    env: &AdminEnv,
     http: &reqwest::Client,
     grant: &Grant,
     session: &mut Option<String>,
     payload: Value,
 ) -> AdminResult<Value> {
     let mut request = http
-        .post(grant.provider.endpoint())
+        .post(grant.provider.endpoint(&env.services()))
         .header(
             "Authorization",
             format!("{} {}", grant.authorization_scheme, grant.access_token),
@@ -60,18 +63,20 @@ async fn rpc(
 }
 
 async fn identity(
+    env: &AdminEnv,
     http: &reqwest::Client,
     grant: &mut Grant,
     session: &mut Option<String>,
 ) -> AdminResult<()> {
     if matches!(grant.provider, Provider::Generic(_)) {
-        grant.resource_name = grant.provider.endpoint();
-        return super::userinfo::generic_identity(http, grant).await;
+        grant.resource_name = grant.provider.endpoint(&env.services());
+        return super::userinfo::generic_identity(env, http, grant).await;
     }
     let info = match &grant.provider {
         Provider::Generic(_) => return Ok(()),
         Provider::Atlassian => super::payload::atlassian_user(
             &rpc(
+                env,
                 http,
                 grant,
                 session,
@@ -113,33 +118,38 @@ async fn identity(
         .unwrap_or(&grant.account_id)
         .clone_into(&mut grant.account_name);
     if grant.provider == Provider::Atlassian {
-        let sites = super::payload::atlassian_sites(&rpc(http, grant, session, json!({"jsonrpc":"2.0", "id":4,
+        let sites = super::payload::atlassian_sites(&rpc(env, http, grant, session, json!({"jsonrpc":"2.0", "id":4,
             "method":"tools/call", "params":{"name":"getAccessibleAtlassianResources", "arguments":{}}})).await?)?;
         super::site::select(grant, &sites).await?;
     }
     Ok(())
 }
 
-pub async fn verify(grant: &mut Grant) -> AdminResult<()> {
-    verify_with_client(grant, &client()?).await
+pub async fn verify(env: &AdminEnv, grant: &mut Grant) -> AdminResult<()> {
+    verify_with_client(env, grant, &client()?).await
 }
 
-pub async fn verify_with_client(grant: &mut Grant, http: &reqwest::Client) -> AdminResult<()> {
+pub async fn verify_with_client(
+    env: &AdminEnv,
+    grant: &mut Grant,
+    http: &reqwest::Client,
+) -> AdminResult<()> {
     let mut report = VerificationReport::for_provider(grant.provider.slug());
-    verify_reporting(grant, http, &mut report).await
+    verify_reporting(env, grant, http, &mut report).await
 }
 
 pub async fn verify_reporting(
+    env: &AdminEnv,
     grant: &mut Grant,
     http: &reqwest::Client,
     report: &mut VerificationReport,
 ) -> AdminResult<()> {
     let mut session = None;
-    let result = handshake(grant, http, &mut session, report).await;
+    let result = handshake(env, grant, http, &mut session, report).await;
     // Why: The probe uses a private session, never a user's active Claude session.
     if let Some(session) = session {
         let _cleanup_result = http
-            .delete(grant.provider.endpoint())
+            .delete(grant.provider.endpoint(&env.services()))
             .header("Mcp-Session-Id", session)
             .header(
                 "Authorization",
@@ -152,6 +162,7 @@ pub async fn verify_reporting(
 }
 
 async fn handshake(
+    env: &AdminEnv,
     grant: &mut Grant,
     http: &reqwest::Client,
     session: &mut Option<String>,
@@ -160,6 +171,7 @@ async fn handshake(
     let started = Instant::now();
     let outcome = async {
         rpc(
+            env,
             http,
             grant,
             session,
@@ -169,6 +181,7 @@ async fn handshake(
         )
         .await?;
         rpc(
+            env,
             http,
             grant,
             session,
@@ -177,7 +190,7 @@ async fn handshake(
         .await?;
         Ok(format!(
             "MCP session open at {}",
-            host(&grant.provider.endpoint())
+            host(&grant.provider.endpoint(&env.services()))
         ))
     }
     .await;
@@ -187,6 +200,7 @@ async fn handshake(
     let started = Instant::now();
     let outcome = async {
         let tools = rpc(
+            env,
             http,
             grant,
             session,
@@ -210,7 +224,7 @@ async fn handshake(
 
     let started = Instant::now();
     let outcome = async {
-        identity(http, grant, session).await?;
+        identity(env, http, grant, session).await?;
         Ok(
             match (
                 grant.account_name.is_empty(),

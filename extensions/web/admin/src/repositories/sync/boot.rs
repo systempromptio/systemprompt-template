@@ -14,6 +14,8 @@
 //! condition into a card headline because an operator came to look; a server
 //! starting with half its declarations is a server nobody asked for.
 
+use crate::env::AdminEnv;
+
 use sqlx::PgPool;
 
 use super::plane::{Actor, SyncMode, SyncPlane};
@@ -25,11 +27,10 @@ use crate::error::{AdminError, AdminResult};
 // trailing ids are literals so this file compiles whether or not those plane
 // modules are present yet — `reconcile_all` fails loudly on an unregistered
 // id, which is the check that matters.
-pub const BOOT_ORDER: [&str; 5] = [
+pub const BOOT_ORDER: [&str; 4] = [
     super::groups::PLANE_ID,
     super::access_control::PLANE_ID,
     super::gateway_policies::PLANE_ID,
-    "gateway_routes",
     "governance",
 ];
 
@@ -52,8 +53,12 @@ pub struct BootReport {
     pub governance: PlaneBoot,
 }
 
-pub async fn reconcile_plane(pool: &PgPool, plane: &dyn SyncPlane) -> AdminResult<PlaneBoot> {
-    let drift = plane.drift(pool).await?;
+pub async fn reconcile_plane(
+    env: &AdminEnv,
+    pool: &PgPool,
+    plane: &dyn SyncPlane,
+) -> AdminResult<PlaneBoot> {
+    let drift = plane.drift(env, pool).await?;
     if let Some(reason) = drift.unreadable {
         return Err(AdminError::invalid(
             "a declaration could not be read at boot",
@@ -67,7 +72,9 @@ pub async fn reconcile_plane(pool: &PgPool, plane: &dyn SyncPlane) -> AdminResul
         ..PlaneBoot::default()
     };
     if drift.in_db == 0 && drift.declared_count > 0 {
-        let outcome = plane.apply(pool, SyncMode::Overwrite, Actor::Boot).await?;
+        let outcome = plane
+            .apply(env, pool, SyncMode::Overwrite, Actor::Boot)
+            .await?;
         boot.seeded = true;
         boot.inserted = outcome.inserted;
         boot.drift_rows = 0;
@@ -101,12 +108,12 @@ pub async fn reconcile_plane(pool: &PgPool, plane: &dyn SyncPlane) -> AdminResul
     Ok(boot)
 }
 
-pub async fn reconcile_all(pool: &PgPool) -> AdminResult<BootReport> {
+pub async fn reconcile_all(env: &AdminEnv, pool: &PgPool) -> AdminResult<BootReport> {
     let mut report = BootReport::default();
     for id in BOOT_ORDER {
         let plane = find_plane(id)
             .ok_or_else(|| AdminError::internal(format!("sync plane '{id}' is not registered")))?;
-        let boot = reconcile_plane(pool, plane.as_ref()).await?;
+        let boot = reconcile_plane(env, pool, plane.as_ref()).await?;
         match id {
             super::groups::PLANE_ID => report.groups = boot,
             super::access_control::PLANE_ID => report.access_control = boot,

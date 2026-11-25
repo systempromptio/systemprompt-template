@@ -20,6 +20,7 @@ pub mod activity;
 pub mod assets;
 pub mod audit_event_bus;
 pub mod authz;
+pub mod env;
 pub mod error;
 pub mod event_hub;
 pub(crate) mod export;
@@ -101,8 +102,7 @@ pub mod test_support {
 
 pub fn hooks_webhook_router(
     pool: Arc<PgPool>,
-    session_service: Arc<systemprompt::oauth::SessionCreationService>,
-    rate_windows: systemprompt::governance::policy::RateWindowRepository,
+    users: Arc<dyn systemprompt::traits::UserProvider>,
 ) -> Router {
     Router::new()
         .route(
@@ -115,8 +115,7 @@ pub fn hooks_webhook_router(
         .route("/hooks/transcript", post(handlers::track_transcript_event))
         .layer(Extension(event_hub::EventHub::default()))
         .layer(Extension(None::<Arc<systemprompt::ai::AiService>>))
-        .layer(Extension(session_service))
-        .layer(Extension(rate_windows))
+        .layer(Extension(users))
         .with_state(pool)
 }
 

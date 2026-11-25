@@ -12,17 +12,19 @@
 //! database, and the user's permissioned catalog is returned as JSON. The
 //! filtering reuses `repositories::users::access_control::resolve_user_matrix`.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
+
+use std::path::Path as FsPath;
 
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
-use base64::Engine;
 use serde::Serialize;
-use sha2::{Digest, Sha256};
 use sqlx::PgPool;
-use systemprompt::config::SecretsBootstrap;
 use systemprompt::identifiers::UserId;
+use systemprompt::traits::ShareTokenSigner;
 
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
@@ -33,69 +35,24 @@ use crate::types::UserContext;
 // procurement cycle, short enough that a forgotten one dies on its own.
 const SHARE_TOKEN_TTL_DAYS: i64 = 30;
 
-fn sign(secret: &[u8], user_id: &UserId, version: i32, expires_unix: i64) -> String {
-    let payload = format!("{user_id}:{version}:{expires_unix}");
-    let mut padded = [0u8; 64];
-    if secret.len() > 64 {
-        let mut h = Sha256::new();
-        h.update(secret);
-        let digest = h.finalize();
-        padded[..32].copy_from_slice(&digest);
-    } else {
-        padded[..secret.len()].copy_from_slice(secret);
-    }
-    let mut ipad = [0x36u8; 64];
-    let mut opad = [0x5cu8; 64];
-    for i in 0..64 {
-        ipad[i] ^= padded[i];
-        opad[i] ^= padded[i];
-    }
-    let mut inner = Sha256::new();
-    inner.update(ipad);
-    inner.update(payload.as_bytes());
-    let inner_digest = inner.finalize();
-    let mut outer = Sha256::new();
-    outer.update(opad);
-    outer.update(inner_digest);
-    let mac = outer.finalize();
+const SHARE_PURPOSE: &str = "share.manifest";
 
-    let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
-    let uid_b64 = b64.encode(user_id.as_str().as_bytes());
-    let ver_b64 = b64.encode(version.to_string().as_bytes());
-    let exp_b64 = b64.encode(expires_unix.to_string().as_bytes());
-    let mut mac_hex = String::with_capacity(mac.len() * 2);
-    for b in mac {
-        mac_hex.push_str(&format!("{b:02x}"));
-    }
-    format!("{uid_b64}:{ver_b64}:{exp_b64}:{mac_hex}")
+fn sign(signer: &dyn ShareTokenSigner, user_id: &UserId, version: i32) -> AdminResult<String> {
+    let payload = format!("{user_id}:{version}");
+    let ttl =
+        std::time::Duration::from_secs(u64::try_from(SHARE_TOKEN_TTL_DAYS).unwrap_or(30) * 86_400);
+    signer
+        .sign(SHARE_PURPOSE, payload.as_bytes(), ttl)
+        .map_err(AdminError::internal)
 }
 
-// Why: expiry is checked *after* the MAC, so a forged expiry can never buy
-// time, and an expired-but-genuine token fails exactly like a tampered one —
-// the public endpoint gives an anonymous caller one answer, not three.
-fn verify(secret: &[u8], token: &str) -> Option<(UserId, i32)> {
-    let parts: Vec<&str> = token.split(':').collect();
-    if parts.len() != 4 {
-        return None;
-    }
-    let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
-    let user_id = UserId::new(String::from_utf8(b64.decode(parts[0]).ok()?).ok()?);
-    let ver_s = String::from_utf8(b64.decode(parts[1]).ok()?).ok()?;
-    let version: i32 = ver_s.parse().ok()?;
-    let exp_s = String::from_utf8(b64.decode(parts[2]).ok()?).ok()?;
-    let expires_unix: i64 = exp_s.parse().ok()?;
-    let expected = sign(secret, &user_id, version, expires_unix);
-    if expected.len() != token.len() {
-        return None;
-    }
-    let mut diff = 0u8;
-    for (a, b) in expected.bytes().zip(token.bytes()) {
-        diff |= a ^ b;
-    }
-    if diff != 0 {
-        return None;
-    }
-    (chrono::Utc::now().timestamp() < expires_unix).then_some((user_id, version))
+// Why: an expired, tampered or foreign token all verify as `None`, so the
+// public endpoint gives an anonymous caller one answer, not three.
+fn verify(signer: &dyn ShareTokenSigner, token: &str) -> Option<(UserId, i32)> {
+    let payload = signer.verify(SHARE_PURPOSE, token).ok()?;
+    let payload = String::from_utf8(payload).ok()?;
+    let (user_id, version) = payload.rsplit_once(':')?;
+    Some((UserId::new(user_id), version.parse().ok()?))
 }
 
 #[derive(Debug, Serialize)]
@@ -106,6 +63,7 @@ struct ShareTokenResponse {
 
 pub(crate) async fn issue_share_token_handler(
     Extension(user_ctx): Extension<UserContext>,
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Path(target_user_id): Path<String>,
 ) -> AdminResult<Response> {
@@ -115,13 +73,10 @@ pub(crate) async fn issue_share_token_handler(
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
     let target_user_id = UserId::new(target_user_id);
-    let secret = SecretsBootstrap::manifest_signing_secret_seed().map_err(AdminError::internal)?;
     let version = repositories::users::find_share_token_version(&pool, &target_user_id)
         .await?
         .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
-    let expires_unix =
-        (chrono::Utc::now() + chrono::Duration::days(SHARE_TOKEN_TTL_DAYS)).timestamp();
-    let token = sign(&secret, &target_user_id, version, expires_unix);
+    let token = sign(env.share_tokens()?, &target_user_id, version)?;
     let url = format!("/share/manifest/{token}");
     Ok(Json(ShareTokenResponse { token, url }).into_response())
 }
@@ -148,10 +103,10 @@ struct ManifestResponse {
 
 pub(crate) async fn public_manifest_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Path(token): Path<String>,
 ) -> AdminResult<Response> {
-    let secret = SecretsBootstrap::manifest_signing_secret_seed().map_err(AdminError::internal)?;
-    let Some((user_id, version)) = verify(&secret, &token) else {
+    let Some((user_id, version)) = verify(env.share_tokens()?, &token) else {
         return Err(AdminError::Unauthorized(
             "Invalid or revoked token".to_owned(),
         ));
@@ -181,7 +136,7 @@ pub(crate) async fn public_manifest_handler(
         ));
     }
 
-    Ok(Json(build_user_manifest(&pool, &user_id).await?).into_response())
+    Ok(Json(build_user_manifest(&env, &pool, &user_id).await?).into_response())
 }
 
 fn opt_desc(desc: String) -> Option<String> {
@@ -189,7 +144,8 @@ fn opt_desc(desc: String) -> Option<String> {
 }
 
 fn collect_manifest_sections(
-    services_path: &std::path::Path,
+    env: &AdminEnv,
+    services_path: &FsPath,
 ) -> Vec<repositories::users::access_control::SectionInput> {
     let mut sections_in: Vec<repositories::users::access_control::SectionInput> = Vec::new();
 
@@ -203,7 +159,8 @@ fn collect_manifest_sections(
             .collect();
         sections_in.push(("mcp_server".into(), "MCP servers".into(), rows));
     }
-    if let Ok(plugins) = repositories::marketplace::plugins::list_plugin_catalog(services_path) {
+    if let Ok(plugins) = repositories::marketplace::plugins::list_plugin_catalog(env, services_path)
+    {
         let rows = plugins
             .into_iter()
             .map(|p| (p.id.as_str().to_owned(), p.name, opt_desc(p.description)))
@@ -228,14 +185,22 @@ fn collect_manifest_sections(
     sections_in
 }
 
-async fn build_user_manifest(pool: &PgPool, user_id: &UserId) -> AdminResult<ManifestResponse> {
-    let services_path = shared::get_services_path()?;
-    let sections_in = collect_manifest_sections(&services_path);
+async fn build_user_manifest(
+    env: &AdminEnv,
+    pool: &PgPool,
+    user_id: &UserId,
+) -> AdminResult<ManifestResponse> {
+    let services_path = shared::get_services_path(env)?;
+    let sections_in = collect_manifest_sections(env, &services_path);
 
-    let matrix =
-        repositories::users::access_control::filter_catalog_for_user(pool, user_id, sections_in)
-            .await?
-            .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
+    let matrix = repositories::users::access_control::filter_catalog_for_user(
+        env,
+        pool,
+        user_id,
+        sections_in,
+    )
+    .await?
+    .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
 
     let sections = matrix
         .sections

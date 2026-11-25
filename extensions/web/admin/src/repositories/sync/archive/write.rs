@@ -8,6 +8,7 @@ use zip::write::SimpleFileOptions;
 
 use super::manifest::{ExportedPlane, build_manifest, render_manifest};
 use super::{MANIFEST_FILE, TREE_PREFIX};
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::sync::registry::planes;
 
@@ -24,7 +25,11 @@ fn zip_error(e: zip::result::ZipError) -> AdminError {
     AdminError::invalid("archive could not be written", e)
 }
 
-pub async fn build_export_zip(pool: &PgPool, actor: &str) -> AdminResult<ExportZip> {
+pub async fn build_export_zip(
+    env: &AdminEnv,
+    pool: &PgPool,
+    actor: &str,
+) -> AdminResult<ExportZip> {
     let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let registry = planes();
@@ -32,7 +37,7 @@ pub async fn build_export_zip(pool: &PgPool, actor: &str) -> AdminResult<ExportZ
     let mut rows = 0usize;
     for plane in &registry {
         // Why: a plane with no file form has nothing to put in the tree.
-        let Some(export) = plane.export(pool).await? else {
+        let Some(export) = plane.export(env, pool).await? else {
             continue;
         };
         writer
@@ -47,7 +52,7 @@ pub async fn build_export_zip(pool: &PgPool, actor: &str) -> AdminResult<ExportZ
             row_count: export.row_count,
         });
     }
-    let manifest = build_manifest(pool, actor, &exported).await?;
+    let manifest = build_manifest(env, pool, actor, &exported).await?;
     writer
         .start_file(MANIFEST_FILE, options)
         .map_err(zip_error)?;

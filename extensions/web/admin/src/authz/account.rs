@@ -2,7 +2,7 @@
 //! stored roles.
 
 use sqlx::PgPool;
-use systemprompt::governance::policy::types::AccessScope;
+use systemprompt::governance::policy::AccessScope;
 use systemprompt::identifiers::UserId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

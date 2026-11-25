@@ -7,6 +7,8 @@
 //! folded in: it was the same account seen from a different sidebar entry, and
 //! the two are now one URL.
 
+use crate::env::AdminEnv;
+
 mod access_overview;
 mod access_view;
 mod context;
@@ -56,6 +58,7 @@ pub(crate) struct DetailQuery {
     reason = "axum extractor list; the router decides the arity, not this signature"
 )]
 pub(crate) async fn user_detail_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -128,6 +131,7 @@ pub(crate) async fn user_detail_page(
     };
 
     let data = Box::pin(fill_tab(
+        &env,
         TabRead {
             pool: &pool,
             user_id: &user_id,
@@ -160,7 +164,11 @@ struct TabRead<'a> {
     viewer: &'a UserContext,
 }
 
-async fn fill_tab(read: TabRead<'_>, mut data: UserDetailContext) -> UserDetailContext {
+async fn fill_tab(
+    env: &AdminEnv,
+    read: TabRead<'_>,
+    mut data: UserDetailContext,
+) -> UserDetailContext {
     let TabRead {
         pool,
         user_id,
@@ -186,7 +194,7 @@ async fn fill_tab(read: TabRead<'_>, mut data: UserDetailContext) -> UserDetailC
         },
         "access" => {
             data.access = Some(view::access_tab(
-                load::load_access(pool, user_id).await,
+                load::load_access(env, pool, user_id).await,
                 user_id,
             ));
         },

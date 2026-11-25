@@ -5,6 +5,8 @@
 //! marketplace version served at the time — and the judge's one label with
 //! its rationale, plus the button that asks for it again.
 
+use crate::env::AdminEnv;
+
 mod context;
 mod figures;
 mod rows;
@@ -31,6 +33,7 @@ use crate::repositories::analysis::conversations::planes::{
 };
 use crate::repositories::scope::visibility::may_view;
 use crate::types::UserContext;
+use axum::Extension;
 
 use context::{Planes, build_context};
 
@@ -115,6 +118,7 @@ pub(crate) struct JudgeNowForm {
 // The row is queued as a manual request and the next `conversation_judge`
 // tick (within five minutes) reads it, whatever the profile's automatic switch.
 pub(crate) async fn judge_now(
+    Extension(env): Extension<AdminEnv>,
     shell: Page,
     State(pool): State<Arc<PgPool>>,
     Path(context_id): Path<String>,
@@ -124,7 +128,7 @@ pub(crate) async fn judge_now(
     if !shell.user.is_console {
         return Err(AdminError::Forbidden("Console access required".into()).into());
     }
-    crate::handlers::shared::require_write_origin(&headers)?;
+    crate::handlers::shared::require_write_origin(&env, &headers)?;
     let context_id = parse_context(&context_id)?;
     load_visible(&pool, &shell.user, &context_id).await?;
     insert_manual_judgement(&pool, &context_id, &shell.user.user_id).await?;

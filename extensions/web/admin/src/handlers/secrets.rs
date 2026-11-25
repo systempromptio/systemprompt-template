@@ -1,15 +1,17 @@
 //! HTTP handlers for secret storage, rotation, and short-lived resolution
 //! tokens.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::Json;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Extension, Path, Query, State};
 use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
-use systemprompt::identifiers::{PluginId, UserId};
+use systemprompt::identifiers::PluginId;
 
 use crate::error::AdminResult;
 use crate::handlers::users::extract_user_from_cookie;
@@ -30,11 +32,11 @@ pub(crate) struct ResolveQuery {
 
 pub(crate) async fn create_resolution_token_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Path(plugin_id): Path<PluginId>,
     headers: HeaderMap,
 ) -> AdminResult<Response> {
-    let subject = validate_plugin_jwt(&headers)?;
-    let user_id = UserId::new(&subject);
+    let user_id = validate_plugin_jwt(&env, &headers).await?;
     let token = secret_service::create_resolution_token(&pool, &user_id, &plugin_id).await?;
     Ok(Json(ResolutionTokenResponse {
         token,
@@ -45,19 +47,22 @@ pub(crate) async fn create_resolution_token_handler(
 
 pub(crate) async fn resolve_secrets_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Path(plugin_id): Path<PluginId>,
     Query(params): Query<ResolveQuery>,
 ) -> AdminResult<Response> {
-    let secrets = secret_service::resolve_secrets(&pool, &plugin_id, &params.token).await?;
+    let secrets =
+        secret_service::resolve_secrets(&pool, env.cipher()?, &plugin_id, &params.token).await?;
     Ok(Json(SecretsListResponse { secrets }).into_response())
 }
 
 pub(crate) async fn audit_log_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Path(plugin_id): Path<PluginId>,
     headers: HeaderMap,
 ) -> AdminResult<Response> {
-    let session = extract_user_from_cookie(&headers)?;
+    let session = extract_user_from_cookie(&env, &headers).await?;
     let entries = secret_service::list_audit_log(&pool, &session.user_id, &plugin_id).await?;
     let items: Vec<AuditLogEntry> = entries
         .into_iter()
@@ -75,10 +80,11 @@ pub(crate) async fn audit_log_handler(
 
 pub(crate) async fn rotate_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     Path(plugin_id): Path<PluginId>,
     headers: HeaderMap,
 ) -> AdminResult<Response> {
-    let session = extract_user_from_cookie(&headers)?;
-    secret_service::rotate_user_keys(&pool, &session.user_id, &plugin_id).await?;
+    let session = extract_user_from_cookie(&env, &headers).await?;
+    secret_service::rotate_user_keys(&pool, env.cipher()?, &session.user_id, &plugin_id).await?;
     Ok(Json(ResultOkResponse { result: "ok" }).into_response())
 }

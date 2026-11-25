@@ -6,6 +6,8 @@
 //! `entity_type`. Allowed values mirror the Postgres CHECK constraint on
 //! `access_control_rules.entity_type`.
 
+use crate::env::AdminEnv;
+
 mod support;
 mod template;
 mod types;
@@ -17,9 +19,7 @@ use axum::extract::{Extension, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
-use systemprompt::governance::authz::{
-    Access, AccessRule, DASHBOARD_SOURCE, EntityRef, RuleType, UpsertRuleParams,
-};
+use systemprompt::governance::authz::{Access, AccessRule, EntityRef, RuleType, UpsertRuleParams};
 use systemprompt::identifiers::RuleId;
 
 use crate::activity::RuleChange;
@@ -100,7 +100,7 @@ pub(crate) async fn upsert_entity_rule_handler(
             rule_value: &rule_value,
             access,
             justification,
-            source: DASHBOARD_SOURCE,
+            source: crate::authz::CONSOLE_SOURCE,
         })
         .await
         .map_err(AdminError::internal)?;
@@ -175,12 +175,13 @@ pub(crate) async fn delete_entity_rule_handler(
 }
 
 pub(crate) async fn set_entity_default_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<DefaultIncludedBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
-    registered_routes_from_services()?.require(kind, &entity_id)?;
+    registered_routes_from_services(&env).require(kind, &entity_id)?;
     let entity = EntityRef::from_kind_and_id(kind, &entity_id)
         .map_err(|error| AdminError::Unprocessable(error.to_string()))?;
     repo(&pool)
@@ -203,11 +204,12 @@ pub(crate) async fn set_entity_default_handler(
 // Why: entity ids come from the profile's dispatchable routes (`gateway_route`)
 // or `services/mcp/*.yaml` (`mcp_server`), not from the database.
 pub(crate) async fn list_all_entity_access_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<AllAccessQuery>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&query.entity_type)?;
-    let entity_ids = collect_entity_ids(&query.entity_type)?;
+    let entity_ids = collect_entity_ids(&env, &query.entity_type)?;
     let r = repo(&pool);
     let bulk = r
         .list_rules_bulk(kind, &entity_ids)
@@ -240,6 +242,7 @@ pub(crate) async fn list_all_entity_access_handler(
 }
 
 pub(crate) async fn apply_template_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<ApplyTemplateBody>,
 ) -> AdminResult<Response> {
@@ -266,7 +269,7 @@ pub(crate) async fn apply_template_handler(
         ));
     }
 
-    let entity_ids = collect_entity_ids(&body.entity_type)?;
+    let entity_ids = collect_entity_ids(&env, &body.entity_type)?;
     let r = repo(&pool);
     let subject = TemplateSubject {
         kind,

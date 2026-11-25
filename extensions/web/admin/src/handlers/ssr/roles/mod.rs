@@ -10,6 +10,8 @@
 //! platform admin, which is the same rule `PUT /users/{id}/roles` enforces on
 //! the write itself.
 
+use crate::env::AdminEnv;
+
 mod data;
 mod entitlements_view;
 mod rows;
@@ -58,6 +60,7 @@ fn tabs(on_entitlements: bool, members: usize, entitlements: usize) -> Vec<TabLi
 }
 
 pub(crate) async fn roles_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -98,7 +101,7 @@ pub(crate) async fn roles_page(
     );
 
     let on_entitlements = query.on_entitlements();
-    let entitlement_groups = entitlement_groups(on_entitlements, &entitlement_rows);
+    let entitlement_groups = entitlement_groups(&env, on_entitlements, &entitlement_rows);
 
     let page = RolesPageData {
         page: "roles",
@@ -137,17 +140,18 @@ pub(crate) async fn roles_page(
 // Why: labels and the catalog are only read for the tab that groups by
 // them; the members tab never names an entity.
 fn entitlement_groups(
+    env: &AdminEnv,
     on_entitlements: bool,
     entitlement_rows: &[entitlements::RoleEntitlementRow],
 ) -> Vec<entitlements_view::RoleEntitlementGroupView> {
     if !on_entitlements {
         return Vec::new();
     }
-    let labels = get_route_labels_from_services()
+    let labels = get_route_labels_from_services(env)
         .inspect_err(|e| tracing::warn!(error = %e, "roles: route labels unavailable"))
         .unwrap_or_default();
-    let sections = shared::get_services_path()
-        .map(|p| build_matrix_sections(&p))
+    let sections = shared::get_services_path(env)
+        .map(|p| build_matrix_sections(env, &p))
         .unwrap_or_default();
     entitlements_view::groups(
         rows::entitlement_views(entitlement_rows, &labels),

@@ -1,6 +1,7 @@
 //! OAuth token exchange and refresh, using only bound destinations.
 use super::transport::client;
 use super::{Grant, Provider};
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use chrono::Utc;
 use serde::Deserialize;
@@ -18,11 +19,12 @@ struct Tokens {
 use systemprompt_web_shared::format::truncate_chars as truncate;
 
 async fn request_with_client(
+    env: &AdminEnv,
     grant: &mut Grant,
     fields: &[(&str, &str)],
     http: &reqwest::Client,
 ) -> AdminResult<()> {
-    super::generic::validate_grant(grant)?;
+    super::generic::validate_grant(env, grant)?;
     let body = {
         let mut form = url::form_urlencoded::Serializer::new(String::new());
         form.extend_pairs(fields)
@@ -33,7 +35,7 @@ async fn request_with_client(
             form.append_pair("client_secret", &grant.client_secret);
         }
         if grant.provider == Provider::Atlassian || matches!(grant.provider, Provider::Generic(_)) {
-            form.append_pair("resource", &grant.provider.endpoint());
+            form.append_pair("resource", &grant.provider.endpoint(&env.services()));
         }
         form.finish()
     };
@@ -139,12 +141,13 @@ fn apply_tokens(grant: &mut Grant, tokens: Tokens) -> AdminResult<()> {
     Ok(())
 }
 
-pub async fn exchange(grant: &mut Grant, code: &str) -> AdminResult<()> {
-    let callback = grant.provider.callback()?;
-    exchange_with_client(grant, code, &callback, &client()?).await
+pub async fn exchange(env: &AdminEnv, grant: &mut Grant, code: &str) -> AdminResult<()> {
+    let callback = grant.provider.callback(&env.config().api_external_url);
+    exchange_with_client(env, grant, code, &callback, &client()?).await
 }
 
 pub async fn exchange_with_client(
+    env: &AdminEnv,
     grant: &mut Grant,
     code: &str,
     callback: &str,
@@ -152,6 +155,7 @@ pub async fn exchange_with_client(
 ) -> AdminResult<()> {
     let verifier = grant.verifier.clone();
     request_with_client(
+        env,
         grant,
         &[
             ("grant_type", "authorization_code"),
@@ -166,18 +170,23 @@ pub async fn exchange_with_client(
     Ok(())
 }
 
-pub(super) async fn refresh(grant: &mut Grant) -> AdminResult<()> {
-    refresh_with_client(grant, &client()?).await
+pub(super) async fn refresh(env: &AdminEnv, grant: &mut Grant) -> AdminResult<()> {
+    refresh_with_client(env, grant, &client()?).await
 }
 
-pub async fn refresh_with_client(grant: &mut Grant, http: &reqwest::Client) -> AdminResult<()> {
+pub async fn refresh_with_client(
+    env: &AdminEnv,
+    grant: &mut Grant,
+    http: &reqwest::Client,
+) -> AdminResult<()> {
     if matches!(grant.provider, Provider::Generic(_)) {
-        super::generic::validate_refresh(grant, http).await?;
+        super::generic::validate_refresh(env, grant, http).await?;
     }
     let token = grant.refresh_token.clone().ok_or_else(|| {
         AdminError::Unauthorized("Connector refresh authorization missing".into())
     })?;
     request_with_client(
+        env,
         grant,
         &[("grant_type", "refresh_token"), ("refresh_token", &token)],
         http,

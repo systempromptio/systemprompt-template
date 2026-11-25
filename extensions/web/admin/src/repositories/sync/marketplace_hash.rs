@@ -192,7 +192,7 @@ fn hash_one(files: &[FileEntry], spec: &MarketplaceSpec, owner: SourceOf) -> Mar
     let skill_count = plugins.iter().map(|p| p.skills.len()).sum::<usize>();
     MarketplaceVersion {
         marketplace_id: spec.id.clone(),
-        content_hash: ServicesBundleManifest::compute_content_hash(&selected),
+        content_hash: ServicesBundleManifest::compute_content_hash(&selected).to_string(),
         source: owner.source,
         source_hash: owner.source_hash,
         plugin_count: i32::try_from(plugins.len()).unwrap_or(i32::MAX),
@@ -224,9 +224,10 @@ fn digest_of(files: &[FileEntry], missing_path: &str) -> String {
             path: missing_path.to_owned(),
             sha256: String::new(),
             size: 0,
-        }]);
+        }])
+        .to_string();
     }
-    ServicesBundleManifest::compute_content_hash(files)
+    ServicesBundleManifest::compute_content_hash(files).to_string()
 }
 
 pub fn skill_key(plugin: &str, skill: &str) -> String {

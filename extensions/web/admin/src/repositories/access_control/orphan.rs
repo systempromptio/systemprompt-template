@@ -2,7 +2,7 @@
 //! from, and whether an overwrite from code retires it.
 
 use serde::Serialize;
-use systemprompt::governance::authz::DASHBOARD_SOURCE;
+use systemprompt::governance::authz::CONSOLE_SOURCE_PREFIX;
 
 use super::drift::BandRuleRow;
 
@@ -22,7 +22,7 @@ pub enum OrphanOrigin {
 impl OrphanOrigin {
     #[must_use]
     pub fn of_source(source: &str) -> Self {
-        if source == DASHBOARD_SOURCE {
+        if source.starts_with(CONSOLE_SOURCE_PREFIX) {
             Self::Console
         } else if source.starts_with("bundle:") {
             Self::Bundle

@@ -1,10 +1,12 @@
 //! Gateway [`SafetyScanner`] implementation for the systemprompt template.
 //!
 //! [`SecretsScanner`] flags credentials from the installation's configured
-//! catalog leaving the gateway in a model reply. It uses the same compiled
-//! scanner as the governance chain and registers through
-//! `register_safety_scanner!` under the name `secrets`; the gateway runs it
-//! for any policy whose `safety.scanners` lists it and blocks the reply when
+//! catalog leaving the gateway in a model reply. It is the governance
+//! chain's compiled secret scanner, built from the scanner's own
+//! `safety.scanner_settings.secrets.config` (the same `patterns` and entropy
+//! keys the `secret_scan` policy takes), and is contributed to the gateway's
+//! `SafetyScannerSlot` under the name `secrets`; the gateway runs it for any
+//! policy whose `safety.scanners` lists it and blocks the reply when
 //! `safety.block_response_categories` includes `secret`.
 //!
 //! **Egress only.** The `secret_scan` governance policy already scans request
@@ -16,28 +18,39 @@
 //! no such overlap: the governance chain is request-only, so this is the sole
 //! thing standing between a model that echoes a credential and the client.
 
-use systemprompt::gateway::{
-    Finding, SafetyScanner, ScanError, ScannerSettings, Severity, register_safety_scanner,
-};
+use std::sync::Arc;
+
+use systemprompt::extension::{Contributions, FactoryError, Resolved};
+use systemprompt::gateway::contract::SafetyScannerSlot;
+use systemprompt::gateway::{Finding, SafetyScanner, ScanError, ScannerSettings, Severity};
 use systemprompt::wire::canonical::{CanonicalRequest, CanonicalResponse};
 
-use systemprompt::governance::policy::{GovernanceEngine, GovernedInput, SecretScanner};
+use systemprompt::governance::policy::{GovernedInput, SecretScanner};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct SecretsScanner {
-    scanner: Option<SecretScanner>,
+    scanner: Result<SecretScanner, String>,
 }
 
 impl SecretsScanner {
     #[must_use]
-    pub const fn new() -> Self {
-        Self { scanner: None }
-    }
-
-    #[must_use]
     pub const fn with_scanner(scanner: SecretScanner) -> Self {
         Self {
-            scanner: Some(scanner),
+            scanner: Ok(scanner),
+        }
+    }
+
+    // Why: an unreadable scanner config is kept as the reason and every scan
+    // fails with it, so the gateway's `fail_mode` decides, never a silently
+    // empty scanner.
+    #[must_use]
+    pub fn from_settings(settings: &ScannerSettings) -> Self {
+        let config = serde_json::to_value(&settings.config)
+            .map_err(|e| e.to_string())
+            .and_then(|json| serde_yaml::to_value(json).map_err(|e| e.to_string()));
+        Self {
+            scanner: config
+                .and_then(|yaml| SecretScanner::from_policy_yaml(&yaml).map_err(|e| e.to_string())),
         }
     }
 }
@@ -67,25 +80,14 @@ impl SafetyScanner for SecretsScanner {
 impl SecretsScanner {
     fn scan(&self, text: &str) -> Result<Vec<Finding>, ScanError> {
         let input = GovernedInput::prompt_text(text.to_owned());
-        let finding = if let Some(scanner) = self.scanner.as_ref() {
-            scanner.detect(&input)
-        } else {
-            let profile = systemprompt::config::ProfileBootstrap::get().map_err(|error| {
-                ScanError::Failed {
-                    scanner: "secrets",
-                    reason: error.to_string(),
-                }
-            })?;
-            let engine =
-                GovernanceEngine::from_services_root(std::path::Path::new(&profile.paths.services))
-                    .map_err(|error| ScanError::Failed {
-                        scanner: "secrets",
-                        reason: error.to_string(),
-                    })?;
-            engine
-                .secret_scanner()
-                .and_then(|scanner| scanner.detect(&input))
-        };
+        let finding = self
+            .scanner
+            .as_ref()
+            .map_err(|reason| ScanError::Failed {
+                scanner: "secrets",
+                reason: reason.clone(),
+            })?
+            .detect(&input);
         Ok(finding.map_or_else(Vec::new, |hit| {
             let observation = hit.observation;
             vec![Finding {
@@ -110,10 +112,6 @@ impl SecretsScanner {
     }
 }
 
-register_safety_scanner!(
-    |_: &ScannerSettings| SecretsScanner::new(),
-    name = "secrets"
-);
 
 /// PII scanner for the categories core's heuristic does not carry: formatted
 /// US SSNs and international-format phone numbers.
@@ -269,7 +267,25 @@ fn digit_adjacent(bytes: &[u8], start: usize, end: usize) -> bool {
     before.is_some_and(|b| b.is_ascii_digit()) || after.is_some_and(|b| b.is_ascii_digit())
 }
 
-register_safety_scanner!(
-    |_: &ScannerSettings| PiiScanner::new(),
-    name = "pii_extended"
-);
+pub fn contribute_scanners(c: &mut Contributions<'_>) {
+    c.slot::<SafetyScannerSlot>()
+        .scanner("secrets", |_r: &Resolved<'_>| {
+            let factory: Arc<dyn systemprompt::gateway::ScannerFactory> = Arc::new(
+                |_: &systemprompt::gateway::SafetyConfig, settings: &ScannerSettings| {
+                    let scanner: Arc<dyn SafetyScanner> =
+                        Arc::new(SecretsScanner::from_settings(settings));
+                    scanner
+                },
+            );
+            Ok::<_, FactoryError>(factory)
+        })
+        .scanner("pii_extended", |_r: &Resolved<'_>| {
+            let factory: Arc<dyn systemprompt::gateway::ScannerFactory> = Arc::new(
+                |_: &systemprompt::gateway::SafetyConfig, _: &ScannerSettings| {
+                    let scanner: Arc<dyn SafetyScanner> = Arc::new(PiiScanner::new());
+                    scanner
+                },
+            );
+            Ok::<_, FactoryError>(factory)
+        });
+}

@@ -2,7 +2,7 @@
 //! every entity of a kind, with the outcome tallied per entity.
 
 use systemprompt::governance::authz::{
-    Access, AccessControlRepository, DASHBOARD_SOURCE, EntityKind, RuleType, UpsertRuleParams,
+    Access, AccessControlRepository, EntityKind, RuleType, UpsertRuleParams,
 };
 
 // Why: the subject a template writes for, the same for every entity it
@@ -64,7 +64,7 @@ pub(super) async fn upsert_subject_rule(
             rule_value: subject.rule_value,
             access,
             justification: subject.justification,
-            source: DASHBOARD_SOURCE,
+            source: crate::authz::CONSOLE_SOURCE,
         })
         .await
     {

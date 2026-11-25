@@ -1,6 +1,8 @@
 //! Account-row state transitions for a connector: how a failure, a rejected
 //! grant or a successful probe is written back to `mcp_connector_accounts`.
 
+use crate::env::AdminEnv;
+
 use super::{Grant, Provider, seal};
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::users::connector_accounts::{ProviderConnection, update_account};
@@ -11,6 +13,7 @@ use systemprompt::identifiers::UserId;
 // Why: an outage or permission problem must not destroy a refresh grant; only
 // a rejected grant is deleted and the generation bumped.
 pub(super) async fn record_grant_failure(
+    env: &AdminEnv,
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     user: &UserId,
     account: &mut ProviderConnection,
@@ -35,7 +38,7 @@ pub(super) async fn record_grant_failure(
         );
         // Why: A successful refresh followed by a failed probe still rotates the
         // grant. Persist it before returning the probe error.
-        repo::store(tx, user, provider.slug(), &seal(grant)?).await?;
+        repo::store(tx, user, provider.slug(), &seal(env.cipher()?, grant)?).await?;
     }
     update_account(tx, user, account).await?;
     tracing::warn!(
@@ -53,13 +56,14 @@ pub(super) async fn record_grant_failure(
 // Why: A grant that cannot be opened under the current configuration flags the
 // account for reconnection before the error propagates.
 pub(super) async fn open_or_flag(
+    env: &AdminEnv,
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     user: &UserId,
     provider: &Provider,
     row: &EncryptedGrant,
     account: &mut ProviderConnection,
 ) -> AdminResult<Grant> {
-    match super::open(row, user, provider) {
+    match super::open(env, row, user, provider) {
         Ok(grant) => Ok(grant),
         Err(error) => {
             if matches!(error, AdminError::Unauthorized(_)) {

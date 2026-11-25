@@ -1,6 +1,8 @@
 //! Filesystem catalog walks over `services/` — one read-only row per skill,
 //! agent, or plugin, plus the raw skill-id listings. Never writes to disk.
 
+use crate::env::AdminEnv;
+
 use std::path::Path;
 
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId};
@@ -145,13 +147,14 @@ pub fn list_agent_catalog(
 }
 
 pub fn list_plugin_catalog(
+    env: &AdminEnv,
     services_path: &Path,
 ) -> Result<Vec<crate::types::PluginDetail>, MarketplaceError> {
     use crate::types::PluginDetail;
     let skills_path = services_path.join("skills");
     let agents_path = services_path.join("agents");
     let mut out: Vec<PluginDetail> = Vec::new();
-    for (_id, plugin, source_path) in plugin_loader::load_all_plugins_with_paths()? {
+    for (_id, plugin, source_path) in plugin_loader::load_all_plugins_with_paths(env)? {
         let skills: Vec<SkillId> =
             resolve_all_plugin_skill_ids(&plugin.base, &skills_path, &agents_path)
                 .into_iter()

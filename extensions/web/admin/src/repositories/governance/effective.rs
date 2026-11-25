@@ -12,6 +12,8 @@
 //! the rest, so a grant a group rule alone confers shows up here exactly as it
 //! does at the enforcement point.
 
+use crate::env::AdminEnv;
+
 use crate::error::AdminError;
 use crate::handlers::shared;
 use crate::repositories;
@@ -36,14 +38,16 @@ pub struct EffectivePermissions {
 
 // Why: lint-ok: unused-pub — the internal fork still calls this.
 pub async fn compute_effective_permissions(
+    env: &AdminEnv,
     pool: &PgPool,
     user_id: &UserId,
     _user_roles: &[String],
 ) -> Result<EffectivePermissions, sqlx::Error> {
-    let gateway_ids = collect_gateway_ids().map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
-    let mcp_ids = collect_mcp_ids().map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+    let gateway_ids = collect_gateway_ids(env);
+    let mcp_ids = collect_mcp_ids(env).map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
     let rows = |ids: Vec<String>| ids.into_iter().map(|id| (id.clone(), id, None)).collect();
     let matrix = repositories::users::access_control::resolve_user_matrix(
+        env,
         pool,
         user_id,
         vec![
@@ -79,16 +83,12 @@ pub async fn compute_effective_permissions(
     Ok(result)
 }
 
-fn collect_gateway_ids() -> Result<Vec<String>, AdminError> {
-    let services = systemprompt::loader::ServicesBootstrap::get()
-        .map_err(|e| AdminError::internal(e.to_string()))?;
-    Ok(repositories::config::gateway::dispatchable_route_ids(
-        services,
-    ))
+fn collect_gateway_ids(env: &AdminEnv) -> Vec<String> {
+    repositories::config::gateway::dispatchable_route_ids(env.services_view().catalog())
 }
 
-fn collect_mcp_ids() -> Result<Vec<String>, AdminError> {
-    let services_path = shared::get_services_path()?;
+fn collect_mcp_ids(env: &AdminEnv) -> Result<Vec<String>, AdminError> {
+    let services_path = shared::get_services_path(env)?;
     let servers = mcp_servers::list_mcp_servers(&services_path)
         .map_err(|e| AdminError::internal(e.to_string()))?;
     Ok(servers

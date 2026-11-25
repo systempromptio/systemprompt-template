@@ -8,6 +8,8 @@
 //! are derived from a remote catalog and are identical for every user holding
 //! the same role set.
 
+use crate::env::AdminEnv;
+
 mod gates;
 mod pat;
 
@@ -50,10 +52,11 @@ pub(crate) use super::marketplace_context::marketplace_context_middleware;
 
 pub(crate) async fn user_context_middleware(
     State(pool): State<Arc<PgPool>>,
+    Extension(env): Extension<AdminEnv>,
     mut request: Request,
     next: Next,
 ) -> Response {
-    let cookie = extract_user_from_cookie(request.headers());
+    let cookie = extract_user_from_cookie(&env, request.headers()).await;
     let pat = cookie
         .is_err()
         .then(|| pat::pat_request(&request))

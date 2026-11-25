@@ -7,23 +7,23 @@ use axum::extract::{Extension, Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
-use systemprompt::manifest::Config;
 use systemprompt::models::auth::JwtAudience;
-use systemprompt::oauth::validate_jwt_token;
 
 use systemprompt::identifiers::{Email, UserId};
 
 use crate::activity::{self, ActivityEntity, NewActivity};
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::repositories;
 use crate::types::{EventsQuery, UpdateUserRequest, UserContext, UsersQuery};
 
 use super::responses::{EventsListResponse, UsersListResponse};
 
-pub(crate) fn extract_user_from_cookie(
+pub(crate) async fn extract_user_from_cookie(
+    env: &AdminEnv,
     headers: &HeaderMap,
 ) -> Result<crate::types::CookieSession, AdminError> {
-    extract_user_with_audiences(headers, &[JwtAudience::Api])
+    extract_user_with_audiences(env, headers, &[JwtAudience::Api]).await
 }
 
 // Why: The token accessors core calls to mint a downstream bearer are reached
@@ -31,32 +31,31 @@ pub(crate) fn extract_user_from_cookie(
 // token carries `Mcp`, not `Api`. Widening happens here rather than in
 // `extract_user_from_cookie` so the browser-session path keeps its single
 // audience.
-pub(crate) fn extract_mcp_accessor_user(
+pub(crate) async fn extract_mcp_accessor_user(
+    env: &AdminEnv,
     headers: &HeaderMap,
 ) -> Result<crate::types::CookieSession, AdminError> {
     extract_user_with_audiences(
+        env,
         headers,
         &[JwtAudience::Api, JwtAudience::Mcp, JwtAudience::Bridge],
     )
+    .await
 }
 
-fn extract_user_with_audiences(
+async fn extract_user_with_audiences(
+    env: &AdminEnv,
     headers: &HeaderMap,
     audiences: &[JwtAudience],
 ) -> Result<crate::types::CookieSession, AdminError> {
     let token = extract_token_from_headers(headers)?;
-
-    let jwt_issuer = Config::get()?.jwt_issuer.clone();
-
-    let claims = validate_jwt_token(&token, &jwt_issuer, audiences)?;
-
-    let email = Email::try_new(claims.email.clone()).map_err(AdminError::unauthenticated)?;
-
+    let (context, user) = crate::services::auth::verify_bearer(env, &token, audiences).await?;
+    let email = Email::try_new(user.email).map_err(AdminError::unauthenticated)?;
     Ok(crate::types::CookieSession {
-        user_id: UserId::new(claims.sub),
-        username: claims.username,
+        user_id: context.user_id,
+        username: user.name,
         email,
-        session_id: claims.session_id,
+        session_id: Some(context.session_id),
     })
 }
 

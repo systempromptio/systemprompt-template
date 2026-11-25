@@ -6,6 +6,8 @@
 //! connected, or that traffic is arriving under a name nothing declares. Both
 //! states are silent everywhere else.
 
+use crate::env::AdminEnv;
+
 mod columns;
 mod detail;
 mod rows;
@@ -82,6 +84,7 @@ async fn load_runtime(pool: &PgPool) -> Runtime {
 }
 
 pub(crate) async fn mcp_servers_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -89,9 +92,9 @@ pub(crate) async fn mcp_servers_page(
     Query(query): Query<McpListQuery>,
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
-    let path = shared::get_services_path()?;
+    let path = shared::get_services_path(&env)?;
 
-    let catalog = super::data::load_catalog(&path, &user_ctx.roles);
+    let catalog = super::data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_MCP_SERVER).await;
     let rt = load_runtime(&pool).await;
 
@@ -171,6 +174,7 @@ pub(crate) async fn mcp_servers_page(
     reason = "axum extractor list; the router decides the arity, not this signature"
 )]
 pub(crate) async fn mcp_detail_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -179,9 +183,9 @@ pub(crate) async fn mcp_detail_page(
     Query(query): Query<McpDetailQuery>,
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
-    let path = shared::get_services_path()?;
+    let path = shared::get_services_path(&env)?;
 
-    let catalog = super::data::load_catalog(&path, &user_ctx.roles);
+    let catalog = super::data::load_catalog(&env, &path, &user_ctx.roles);
     let server = catalog.mcp.iter().find(|s| s.id == mcp_id);
     let rt = load_runtime(&pool).await;
     let known_at_runtime = rt.heartbeat.contains_key(mcp_id.as_str())
@@ -211,6 +215,7 @@ pub(crate) async fn mcp_detail_page(
 
     let sections = sections::detail_sections(&pool, &mcp_id, query.page.unwrap_or(0).max(0)).await;
     let access = super::access::panel(
+        &env,
         &pool,
         &user_ctx,
         (ENTITY_MCP_SERVER, mcp_id.as_str()),

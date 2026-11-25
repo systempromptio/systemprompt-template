@@ -5,6 +5,8 @@
 //! small pure conversions (string -> typed enum) and the on-disk lookups that
 //! feed the bulk/matrix endpoints.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use sqlx::PgPool;
@@ -100,13 +102,13 @@ pub(super) fn parse_access(s: &str) -> Option<Access> {
     }
 }
 
-pub(super) fn collect_entity_ids(entity_type: &str) -> AdminResult<Vec<String>> {
+pub(super) fn collect_entity_ids(env: &AdminEnv, entity_type: &str) -> AdminResult<Vec<String>> {
     match entity_type {
         "gateway_route" => Ok(repositories::config::gateway::dispatchable_route_ids(
-            systemprompt::loader::ServicesBootstrap::get()?,
+            env.services_view().catalog(),
         )),
         "mcp_server" => {
-            let services_path = shared::get_services_path()?;
+            let services_path = shared::get_services_path(env)?;
             let servers =
                 mcp_servers::list_mcp_servers(&services_path).map_err(AdminError::internal)?;
             Ok(servers

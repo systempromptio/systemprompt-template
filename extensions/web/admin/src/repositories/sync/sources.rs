@@ -5,24 +5,19 @@
 //! way `systemprompt core services bundle` computes a bundle's
 //! `content_hash` — the same file walk, the same digest — so the number on
 //! the page equals the one on the base bundle published at this release.
-//! Each `bundle:<name>` is a source the profile pins; its digest, version,
-//! hash and fetch time come from the bundle cache's `state.json`, what it
-//! owns from its cached `bundle.json`, and its provenance from the active
-//! services root core installed at boot. Nothing here fetches.
+//! Each `bundle:<name>` is a source the profile pins, read from the install
+//! services view as its name, transport and credential-free location. The
+//! bundle cache state (active digest, version, content hash, fetch time,
+//! what a bundle owns) and the active root's provenance are not readable by
+//! an install member, so the panel shows the pins without them. Nothing here
+//! fetches.
+
+use crate::env::AdminEnv;
 
 use std::path::Path;
 
 use serde::Serialize;
-use systemprompt::config::ProfileBootstrap;
-use systemprompt::loader::ConfigLoader;
-use systemprompt::loader::bundle::{BundleCache, cache_root};
-use systemprompt::loader::services_root::{
-    ActiveServicesRoot, ServicesProvenance, ServicesRootBootstrap,
-};
-use systemprompt::manifest::profile::{Profile, ServicesSource};
-use systemprompt::manifest::services::bundle::{
-    BundleOwnership, ServicesBundleManifest, ServicesBundleState,
-};
+use systemprompt::manifest::services::{ServicesSourceView, SourceTransport};
 
 use super::source_badges::{BadgeInputs, SourceBadge, source_badges};
 use super::tree_hash::base_tree_hash;
@@ -77,115 +72,49 @@ pub struct SourcesView {
     pub refresh_hint: String,
 }
 
-pub fn build_sources() -> AdminResult<SourcesView> {
-    let profile = ProfileBootstrap::get()?;
-    let active = ServicesRootBootstrap::get();
-    let cache = BundleCache::new(cache_root(profile));
-    let state = cache.read_state();
-    let (provenance, provenance_error, composed_hash) = provenance_of(active);
-
-    let restart_pending = !state.composed_hash.is_empty()
-        && state.last_reconciled_hash.as_deref() != Some(state.composed_hash.as_str());
-
-    let composed_marketplaces_declaring_access = marketplaces_declaring_access();
-
-    let bundles = profile
-        .services
-        .sources
+pub fn build_sources(env: &AdminEnv) -> AdminResult<SourcesView> {
+    let declaring_access = marketplaces_declaring_access(env);
+    let bundles = env
+        .services_view()
+        .sources()
         .iter()
-        .map(|source| {
-            bundle_view(
-                source,
-                &state,
-                &cache,
-                restart_pending,
-                &composed_marketplaces_declaring_access,
-            )
-        })
+        .map(|source| bundle_view(source, &declaring_access))
         .collect();
-
+    let baked = env.baked_services_root();
     Ok(SourcesView {
         base: BaseSourceView {
             version: env!("CARGO_PKG_VERSION"),
-            tree_hash: base_tree_hash(Path::new(&profile.paths.services)),
-            tree_path: profile.paths.services.clone(),
-            provenance,
-            provenance_error,
+            tree_hash: base_tree_hash(Path::new(&baked)),
+            tree_path: baked.display().to_string(),
+            provenance: "unreported",
+            provenance_error: None,
         },
         bundles,
-        // Why: the boot-time provenance is a static; after an in-place import
-        // the cache state is what names the composition being served.
-        composed_hash: (!state.composed_hash.is_empty())
-            .then(|| state.composed_hash.clone())
-            .or(composed_hash),
-        last_reconciled_hash: state.last_reconciled_hash,
-        restart_pending,
-        on_fetch_failure: serde_yaml::to_string(&profile.services.on_fetch_failure)
-            .map(|s| s.trim().to_owned())
-            .unwrap_or_default(),
-        refresh_hint: refresh_hint(profile),
+        composed_hash: None,
+        last_reconciled_hash: None,
+        restart_pending: false,
+        on_fetch_failure: String::new(),
+        refresh_hint: refresh_hint(env),
     })
 }
 
-fn provenance_of(
-    active: Option<&ActiveServicesRoot>,
-) -> (&'static str, Option<String>, Option<String>) {
-    match active.map(|a| &a.provenance) {
-        None | Some(ServicesProvenance::Bundled) => ("bundled", None, None),
-        Some(ServicesProvenance::Fetched { composed_hash, .. }) => {
-            ("fetched", None, Some(composed_hash.clone()))
-        },
-        Some(ServicesProvenance::LastGood {
-            composed_hash,
-            error,
-        }) => (
-            "last_good",
-            Some(error.clone()),
-            Some(composed_hash.clone()),
-        ),
-        Some(ServicesProvenance::BundledFallback { error }) => {
-            ("bundled_fallback", Some(error.clone()), None)
-        },
-    }
-}
-
-fn bundle_view(
-    source: &ServicesSource,
-    state: &ServicesBundleState,
-    cache: &BundleCache,
-    restart_pending: bool,
-    declaring_access: &[String],
-) -> BundleSourceView {
-    let (transport, reference) = source.oci.as_ref().map_or_else(
-        || {
-            (
-                "https",
-                source
-                    .https
-                    .as_ref()
-                    .map(|h| h.url.clone())
-                    .unwrap_or_default(),
-            )
-        },
-        |o| ("oci", o.reference.clone()),
-    );
+fn bundle_view(source: &ServicesSourceView, declaring_access: &[String]) -> BundleSourceView {
+    let transport = match source.transport {
+        SourceTransport::Https => "https",
+        SourceTransport::Oci => "oci",
+    };
+    let reference = source.location.clone().unwrap_or_default();
     let pinned_digest = reference
         .split_once("@sha256:")
         .map(|(_, d)| format!("sha256:{d}"));
     let following_tag = transport == "oci" && pinned_digest.is_none();
-
-    let active = state.sources.get(&source.name);
-    let owns = active
-        .and_then(|a| cache.read_manifest(&source.name, &a.content_hash).ok())
-        .map(|m| owns_view(&m.manifest))
-        .unwrap_or_default();
-
+    let owns = OwnsView::default();
     let badges = source_badges(&BadgeInputs {
         name: &source.name,
         pinned_digest: pinned_digest.as_deref(),
-        active_digest: active.map(|a| a.digest.as_str()),
+        active_digest: None,
         following_tag,
-        restart_pending,
+        restart_pending: false,
         kit_access: owns
             .marketplaces
             .iter()
@@ -193,46 +122,23 @@ fn bundle_view(
             .map(String::as_str)
             .collect(),
     });
-
-    let owner_key = format!("bundle:{}", source.name);
-    let pin_command = format!(
-        "just services-pin {} <digest>   # rewrites services.sources[{}] in the profile",
-        source.name, source.name
-    );
     BundleSourceView {
         name: source.name.clone(),
-        owner_key,
+        owner_key: format!("bundle:{}", source.name),
         transport,
         reference,
         pinned_digest,
         following_tag,
-        active_digest: active.map(|a| a.digest.clone()),
-        version: active.map(|a| a.version.clone()),
-        content_hash: active.map(|a| a.content_hash.clone()),
-        fetched_at: active.map(|a| a.fetched_at.to_rfc3339()),
+        active_digest: None,
+        version: None,
+        content_hash: None,
+        fetched_at: None,
         owns,
         badges,
-        pin_command,
-    }
-}
-
-fn owns_view(manifest: &ServicesBundleManifest) -> OwnsView {
-    let BundleOwnership {
-        marketplaces,
-        plugins,
-        skills,
-        ..
-    } = &manifest.owns;
-    OwnsView {
-        summary: format!(
-            "{} marketplace(s) · {} plugin(s) · {} skill(s)",
-            marketplaces.len(),
-            plugins.len(),
-            skills.len()
+        pin_command: format!(
+            "just services-pin {} <digest>   # rewrites services.sources[{}] in the profile",
+            source.name, source.name
         ),
-        marketplaces: marketplaces.clone(),
-        plugins: plugins.clone(),
-        skills: skills.clone(),
     }
 }
 
@@ -240,24 +146,19 @@ fn owns_view(manifest: &ServicesBundleManifest) -> OwnsView {
 // it. Core still ingests it at reconcile (source `bundle:<name>`), so the
 // panel names it and the access-control drift shows those rows as bundle
 // orphans that an overwrite deletes.
-fn marketplaces_declaring_access() -> Vec<String> {
-    ConfigLoader::load().map_or_else(
-        |_| Vec::new(),
-        |services| {
-            services
-                .marketplaces
-                .iter()
-                .filter(|(_, m)| m.access.declares_rules() || m.access.default_included)
-                .map(|(id, _)| id.as_str().to_owned())
-                .collect()
-        },
-    )
+fn marketplaces_declaring_access(env: &AdminEnv) -> Vec<String> {
+    env.services()
+        .marketplaces
+        .iter()
+        .filter(|(_, m)| m.access.declares_rules() || m.access.default_included)
+        .map(|(id, _)| id.as_str().to_owned())
+        .collect()
 }
 
-fn refresh_hint(profile: &Profile) -> String {
+fn refresh_hint(env: &AdminEnv) -> String {
     format!(
         "curl -X POST -H \"Authorization: Bearer $ADMIN_TOKEN\" \
          http://127.0.0.1:{}/api/v1/admin/services/refresh",
-        profile.server.port
+        env.config().port
     )
 }

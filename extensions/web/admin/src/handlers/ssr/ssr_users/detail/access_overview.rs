@@ -2,13 +2,13 @@
 //! connection state. Client installation and execution are deliberately never
 //! inferred from a heartbeat.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
-use systemprompt::loader::ConfigLoader;
-use systemprompt::manifest::Config;
 use systemprompt::marketplace::{AssembleRequest, ManifestService, MarketplaceCache};
 
 use crate::marketplace_filter::TemplateMarketplaceFilter;
@@ -131,10 +131,11 @@ impl AccessOverview {
     }
 }
 
-pub(super) async fn load(pool: &PgPool, user_id: &UserId) -> AccessOverview {
+pub(super) async fn load(env: &AdminEnv, pool: &PgPool, user_id: &UserId) -> AccessOverview {
+    let services = env.services();
     let (catalog, connections, runtime) = tokio::join!(
-        included_content(pool, user_id),
-        connector_accounts::get_connections(pool, user_id),
+        included_content(env, pool, user_id),
+        connector_accounts::get_connections(pool, &services, user_id),
         queries::get_user_runtime_detail(pool, user_id),
     );
     let mut view = AccessOverview::default();
@@ -183,14 +184,15 @@ pub(super) async fn load(pool: &PgPool, user_id: &UserId) -> AccessOverview {
     view
 }
 
-async fn included_content(pool: &PgPool, user_id: &UserId) -> Result<Vec<WorkspaceView>, String> {
-    let services = ConfigLoader::load().map_err(|e| e.to_string())?;
-    let root = crate::handlers::shared::get_services_path().map_err(|e| e.to_string())?;
-    let url = Config::get()
-        .map_err(|e| e.to_string())?
-        .api_external_url
-        .clone();
-    let filter = TemplateMarketplaceFilter::from_pool(Arc::new(pool.clone()));
+async fn included_content(
+    env: &AdminEnv,
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<Vec<WorkspaceView>, String> {
+    let services = env.services();
+    let root = crate::handlers::shared::get_services_path(env).map_err(|e| e.to_string())?;
+    let url = env.config().api_external_url.clone();
+    let filter = TemplateMarketplaceFilter::from_env(Arc::new(pool.clone()), env);
     let cache = MarketplaceCache::default();
     let candidate = ManifestService::assemble_candidate(
         &AssembleRequest {

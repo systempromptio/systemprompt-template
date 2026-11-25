@@ -1,10 +1,10 @@
 //! The runtime settings the web members read, projected once from the
-//! profile's runtime configuration by `WebExtension`'s provide fn.
+//! profile's runtime configuration view by `WebExtension`'s provide fn.
 
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use systemprompt::manifest::Config;
+use systemprompt::manifest::ConfigView;
 
 /// What the web routes and jobs need of the runtime configuration: no
 /// credential, no database URL.
@@ -21,7 +21,7 @@ pub struct WebSettings {
 
 impl WebSettings {
     #[must_use]
-    pub fn from_config(config: &Config, admin_template_dir: PathBuf) -> Arc<Self> {
+    pub fn from_config(config: &ConfigView, admin_template_dir: PathBuf) -> Arc<Self> {
         Arc::new(Self {
             sitename: config.sitename.clone(),
             api_external_url: config.api_external_url.clone(),

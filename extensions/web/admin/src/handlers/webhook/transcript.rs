@@ -6,6 +6,8 @@
 //! tracking webhooks: the hook must never surface a storage hiccup to the
 //! client, so errors log and the response is 204 regardless.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::Json;
@@ -17,16 +19,18 @@ use sqlx::PgPool;
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::analytics::conversations::upsert_session_transcript;
 use crate::types::webhook::{TranscriptPayload, TranscriptQuery};
+use axum::Extension;
 
 use super::helpers::authenticate_webhook;
 
 pub(crate) async fn track_transcript_event(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Query(query): Query<TranscriptQuery>,
     Json(payload): Json<TranscriptPayload>,
 ) -> AdminResult<Response> {
-    let user_id = authenticate_webhook(&headers)?;
+    let user_id = authenticate_webhook(&env, &headers).await?;
 
     let session_id = payload
         .session_id

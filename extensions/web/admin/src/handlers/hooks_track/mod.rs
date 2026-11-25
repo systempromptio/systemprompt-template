@@ -4,6 +4,8 @@
 //! downstream tracking, entity detection and AI analysis are dispatched after
 //! the event is persisted so a slow analysis never stalls the caller's hook.
 
+use crate::env::AdminEnv;
+
 pub(crate) mod ai_context;
 pub(crate) mod ai_summary;
 pub(crate) mod ai_summary_types;
@@ -23,7 +25,7 @@ use crate::repositories::marketplace::webhook;
 use crate::types::webhook::HookEventPayload;
 use auth::extract_and_validate_jwt;
 use axum::Json;
-use axum::extract::{Extension, State};
+use axum::extract::{Extension, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use sha2::Digest;
@@ -32,8 +34,15 @@ use std::sync::Arc;
 use systemprompt::ai::AiService;
 use systemprompt::identifiers::{PluginId, SessionId, UserId};
 
+#[derive(Debug, serde::Deserialize)]
+pub(crate) struct TrackQuery {
+    plugin_id: Option<PluginId>,
+}
+
 pub(crate) async fn handle_hook_track(
     Extension(event_hub): Extension<EventHub>,
+    Extension(env): Extension<AdminEnv>,
+    Query(track): Query<TrackQuery>,
     Extension(ai_service): Extension<Option<Arc<AiService>>>,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
@@ -41,7 +50,8 @@ pub(crate) async fn handle_hook_track(
     // events by `HookEventPayload::from_value` after the raw copy is retained
     Json(mut raw): Json<serde_json::Value>,
 ) -> AdminResult<Response> {
-    let (user_id, plugin_id, jwt_token) = extract_and_validate_jwt(&headers)?;
+    let (user_id, plugin_id, jwt_token) =
+        extract_and_validate_jwt(&env, &headers, track.plugin_id).await?;
     tracing::trace!(payload = %helpers::sanitize_metadata(&raw), "Hook track received payload");
     if let Some(event_id) = headers
         .get("x-ingestion-event-id")

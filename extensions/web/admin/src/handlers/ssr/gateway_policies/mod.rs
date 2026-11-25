@@ -9,6 +9,8 @@
 //! The Sync tab shows what this editor changed as drift on the
 //! `gateway_policies` plane until it is exported or overwritten.
 
+use crate::env::AdminEnv;
+
 mod view;
 
 use std::sync::Arc;
@@ -31,6 +33,7 @@ use crate::repositories::gateway_policies::month_window_db::refresh_month_window
 use crate::repositories::gateway_policies::rows::{
     PolicyWrite, delete_policy, list_policies, upsert_policy,
 };
+use axum::Extension;
 
 pub(crate) const BASE_URL: &str = "/admin/gateway/policies";
 
@@ -61,13 +64,13 @@ fn require_console(page: &Page) -> Result<(), AdminError> {
     Err(AdminError::Forbidden("Admin access required.".to_owned()))
 }
 
-fn require_admin_write(page: &Page, headers: &HeaderMap) -> Result<(), AdminError> {
+fn require_admin_write(env: &AdminEnv, page: &Page, headers: &HeaderMap) -> Result<(), AdminError> {
     if !page.user.is_admin {
         return Err(AdminError::Forbidden(
             "Editing gateway policies needs an administrator.".to_owned(),
         ));
     }
-    require_write_origin(headers)
+    require_write_origin(env, headers)
 }
 
 // Why: which row core's merge lets win each section, so the page can say
@@ -95,6 +98,7 @@ fn winners(
 }
 
 pub(crate) async fn gateway_policies_page(
+    Extension(env): Extension<AdminEnv>,
     page: Page,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<PoliciesQuery>,
@@ -103,6 +107,7 @@ pub(crate) async fn gateway_policies_page(
     let on_sync = is_sync_tab(query.tab.as_deref());
     let sync = if on_sync {
         plane_card_by_id(
+            &env,
             &pool,
             crate::repositories::sync::gateway_policies::PLANE_ID,
             "",
@@ -164,12 +169,13 @@ fn back_with(param: &str, value: &str) -> Redirect {
 }
 
 pub(crate) async fn save_gateway_policy(
+    Extension(env): Extension<AdminEnv>,
     page: Page,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Form(fields): Form<Vec<(String, String)>>,
 ) -> AdminHtmlResult<Redirect> {
-    require_admin_write(&page, &headers)?;
+    require_admin_write(&env, &page, &headers)?;
     let parsed = match parse_policy_form(&fields) {
         Ok(p) => p,
         Err(e) => return Ok(back_with("error", &e.to_string())),
@@ -202,12 +208,13 @@ pub(crate) struct DeleteForm {
 }
 
 pub(crate) async fn delete_gateway_policy(
+    Extension(env): Extension<AdminEnv>,
     page: Page,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Form(form): Form<DeleteForm>,
 ) -> AdminHtmlResult<Redirect> {
-    require_admin_write(&page, &headers)?;
+    require_admin_write(&env, &page, &headers)?;
     let name = form.name.trim();
     if name.is_empty() {
         return Ok(back_with("error", "a policy name is required to delete"));

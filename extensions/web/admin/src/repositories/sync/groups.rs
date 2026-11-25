@@ -9,6 +9,8 @@
 //! *Export* renders every dashboard-created set and mapping back into the
 //! file's shape, which is how a group made in the console reaches git.
 
+use crate::env::AdminEnv;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
 
@@ -33,9 +35,9 @@ pub const PLANE_ID: &str = "groups";
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GroupsPlane;
 
-fn declared_groups_from(from: DeclarationSource<'_>) -> AdminResult<GroupsDoc> {
+fn declared_groups_from(env: &AdminEnv, from: DeclarationSource<'_>) -> AdminResult<GroupsDoc> {
     // Why: no file declares nothing — the loader treats it the same way.
-    let Some(yaml) = read_or_text(from, GROUPS_FILE)? else {
+    let Some(yaml) = read_or_text(env, from, GROUPS_FILE)? else {
         return Ok(GroupsDoc::default());
     };
     parse_groups_doc(&yaml).map_err(|e| AdminError::invalid("groups.yaml could not be parsed", e))
@@ -69,17 +71,18 @@ impl SyncPlane for GroupsPlane {
         "/admin/groups"
     }
 
-    async fn drift(&self, pool: &PgPool) -> AdminResult<PlaneDrift> {
-        self.drift_from(pool, DeclarationSource::Disk).await
+    async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift> {
+        self.drift_from(env, pool, DeclarationSource::Disk).await
     }
 
     async fn drift_from(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         from: DeclarationSource<'_>,
     ) -> AdminResult<PlaneDrift> {
         let in_db = usize::try_from(count_member_sets(pool).await?).unwrap_or(0);
-        let doc = match declared_groups_from(from) {
+        let doc = match declared_groups_from(env, from) {
             Ok(d) => d,
             Err(e) => {
                 return Ok(PlaneDrift {
@@ -140,22 +143,24 @@ impl SyncPlane for GroupsPlane {
 
     async fn apply(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        self.apply_from(pool, mode, actor, DeclarationSource::Disk)
+        self.apply_from(env, pool, mode, actor, DeclarationSource::Disk)
             .await
     }
 
     async fn apply_from(
         &self,
+        env: &AdminEnv,
         pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
         from: DeclarationSource<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        let doc = declared_groups_from(from)?;
+        let doc = declared_groups_from(env, from)?;
         let before = drift_now(pool, &doc).await?;
         let outcome = match mode {
             SyncMode::InsertOnly => {
@@ -182,14 +187,14 @@ impl SyncPlane for GroupsPlane {
                 declared_hash: &declared_hash(&doc),
                 mode: actor.recorded_mode(mode),
                 actor: actor.as_str(),
-                from: applied_from(),
+                from: applied_from(env),
             },
         )
         .await?;
         Ok(outcome)
     }
 
-    async fn export(&self, pool: &PgPool) -> AdminResult<Option<Export>> {
+    async fn export(&self, _env: &AdminEnv, pool: &PgPool) -> AdminResult<Option<Export>> {
         let sets = list_member_sets(pool).await?;
         let mappings = list_mappings(pool).await?;
         Ok(Some(Export {

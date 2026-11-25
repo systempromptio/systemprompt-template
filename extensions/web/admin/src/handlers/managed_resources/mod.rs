@@ -1,5 +1,6 @@
 //! Owner-authenticated source and revision authoring; no implicit activation.
 
+use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared::require_write_origin;
 use crate::routes::managed_state::ManagedState;
@@ -10,7 +11,6 @@ use std::sync::Arc;
 
 use axum::{Extension, Json};
 use serde::Deserialize;
-use systemprompt::config::{AppPaths, ProfileBootstrap};
 use systemprompt::identifiers::{
     ManagedReconciliationId, ManagedResourceId, ManagedSourceId, ResourceRevisionId,
     SourceSnapshotId, WithdrawalProposalId,
@@ -31,12 +31,13 @@ pub(crate) struct CreateSource {
 }
 
 pub(crate) async fn create_source(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
     Json(input): Json<CreateSource>,
 ) -> AdminResult<(StatusCode, Json<ManagedSourceId>)> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     let id = state
         .repository
         .register_source(&state.owner, &input.name, &input.specification)
@@ -53,13 +54,14 @@ pub(crate) async fn source(
 }
 
 pub(crate) async fn capture_snapshot(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ManagedSourceId>,
     headers: HeaderMap,
     Json(input): Json<SnapshotProvenance>,
 ) -> AdminResult<(StatusCode, Json<SourceSnapshotId>)> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     Ok((
         StatusCode::CREATED,
         Json(
@@ -72,40 +74,55 @@ pub(crate) async fn capture_snapshot(
 }
 
 pub(crate) async fn sync_git(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
-    Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ManagedSourceId>,
     headers: HeaderMap,
     Json(input): Json<GitSyncRequest>,
-) -> AdminResult<Json<systemprompt::marketplace::managed::GitSyncResult>> {
-    require_write_origin(&headers)?;
+) -> AdminResult<Json<serde_json::Value>> {
+    require_write_origin(&env, &headers)?;
     if input.source_id != id {
         return Err(AdminError::Conflict(
             "Source path and body differ".to_owned(),
         ));
     }
-    Ok(Json(
-        systemprompt::system::managed::git_sources::GitSourceOrchestrator::new(
-            state.repository.clone(),
-            scratch_root()?,
-        )
-        .synchronize(&state.owner, &input)
-        .await?,
-    ))
+    let synced = env
+        .git_sync()?
+        .sync(&systemprompt::traits::GitSourceSyncRequest {
+            source_id: input.source_id,
+            resource_id: input.resource_id,
+            upstream_root: input.upstream_root,
+            upstream_base_revision_id: input.upstream_base_revision_id,
+        })
+        .await?;
+    // JSON: the sync outcome relayed in the console's tagged shape
+    Ok(Json(match synced {
+        systemprompt::traits::GitSourceSynced::Incoming {
+            snapshot_id,
+            revision_id,
+            commit,
+        } => serde_json::json!({
+            "result": "incoming",
+            "snapshot_id": snapshot_id,
+            "revision_id": revision_id,
+            "commit": commit,
+        }),
+        systemprompt::traits::GitSourceSynced::WithdrawalProposed {
+            snapshot_id,
+            proposal_id,
+            commit,
+        } => serde_json::json!({
+            "result": "withdrawal_proposed",
+            "snapshot_id": snapshot_id,
+            "proposal_id": proposal_id,
+            "commit": commit,
+        }),
+    }))
 }
 
-fn scratch_root() -> AdminResult<std::path::PathBuf> {
-    let profile = ProfileBootstrap::get().map_err(AdminError::internal)?;
-    let paths = AppPaths::from_profile(
-        &profile.paths,
-        profile.path_resolution(),
-        systemprompt::loader::ServicesRootBootstrap::get().map(|root| root.path.as_path()),
-    )
-    .map_err(AdminError::internal)?;
-    Ok(paths.storage().scratch().to_path_buf())
-}
 
 pub(crate) async fn begin_reconciliation(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
@@ -114,7 +131,7 @@ pub(crate) async fn begin_reconciliation(
     StatusCode,
     Json<systemprompt::marketplace::managed::ReconciliationRecord>,
 )> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     Ok((
         StatusCode::CREATED,
         Json(
@@ -135,13 +152,14 @@ pub(crate) struct ResolveConflict {
 }
 
 pub(crate) async fn resolve_conflict(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ManagedReconciliationId>,
     headers: HeaderMap,
     Json(input): Json<ResolveConflict>,
 ) -> AdminResult<StatusCode> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     state
         .repository
         .resolve_reconciliation_conflict(
@@ -164,13 +182,14 @@ pub(crate) struct CompleteReconciliation {
 }
 
 pub(crate) async fn complete_reconciliation(
+    Extension(env): Extension<AdminEnv>,
     Extension(user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ManagedReconciliationId>,
     headers: HeaderMap,
     Json(input): Json<CompleteReconciliation>,
 ) -> AdminResult<StatusCode> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     state
         .repository
         .complete_reconciliation(&state.owner, &user.user_id, &id, &input.revision_id)
@@ -197,13 +216,14 @@ pub(crate) struct DecideWithdrawal {
 }
 
 pub(crate) async fn decide_withdrawal(
+    Extension(env): Extension<AdminEnv>,
     Extension(user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<WithdrawalProposalId>,
     headers: HeaderMap,
     Json(input): Json<DecideWithdrawal>,
 ) -> AdminResult<StatusCode> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     state
         .repository
         .decide_withdrawal_proposal(&state.owner, &user.user_id, &id, input.approved)
@@ -212,12 +232,13 @@ pub(crate) async fn decide_withdrawal(
 }
 
 pub(crate) async fn bind_resource(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
     Json(input): Json<NewResource>,
 ) -> AdminResult<(StatusCode, Json<ManagedResourceId>)> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     Ok((
         StatusCode::CREATED,
         Json(state.repository.bind_resource(&state.owner, &input).await?),
@@ -225,12 +246,13 @@ pub(crate) async fn bind_resource(
 }
 
 pub(crate) async fn create_revision(
+    Extension(env): Extension<AdminEnv>,
     Extension(_user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     headers: HeaderMap,
     Json(input): Json<NewRevision>,
 ) -> AdminResult<(StatusCode, Json<ResourceRevisionId>)> {
-    require_write_origin(&headers)?;
+    require_write_origin(&env, &headers)?;
     Ok((
         StatusCode::CREATED,
         Json(

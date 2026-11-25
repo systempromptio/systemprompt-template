@@ -9,6 +9,8 @@
 //! row naming the stage it came from. The write tier and a same-origin
 //! check guard everything but the export.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::Json;
@@ -36,10 +38,11 @@ fn preview_url(stage_id: &str) -> String {
 }
 
 pub(crate) async fn export_zip_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
 ) -> AdminResult<Response> {
-    let zip = build_export_zip(&pool, user_ctx.user_id.as_str()).await?;
+    let zip = build_export_zip(&env, &pool, user_ctx.user_id.as_str()).await?;
     activity::record(
         &pool,
         NewActivity::configuration_exported(&user_ctx.user_id, zip.planes, zip.rows),
@@ -66,21 +69,22 @@ pub(crate) struct StageResponse {
     pub expires_at: String,
 }
 
-fn require_admin(user_ctx: &UserContext, headers: &HeaderMap) -> AdminResult<()> {
+fn require_admin(env: &AdminEnv, user_ctx: &UserContext, headers: &HeaderMap) -> AdminResult<()> {
     if !user_ctx.is_admin {
         return Err(AdminError::Forbidden(
             "Importing configuration needs an administrator.".to_owned(),
         ));
     }
-    require_write_origin(headers)
+    require_write_origin(env, headers)
 }
 
 pub(crate) async fn stage_import_handler(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     headers: HeaderMap,
     body: Bytes,
 ) -> AdminResult<Response> {
-    require_admin(&user_ctx, &headers)?;
+    require_admin(&env, &user_ctx, &headers)?;
     let store = StagingStore::global();
     if body.is_empty() {
         return Err(AdminError::BadRequest(
@@ -134,13 +138,14 @@ fn stage_or_404(store: &StagingStore, id: &str) -> AdminResult<StagedArchive> {
 }
 
 pub(crate) async fn apply_import_handler(
+    Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(stage_id): Path<String>,
     headers: HeaderMap,
     Json(body): Json<ImportApplyRequest>,
 ) -> AdminResult<Response> {
-    require_admin(&user_ctx, &headers)?;
+    require_admin(&env, &user_ctx, &headers)?;
     let store = StagingStore::global();
     let stage = stage_or_404(store, &stage_id)?;
     let chosen: Vec<&'static str> = if body.plane == "all" {
@@ -164,7 +169,7 @@ pub(crate) async fn apply_import_handler(
         let text = stage.planes.get(id).map(String::as_str).unwrap_or_default();
         let from = DeclarationSource::Text(text);
         let outcome = plane
-            .apply_from(&pool, body.mode, Actor::User(&user_ctx.user_id), from)
+            .apply_from(&env, &pool, body.mode, Actor::User(&user_ctx.user_id), from)
             .await?;
         activity::record(
             &pool,
@@ -183,7 +188,7 @@ pub(crate) async fn apply_import_handler(
         .await;
         // Why: after the apply the honest picture is the disk declaration
         // against the database — that is what the next page load shows.
-        let drift_after = plane.drift(&pool).await?;
+        let drift_after = plane.drift(&env, &pool).await?;
         stage_closed = store.drop_plane(&stage_id, id);
         applied.push(ImportApplied {
             plane: plane.id(),
@@ -201,11 +206,12 @@ pub(crate) async fn apply_import_handler(
 }
 
 pub(crate) async fn discard_import_handler(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Path(stage_id): Path<String>,
     headers: HeaderMap,
 ) -> AdminResult<Response> {
-    require_admin(&user_ctx, &headers)?;
+    require_admin(&env, &user_ctx, &headers)?;
     let store = StagingStore::global();
     stage_or_404(store, &stage_id)?;
     store.remove(&stage_id);

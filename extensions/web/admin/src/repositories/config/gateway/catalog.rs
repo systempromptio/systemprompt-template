@@ -1,129 +1,112 @@
 //! The set of gateway routes this deployment vouches for.
 //!
-//! Every path that writes a `gateway_route` catalog row â the governance
+//! Every path that writes a `gateway_route` catalog row — the governance
 //! bootstrap, the rules.yaml projection it feeds, and the dashboard handlers
-//! â derives the set here, from the same `dispatchable_route_ids` the gateway
-//! dispatches by, so no two of them can disagree about which ids are real. It
-//! includes the synthesized catch-all route, which the gateway YAML never
-//! lists. The routes and the registry they resolve against are services
-//! configuration (`services/ai/gateway.yaml`, `services/ai/providers.yaml`),
-//! read from the `ServicesBootstrap` cell the process booted with.
+//! — derives the set here, from the resolved catalog's declared routes, the
+//! same routes the gateway dispatches by, so no two of them can disagree
+//! about which ids are real. The catalog is read from the install services
+//! view the web member resolved.
+
+use crate::env::AdminEnv;
 
 use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
-use systemprompt::identifiers::RouteId;
-use systemprompt::loader::ServicesBootstrap;
-use systemprompt::manifest::ServicesConfig;
-use systemprompt::manifest::services::ProviderRegistry;
+use systemprompt::manifest::services::{GatewayRoute, ResolvedCatalog};
 use systemprompt_web_shared::error::MarketplaceError;
 
 use crate::types::{GatewayRouteView, RouteFallbackView};
 
-pub fn dispatchable_route_ids(services: &ServicesConfig) -> Vec<String> {
-    services
-        .gateway
-        .as_ref()
-        .map(|gateway| gateway.dispatchable_route_ids(&services.providers))
-        .unwrap_or_default()
+#[must_use]
+pub fn dispatchable_route_ids(catalog: &ResolvedCatalog) -> Vec<String> {
+    catalog
+        .routes()
         .iter()
-        .map(RouteId::as_str)
-        .map(str::to_owned)
+        .map(|route| route.id.as_str().to_owned())
         .collect()
 }
 
-// Why: the same routes as `dispatchable_route_ids`, carrying the metadata the
-// access-control views label and filter by. Read views that decide *access*
-// must use this rather than the gateway YAML `get_gateway_config` reads: that
-// YAML omits the synthesized catch-all, so a grant on it would be invisible â
-// and therefore unreachable â from any surface built on the file.
-pub fn dispatchable_routes(
-    services: &ServicesConfig,
-) -> Result<Vec<GatewayRouteView>, MarketplaceError> {
-    let config = services.gateway_config().ok_or_else(missing_gateway)?;
-    Ok(config
-        .candidate_routes(&services.providers)
-        .filter_map(|route| {
-            let route = route.into_owned();
-            Some(GatewayRouteView {
-                id: route.id?.to_string(),
-                name: route.name,
-                description: route.description,
-                model_pattern: route.model_pattern,
-                provider: route.provider.as_str().to_owned(),
-                upstream_model: route.upstream_model,
-                extra_headers: route.extra_headers.into_iter().collect(),
-                // Why: read-only projection for the access-control views â
-                // nothing here is ever written back to the file, so the
-                // editor's passthrough fields are dropped rather than
-                // round-tripped through a second representation.
-                pricing: None,
-                when: None,
-                requires: None,
-                fallbacks: route
-                    .fallbacks
-                    .into_iter()
-                    .map(|deployment| RouteFallbackView {
-                        provider: deployment.provider.as_str().to_owned(),
-                        upstream_model: deployment.upstream_model,
-                    })
-                    .collect(),
-                by_scope: route
-                    .by_scope
-                    .and_then(|scoped| serde_yaml::to_value(scoped).ok()),
+// Why: a read-only projection for the access-control views: the route's
+// model globs, its first deployment's provider, and the remaining deployments
+// as the fallback chain. Nothing here is written back.
+fn route_view(route: &GatewayRoute) -> GatewayRouteView {
+    let mut deployments = route
+        .deployments
+        .iter()
+        .map(|d| d.endpoint().provider.as_str());
+    GatewayRouteView {
+        id: route.id.as_str().to_owned(),
+        name: route.label.clone(),
+        description: route.description.clone(),
+        model_pattern: route.models.0.join(" "),
+        provider: deployments.next().unwrap_or_default().to_owned(),
+        upstream_model: None,
+        extra_headers: std::collections::BTreeMap::new(),
+        pricing: None,
+        when: None,
+        requires: None,
+        fallbacks: deployments
+            .map(|provider| RouteFallbackView {
+                provider: provider.to_owned(),
+                upstream_model: None,
             })
-        })
-        .collect())
+            .collect(),
+        by_scope: None,
+    }
+}
+
+pub fn dispatchable_routes(
+    catalog: &ResolvedCatalog,
+) -> Result<Vec<GatewayRouteView>, MarketplaceError> {
+    if catalog.routes().is_empty() {
+        return Err(missing_gateway());
+    }
+    Ok(catalog.routes().iter().map(route_view).collect())
 }
 
 // Why: an absent catalog is an error, never an empty list. The per-user
 // catalog and the after-the-fact ACL detector both iterate these routes, so
 // returning nothing would let them report no violations while checking
-// nothing â a governance surface may not fail open and quiet.
+// nothing — a governance surface may not fail open and quiet.
 fn missing_gateway() -> MarketplaceError {
     MarketplaceError::Internal(
-        "no gateway configuration in the services tree — expected a `gateway:` block in \
-         services/ai/gateway.yaml, included from services/config/config.yaml"
+        "no gateway routes in the services catalog — expected a `gateway.routes` block in \
+         services/ai/gateway.yaml"
             .to_owned(),
     )
 }
 
-pub fn dispatchable_routes_from_services() -> Result<Vec<GatewayRouteView>, MarketplaceError> {
-    dispatchable_routes(ServicesBootstrap::get()?)
-}
-
-// Why: the routes a client may name directly. A provider declared
-// `surface: backend` in `services/ai/providers.yaml` is a dispatch target for
-// an `upstream_model` rewrite, never a surface a client targets, so listing it
-// in a per-user catalog advertises egress the gateway would refuse. Same rule
-// `/v1/models` applies via `ApiSurface::is_advertised`. A route naming a
-// provider the registry does not know passes through: only a provider that
-// declares itself backend is hidden, and an unknown one is a validation
-// problem for the services loader, not a reason for the catalog to go quiet.
-pub fn client_facing_routes(
-    services: &ServicesConfig,
+pub fn dispatchable_routes_from_services(
+    env: &AdminEnv,
 ) -> Result<Vec<GatewayRouteView>, MarketplaceError> {
-    Ok(retain_client_facing(
-        dispatchable_routes(services)?,
-        &services.providers,
-    ))
+    dispatchable_routes(env.services_view().catalog())
 }
 
-#[must_use]
-pub fn retain_client_facing(
-    routes: Vec<GatewayRouteView>,
-    providers: &ProviderRegistry,
-) -> Vec<GatewayRouteView> {
-    routes
-        .into_iter()
+// Why: the routes a client may name directly: a route matching at least one
+// model the catalog advertises to some client family. A route that reaches
+// only unadvertised models serves an `upstream_model` rewrite, never a name a
+// client targets, so listing it in a per-user catalog advertises egress the
+// gateway would refuse.
+pub fn client_facing_routes(
+    catalog: &ResolvedCatalog,
+) -> Result<Vec<GatewayRouteView>, MarketplaceError> {
+    if catalog.routes().is_empty() {
+        return Err(missing_gateway());
+    }
+    Ok(catalog
+        .routes()
+        .iter()
         .filter(|route| {
-            providers
-                .find_provider(&route.provider)
-                .is_none_or(|entry| entry.surface.is_advertised())
+            catalog
+                .models()
+                .any(|model| model.is_advertised() && route.matches_model(model.id.as_str()))
         })
-        .collect()
+        .map(route_view)
+        .collect())
 }
 
-pub fn client_facing_routes_from_services() -> Result<Vec<GatewayRouteView>, MarketplaceError> {
-    client_facing_routes(ServicesBootstrap::get()?)
+pub fn client_facing_routes_from_services(
+    env: &AdminEnv,
+) -> Result<Vec<GatewayRouteView>, MarketplaceError> {
+    client_facing_routes(env.services_view().catalog())
 }
 
 // Why: an empty set is a services tree without a gateway, not a declaration
@@ -139,7 +122,7 @@ pub fn registered_routes(route_ids: &[String]) -> RegisteredEntities {
     }
 }
 
-pub fn registered_routes_from_services() -> Result<RegisteredEntities, MarketplaceError> {
-    let services = ServicesBootstrap::get()?;
-    Ok(registered_routes(&dispatchable_route_ids(services)))
+#[must_use]
+pub fn registered_routes_from_services(env: &AdminEnv) -> RegisteredEntities {
+    registered_routes(&dispatchable_route_ids(env.services_view().catalog()))
 }

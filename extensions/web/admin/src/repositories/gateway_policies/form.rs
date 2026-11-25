@@ -10,8 +10,11 @@
 use std::collections::BTreeMap;
 
 use systemprompt::gateway::{
-    GatewayPolicyConfig, GatewayPolicyEntry, GatewayPolicySpec, HeuristicConfig, QuotaMode,
-    QuotaWindow, SafetyConfig, SafetyHistoryMode, SafetyMode,
+    GatewayPolicyConfig, GatewayPolicyEntry, GatewayPolicySpec, HeuristicConfig, QuotaWindow,
+    SafetyConfig, SafetyHistoryMode,
+};
+use systemprompt::manifest::services::{
+    EnforcementMode as QuotaMode, EnforcementMode as SafetyMode,
 };
 
 pub use super::form_error::FormError;

@@ -9,6 +9,8 @@
 //! whole subject, and each band is marked *decided*, *outranked* (it would
 //! have decided something but a narrower band won) or *no rule*.
 
+use crate::env::AdminEnv;
+
 use serde::Serialize;
 use systemprompt::governance::authz::{
     ParentChainIndex, RuleType, SubjectAttributes, SubjectDimension,
@@ -186,6 +188,7 @@ pub fn explain(input: &ExplainInput<'_>) -> Explanation {
 // Why: `None` when the account does not exist — the panel says so rather
 // than explaining a subject nobody holds.
 pub async fn explain_for_user(
+    env: &AdminEnv,
     pool: &sqlx::PgPool,
     user_id: &UserId,
     entity_type: &str,
@@ -194,8 +197,9 @@ pub async fn explain_for_user(
     let Some(user) = super::matrix::find_user_for_matrix(pool, user_id).await? else {
         return Ok(None);
     };
-    let subject = super::matrix_subject::user_subject(pool, user_id, user.roles).await?;
-    let inputs = super::matrix::resolution_inputs(pool).await?;
+    let subject = super::matrix_subject::user_subject(env, user_id, user.roles).await?;
+    let inputs = super::matrix::resolution_inputs(env, pool).await?;
+    let dimensions = crate::authz::dimensions(env.subjects())?;
     let default_open = inputs
         .defaults
         .get(&(entity_type.to_owned(), entity_id.to_owned()))
@@ -206,7 +210,7 @@ pub async fn explain_for_user(
         entity_type,
         entity_id,
         subject: &subject,
-        dimensions: crate::authz::dimensions(pool),
+        dimensions: &dimensions,
         default_open,
         chains: &inputs.chains,
     })))

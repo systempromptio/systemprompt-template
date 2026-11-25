@@ -9,7 +9,7 @@
 //! this instance declares and falls back to the last `_` only when none
 //! matches.
 
-use systemprompt::loader::ServicesBootstrap;
+use systemprompt::manifest::services::ServicesConfig;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct McpToolName {
@@ -19,11 +19,8 @@ pub struct McpToolName {
 
 // Why: resolves against the servers this instance declares.
 #[must_use]
-pub fn parse_mcp_tool_name(tool_name: &str) -> Option<McpToolName> {
-    let known: Vec<String> = ServicesBootstrap::get().map_or_else(
-        |_| Vec::new(),
-        |services| services.mcp_servers.keys().cloned().collect(),
-    );
+pub fn parse_mcp_tool_name(services: &ServicesConfig, tool_name: &str) -> Option<McpToolName> {
+    let known: Vec<String> = services.mcp_servers.keys().cloned().collect();
     parse_mcp_tool_name_with(tool_name, &known)
 }
 

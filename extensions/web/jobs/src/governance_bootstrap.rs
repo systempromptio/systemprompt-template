@@ -35,6 +35,7 @@ use systemprompt::traits::{Job, JobContext, JobResult};
 use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
 
 use crate::error::JobError;
+use systemprompt_web_admin::env::AdminEnv;
 use systemprompt_web_admin::repositories::config::gateway::{
     dispatchable_route_ids, registered_routes,
 };
@@ -80,28 +81,26 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     // Why: the composed root — the same tree the sync page reads — so a kit's
     // marketplace validates once its bundle is active, and boot and page can
     // never disagree about what the declaration says.
-    let profile = systemprompt::config::ProfileBootstrap::get()?;
-    let services_path = systemprompt::loader::services_root::ServicesRootBootstrap::active_root_or(
-        &profile.paths.services,
-    );
+    let env = ctx.get::<AdminEnv>()?;
+    let services_path = env.active_services_root();
 
     let governance = check_governance_config(&services_path)?;
-    check_judge_config()?;
+    check_judge_config(&env);
 
-    let catalog = bootstrap_gateway_entities(db_pool).await?;
+    let catalog = bootstrap_gateway_entities(db_pool, &env).await?;
 
     let pool = db_pool.write_pool();
-    let planes = reconcile_all(&pool)
+    let planes = reconcile_all(&env, &pool)
         .await
         .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
 
-    let slack_workspaces = load_slack_apps(&pool).await.map_err(JobError::from)?;
+    let slack_workspaces = load_slack_apps(&env, &pool).await.map_err(JobError::from)?;
 
     // Why: every skill invocation is credited to the marketplace that owns
     // its plugin and the version that marketplace was serving; ownership and
     // versions come from the composition this process booted on, so they are
     // recorded here.
-    let sources = record_service_sources(&pool)
+    let sources = record_service_sources(&env, &pool)
         .await
         .map_err(JobError::from)?;
 
@@ -153,7 +152,9 @@ pub fn check_governance_config(
     use systemprompt::governance::policy::GovernanceConfig;
 
     let path = services_path.join("governance/config.yaml");
-    let config = GovernanceConfig::load(&path)
+    let yaml = std::fs::read_to_string(&path)
+        .map_err(|e| MarketplaceError::config_file(path.display().to_string(), e))?;
+    let config = GovernanceConfig::parse(&yaml)
         .map_err(|e| MarketplaceError::config_file(path.display().to_string(), e))?;
     let active = if config.enabled {
         config.policies.iter().filter(|p| p.enabled).count()
@@ -191,16 +192,14 @@ pub fn check_governance_config(
 // conversation judge; core already refuses two owners. Reported so the boot
 // log says whether conversations will be labelled.
 #[doc(hidden)]
-pub fn check_judge_config() -> Result<(), JobError> {
-    let services = systemprompt::loader::ServicesBootstrap::get()?;
+pub fn check_judge_config(env: &AdminEnv) {
+    let services = env.services();
     let owner = services
         .plugins
         .values()
         .find(|p| p.enabled && p.hooks.judge)
         .map(|p| p.id.as_str());
-    let automatic = systemprompt::config::ProfileBootstrap::get()?
-        .judge
-        .automatic;
+    let automatic = env.profile().judge_automatic;
     if let Some(owner) = owner {
         tracing::info!(owner, automatic, "conversation judge configured");
     } else {
@@ -208,7 +207,6 @@ pub fn check_judge_config() -> Result<(), JobError> {
             "no enabled plugin sets hooks.judge: true — conversations will not be judged"
         );
     }
-    Ok(())
 }
 
 struct GatewayCatalog {
@@ -216,14 +214,13 @@ struct GatewayCatalog {
     pruned: u64,
 }
 
-async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, JobError> {
-    let profile = systemprompt::config::ProfileBootstrap::get()?;
-    let services = systemprompt::loader::ServicesBootstrap::get()?;
-    let gateway_path = std::path::Path::new(&profile.paths.services)
-        .join("ai")
-        .join("gateway.yaml");
+async fn bootstrap_gateway_entities(
+    db_pool: &DbPool,
+    env: &AdminEnv,
+) -> Result<GatewayCatalog, JobError> {
+    let gateway_path = env.baked_services_root().join("ai").join("gateway.yaml");
 
-    let route_ids = dispatchable_route_ids(services);
+    let route_ids = dispatchable_route_ids(env.services_view().catalog());
     let registered = registered_routes(&route_ids);
     let id_refs: Vec<&str> = route_ids.iter().map(String::as_str).collect();
 
@@ -243,10 +240,10 @@ async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, 
         });
     }
 
-    let source = format!("services:{}", gateway_path.display());
+    let source = systemprompt::governance::authz::SERVICES_SOURCE;
     let repo = systemprompt::governance::authz::AccessControlRepository::new(db_pool);
     let report =
-        systemprompt::governance::authz::reconcile_gateway_entities_exact(&repo, &id_refs, &source)
+        systemprompt::governance::authz::reconcile_gateway_entities_exact(&repo, &id_refs, source)
             .await
             .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
 

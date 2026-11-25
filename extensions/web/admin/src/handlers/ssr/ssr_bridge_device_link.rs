@@ -8,6 +8,8 @@
 //! loopback, so it sends the user here without one and the approve step
 //! *displays* the code for the user to copy back into the terminal.
 
+use crate::env::AdminEnv;
+
 use std::sync::Arc;
 
 use axum::extract::{Extension, Form, Query, State};
@@ -93,6 +95,7 @@ pub(crate) async fn device_link_page(
 }
 
 pub(crate) async fn device_link_approve(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
@@ -113,7 +116,7 @@ pub(crate) async fn device_link_approve(
         let login_command = format!(
             "{BRIDGE_BINARY} login --code {code}{gateway}",
             code = issued.code,
-            gateway = gateway_suffix()
+            gateway = gateway_suffix(&env)
         );
         return render_code_page(
             &engine,
@@ -171,10 +174,10 @@ fn render_code_page(
 
 // Why: `--gateway` is only worth printing when the server knows its own
 // external URL; a wrong one is worse than the CLI's configured default.
-fn gateway_suffix() -> String {
-    systemprompt::manifest::Config::get().map_or_else(
-        |_| String::new(),
-        |c| format!(" --gateway {}", c.api_external_url.trim_end_matches('/')),
+fn gateway_suffix(env: &AdminEnv) -> String {
+    format!(
+        " --gateway {}",
+        env.config().api_external_url.trim_end_matches('/')
     )
 }
 

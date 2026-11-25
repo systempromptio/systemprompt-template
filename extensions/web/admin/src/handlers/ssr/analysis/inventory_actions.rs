@@ -1,6 +1,13 @@
 //! Explicit binding of a configured inventory entry to the managed resource
 //! that shares its name, so retained snapshots and coverage can attach to it,
-//! and the on-demand inventory sync that publishes every configured skill.
+//! and the on-demand record of the services tree's marketplace versions.
+//!
+//! The inventory refresh and the publication of every configured skill are
+//! core's `inventory_refresh` job: its refresher reads the bundle sources
+//! and the active services root, which an install member does not hold, so a
+//! binding or a sync here takes effect on that job's next run.
+
+use crate::env::AdminEnv;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::routes::managed_state::ManagedState;
@@ -21,6 +28,7 @@ pub(crate) struct BindForm {
 }
 
 pub(crate) async fn bind(
+    Extension(env): Extension<AdminEnv>,
     Extension(user): Extension<UserContext>,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(entry): Path<InventoryEntryId>,
@@ -30,50 +38,27 @@ pub(crate) async fn bind(
     if !user.is_admin {
         return Err(AdminError::Forbidden("Administrator access required".to_owned()).into());
     }
-    crate::handlers::shared::require_write_origin(&headers)?;
+    crate::handlers::shared::require_write_origin(&env, &headers)?;
     state
         .repository
         .bind_inventory_resource(&state.owner, &user.user_id, &entry, &form.resource_id)
         .await?;
-    let root = crate::handlers::shared::get_services_path()?;
-    let services = systemprompt::loader::ConfigLoader::load().map_err(AdminError::internal)?;
-    systemprompt::marketplace::inventory::InventoryService::new(state.repository.clone())
-        .refresh(&state.owner, &root, &services)
-        .await?;
     Ok(Redirect::to(SKILLS_PAGE))
 }
 
-// Why: the same pass the scheduler runs each minute, on demand — refresh the
-// inventory, then publish the latest configured revision of every skill.
 pub(crate) async fn sync_inventory(
+    Extension(env): Extension<AdminEnv>,
     Extension(user): Extension<UserContext>,
-    Extension(state): Extension<Arc<ManagedState>>,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
 ) -> AdminHtmlResult<Redirect> {
     if !user.is_admin {
         return Err(AdminError::Forbidden("Administrator access required".to_owned()).into());
     }
-    crate::handlers::shared::require_write_origin(&headers)?;
-    let root = crate::handlers::shared::get_services_path()?;
-    let services = systemprompt::loader::ConfigLoader::load().map_err(AdminError::internal)?;
-    let service =
-        systemprompt::marketplace::inventory::InventoryService::new(state.repository.clone());
-    service.refresh(&state.owner, &root, &services).await?;
-    service
-        .publish_latest(
-            &systemprompt::marketplace::inventory::BaselineScope {
-                owner: &state.owner,
-                actor: &user.user_id,
-                root: &root,
-                services: &services,
-            },
-            &mut systemprompt::marketplace::inventory::PublishGuard::default(),
-        )
-        .await?;
+    crate::handlers::shared::require_write_origin(&env, &headers)?;
     // Why: a sync is also when a marketplace's bytes may have moved, so the
     // version record is refreshed here and not only at boot.
-    crate::repositories::sync::sources_db::record_service_sources(&pool)
+    crate::repositories::sync::sources_db::record_service_sources(&env, &pool)
         .await
         .map_err(AdminError::internal)?;
     Ok(Redirect::to(SKILLS_PAGE))

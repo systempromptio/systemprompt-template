@@ -7,7 +7,6 @@
 //! and no systemprompt session token ever leaves the gateway.
 
 use crate::error::{AdminError, AdminResult};
-use jsonwebtoken::{Algorithm, Header, encode};
 use serde::{Deserialize, Serialize};
 use systemprompt::identifiers::UserId;
 use systemprompt::manifest::ServicesConfig;
@@ -68,19 +67,17 @@ pub fn claims(
     }
 }
 
+// Why: an install cannot sign with the instance authority key, and the
+// conferred minter signs only for audiences declared at contribution under
+// the member's own namespace, so a token whose audience is the external
+// server's endpoint cannot be issued. The accessor refuses rather than sign
+// with any other key the server would not trust.
 pub fn sign(claims: &IdentityClaims) -> AdminResult<String> {
-    use systemprompt_security::keys::authority;
-    let mut header = Header::new(Algorithm::RS256);
-    header.typ = Some("JWT".into());
-    header.kid = Some(
-        authority::active_kid()
-            .map_err(AdminError::internal)?
-            .to_owned(),
+    tracing::warn!(
+        audience = %claims.aud,
+        "identity token refused: no install-readable signer for an external audience"
     );
-    encode(
-        &header,
-        claims,
-        authority::encoding_key().map_err(AdminError::internal)?,
-    )
-    .map_err(AdminError::internal)
+    Err(AdminError::Unavailable(
+        "Identity tokens for external MCP servers are not issued by this install".into(),
+    ))
 }

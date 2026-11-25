@@ -1,6 +1,8 @@
 //! SSR page for connecting a client — Claude Code, Claude Desktop or `OpenCode`
 //! — to this gateway with a single-use connect code.
 
+use crate::env::AdminEnv;
+
 use axum::extract::Extension;
 use axum::response::Response;
 use serde::Serialize;
@@ -25,11 +27,12 @@ struct ConnectPageView {
 }
 
 pub(crate) async fn connect_page(
+    Extension(env): Extension<AdminEnv>,
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
 ) -> AdminHtmlResult<Response> {
-    let (_, gateway) = bridge_profile::read_config_strings();
+    let (_, gateway) = bridge_profile::read_config_strings(&env);
     let view = ConnectPageView {
         page: "connect",
         title: "Connect a client",

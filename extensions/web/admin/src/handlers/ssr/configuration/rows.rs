@@ -1,6 +1,8 @@
 //! Builds the configuration table: one row per kind, projected kinds from
 //! their planes and everything else from the tree itself.
 
+use crate::env::AdminEnv;
+
 use std::path::Path;
 
 use sqlx::PgPool;
@@ -109,6 +111,7 @@ fn served_row(
 
 // Why: every row, projected kinds first, in inventory order.
 pub(super) async fn build_rows(
+    env: &AdminEnv,
     pool: &PgPool,
     active_root: &Path,
     baked_root: &Path,
@@ -121,7 +124,7 @@ pub(super) async fn build_rows(
         // knows the kind exists. A registered plane the inventory does not
         // list is added below so a new plane shows up with no page change.
         if let Some(plane_id) = kind.plane {
-            if let Some(card) = plane_card_by_id(pool, plane_id, "").await? {
+            if let Some(card) = plane_card_by_id(env, pool, plane_id, "").await? {
                 rows.push(projected_row(kind, &card));
             }
             continue;
@@ -132,7 +135,7 @@ pub(super) async fn build_rows(
         if CONFIG_KINDS.iter().any(|k| k.plane == Some(plane.id())) {
             continue;
         }
-        if let Some(card) = plane_card_by_id(pool, plane.id(), "").await? {
+        if let Some(card) = plane_card_by_id(env, pool, plane.id(), "").await? {
             let kind = ConfigKind {
                 id: plane.id(),
                 label: plane.label(),

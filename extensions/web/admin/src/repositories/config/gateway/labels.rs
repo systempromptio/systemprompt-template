@@ -8,11 +8,13 @@
 //! label is derived from the model pattern and the provider's display name,
 //! and the generated id is demoted to a subtitle the page may still show.
 
+use crate::env::AdminEnv;
+
 use std::collections::HashMap;
 
-use systemprompt::loader::ServicesBootstrap;
-use systemprompt::manifest::ServicesConfig;
-use systemprompt::manifest::services::ProviderEntry;
+use systemprompt::manifest::services::ResolvedCatalog;
+use systemprompt::manifest::services::catalog::{ResolvedEndpoint, ResolvedProvider};
+
 use systemprompt_web_shared::error::MarketplaceError;
 
 use super::catalog::dispatchable_routes;
@@ -85,18 +87,20 @@ impl RouteLabels {
     }
 }
 
-pub fn get_route_labels(services: &ServicesConfig) -> Result<RouteLabels, MarketplaceError> {
-    let providers: Vec<ProviderLabel> = services
-        .providers
-        .providers
-        .iter()
-        .map(provider_label)
+pub fn get_route_labels(catalog: &ResolvedCatalog) -> Result<RouteLabels, MarketplaceError> {
+    let providers: Vec<ProviderLabel> = catalog
+        .providers()
+        .map(|provider| provider_label(catalog, provider))
         .collect();
-    let routes: Vec<RouteLabel> = dispatchable_routes(services)?
+    let routes: Vec<RouteLabel> = dispatchable_routes(catalog)?
         .into_iter()
         .map(|route| {
-            let entry = services.providers.find_provider(&route.provider);
-            let provider_label = derive_provider_label(&route.provider, entry);
+            let provider = catalog.provider(&route.provider);
+            let endpoint = first_endpoint(catalog, &route.provider);
+            let provider_label = derive_provider_label(
+                &route.provider,
+                provider.and_then(|p| p.display_name.as_deref()),
+            );
             let declared = route
                 .name
                 .as_deref()
@@ -107,14 +111,12 @@ pub fn get_route_labels(services: &ServicesConfig) -> Result<RouteLabels, Market
                     .fallbacks
                     .iter()
                     .map(|deployment| {
-                        let label = derive_provider_label(
+                        derive_provider_label(
                             &deployment.provider,
-                            services.providers.find_provider(&deployment.provider),
-                        );
-                        match &deployment.upstream_model {
-                            Some(model) => format!("{label} as {model}"),
-                            None => label,
-                        }
+                            catalog
+                                .provider(&deployment.provider)
+                                .and_then(|p| p.display_name.as_deref()),
+                        )
                     })
                     .collect::<Vec<_>>()
                     .join(", then ")
@@ -131,11 +133,9 @@ pub fn get_route_labels(services: &ServicesConfig) -> Result<RouteLabels, Market
                 provider: route.provider,
                 provider_label,
                 upstream: route.upstream_model,
-                endpoint: entry.map(|e| e.endpoint.clone()).unwrap_or_default(),
-                surface: entry
-                    .map(|e| e.surface.as_tag().to_owned())
-                    .unwrap_or_default(),
-                wire: entry.map(|e| e.wire.to_string()).unwrap_or_default(),
+                endpoint: endpoint.map(|e| e.url.clone()).unwrap_or_default(),
+                surface: String::new(),
+                wire: endpoint.map(|e| e.wire.to_string()).unwrap_or_default(),
                 fallback,
             }
         })
@@ -148,37 +148,54 @@ pub fn get_route_labels(services: &ServicesConfig) -> Result<RouteLabels, Market
     })
 }
 
-pub fn get_route_labels_from_services() -> Result<RouteLabels, MarketplaceError> {
-    get_route_labels(ServicesBootstrap::get()?)
+pub fn get_route_labels_from_services(env: &AdminEnv) -> Result<RouteLabels, MarketplaceError> {
+    get_route_labels(env.services_view().catalog())
 }
 
-fn provider_label(entry: &ProviderEntry) -> ProviderLabel {
+fn first_endpoint<'c>(
+    catalog: &'c ResolvedCatalog,
+    provider: &str,
+) -> Option<&'c ResolvedEndpoint> {
+    catalog
+        .endpoints()
+        .find(|e| e.provider.as_str() == provider)
+}
+
+fn provider_models(catalog: &ResolvedCatalog, provider: &str) -> Vec<(String, bool)> {
+    catalog
+        .models()
+        .filter(|model| {
+            catalog
+                .deployments(model.id.as_str())
+                .iter()
+                .any(|hop| hop.provider.as_str() == provider)
+        })
+        .map(|model| (model.id.as_str().to_owned(), model.is_advertised()))
+        .collect()
+}
+
+fn provider_label(catalog: &ResolvedCatalog, provider: &ResolvedProvider) -> ProviderLabel {
+    let id = provider.id.as_str();
+    let endpoint = first_endpoint(catalog, id);
+    let models = provider_models(catalog, id);
     ProviderLabel {
-        id: entry.name.as_str().to_owned(),
-        label: derive_provider_label(entry.name.as_str(), Some(entry)),
-        description: entry.description.clone(),
-        endpoint: entry.endpoint.clone(),
-        surface: entry.surface.as_tag().to_owned(),
-        wire: entry.wire.to_string(),
-        model_count: entry.models.len(),
-        advertised: entry.surface.is_advertised(),
-        models: entry
-            .models
-            .iter()
-            .map(|m| m.id.as_str().to_owned())
-            .collect(),
+        id: id.to_owned(),
+        label: derive_provider_label(id, provider.display_name.as_deref()),
+        description: provider.description.clone(),
+        endpoint: endpoint.map(|e| e.url.clone()).unwrap_or_default(),
+        surface: String::new(),
+        wire: endpoint.map(|e| e.wire.to_string()).unwrap_or_default(),
+        model_count: models.len(),
+        advertised: models.iter().any(|(_, advertised)| *advertised),
+        models: models.into_iter().map(|(id, _)| id).collect(),
     }
 }
 
 // Why: The provider's display name, falling back to a known spelling of the id
 // and then to the id title-cased.
 #[must_use]
-pub fn derive_provider_label(id: &str, entry: Option<&ProviderEntry>) -> String {
-    if let Some(name) = entry
-        .and_then(|e| e.display_name.as_deref())
-        .map(str::trim)
-        .filter(|n| !n.is_empty())
-    {
+pub fn derive_provider_label(id: &str, display_name: Option<&str>) -> String {
+    if let Some(name) = display_name.map(str::trim).filter(|n| !n.is_empty()) {
         return name.to_owned();
     }
     match id {
