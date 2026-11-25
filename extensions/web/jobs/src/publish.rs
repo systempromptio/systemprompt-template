@@ -16,10 +16,11 @@ use systemprompt::generator::{
 };
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use super::{
-    AssetDeclaration, BundleAdminCssJob, ContentIngestionJob, CopyExtensionAssetsJob,
-    LlmsTxtGenerationJob, RobotsTxtGenerationJob,
+use systemprompt_web_shared::asset_jobs::{
+    AssetDeclaration, BundleAdminCssJob, CopyExtensionAssetsJob,
 };
+
+use super::{ContentIngestionJob, LlmsTxtGenerationJob, RobotsTxtGenerationJob};
 use crate::error::JobError;
 
 #[doc(hidden)]

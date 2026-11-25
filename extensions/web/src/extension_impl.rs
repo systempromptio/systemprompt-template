@@ -138,6 +138,10 @@ impl Extension for WebExtension {
             .routes(route_set());
         crate::admin::authz::contribute_subject_attributes(c);
         crate::admin::jobs::contribute_jobs(c);
+        c.job(systemprompt_web_shared::asset_jobs::BundleAdminCssJob)
+            .job(systemprompt_web_shared::asset_jobs::CopyExtensionAssetsJob::new(
+                declared_assets,
+            ));
         #[cfg(feature = "gateway")]
         contribute_gateway(c);
         #[cfg(feature = "mcp")]

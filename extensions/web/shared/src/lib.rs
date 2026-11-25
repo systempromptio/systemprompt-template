@@ -3,6 +3,7 @@
 //! No business logic — only the cross-cutting primitives the other web
 //! crates need to agree on:
 //!
+//! - [`asset_jobs`] — the console asset jobs every flavour contributes.
 //! - [`config`] / [`config_errors`] — typed YAML schemas with
 //!   `#[serde(deny_unknown_fields)]` plus the error type that surfaces
 //!   misconfigurations at startup.
@@ -18,6 +19,7 @@
 //! - [`html_escape`] — escape helper for template-bound strings.
 
 pub mod adfs;
+pub mod asset_jobs;
 pub mod config;
 pub mod config_errors;
 pub mod error;

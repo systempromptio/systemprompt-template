@@ -160,3 +160,5 @@ scheduler:
     - managed_inventory_refresh
     - database_cleanup
     - cleanup_inactive_sessions
+    - bundle_admin_css
+    - copy_extension_assets

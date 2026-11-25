@@ -9,13 +9,13 @@ use std::sync::Arc;
 use systemprompt::config::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use crate::error::JobError;
+use super::AssetJobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BundleAdminCssJob;
 
 impl BundleAdminCssJob {
-    pub async fn execute_bundle(paths: &AppPaths) -> Result<JobResult, JobError> {
+    pub async fn execute_bundle(paths: &AppPaths) -> Result<JobResult, AssetJobError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Bundle admin CSS job started");
@@ -27,9 +27,7 @@ impl BundleAdminCssJob {
         let (bundle, bundled, failed) = concatenate_css_files(&css_files).await;
 
         if failed > 0 {
-            return Err(JobError::other(format!(
-                "Failed to read {failed} CSS file(s) during bundling"
-            )));
+            return Err(AssetJobError::CssUnreadable { failed });
         }
 
         tokio::fs::write(&bundle_path, &bundle).await?;
@@ -50,7 +48,7 @@ impl BundleAdminCssJob {
 }
 
 #[doc(hidden)]
-pub async fn collect_css_files(css_dir: &std::path::Path) -> Result<Vec<PathBuf>, JobError> {
+pub async fn collect_css_files(css_dir: &std::path::Path) -> Result<Vec<PathBuf>, AssetJobError> {
     let mut css_files: Vec<PathBuf> = Vec::new();
     let mut read_dir = tokio::fs::read_dir(css_dir).await?;
 
@@ -105,7 +103,7 @@ impl Job for BundleAdminCssJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![systemprompt_web_shared::JOB_TAG]
+        vec![crate::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

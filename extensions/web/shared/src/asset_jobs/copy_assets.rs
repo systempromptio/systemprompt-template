@@ -11,7 +11,7 @@ use systemprompt::config::AppPaths;
 use systemprompt::extension::{AssetDefinition, AssetPaths};
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use crate::error::JobError;
+use super::AssetJobError;
 
 const MEMBER_ID: &str = "web";
 
@@ -31,7 +31,7 @@ impl CopyExtensionAssetsJob {
     pub async fn execute_copy(
         paths: &AppPaths,
         declared: Vec<AssetDefinition>,
-    ) -> Result<JobResult, JobError> {
+    ) -> Result<JobResult, AssetJobError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Copy extension assets job started");
@@ -70,7 +70,7 @@ impl CopyExtensionAssetsJob {
 pub async fn copy_all_assets(
     dist_dir: &Path,
     assets: Vec<(&str, AssetDefinition)>,
-) -> Result<(u64, u64), JobError> {
+) -> Result<(u64, u64), AssetJobError> {
     let mut copied = 0u64;
     let mut failed = 0u64;
 
@@ -100,7 +100,7 @@ pub async fn copy_asset(
     dist_dir: &Path,
     ext_id: &str,
     asset: &AssetDefinition,
-) -> Result<(), JobError> {
+) -> Result<(), AssetJobError> {
     let dest_path = dist_dir.join(asset.destination());
 
     if let Some(parent) = dest_path.parent() {
@@ -126,7 +126,7 @@ impl Job for CopyExtensionAssetsJob {
     }
 
     fn tags(&self) -> Vec<&'static str> {
-        vec![systemprompt_web_shared::JOB_TAG]
+        vec![crate::JOB_TAG]
     }
 
     fn description(&self) -> &'static str {

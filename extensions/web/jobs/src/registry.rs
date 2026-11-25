@@ -5,16 +5,14 @@
 //! `systemprompt_web_shared::JOB_TAG`, for operators filtering job listings.
 
 use systemprompt::extension::Contributions;
+use systemprompt_web_shared::asset_jobs::AssetDeclaration;
 
 use crate::{
-    AssetDeclaration, BundleAdminCssJob, ContentIngestionJob, CopyExtensionAssetsJob,
-    LlmsTxtGenerationJob, PublishPipelineJob, RobotsTxtGenerationJob,
+    ContentIngestionJob, LlmsTxtGenerationJob, PublishPipelineJob, RobotsTxtGenerationJob,
 };
 
 pub fn contribute_jobs(c: &mut Contributions<'_>, assets: AssetDeclaration) {
-    c.job(BundleAdminCssJob)
-        .job(ContentIngestionJob)
-        .job(CopyExtensionAssetsJob::new(assets))
+    c.job(ContentIngestionJob)
         .job(LlmsTxtGenerationJob)
         .job(PublishPipelineJob::new(assets))
         .job(RobotsTxtGenerationJob);

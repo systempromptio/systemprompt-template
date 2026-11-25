@@ -21,6 +21,9 @@ chrono = { workspace = true }
 url = { workspace = true }
 urlencoding = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
 
 [lints]
 workspace = true

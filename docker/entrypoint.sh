@@ -3,7 +3,8 @@
 # Authors a profile via `systemprompt admin setup` on first boot,
 # waits for Postgres, runs migrations, starts the server. The image's flavour
 # (Dockerfile ARGs) decides whether a provider key is required
-# (FLAVOUR_REQUIRES_AI_KEY) and whether the site is published (FLAVOUR_SITE).
+# (FLAVOUR_REQUIRES_AI_KEY) and whether the site or only the console assets
+# are published (FLAVOUR_SITE).
 set -eu
 umask 077
 profile_created=false
@@ -206,6 +207,13 @@ if [ "${FLAVOUR_SITE:-true}" = true ]; then
     if ! /app/bin/systemprompt infra jobs run publish_pipeline; then
         echo "WARN: publish_pipeline failed; the public site may 404 on this node until the next scheduled run." >&2
     fi
+else
+    echo "Publishing console assets for this node..."
+    for job in bundle_admin_css copy_extension_assets; do
+        if ! /app/bin/systemprompt infra jobs run "$job"; then
+            echo "WARN: $job failed; the console may render unstyled on this node until it is re-run." >&2
+        fi
+    done
 fi
 
 echo "Starting services..."

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Local install of one flavour: Docker Postgres, the flavour's build, a profile
 # at .systemprompt/profiles/<flavour>/, its staged services tree, migrations,
-# the bootstrap admin and (for a flavour with a site) the publish pipeline.
+# the bootstrap admin, then the publish pipeline (a flavour with a site) or the
+# console asset jobs (every other flavour).
 #   scripts/flavour-setup.sh FLAVOUR [--anthropic-key K] [--openai-key K]
 #       [--gemini-key K] [--http-port N] [--pg-port N] [--admin-email E]
 #       [--no-build] [--dry-run]
@@ -10,7 +11,7 @@
 # target/flavour-<flavour>/ (release, else debug). --dry-run prints each step.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
-usage() { sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 flavour="${1:-}"
 [ -n "$flavour" ] && [ "${flavour#-}" = "$flavour" ] || usage
 shift
@@ -173,6 +174,10 @@ fi
 if [ "$site" = true ]; then
     step "Publishing the site"
     run "$bin" infra jobs run publish_pipeline
+else
+    step "Publishing the console assets"
+    run "$bin" infra jobs run bundle_admin_css
+    run "$bin" infra jobs run copy_extension_assets
 fi
 echo ""
 echo "Setup of $flavour complete. Run: FLAVOUR=$flavour just start"
