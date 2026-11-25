@@ -1,0 +1,23 @@
+providers:
+  anthropic:
+    provider: anthropic
+    endpoint: anthropic/api
+    credential: anthropic
+  gemini:
+    provider: gemini
+    endpoint: gemini/api
+    credential: gemini
+  openai:
+    provider: openai
+    endpoint: openai/api
+    credential: openai
+route_models:
+  claude-star-4203d1: claude-*
+  gemini-star-5db635: gemini-*
+  gpt-star-d0e2e6: gpt-*
+  star-bf70e4: '*'
+dropped_models:
+- o4-mini
+- o3
+- o3-mini
+- o1

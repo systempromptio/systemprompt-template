@@ -1,63 +1,30 @@
-# Gateway routes: how an inbound model name is dispatched to a provider in the
-# catalog. Included from services/config/config.yaml as `../ai/gateway.yaml`.
-#
-# Route ids are generated, never authored — core derives them as
-# synthesize_route_id(model_pattern, provider). The governance bootstrap hands
-# core these ids as the authoritative catalog, so an invented id fails boot.
 gateway:
   enabled: true
-  # `name` and `description` are what the console and the model picker show
-  # in place of the generated id.
-  #
-  # `fallbacks` (not used here): when two providers in providers.yaml serve
-  # the same model, a route may list `{provider, upstream_model}` entries tried
-  # in order — a retry-budget exhaustion (429/503), any other 5xx or a failed
-  # connection re-sends the same governed request there, and the audit row records
-  # `served_provider`. Each provider below serves its own models only, so no
-  # route has a fallback.
   routes:
-  - id: claude-star-4203d1
-    name: Claude (Anthropic API)
-    description: >-
-      Every claude-* request goes to Anthropic's own API, authenticated with the anthropic key.
-    model_pattern: claude-*
-    provider: anthropic
-  - id: gpt-star-d0e2e6
-    name: OpenAI
-    description: >-
-      Every gpt-* request is served by OpenAI's gpt-5-mini.
-    model_pattern: gpt-*
-    provider: openai
-    upstream_model: gpt-5-mini
-  - id: gemini-star-5db635
-    name: Gemini (public API)
-    description: >-
-      Every gemini-* request goes to Google's public Gemini API, authenticated with the gemini key.
-    model_pattern: gemini-*
-    provider: gemini
-  default_provider: anthropic
-  # `[1m]` is Claude Code's 1M-context marker: without it Claude Code budgets
-  # 200k for every gateway model. claude-sonnet-5 declares a 1,000,000-token
-  # context window in providers.yaml. The bridge seeds the marker into Claude
-  # Code, hands other clients the bare catalog id, and the gateway strips it
-  # before matching and forwarding.
-  default_model: "claude-sonnet-5[1m]"
-  allow_unlisted_models: false
-  # Closed: a quota window whose subject cannot be resolved — no provider,
-  # provider error, or a user with no value — refuses the request instead of
-  # passing it uncounted. Every subject services/gateway/policies.yaml names
-  # (user, organization) resolves, so a fault here is a bug to surface, not
-  # traffic to wave through.
+  - id: claude-haiku-4-5-20251001-alias
+    label: claude-haiku-4-5-20251001 (alias of claude-haiku-4-5)
+    alias:
+      requested: claude-haiku-4-5-20251001
+      model: claude-haiku-4-5
+  - id: claude-opus-4-5-20251101-alias
+    label: claude-opus-4-5-20251101 (alias of claude-opus-4-5)
+    alias:
+      requested: claude-opus-4-5-20251101
+      model: claude-opus-4-5
+  - id: claude-sonnet-4-5-20250929-alias
+    label: claude-sonnet-4-5-20250929 (alias of claude-sonnet-4-5)
+    alias:
+      requested: claude-sonnet-4-5-20250929
+      model: claude-sonnet-4-5
+  default_model: claude-sonnet-5
   quota_fault_mode: closed
+  automatic_prompt_caching: true
   auth_scheme: bearer
   inference_path_prefix: /v1
-  # Where an installed bridge looks for its own updates. The gateway resolves
-  # and proxies the release assets so the client needs no GitHub credential.
-  # No macos slug: the self-updater installs a zipped .app and core publishes
-  # a bare darwin binary, which only the `update` CLI command can install.
   bridge_releases:
     repo: systempromptio/systemprompt-core
     tag_prefix: bridge-v
     assets:
-      windows: systemprompt-bridge-x86_64-pc-windows-msvc.exe
       linux-x86_64: systemprompt-bridge-x86_64-unknown-linux-gnu
+      windows: systemprompt-bridge-x86_64-pc-windows-msvc.exe
+    enforce_max: false

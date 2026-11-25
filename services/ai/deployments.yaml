@@ -1,0 +1,163 @@
+deployments:
+  claude-fable-5:
+  - anthropic/api
+  claude-haiku-4-5:
+  - anthropic/api
+  claude-opus-4-1-20250805:
+  - anthropic/api
+  claude-opus-4-20250514:
+  - anthropic/api
+  claude-opus-4-5:
+  - anthropic/api
+  claude-opus-4-6:
+  - anthropic/api
+  claude-opus-4-7:
+  - anthropic/api
+  claude-opus-4-8:
+  - anthropic/api
+  claude-opus-5:
+  - anthropic/api
+  claude-opus-5-5:
+  - anthropic/api
+  claude-sonnet-4-20250514:
+  - anthropic/api
+  claude-sonnet-4-5:
+  - anthropic/api
+  claude-sonnet-4-6:
+  - anthropic/api
+  claude-sonnet-5:
+  - anthropic/api
+  gemini-2.0-flash:
+  - gemini/api
+  gemini-2.0-flash-lite:
+  - gemini/api
+  gemini-2.5-flash:
+  - gemini/api
+  gemini-2.5-flash-image:
+  - gemini/api
+  gemini-2.5-flash-lite:
+  - gemini/api
+  gemini-2.5-pro:
+  - gemini/api
+  gemini-3-flash-preview:
+  - gemini/api
+  gemini-3-pro-image-preview:
+  - gemini/api
+  gemini-3.1-flash-image-preview:
+  - gemini/api
+  gemini-3.1-flash-lite-preview:
+  - gemini/api
+  gemini-3.1-pro-preview:
+  - gemini/api
+  gemini-3.5-flash:
+  - gemini/api
+  gemini-flash-latest:
+  - gemini/api
+  gemini-pro-latest:
+  - gemini/api
+  gpt-3.5-turbo:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-4:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-4-turbo:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-4.1:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-4.1-mini:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-4.1-nano:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-4o:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-4o-mini:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-5:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-5-mini:
+  - openai/api
+  gpt-5-nano:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-5.1:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-image-1:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+  gpt-image-1-mini:
+  - endpoint: openai/api
+    upstream_model: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0

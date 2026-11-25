@@ -55,17 +55,6 @@ scheduler:
       owner: admin
       enabled: true
 
-    # Ships the audit trail to the OTLP collector the profile names under
-    # `observability.otlp` (core job, every 15 s by its own schedule). Tails
-    # ai_requests / tool_call_ledger / governance_decisions as spans and the
-    # logs table as log records, by watermark in otlp_export_state; a batch
-    # is acknowledged before its cursor moves. No-op on a profile without
-    # the block.
-    - name: otlp_export
-      extension: core
-      owner: admin
-      enabled: true
-
     # Hourly validity sweep (web extension): revokes expired group/project
     # membership, manual roles, access rules and device certificates, and
     # pulls live credentials when an expiry removes a manage role. The
@@ -258,11 +247,6 @@ scheduler:
 
     - name: page_prerender
       extension: core
-      owner: admin
-      enabled: false
-
-    - name: sitemap_generation
-      extension: web
       owner: admin
       enabled: false
 
