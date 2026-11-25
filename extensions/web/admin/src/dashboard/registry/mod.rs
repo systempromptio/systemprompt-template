@@ -27,8 +27,13 @@ pub(crate) struct NavItemDef {
 }
 
 pub(crate) fn find(id: &str) -> Option<&'static NavItemDef> {
-    [activity::ITEMS, people::ITEMS, platform::ITEMS, account::ITEMS]
-        .into_iter()
-        .flatten()
-        .find(|item| item.id == id)
+    [
+        activity::ITEMS,
+        people::ITEMS,
+        platform::ITEMS,
+        account::ITEMS,
+    ]
+    .into_iter()
+    .flatten()
+    .find(|item| item.id == id)
 }

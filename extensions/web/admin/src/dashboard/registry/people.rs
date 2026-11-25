@@ -1,4 +1,5 @@
-//! Console nav items — People, access and analysis: who it happened to and what the record says about it.
+//! Console nav items — People, access and analysis: who it happened to and what
+//! the record says about it.
 
 use super::NavItemDef;
 

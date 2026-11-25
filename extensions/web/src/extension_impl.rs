@@ -111,49 +111,12 @@ impl Extension for WebExtension {
             .secret(SecretName::new("github_mcp_client_id"))
             .secret(SecretName::new("github_mcp_client_secret"))
             .secret_prefix(CONNECTOR_SECRET_PREFIX)
-            .provide::<Arc<WebSettings>, _>(|r: &Resolved<'_>| {
-                let config = r.get::<Arc<ConfigView>>()?;
-                let paths = r.get::<Arc<AppPaths>>()?;
-                Ok(WebSettings::from_config(
-                    &config,
-                    paths.storage().files().join("admin"),
-                ))
-            })
-            .provide_after_governance::<AdminEnv, _>(|r: &Resolved<'_>| {
-                Ok(AdminEnv::new(AdminEnvParts {
-                    config: r.get::<Arc<ConfigView>>()?,
-                    profile: r.get::<Arc<ProfileView>>()?,
-                    services: r.get::<InstallServicesView>()?,
-                    authenticator: r.get::<DynRequestAuthenticator>()?,
-                    subjects: r.get::<SubjectSourceCell>()?,
-                    cipher: r.member_cipher().ok(),
-                    share_tokens: r.share_tokens().ok(),
-                    secrets: r.secrets()?,
-                    paths: r.get::<Arc<AppPaths>>()?,
-                    artifact_ui: r.optional::<DynArtifactUiRenderer>(),
-                    git_sync: r.git_source_sync().ok(),
-                }))
-            })
-            .provide::<Arc<ConsoleDashboard>, _>(|r: &Resolved<'_>| {
-                let settings = r.get::<Arc<WebSettings>>()?;
-                ConsoleDashboard::load(&settings.services_path)
-                    .map(Arc::new)
-                    .map_err(|e| ProvideError::Failed(Box::new(e)))
-            })
-            .provide_after_governance::<Arc<WebRuntime>, _>(|r: &Resolved<'_>| {
-                let db = DbHandles::resolve(r)?;
-                let settings = r.get::<Arc<WebSettings>>()?;
-                let env = r.get::<AdminEnv>()?;
-                let dashboard = r.get::<Arc<ConsoleDashboard>>()?;
-                Ok(Arc::new(WebRuntime::build(&db, &settings, &env, dashboard)))
-            })
             .routes(route_set());
+        contribute_values(c);
         crate::admin::authz::contribute_subject_attributes(c);
         crate::admin::jobs::contribute_jobs(c);
         c.job(systemprompt_web_shared::asset_jobs::BundleAdminCssJob)
-            .job(systemprompt_web_shared::asset_jobs::CopyExtensionAssetsJob::new(
-                declared_assets,
-            ));
+            .job(systemprompt_web_shared::asset_jobs::CopyExtensionAssetsJob::new(declared_assets));
         #[cfg(feature = "gateway")]
         contribute_gateway(c);
         #[cfg(feature = "mcp")]
@@ -167,6 +130,45 @@ impl Extension for WebExtension {
     }
 }
 
+fn contribute_values(c: &mut Contributions<'_>) {
+    c.provide::<Arc<WebSettings>, _>(|r: &Resolved<'_>| {
+        let config = r.get::<Arc<ConfigView>>()?;
+        let paths = r.get::<Arc<AppPaths>>()?;
+        Ok(WebSettings::from_config(
+            &config,
+            paths.storage().files().join("admin"),
+        ))
+    })
+    .provide_after_governance::<AdminEnv, _>(|r: &Resolved<'_>| {
+        Ok(AdminEnv::new(AdminEnvParts {
+            config: r.get::<Arc<ConfigView>>()?,
+            profile: r.get::<Arc<ProfileView>>()?,
+            services: r.get::<InstallServicesView>()?,
+            authenticator: r.get::<DynRequestAuthenticator>()?,
+            subjects: r.get::<SubjectSourceCell>()?,
+            cipher: r.member_cipher().ok(),
+            share_tokens: r.share_tokens().ok(),
+            secrets: r.secrets()?,
+            paths: r.get::<Arc<AppPaths>>()?,
+            artifact_ui: r.optional::<DynArtifactUiRenderer>(),
+            git_sync: r.git_source_sync().ok(),
+        }))
+    })
+    .provide::<Arc<ConsoleDashboard>, _>(|r: &Resolved<'_>| {
+        let settings = r.get::<Arc<WebSettings>>()?;
+        ConsoleDashboard::load(&settings.services_path)
+            .map(Arc::new)
+            .map_err(|e| ProvideError::Failed(Box::new(e)))
+    })
+    .provide_after_governance::<Arc<WebRuntime>, _>(|r: &Resolved<'_>| {
+        let db = DbHandles::resolve(r)?;
+        let settings = r.get::<Arc<WebSettings>>()?;
+        let env = r.get::<AdminEnv>()?;
+        let dashboard = r.get::<Arc<ConsoleDashboard>>()?;
+        Ok(Arc::new(WebRuntime::build(&db, &settings, &env, dashboard)))
+    });
+}
+
 #[cfg(feature = "gateway")]
 fn contribute_gateway(c: &mut Contributions<'_>) {
     c.gateway_guard(|r: &Resolved<'_>| {
@@ -178,7 +180,10 @@ fn contribute_gateway(c: &mut Contributions<'_>) {
 }
 
 fn declared_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
-    #[cfg_attr(not(feature = "content"), expect(unused_mut, reason = "site assets join only with content"))]
+    #[cfg_attr(
+        not(feature = "content"),
+        expect(unused_mut, reason = "site assets join only with content")
+    )]
     let mut assets = crate::admin::assets::admin_assets(paths);
     #[cfg(feature = "content")]
     assets.extend(web_assets(paths));

@@ -32,10 +32,7 @@ pub(crate) fn render_typed_page<T: Serialize>(
         serde_json::Value::Object(serde_json::Map::new())
     });
     let page_id = value.get("page").and_then(serde_json::Value::as_str);
-    let shell = PageShell::new(
-        engine.branding(),
-        engine.dashboard().nav(),
-        user_ctx, mkt_ctx, page_id, &value);
+    let shell = PageShell::new(engine, user_ctx, mkt_ctx, page_id, &value);
 
     let response = match engine.render(template, &shell) {
         Ok(html) => Html(html).into_response(),

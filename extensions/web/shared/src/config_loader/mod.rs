@@ -43,10 +43,8 @@ fn load_branding_config(services: &Path) -> Result<Option<BrandingConfig>, Confi
     let Some(branding_value) = theme_value.get("branding") else {
         return Ok(None);
     };
-    let branding_config: BrandingConfig = parse_section(
-        branding_value.clone(),
-        "theme.yaml (branding section)",
-    )?;
+    let branding_config: BrandingConfig =
+        parse_section(branding_value.clone(), "theme.yaml (branding section)")?;
     tracing::info!("Loaded branding config from config/theme.yaml");
     Ok(Some(branding_config))
 }

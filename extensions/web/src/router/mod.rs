@@ -24,12 +24,12 @@ use axum::http::Method;
 #[cfg(not(feature = "content"))]
 use axum::response::Redirect;
 use axum::response::{IntoResponse, Response};
+use systemprompt::api::ServicesRefresh;
 use systemprompt::extension::RouteGroup;
 use systemprompt::extension::prelude::*;
 use systemprompt::extension::router::{
     BasePath, BodyLimit, RouteLimits, RouteSet, RouteSpec, WebBase,
 };
-use systemprompt::api::ServicesRefresh;
 use systemprompt::governance::policy::GovernanceEngine;
 use systemprompt::models::execution::context::RequestContext;
 use systemprompt::traits::ConfigWatch;
@@ -111,15 +111,14 @@ impl WebRuntime {
         let mut router = Router::new()
             .merge(api::share(db))
             .nest("/api/public", api::build(db, settings));
-        match admin_ssr::build(db, sso_deps, settings, env, dashboard) {
-            Some(ssr) => {
-                router = router
-                    .nest_service("/admin", ssr.admin)
-                    .nest_service("/bridge-auth", ssr.bridge_auth);
-            },
-            None => tracing::error!(
+        if let Some(ssr) = admin_ssr::build(db, sso_deps, settings, env, dashboard) {
+            router = router
+                .nest_service("/admin", ssr.admin)
+                .nest_service("/bridge-auth", ssr.bridge_auth);
+        } else {
+            tracing::error!(
                 "Admin template engine failed to initialise; serving API routes without the SSR dashboard"
-            ),
+            );
         }
         Self {
             router: router.layer(axum::Extension(env.clone())),
@@ -146,10 +145,7 @@ impl FromState for WebState {
 async fn forward(State(state): State<WebState>, request: Request<Body>) -> Response {
     let (mut parts, body) = request.into_parts();
     let mut carried = axum::http::Extensions::new();
-    if let Some(governance) = parts
-        .extensions
-        .remove::<ConfigWatch<GovernanceEngine>>()
-    {
+    if let Some(governance) = parts.extensions.remove::<ConfigWatch<GovernanceEngine>>() {
         carried.insert(governance);
     }
     if let Some(refresh) = parts.extensions.remove::<ServicesRefresh>() {

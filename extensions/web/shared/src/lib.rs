@@ -25,8 +25,8 @@
 pub mod adfs;
 pub mod asset_jobs;
 pub mod config;
-pub mod config_loader;
 pub mod config_errors;
+pub mod config_loader;
 pub mod dashboard;
 pub mod error;
 pub mod format;

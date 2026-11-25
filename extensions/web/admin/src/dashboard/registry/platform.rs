@@ -1,4 +1,5 @@
-//! Console nav items — Governance and platform: what the policy said and what is installed.
+//! Console nav items — Governance and platform: what the policy said and what
+//! is installed.
 
 use super::NavItemDef;
 

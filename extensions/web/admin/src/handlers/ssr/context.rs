@@ -7,6 +7,7 @@ use systemprompt_web_shared::{BrandingConfig, RankTier, UserId};
 
 use crate::dashboard::{NavItemView, NavSectionView};
 use crate::numeric;
+use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ssr_demo_help::demo_help_text;
@@ -137,8 +138,7 @@ pub(crate) struct PageShell<'a, T> {
 
 impl<'a, T: Serialize> PageShell<'a, T> {
     pub(crate) fn new(
-        branding: Option<&'a BrandingConfig>,
-        nav: &'a [NavSectionView],
+        engine: &'a AdminTemplateEngine,
         user_ctx: &'a UserContext,
         mkt_ctx: &'a MarketplaceContext,
         page_id: Option<&str>,
@@ -146,7 +146,7 @@ impl<'a, T: Serialize> PageShell<'a, T> {
     ) -> Self {
         let help = page_id.map(demo_help_text);
         Self {
-            branding,
+            branding: engine.branding(),
             current_user: CurrentUser::from(user_ctx),
             marketplace: MarketplaceView::from(mkt_ctx),
             page_stats: [],
@@ -164,7 +164,7 @@ impl<'a, T: Serialize> PageShell<'a, T> {
             } else {
                 0
             },
-            nav_sections: visible_nav(nav, user_ctx.is_console),
+            nav_sections: visible_nav(engine.dashboard().nav(), user_ctx.is_console),
             page,
         }
     }

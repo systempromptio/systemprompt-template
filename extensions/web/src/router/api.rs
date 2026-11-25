@@ -8,9 +8,9 @@ use axum::routing::post;
 use systemprompt::users::{UserRepository, UserService};
 
 use super::pools::DbHandles;
+use crate::admin;
 #[cfg(feature = "content")]
 use crate::extension::WebExtension;
-use crate::admin;
 use crate::shared::session_cookie;
 
 pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings) -> Router {

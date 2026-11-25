@@ -15,8 +15,8 @@
 //! - `content` — content ingestion, repositories, search, link analytics.
 //! - `jobs` — `publish_pipeline` and its content sub-jobs (ingestion,
 //!   prerender, llms.txt, robots.txt).
-//! - `shared` — config schemas and loaders, error types, branding, ID
-//!   newtypes, the console asset jobs and the session-cookie endpoint.
+//! - `shared` — config schemas and loaders, error types, branding, ID newtypes,
+//!   the console asset jobs and the session-cookie endpoint.
 //! - `site` — public homepage / docs content providers.
 
 // Why: The admin template engine needs the same branding the server builds it
