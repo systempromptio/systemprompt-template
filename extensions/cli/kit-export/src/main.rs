@@ -47,7 +47,7 @@ struct Cli {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     let config_path = cli.services.join("config").join("config.yaml");
-    let services = ConfigLoader::load_from_path(&config_path)
+    let services = ConfigLoader::load_from_path(&config_path, None)
         .with_context(|| format!("loading {}", config_path.display()))?;
 
     if cli.out.exists() && std::fs::read_dir(&cli.out)?.next().is_some() {
