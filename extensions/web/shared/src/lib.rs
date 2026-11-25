@@ -4,6 +4,9 @@
 //! crates need to agree on:
 //!
 //! - [`asset_jobs`] — the console asset jobs every flavour contributes.
+//! - [`config_loader`] — branding and ADFS loaders the console reads on every
+//!   flavour.
+//! - [`session_cookie`] — the session-cookie login endpoint.
 //! - [`config`] / [`config_errors`] — typed YAML schemas with
 //!   `#[serde(deny_unknown_fields)]` plus the error type that surfaces
 //!   misconfigurations at startup.
@@ -21,12 +24,14 @@
 pub mod adfs;
 pub mod asset_jobs;
 pub mod config;
+pub mod config_loader;
 pub mod config_errors;
 pub mod error;
 pub mod format;
 pub mod ids;
 pub mod models;
 pub mod pagination;
+pub mod session_cookie;
 pub mod settings;
 mod utils;
 

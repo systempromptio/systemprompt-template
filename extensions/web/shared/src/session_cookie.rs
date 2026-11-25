@@ -1,12 +1,16 @@
-//! Session cookie issue and clear for the public content surface.
+//! Session cookie issue and clear behind `/api/public/auth/session`, served on
+//! every flavour: the console login sets the cookie through it.
 
 use axum::Json;
 use axum::extract::State;
 use axum::http::HeaderMap;
 use axum::http::header::SET_COOKIE;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use crate::api::OkResponse;
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct OkResponse {
+    pub ok: bool,
+}
 
 #[derive(Deserialize, Debug)]
 pub struct SetSessionRequest {

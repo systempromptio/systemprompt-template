@@ -4,7 +4,8 @@
 //! `shared`, `site`) into a single `WebExtension` registered with the core
 //! runtime. The capability features (`gateway`, `mcp`, `agents`, `content`)
 //! select the console page groups and contributions a flavour compiles;
-//! `jobs` and the public-site contributions exist only with `content`. Most of this crate is re-exports — the actual extension entry
+//! `content`, `jobs`, `site` and the public-site contributions exist only with
+//! `content`. Most of this crate is re-exports — the actual extension entry
 //! point is [`extension::WebExtension`], which advertises required assets,
 //! HTTP routes, page data providers, and jobs to the host binary.
 //!
@@ -12,16 +13,16 @@
 //!
 //! - `admin` — SSR dashboard, governance webhooks, access-token plane.
 //! - `content` — content ingestion, repositories, search, link analytics.
-//! - `jobs` — `publish_pipeline` and its sub-jobs (asset copy, prerender,
-//!   sitemap, llms.txt, secret migration, content analytics).
-//! - `shared` — config schemas, error types, branding, ID newtypes, HTML-escape
-//!   helpers.
+//! - `jobs` — `publish_pipeline` and its content sub-jobs (ingestion,
+//!   prerender, llms.txt, robots.txt).
+//! - `shared` — config schemas and loaders, error types, branding, ID
+//!   newtypes, the console asset jobs and the session-cookie endpoint.
 //! - `site` — public homepage / docs content providers.
 
 // Why: The admin template engine needs the same branding the server builds it
 // with; the HTTP contract suite would otherwise render every page against a
 // different context than production.
-pub use systemprompt_web_site::config_loader::{self, branding_config};
+pub use systemprompt_web_shared::config_loader::branding_config;
 pub mod extension;
 mod extension_impl;
 mod router;
@@ -29,6 +30,7 @@ mod router;
 pub mod schemas;
 
 pub use systemprompt_web_admin as admin;
+#[cfg(feature = "content")]
 pub use systemprompt_web_content::{api, repository, services};
 #[cfg(feature = "content")]
 pub use systemprompt_web_jobs as jobs;
@@ -36,6 +38,7 @@ pub use systemprompt_web_shared as shared;
 pub use systemprompt_web_shared::{
     BrandingConfig, WebSettings, config, config_errors, error, html_escape, models,
 };
+#[cfg(feature = "content")]
 pub use systemprompt_web_site::{
     assets, docs, extenders, homepage, navigation, partials, skills_page,
 };
@@ -44,9 +47,11 @@ pub use config::{
     BlogConfigRaw, BlogConfigValidated, ContentSourceRaw, ContentSourceValidated,
     ExtensionConfigError, ExtensionConfigErrors,
 };
+#[cfg(feature = "content")]
 pub use docs::{ChildDoc, DocsContentDataProvider, DocsPageDataProvider};
 pub use error::BlogError;
 pub use extension::WebExtension;
+#[cfg(feature = "content")]
 pub use homepage::{
     ComparisonConfig, ComparisonItem, ComparisonSide, DifferentiatorConfig, DifferentiatorItem,
     ExtensionTrait, ExtensionsConfig, FaqConfig, FaqItem, Feature, FeatureCategory, FinalCtaConfig,
@@ -61,18 +66,23 @@ pub use models::{
     PaperSection, RecordClickParams, SearchFilters, SearchRequest, SearchResponse, SearchResult,
     Tag, TrackClickParams, UtmParams,
 };
+#[cfg(feature = "content")]
 pub use navigation::{
     HeaderNavConfig, NavCta, NavItem, NavLink, NavSection, NavigationPageDataProvider,
 };
+#[cfg(feature = "content")]
 pub use skills_page::{SkillEntry, SkillsPageConfig, SkillsPagePrerenderer};
 
+#[cfg(feature = "content")]
 pub use extenders::{OrgUrlExtender, ReleaseVersionExtender};
 #[cfg(feature = "content")]
 pub use jobs::ContentIngestionJob;
+#[cfg(feature = "content")]
 pub use repository::{
     ContentRepository, LinkAnalyticsRepository, LinkRepository, SearchRepository,
     UpdateContentParams, UpdateContentParamsBuilder, UpdateContentSeed,
 };
+#[cfg(feature = "content")]
 pub use services::{
     ContentService, IngestionService, LinkAnalyticsService, LinkGenerationService, LinkService,
     SearchService, ValidationService,

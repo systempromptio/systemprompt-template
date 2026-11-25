@@ -7,9 +7,9 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use systemprompt_web_shared::adfs::{ACS_PATH, AdfsConfig, METADATA_PATH};
+use crate::adfs::{ACS_PATH, AdfsConfig, METADATA_PATH};
 
-use super::{ConfigError, load_config_section};
+use super::{ConfigError, load_config_section, parse_section};
 
 // Why: the relying-party identifier and the ACS are the instance's own public
 // URLs, and the profile already names that host. Deriving both from
@@ -48,11 +48,7 @@ pub(super) fn load_adfs_config(
         return Ok(None);
     };
 
-    let mut config: AdfsConfig =
-        serde_yaml::from_value(value).map_err(|e| ConfigError::Parse {
-            config_name: filename.clone(),
-            message: e.to_string(),
-        })?;
+    let mut config: AdfsConfig = parse_section(value, &filename)?;
 
     derive_saml_urls(&mut config, api_external_url);
 
@@ -62,12 +58,9 @@ pub(super) fn load_adfs_config(
     if config.enabled {
         let metadata_path = services.join("web/config").join(&config.idp_metadata_path);
         config.idp_metadata_xml =
-            std::fs::read_to_string(&metadata_path).map_err(|e| ConfigError::Parse {
-                config_name: filename.clone(),
-                message: format!(
-                    "idp_metadata_path {} unreadable: {e}",
-                    metadata_path.display()
-                ),
+            std::fs::read_to_string(&metadata_path).map_err(|source| ConfigError::Read {
+                path: metadata_path.clone(),
+                source,
             })?;
     }
 

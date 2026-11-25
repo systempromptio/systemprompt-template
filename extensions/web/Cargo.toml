@@ -23,6 +23,8 @@ agents = ["mcp", "systemprompt/agents", "systemprompt-web-admin/agents"]
 content = [
     "systemprompt/content",
     "dep:systemprompt-web-jobs",
+    "dep:systemprompt-web-content",
+    "dep:systemprompt-web-site",
     "systemprompt-web-admin/content",
 ]
 
@@ -38,8 +40,8 @@ systemprompt = { workspace = true, features = ["api", "security", "config"] }
 # Local sub-crates
 systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
-systemprompt-web-content = { workspace = true }
-systemprompt-web-site = { workspace = true }
+systemprompt-web-content = { workspace = true, optional = true }
+systemprompt-web-site = { workspace = true, optional = true }
 systemprompt-web-jobs = { workspace = true, optional = true }
 
 # Extension framework — direct dep so the `extension_migrations!()` macro

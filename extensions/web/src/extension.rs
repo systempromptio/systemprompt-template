@@ -1,7 +1,8 @@
 //! The `WebExtension` composition member and the configuration it loads from
 //! the profile's services tree.
 //!
-//! Config loading lives in `systemprompt_web_site::config_loader`, beside the
+//! Config loading lives in `systemprompt_web_site::config_loader` (public-site
+//! sections) and `systemprompt_web_shared::config_loader` (console), beside the
 //! types it deserialises; every read takes the services directory from the
 //! member's [`WebSettings`], so nothing is cached process-wide.
 

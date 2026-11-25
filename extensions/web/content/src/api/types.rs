@@ -65,12 +65,6 @@ impl ErrorResponse {
     }
 }
 
-/// JSON body returned by the session cookie endpoints (`{ "ok": true }`).
-#[derive(Debug, Clone, Copy, Serialize)]
-pub struct OkResponse {
-    pub ok: bool,
-}
-
 /// JSON body returned by `list_links_handler` (`{ "links": [...], "total": N
 /// }`).
 #[derive(Debug, Clone, Serialize)]

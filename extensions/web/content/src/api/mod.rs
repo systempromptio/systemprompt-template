@@ -1,6 +1,5 @@
 //! The public content API surface and its router.
 
-pub mod auth;
 pub mod handlers;
 mod types;
 
@@ -14,7 +13,7 @@ use systemprompt_web_shared::config::BlogConfigValidated;
 
 pub use types::{
     ContentJourneyQuery, ErrorResponse, GenerateLinkRequest, GenerateLinkResponse, ListLinksQuery,
-    ListLinksResponse, OkResponse, RecordClickRequest, SearchQuery,
+    ListLinksResponse, RecordClickRequest, SearchQuery,
 };
 pub fn router(pool: Arc<PgPool>, config: Option<Arc<BlogConfigValidated>>) -> Router {
     let state = BlogState { pool, config };

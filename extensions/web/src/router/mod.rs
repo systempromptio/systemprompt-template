@@ -94,7 +94,7 @@ impl std::fmt::Debug for WebRuntime {
 impl WebRuntime {
     pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings, env: &AdminEnv) -> Self {
         let sso_deps = crate::admin::AdfsDeps {
-            config: crate::config_loader::adfs_config(
+            config: crate::shared::config_loader::adfs_config(
                 &settings.services_path,
                 &settings.api_external_url,
             )

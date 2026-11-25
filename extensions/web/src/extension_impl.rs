@@ -22,6 +22,10 @@ use systemprompt_web_admin::env::{AdminEnv, AdminEnvParts};
 #[cfg(feature = "gateway")]
 use systemprompt_web_admin::gateway_entitlement::RouteEntitlementGuard;
 #[cfg(feature = "content")]
+use systemprompt_web_shared::config_loader::branding_config;
+#[cfg(feature = "content")]
+use systemprompt_web_site::config_loader;
+#[cfg(feature = "content")]
 use systemprompt_web_site::partials::{
     FooterPartialRenderer, HeadAssetsPartialRenderer, HeaderPartialRenderer, ScriptsPartialRenderer,
 };
@@ -39,7 +43,7 @@ use crate::schemas::{migrations, schema_definitions};
 #[cfg(feature = "content")]
 use crate::{
     DocsContentDataProvider, DocsPageDataProvider, OrgUrlExtender, ReleaseVersionExtender,
-    SkillsPagePrerenderer, config_loader,
+    SkillsPagePrerenderer,
     assets::web_assets,
     homepage::{HomepagePageDataProvider, HomepagePrerenderer},
     navigation::NavigationPageDataProvider,
@@ -202,7 +206,7 @@ fn contribute_content(c: &mut Contributions<'_>) {
                     config_loader::navigation_config(&settings.services_path),
                     "web/navigation.yaml",
                 )?;
-                let branding = config_loader::branding_config(&settings.services_path);
+                let branding = branding_config(&settings.services_path);
                 Ok(Arc::new(
                     NavigationPageDataProvider::new(nav).with_branding(branding),
                 ))

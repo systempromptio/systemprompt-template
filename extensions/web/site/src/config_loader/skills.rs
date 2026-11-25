@@ -48,9 +48,9 @@ pub fn read_skills_dir(skills_dir: &Path) -> Result<Option<std::fs::ReadDir>, Co
             );
             Ok(None)
         },
-        Err(e) => Err(ConfigError::Parse {
-            config_name: skills_dir.display().to_string(),
-            message: format!("Failed to read directory: {e}"),
+        Err(source) => Err(ConfigError::Read {
+            path: skills_dir.to_path_buf(),
+            source,
         }),
     }
 }

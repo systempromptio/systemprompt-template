@@ -6,7 +6,7 @@ use axum::Router;
 
 
 use super::pools::DbHandles;
-use systemprompt_web_site::config_loader;
+use systemprompt_web_shared::config_loader;
 
 use crate::admin;
 

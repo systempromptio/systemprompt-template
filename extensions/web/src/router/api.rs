@@ -10,7 +10,8 @@ use systemprompt::users::{UserRepository, UserService};
 use super::pools::DbHandles;
 #[cfg(feature = "content")]
 use crate::extension::WebExtension;
-use crate::{admin, api};
+use crate::admin;
+use crate::shared::session_cookie;
 
 pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings) -> Router {
     let admin_api = admin::admin_router(&db.db, Arc::clone(&db.read), &db.write, db.owner.clone());
@@ -21,12 +22,12 @@ pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings) -> Router {
     let bridge_identity = admin::bridge_identity_router(Arc::clone(&db.read));
     let router = Router::new().route(
         "/auth/session",
-        post(api::auth::set_session)
-            .delete(api::auth::clear_session)
-            .with_state(api::auth::CookieSecure(settings.use_https)),
+        post(session_cookie::set_session)
+            .delete(session_cookie::clear_session)
+            .with_state(session_cookie::CookieSecure(settings.use_https)),
     );
     #[cfg(feature = "content")]
-    let router = router.merge(api::router(
+    let router = router.merge(crate::api::router(
         Arc::clone(&db.read),
         WebExtension::blog_config(settings),
     ));
