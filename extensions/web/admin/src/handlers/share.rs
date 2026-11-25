@@ -190,7 +190,7 @@ async fn build_user_manifest(
     pool: &PgPool,
     user_id: &UserId,
 ) -> AdminResult<ManifestResponse> {
-    let services_path = shared::get_services_path(env)?;
+    let services_path = shared::get_services_path(env);
     let sections_in = collect_manifest_sections(env, &services_path);
 
     let matrix = repositories::users::access_control::filter_catalog_for_user(

@@ -6,12 +6,11 @@ use serde::Serialize;
 use super::figures::{ToolTileView, charts, tiles};
 use super::query::{Lens, ToolsQuery};
 use super::ribbon::ribbon;
-use crate::handlers::ssr::format::format_bytes;
 use super::rows::{ToolActivityRowView, kind_icon, kind_label, tool_row};
 use crate::handlers::ssr::analysis::help::HelpView;
 use crate::handlers::ssr::analysis::ribbon::RibbonView;
 use crate::handlers::ssr::analysis::tone::{deny_tone, error_rate_tone, latency_tone, percent};
-use crate::handlers::ssr::format::format_duration_ms;
+use crate::handlers::ssr::format::{format_bytes, format_duration_ms};
 use crate::handlers::ssr::list_view::{DEFAULT_PAGE_SIZE, PageWindow, Pagination, ScopeFilterView};
 use crate::handlers::ssr::types::{BreadcrumbView, SortHeaderView, SvgLineChartView, TabLinkView};
 use crate::repositories::analysis::tools::{

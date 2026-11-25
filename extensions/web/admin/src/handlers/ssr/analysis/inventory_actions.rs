@@ -8,6 +8,7 @@
 //! binding or a sync here takes effect on that job's next run.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Caller;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::routes::managed_state::ManagedState;
@@ -28,13 +29,13 @@ pub(crate) struct BindForm {
 }
 
 pub(crate) async fn bind(
-    Extension(env): Extension<AdminEnv>,
-    Extension(user): Extension<UserContext>,
+    caller: Caller,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(entry): Path<InventoryEntryId>,
     headers: HeaderMap,
     Form(form): Form<BindForm>,
 ) -> AdminHtmlResult<Redirect> {
+    let Caller { env, user } = caller;
     if !user.is_admin {
         return Err(AdminError::Forbidden("Administrator access required".to_owned()).into());
     }

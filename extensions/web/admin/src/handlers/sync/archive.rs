@@ -10,6 +10,7 @@
 //! check guard everything but the export.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Caller;
 
 use std::sync::Arc;
 
@@ -28,7 +29,7 @@ use crate::repositories::sync::archive::read::{classify, unpack_zip};
 use crate::repositories::sync::archive::staging::{StagedArchive, StagingStore};
 use crate::repositories::sync::archive::write::build_export_zip;
 use crate::repositories::sync::plane::{
-    Actor, ApplyOutcome, DeclarationSource, PlaneDrift, SyncMode,
+    Actor, ApplyBy, ApplyOutcome, DeclarationSource, PlaneDrift, SyncMode,
 };
 use crate::repositories::sync::registry::{find_plane, planes};
 use crate::types::UserContext;
@@ -138,13 +139,16 @@ fn stage_or_404(store: &StagingStore, id: &str) -> AdminResult<StagedArchive> {
 }
 
 pub(crate) async fn apply_import_handler(
-    Extension(env): Extension<AdminEnv>,
+    caller: Caller,
     State(pool): State<Arc<PgPool>>,
-    Extension(user_ctx): Extension<UserContext>,
     Path(stage_id): Path<String>,
     headers: HeaderMap,
     Json(body): Json<ImportApplyRequest>,
 ) -> AdminResult<Response> {
+    let Caller {
+        env,
+        user: user_ctx,
+    } = caller;
     require_admin(&env, &user_ctx, &headers)?;
     let store = StagingStore::global();
     let stage = stage_or_404(store, &stage_id)?;
@@ -169,7 +173,15 @@ pub(crate) async fn apply_import_handler(
         let text = stage.planes.get(id).map(String::as_str).unwrap_or_default();
         let from = DeclarationSource::Text(text);
         let outcome = plane
-            .apply_from(&env, &pool, body.mode, Actor::User(&user_ctx.user_id), from)
+            .apply_from(
+                &env,
+                &pool,
+                ApplyBy {
+                    mode: body.mode,
+                    actor: Actor::User(&user_ctx.user_id),
+                },
+                from,
+            )
             .await?;
         activity::record(
             &pool,

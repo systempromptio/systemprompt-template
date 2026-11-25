@@ -10,10 +10,6 @@
 //! A person whose expiry took away a manage role loses their live
 //! credentials too, exactly as a demotion in the role editor does.
 
-use sqlx::PgPool;
-use systemprompt::database::DbPool;
-use systemprompt::identifiers::UserId;
-use systemprompt::traits::{Job, JobContext, JobResult};
 use crate::repositories::access_control::validity::delete_expired_rules;
 use crate::repositories::devices::certs::revoke_expired_device_certs;
 use crate::repositories::scope::defaults::recompute_scope_defaults_for_user;
@@ -21,6 +17,10 @@ use crate::repositories::scope::expiry::revoke_expired_memberships;
 use crate::repositories::users::revocation::revoke_user_access;
 use crate::repositories::users::roles;
 use crate::types::{ROLES_MANAGE, has_any};
+use sqlx::PgPool;
+use systemprompt::database::DbPool;
+use systemprompt::identifiers::UserId;
+use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::jobs::error::JobError;
 

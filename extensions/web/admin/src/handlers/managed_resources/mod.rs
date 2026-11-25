@@ -3,6 +3,7 @@
 use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared::require_write_origin;
+use crate::handlers::ssr::page::Caller;
 use crate::routes::managed_state::ManagedState;
 use crate::types::UserContext;
 use axum::extract::Path;
@@ -54,13 +55,13 @@ pub(crate) async fn source(
 }
 
 pub(crate) async fn capture_snapshot(
-    Extension(env): Extension<AdminEnv>,
-    Extension(_user): Extension<UserContext>,
+    caller: Caller,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ManagedSourceId>,
     headers: HeaderMap,
     Json(input): Json<SnapshotProvenance>,
 ) -> AdminResult<(StatusCode, Json<SourceSnapshotId>)> {
+    let Caller { env, .. } = caller;
     require_write_origin(&env, &headers)?;
     Ok((
         StatusCode::CREATED,
@@ -154,13 +155,13 @@ pub(crate) struct ResolveConflict {
 }
 
 pub(crate) async fn resolve_conflict(
-    Extension(env): Extension<AdminEnv>,
-    Extension(_user): Extension<UserContext>,
+    caller: Caller,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ManagedReconciliationId>,
     headers: HeaderMap,
     Json(input): Json<ResolveConflict>,
 ) -> AdminResult<StatusCode> {
+    let Caller { env, .. } = caller;
     require_write_origin(&env, &headers)?;
     state
         .repository
@@ -184,13 +185,13 @@ pub(crate) struct CompleteReconciliation {
 }
 
 pub(crate) async fn complete_reconciliation(
-    Extension(env): Extension<AdminEnv>,
-    Extension(user): Extension<UserContext>,
+    caller: Caller,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ManagedReconciliationId>,
     headers: HeaderMap,
     Json(input): Json<CompleteReconciliation>,
 ) -> AdminResult<StatusCode> {
+    let Caller { env, user } = caller;
     require_write_origin(&env, &headers)?;
     state
         .repository
@@ -218,13 +219,13 @@ pub(crate) struct DecideWithdrawal {
 }
 
 pub(crate) async fn decide_withdrawal(
-    Extension(env): Extension<AdminEnv>,
-    Extension(user): Extension<UserContext>,
+    caller: Caller,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<WithdrawalProposalId>,
     headers: HeaderMap,
     Json(input): Json<DecideWithdrawal>,
 ) -> AdminResult<StatusCode> {
+    let Caller { env, user } = caller;
     require_write_origin(&env, &headers)?;
     state
         .repository

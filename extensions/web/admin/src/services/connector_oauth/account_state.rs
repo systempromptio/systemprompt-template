@@ -10,16 +10,24 @@ use crate::repositories::users::connector_credentials::{self as repo, EncryptedG
 use chrono::Utc;
 use systemprompt::identifiers::UserId;
 
+// Why: the account row a connector transaction holds locked, beside the
+// person it belongs to — every transition writes the two together.
+pub(super) struct LockedAccount<'a> {
+    pub(super) user: &'a UserId,
+    pub(super) account: ProviderConnection,
+}
+
 // Why: an outage or permission problem must not destroy a refresh grant; only
 // a rejected grant is deleted and the generation bumped.
 pub(super) async fn record_grant_failure(
     env: &AdminEnv,
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    user: &UserId,
-    account: &mut ProviderConnection,
+    locked: &mut LockedAccount<'_>,
     grant: &Grant,
     error: &AdminError,
 ) -> AdminResult<()> {
+    let LockedAccount { user, account } = locked;
+    let user = *user;
     let provider = &grant.provider;
     if matches!(error, AdminError::Unauthorized(_)) {
         account.status = "reconnect_required".into();
@@ -58,11 +66,12 @@ pub(super) async fn record_grant_failure(
 pub(super) async fn open_or_flag(
     env: &AdminEnv,
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    user: &UserId,
+    locked: &mut LockedAccount<'_>,
     provider: &Provider,
     row: &EncryptedGrant,
-    account: &mut ProviderConnection,
 ) -> AdminResult<Grant> {
+    let LockedAccount { user, account } = locked;
+    let user = *user;
     match super::open(env, row, user, provider) {
         Ok(grant) => Ok(grant),
         Err(error) => {

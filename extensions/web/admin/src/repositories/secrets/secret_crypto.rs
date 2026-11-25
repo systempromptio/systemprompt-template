@@ -19,6 +19,10 @@ pub enum SecretCryptoError {
     Wrap(#[source] MemberCipherError),
     #[error("Invalid key material")]
     InvalidKeyMaterial,
+    #[error("Sealed key material is not UTF-8")]
+    SealedNotUtf8(#[source] std::str::Utf8Error),
+    #[error("Opened key material is not hex")]
+    OpenedNotHex(#[source] hex::FromHexError),
     #[error("Database error: {0}")]
     Database(String),
 }
@@ -88,7 +92,7 @@ pub fn seal_bytes(
 }
 
 pub fn open_bytes(cipher: &dyn MemberCipher, sealed: &[u8]) -> Result<Vec<u8>, SecretCryptoError> {
-    let sealed = std::str::from_utf8(sealed).map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
+    let sealed = std::str::from_utf8(sealed).map_err(SecretCryptoError::SealedNotUtf8)?;
     let hex_plain = cipher.open(sealed).map_err(SecretCryptoError::Wrap)?;
-    hex::decode(hex_plain).map_err(|_| SecretCryptoError::InvalidKeyMaterial)
+    hex::decode(hex_plain).map_err(SecretCryptoError::OpenedNotHex)
 }

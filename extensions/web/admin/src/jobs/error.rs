@@ -1,7 +1,7 @@
 //! Error type shared by every admin-plane job.
 
-use systemprompt::traits::ProviderError;
 use crate::repositories::secrets::secret_crypto::SecretCryptoError;
+use systemprompt::traits::ProviderError;
 use systemprompt_web_shared::error::{InfraError, MarketplaceError};
 use thiserror::Error;
 

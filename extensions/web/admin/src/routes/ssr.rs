@@ -13,14 +13,26 @@ use crate::env::AdminEnv;
 use crate::handlers::adfs_auth::AdfsDeps;
 use systemprompt::database::DbPool;
 
+/// What the server-rendered console draws with: its template engine, the
+/// SSO relying party, and the environment the public routes are mounted for.
+#[derive(Debug)]
+pub struct AdminSsrShell<'a> {
+    pub engine: AdminTemplateEngine,
+    pub sso_deps: AdfsDeps,
+    pub env: &'a AdminEnv,
+}
+
 pub fn admin_ssr_router(
     db: &DbPool,
     pool: Arc<PgPool>,
-    engine: AdminTemplateEngine,
-    sso_deps: AdfsDeps,
     owner: systemprompt::identifiers::UserId,
-    env: &AdminEnv,
+    shell: AdminSsrShell<'_>,
 ) -> Router {
+    let AdminSsrShell {
+        engine,
+        sso_deps,
+        env,
+    } = shell;
     let inner = overview_routes()
         .merge(people_routes())
         .merge(ai_activity_routes())
@@ -30,9 +42,9 @@ pub fn admin_ssr_router(
         .merge(account_routes())
         .merge(api_routes());
     #[cfg(feature = "mcp")]
-    let inner = inner.layer(Extension(Arc::new(super::managed_state::ManagedState::new(
-        db, owner,
-    ))));
+    let inner = inner.layer(Extension(Arc::new(
+        super::managed_state::ManagedState::new(db, owner),
+    )));
     #[cfg(not(feature = "mcp"))]
     let _ = (db, owner);
     let inner = inner

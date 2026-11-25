@@ -5,7 +5,7 @@
 //! marketplace version served at the time — and the judge's one label with
 //! its rationale, plus the button that asks for it again.
 
-use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Console;
 
 mod context;
 mod figures;
@@ -33,7 +33,6 @@ use crate::repositories::analysis::conversations::planes::{
 };
 use crate::repositories::scope::visibility::may_view;
 use crate::types::UserContext;
-use axum::Extension;
 
 use context::{Planes, build_context};
 
@@ -118,13 +117,13 @@ pub(crate) struct JudgeNowForm {
 // The row is queued as a manual request and the next `conversation_judge`
 // tick (within five minutes) reads it, whatever the profile's automatic switch.
 pub(crate) async fn judge_now(
-    Extension(env): Extension<AdminEnv>,
-    shell: Page,
+    console: Console,
     State(pool): State<Arc<PgPool>>,
     Path(context_id): Path<String>,
     headers: HeaderMap,
     Form(form): Form<JudgeNowForm>,
 ) -> AdminHtmlResult<Redirect> {
+    let Console { env, page: shell } = console;
     if !shell.user.is_console {
         return Err(AdminError::Forbidden("Console access required".into()).into());
     }

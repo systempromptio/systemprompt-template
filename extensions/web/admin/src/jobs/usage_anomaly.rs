@@ -195,10 +195,7 @@ fn alert(finding: Finding, obs: &HourlyObservation) {
 }
 
 fn usd(microdollars: i64) -> String {
-    format!(
-        "${:.2}",
-        crate::numeric::to_f64(microdollars) / 1_000_000.0
-    )
+    format!("${:.2}", crate::numeric::to_f64(microdollars) / 1_000_000.0)
 }
 
 #[async_trait::async_trait]

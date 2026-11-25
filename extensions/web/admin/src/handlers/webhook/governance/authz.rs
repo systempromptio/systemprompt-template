@@ -32,7 +32,8 @@ use systemprompt::governance::authz::{
 use crate::authz::{dimensions, subject_attributes_for};
 use axum::Extension;
 use systemprompt::governance::authz::{
-    DecisionFacts, GovernanceDecisionRecord, insert_governance_decision,
+    DecisionFacts, GovernanceDecisionRecord, SubjectAttributes, SubjectDimension,
+    insert_governance_decision,
 };
 
 const POLICY_NAME: &str = "authz";
@@ -175,6 +176,40 @@ async fn audit_decision(
     }
 }
 
+struct Subject {
+    dimensions: Vec<SubjectDimension>,
+    attributes: SubjectAttributes,
+    roles: Vec<String>,
+}
+
+// Why: resolved by lookup rather than read off the request, so a group
+// change or a revocation binds on the next call instead of waiting for the
+// caller's token to refresh. Any part that cannot be resolved withholds the
+// whole subject, and the caller fails closed.
+async fn resolve_subject(env: &AdminEnv, pool: &PgPool, req: &AuthzRequest) -> Option<Subject> {
+    let dimensions = dimensions(env.subjects())
+        .inspect_err(|error| {
+            tracing::error!(%error, trace_id = %req.trace_id, "authorization_unavailable: dimensions");
+        })
+        .ok()?;
+    let attributes = subject_attributes_for(env.subjects(), &req.user_id)
+        .await
+        .inspect_err(|error| {
+            tracing::error!(%error, user_id = %req.user_id, trace_id = %req.trace_id, "authorization_unavailable: attributes");
+        })
+        .ok()?;
+    let identity = crate::repositories::users::queries::find_identity_envelope(pool, &req.user_id)
+        .await
+        .ok()
+        .flatten()
+        .filter(|identity| identity.status == "active")?;
+    Some(Subject {
+        dimensions,
+        attributes,
+        roles: identity.roles,
+    })
+}
+
 pub(crate) async fn govern_authz(
     State(pool): State<Arc<PgPool>>,
     Extension(env): Extension<AdminEnv>,
@@ -200,39 +235,16 @@ pub(crate) async fn govern_authz(
         },
     };
 
-    // Why: resolved by lookup rather than read off the request, so a group
-    // change or a revocation binds on the next call instead of waiting for the
-    // caller's token to refresh.
-    let dimensions = match dimensions(env.subjects()) {
-        Ok(dimensions) => dimensions,
-        Err(error) => {
-            tracing::error!(%error, trace_id = %req.trace_id, "authorization_unavailable: dimensions");
-            audit_unavailable(&pool, &req).await;
-            return unavailable();
-        },
+    let Some(subject) = resolve_subject(&env, &pool, &req).await else {
+        audit_unavailable(&pool, &req).await;
+        return unavailable();
     };
-    let attributes = match subject_attributes_for(env.subjects(), &req.user_id).await {
-        Ok(attributes) => attributes,
-        Err(error) => {
-            tracing::error!(%error, user_id = %req.user_id, trace_id = %req.trace_id, "authorization_unavailable: attributes");
-            audit_unavailable(&pool, &req).await;
-            return unavailable();
-        },
-    };
-    let identity = match crate::repositories::users::queries::find_identity_envelope(
-        &pool,
-        &req.user_id,
-    )
-    .await
-    {
-        Ok(Some(identity)) if identity.status == "active" => identity,
-        _ => {
-            audit_unavailable(&pool, &req).await;
-            return unavailable();
-        },
-    };
-
-    req.roles = identity.roles;
+    let Subject {
+        dimensions,
+        attributes,
+        roles,
+    } = subject;
+    req.roles = roles;
     let decision = chains.resolve(
         req.entity.kind(),
         req.entity.id_str(),

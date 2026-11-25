@@ -16,5 +16,5 @@ mod ssr_platform;
 pub(crate) use admin::{
     build_admin_only_routes, build_auth_read_routes, build_self_service_routes,
 };
-pub use ssr::admin_ssr_router;
+pub use ssr::{AdminSsrShell, admin_ssr_router};
 pub use ssr_bridge::bridge_auth_ssr_router;

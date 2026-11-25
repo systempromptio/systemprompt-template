@@ -11,9 +11,8 @@ use crate::handlers::ssr::analysis::conversations::view::SkillChipView;
 use crate::handlers::ssr::analysis::tone::{latency_tone, safety_tone, score_tone};
 use crate::handlers::ssr::analysis_urls::{analysis_skill_url, analysis_version_url};
 use crate::handlers::ssr::format::{
-    format_cost, format_duration_ms, format_token_total, local_time,
+    format_bytes, format_cost, format_duration_ms, format_token_total, local_time,
 };
-use crate::handlers::ssr::format::format_bytes;
 use crate::handlers::ssr::ssr_tools::rows::{kind_icon, kind_label};
 use crate::repositories::analysis::conversations::ConversationFactRow;
 use crate::repositories::analysis::conversations::planes::{

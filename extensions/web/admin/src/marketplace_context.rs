@@ -23,7 +23,7 @@ pub(crate) async fn marketplace_context_middleware(
     next: Next,
 ) -> Response {
     let result = async {
-        let path = crate::handlers::shared::get_services_path(&env)?;
+        let path = crate::handlers::shared::get_services_path(&env);
         let plugins = crate::repositories::marketplace::plugins::list_plugins_for_user(
             &env,
             &pool,

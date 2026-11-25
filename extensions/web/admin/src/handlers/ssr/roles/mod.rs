@@ -11,6 +11,7 @@
 //! the write itself.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 mod data;
 mod entitlements_view;
@@ -30,9 +31,8 @@ use crate::handlers::ssr::list_view::PageWindow;
 use crate::handlers::ssr::types::{BreadcrumbView, TabLinkView};
 use crate::repositories::config::gateway::get_route_labels_from_services;
 use crate::repositories::roles::{entitlements, members};
-use crate::templates::AdminTemplateEngine;
+use crate::types::Role;
 use crate::types::role::{ROLES_PLATFORM, has_any};
-use crate::types::{MarketplaceContext, Role, UserContext};
 
 use crate::handlers::ssr::list_view::DEFAULT_PAGE_SIZE;
 use data::RolesQuery;
@@ -60,13 +60,16 @@ fn tabs(on_entitlements: bool, members: usize, entitlements: usize) -> Vec<TabLi
 }
 
 pub(crate) async fn roles_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<RolesQuery>,
 ) -> AdminHtmlResult<Response> {
+    let Page {
+        engine,
+        user: user_ctx,
+        marketplace: mkt_ctx,
+    } = shell;
     if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
@@ -150,9 +153,7 @@ fn entitlement_groups(
     let labels = get_route_labels_from_services(env)
         .inspect_err(|e| tracing::warn!(error = %e, "roles: route labels unavailable"))
         .unwrap_or_default();
-    let sections = shared::get_services_path(env)
-        .map(|p| build_matrix_sections(env, &p))
-        .unwrap_or_default();
+    let sections = build_matrix_sections(env, &shared::get_services_path(env));
     entitlements_view::groups(
         rows::entitlement_views(entitlement_rows, &labels),
         &sections,

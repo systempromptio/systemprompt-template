@@ -6,9 +6,7 @@ use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::jobs::error::JobError;
-use crate::repositories::analytics::content_rollup::{
-    self, ContentRollupRow, UpsertMetricsParams,
-};
+use crate::repositories::analytics::content_rollup::{self, ContentRollupRow, UpsertMetricsParams};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ContentAnalyticsAggregationJob;

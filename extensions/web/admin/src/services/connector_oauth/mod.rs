@@ -114,7 +114,17 @@ pub async fn verified_token(
     probe: bool,
 ) -> AdminResult<String> {
     let mut report = VerificationReport::for_provider(provider.slug());
-    resolve_token(env, pool, user, provider, probe, &mut report).await
+    resolve_token(
+        env,
+        pool,
+        TokenRequest {
+            user,
+            provider,
+            probe,
+        },
+        &mut report,
+    )
+    .await
 }
 
 // Why: a probe that fails at a stage is a result, not an error — the page
@@ -127,29 +137,49 @@ pub async fn probe_connection(
     provider: Provider,
 ) -> AdminResult<VerificationReport> {
     let mut report = VerificationReport::for_provider(provider.slug());
-    match resolve_token(env, pool, user, provider, true, &mut report).await {
+    let request = TokenRequest {
+        user,
+        provider,
+        probe: true,
+    };
+    match resolve_token(env, pool, request, &mut report).await {
         Err(error) if report.steps.is_empty() => Err(error),
         Ok(_) | Err(_) => Ok(report.finish()),
     }
 }
 
+// Why: one token resolution: whose, for which connector, and whether it is
+// the person's own Test connection (which bypasses the outage hold).
+struct TokenRequest<'a> {
+    user: &'a UserId,
+    provider: Provider,
+    probe: bool,
+}
+
 async fn resolve_token(
     env: &AdminEnv,
     pool: &PgPool,
-    user: &UserId,
-    provider: Provider,
-    probe: bool,
+    request: TokenRequest<'_>,
     report: &mut VerificationReport,
 ) -> AdminResult<String> {
     use crate::repositories::users::connector_accounts as accounts;
+    let TokenRequest {
+        user,
+        provider,
+        probe,
+    } = request;
     if !provider.configured(&env.services()) {
         return Err(AdminError::Unavailable("Connector not configured".into()));
     }
     let mut tx = pool.begin().await?;
-    let mut account = accounts::get_locked_account(&mut tx, user, provider.slug()).await?;
+    let mut locked = account_state::LockedAccount {
+        user,
+        account: accounts::get_locked_account(&mut tx, user, provider.slug()).await?,
+    };
     let row = repo::lock(&mut tx, user, provider.slug()).await?;
-    require_connection(&account.status)?;
-    if !probe && account_state::in_outage_hold(&account, row.as_ref().map(|r| r.updated_at)) {
+    require_connection(&locked.account.status)?;
+    if !probe && account_state::in_outage_hold(&locked.account, row.as_ref().map(|r| r.updated_at))
+    {
         return Err(AdminError::Unavailable(
             "Connector provider recently unavailable; retry shortly".into(),
         ));
@@ -157,13 +187,13 @@ async fn resolve_token(
     let row = row.map(|r| r.grant);
     // Why: a saved OAuth grant is not usable until the MCP verification has
     // succeeded.
-    if !probe && account.verified_at.is_none() {
+    if !probe && locked.account.verified_at.is_none() {
         return Err(AdminError::Forbidden(
             "Test the connection on the Connectors page before using this MCP".into(),
         ));
     }
     let mut grant = match row {
-        Some(row) => match open_or_flag(env, &mut tx, user, &provider, &row, &mut account).await {
+        Some(row) => match open_or_flag(env, &mut tx, &mut locked, &provider, &row).await {
             Ok(grant) => grant,
             Err(error) => {
                 tx.commit().await?;
@@ -179,16 +209,22 @@ async fn resolve_token(
     let refresh = grant.auth_method == "oauth" && grant.expires_at <= Utc::now().timestamp() + 120;
     let result = refresh_and_verify(env, &mut grant, refresh, probe, report).await;
     if let Err(error) = result {
-        record_grant_failure(env, &mut tx, user, &mut account, &grant, &error).await?;
+        record_grant_failure(env, &mut tx, &mut locked, &grant, &error).await?;
         tx.commit().await?;
         return Err(error);
     }
     if refresh || probe {
-        repo::store(&mut tx, user, provider.slug(), &seal(env.cipher()?, &grant)?).await?;
+        repo::store(
+            &mut tx,
+            user,
+            provider.slug(),
+            &seal(env.cipher()?, &grant)?,
+        )
+        .await?;
     }
     if probe {
-        apply_verification(&mut account, &grant);
-        accounts::update_account(&mut tx, user, &account).await?;
+        apply_verification(&mut locked.account, &grant);
+        accounts::update_account(&mut tx, user, &locked.account).await?;
     }
     tx.commit().await?;
     Ok(format!(

@@ -12,6 +12,7 @@
 //! are strictly read-only: operators edit `services/*.yaml` and restart.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 mod access;
 mod data;
@@ -79,15 +80,18 @@ async fn visibility_inputs(
 }
 
 pub(crate) async fn plugins_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     axum::extract::Query(query): axum::extract::Query<CatalogListQuery>,
 ) -> AdminHtmlResult<Response> {
+    let Page {
+        engine,
+        user: user_ctx,
+        marketplace: mkt_ctx,
+    } = shell;
     admin_only(&user_ctx)?;
-    let path = shared::get_services_path(&env)?;
+    let path = shared::get_services_path(&env);
 
     let catalog = data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_PLUGIN).await;
@@ -167,7 +171,7 @@ pub(crate) async fn plugin_detail_page(
     axum::extract::Query(query): axum::extract::Query<view::PanelQuery>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
-    let path = shared::get_services_path(&env)?;
+    let path = shared::get_services_path(&env);
 
     let catalog = data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_PLUGIN).await;
@@ -194,15 +198,18 @@ pub(crate) async fn plugin_detail_page(
 }
 
 pub(crate) async fn skills_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     axum::extract::Query(query): axum::extract::Query<CatalogListQuery>,
 ) -> AdminHtmlResult<Response> {
+    let Page {
+        engine,
+        user: user_ctx,
+        marketplace: mkt_ctx,
+    } = shell;
     admin_only(&user_ctx)?;
-    let path = shared::get_services_path(&env)?;
+    let path = shared::get_services_path(&env);
 
     let catalog = data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_SKILL).await;
@@ -272,7 +279,7 @@ pub(crate) async fn skill_detail_page(
     axum::extract::Query(query): axum::extract::Query<view::PanelQuery>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
-    let path = shared::get_services_path(&env)?;
+    let path = shared::get_services_path(&env);
 
     let catalog = data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_SKILL).await;

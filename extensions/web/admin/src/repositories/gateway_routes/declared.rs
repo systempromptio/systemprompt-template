@@ -127,14 +127,14 @@ pub fn load_declared_routes(services_path: &Path) -> AdminResult<DeclaredRoutes>
 // content-addressed overlay the next refresh replaces, and this is the one
 // file the console writes back, so declaration and runtime must be the
 // same path.
-pub fn baked_services_path(env: &AdminEnv) -> AdminResult<std::path::PathBuf> {
-    Ok(env.baked_services_root())
+pub fn baked_services_path(env: &AdminEnv) -> std::path::PathBuf {
+    env.baked_services_root()
 }
 
-pub fn gateway_file_path(env: &AdminEnv) -> AdminResult<std::path::PathBuf> {
-    Ok(baked_services_path(env)?.join(GATEWAY_FILE))
+pub fn gateway_file_path(env: &AdminEnv) -> std::path::PathBuf {
+    baked_services_path(env).join(GATEWAY_FILE)
 }
 
 pub fn declared_routes_now(env: &AdminEnv) -> AdminResult<DeclaredRoutes> {
-    load_declared_routes(&baked_services_path(env)?)
+    load_declared_routes(&baked_services_path(env))
 }

@@ -8,6 +8,7 @@
 //! shows a loading widget that polls `/status` until the verdict is there.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Console;
 
 pub(crate) mod banner;
 mod form;
@@ -34,7 +35,7 @@ use crate::repositories::analysis::inventory_index::InventoryIndex;
 use crate::repositories::analysis::reports::{
     AnalysisReportRow, find_report, list_reports, render_digest_text,
 };
-use crate::services::analysis_report::generate_report;
+use crate::services::analysis_report::{ReportJob, generate_report};
 
 use form::{ReportRequestForm, queue, regenerate_form, resolve};
 use view::{
@@ -84,7 +85,7 @@ pub(crate) async fn page(
 ) -> AdminHtmlResult<Response> {
     require_console(&shell)?;
     let rows = list_reports(&pool, HISTORY_LIMIT).await?;
-    let index = InventoryIndex::build(&env, &crate::handlers::shared::get_services_path(&env)?);
+    let index = InventoryIndex::build(&env, &crate::handlers::shared::get_services_path(&env));
     let context = ReportsPageContext {
         page: "analysis-reports",
         title: "Reports",
@@ -248,9 +249,11 @@ async fn start(
         env.clone(),
         Arc::clone(pool),
         ai,
-        shell.user.user_id.clone(),
-        row,
-        queued.lease_token,
+        ReportJob {
+            requested_by: shell.user.user_id.clone(),
+            row,
+            lease: queued.lease_token,
+        },
     ));
     tracing::info!(report_id = %queued.id, requested_by = %shell.user.user_id, "analysis report generation started from the console");
     Ok(queued.id)
@@ -263,13 +266,13 @@ fn report_redirect(id: &str) -> Redirect {
 // Why: `POST /admin/analysis/reports` — write one report now. The digest is
 // computed at this moment, so the report answers the record as it stood.
 pub(crate) async fn create(
-    Extension(env): Extension<AdminEnv>,
-    shell: Page,
+    console: Console,
     State(pool): State<Arc<PgPool>>,
     Extension(ai): Extension<Option<Arc<AiService>>>,
     headers: HeaderMap,
     Form(form): Form<ReportRequestForm>,
 ) -> AdminHtmlResult<Redirect> {
+    let Console { env, page: shell } = console;
     require_console(&shell)?;
     crate::handlers::shared::require_write_origin(&env, &headers)?;
     let id = start(&env, &pool, ai, &shell, &form).await?;
@@ -277,13 +280,13 @@ pub(crate) async fn create(
 }
 
 pub(crate) async fn regenerate(
-    Extension(env): Extension<AdminEnv>,
-    shell: Page,
+    console: Console,
     State(pool): State<Arc<PgPool>>,
     Extension(ai): Extension<Option<Arc<AiService>>>,
     Path(id): Path<String>,
     headers: HeaderMap,
 ) -> AdminHtmlResult<Redirect> {
+    let Console { env, page: shell } = console;
     require_console(&shell)?;
     crate::handlers::shared::require_write_origin(&env, &headers)?;
     let row = load_report(&pool, &id).await?;

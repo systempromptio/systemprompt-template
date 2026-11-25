@@ -113,14 +113,24 @@ pub(crate) async fn require_entitlement(
     Ok(())
 }
 
+#[derive(Clone, Copy)]
+struct ConnectionState<'a> {
+    status: &'a str,
+    configured: bool,
+    entitled: bool,
+}
+
 fn actions_for(
     services: &ServicesConfig,
     provider: &Provider,
     row: Option<&repo::ProviderConnection>,
-    status: &str,
-    configured: bool,
-    entitled: bool,
+    state: ConnectionState<'_>,
 ) -> Vec<String> {
+    let ConnectionState {
+        status,
+        configured,
+        entitled,
+    } = state;
     let mut actions = Vec::new();
     if configured && entitled && provider.is_session_attested(services) {
         actions.push("test".into());
@@ -194,7 +204,16 @@ fn describe(
         } else {
             row.and_then(|r| r.verified_at.map(|t| t.to_rfc3339()))
         },
-        actions: actions_for(services, provider, row, status, configured, entitled),
+        actions: actions_for(
+            services,
+            provider,
+            row,
+            ConnectionState {
+                status,
+                configured,
+                entitled,
+            },
+        ),
     }
 }
 

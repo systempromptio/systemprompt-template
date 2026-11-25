@@ -10,7 +10,6 @@ use sha2::{Digest, Sha256};
 use systemprompt::gateway::{GATEWAY_POLICIES_FILE, GatewayPolicyConfig, GatewayPolicyEntry};
 
 use super::month_window::normalise_spec;
-use crate::error::AdminResult;
 
 pub const POLICIES_FILE: &str = GATEWAY_POLICIES_FILE;
 
@@ -62,6 +61,6 @@ pub fn parse_declared_policies(yaml: &str) -> Result<DeclaredPolicies, String> {
     })
 }
 
-pub fn services_root(env: &AdminEnv) -> AdminResult<std::path::PathBuf> {
-    Ok(env.active_services_root())
+pub fn services_root(env: &AdminEnv) -> std::path::PathBuf {
+    env.active_services_root()
 }

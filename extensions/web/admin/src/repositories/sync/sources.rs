@@ -22,7 +22,6 @@ use systemprompt::manifest::services::{ServicesSourceView, SourceTransport};
 use super::source_badges::{BadgeInputs, SourceBadge, source_badges};
 use super::tree_hash::base_tree_hash;
 
-use crate::error::AdminResult;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct BaseSourceView {
@@ -72,7 +71,7 @@ pub struct SourcesView {
     pub refresh_hint: String,
 }
 
-pub fn build_sources(env: &AdminEnv) -> AdminResult<SourcesView> {
+pub fn build_sources(env: &AdminEnv) -> SourcesView {
     let declaring_access = marketplaces_declaring_access(env);
     let bundles = env
         .services_view()
@@ -81,7 +80,7 @@ pub fn build_sources(env: &AdminEnv) -> AdminResult<SourcesView> {
         .map(|source| bundle_view(source, &declaring_access))
         .collect();
     let baked = env.baked_services_root();
-    Ok(SourcesView {
+    SourcesView {
         base: BaseSourceView {
             version: env!("CARGO_PKG_VERSION"),
             tree_hash: base_tree_hash(Path::new(&baked)),
@@ -95,7 +94,7 @@ pub fn build_sources(env: &AdminEnv) -> AdminResult<SourcesView> {
         restart_pending: false,
         on_fetch_failure: String::new(),
         refresh_hint: refresh_hint(env),
-    })
+    }
 }
 
 fn bundle_view(source: &ServicesSourceView, declaring_access: &[String]) -> BundleSourceView {

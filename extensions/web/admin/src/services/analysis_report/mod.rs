@@ -142,6 +142,14 @@ async fn call_model(
     Ok(())
 }
 
+// Why: the queued report a spawned generation owns: the row, who asked for
+// it, and the lease that lets only this task write its outcome.
+pub(crate) struct ReportJob {
+    pub(crate) requested_by: UserId,
+    pub(crate) row: AnalysisReportRow,
+    pub(crate) lease: String,
+}
+
 // Why: one report, start to finish: the model call, then the row written
 // as generated or as failed with the reason the page shows. Runs on a
 // spawned task, so every outcome is recorded rather than returned.
@@ -149,10 +157,13 @@ pub(crate) async fn generate_report(
     env: AdminEnv,
     pool: Arc<PgPool>,
     ai: Option<Arc<AiService>>,
-    requested_by: UserId,
-    row: AnalysisReportRow,
-    lease: String,
+    job: ReportJob,
 ) {
+    let ReportJob {
+        requested_by,
+        row,
+        lease,
+    } = job;
     let outcome = match ai {
         None => Err(AdminError::internal(
             "no AI provider is configured on this instance, so a report cannot be written",

@@ -26,8 +26,8 @@ pub mod event_hub;
 pub(crate) mod export;
 pub mod gateway_entitlement;
 pub mod gateway_safety;
-pub mod jobs;
 pub(crate) mod handlers;
+pub mod jobs;
 mod marketplace_context;
 #[cfg(feature = "mcp")]
 pub mod marketplace_filter;
@@ -55,7 +55,7 @@ pub use handlers::connector_auth::router as connector_api_router;
 pub use handlers::dev_login::{
     DEV_LOGIN_PATH, dev_login_allowed, dev_login_enabled, dev_login_url,
 };
-pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
+pub use routes::{AdminSsrShell, admin_ssr_router, bridge_auth_ssr_router};
 pub use services::{connector_oauth, identity_token};
 pub use types::{
     CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent,
@@ -69,7 +69,6 @@ pub mod test_support {
     pub use crate::handlers::catalog::sorting::{
         direction, matches, preserved_search, sort_headers,
     };
-    pub use crate::handlers::ssr::types::table::{SortColumn, SortHeaderView};
     #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::ai_context::build_full_context;
     #[cfg(feature = "agents")]
@@ -108,6 +107,7 @@ pub mod test_support {
         TranscriptRequestIds, TurnView, build_conversation, meta_view, parse_assistant, preview,
         short_id, strip_system_reminders, tidy_lines, transcript_request_ids,
     };
+    pub use crate::handlers::ssr::types::table::{SortColumn, SortHeaderView};
     pub use crate::repositories::analysis::inventory_index::MarketplaceAudience;
     pub use crate::services::connector_accounts::{
         Connection, ConnectionSnapshot, get_connections,

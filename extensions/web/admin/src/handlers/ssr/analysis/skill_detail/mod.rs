@@ -169,7 +169,7 @@ pub(crate) async fn skill_page(
         end,
         subject_ids: scope.as_sql().map(<[String]>::to_vec),
     };
-    let index = InventoryIndex::build(&env, &crate::handlers::shared::get_services_path(&env)?);
+    let index = InventoryIndex::build(&env, &crate::handlers::shared::get_services_path(&env));
     let run_filter = SkillRunFilter {
         marketplace: None,
         skill: Some(skill.skill.clone()),

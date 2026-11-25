@@ -25,8 +25,7 @@ use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::shared;
 use crate::handlers::ssr::entity_panel::{PanelRequest, build_entity_panel};
 use crate::handlers::ssr::page::Page;
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, Role, UserContext};
+use crate::types::{Role, UserContext};
 
 use self::kpis::list_kpis;
 use self::view::{
@@ -69,15 +68,18 @@ fn console_only(user_ctx: &UserContext) -> AdminHtmlResult<()> {
 }
 
 pub(crate) async fn marketplaces_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<super::CatalogListQuery>,
 ) -> AdminHtmlResult<Response> {
+    let Page {
+        engine,
+        user: user_ctx,
+        marketplace: mkt_ctx,
+    } = shell;
     console_only(&user_ctx)?;
-    let path = shared::get_services_path(&env)?;
+    let path = shared::get_services_path(&env);
     let manifests = data::load_manifests(&pool, &path).await;
     let audience = data::audience_matrix(&env, &pool, &manifests, &known_roles()).await;
     let grants = data::group_grants(&pool).await;
@@ -187,7 +189,7 @@ pub(crate) async fn marketplace_detail_page(
         marketplace: mkt_ctx,
     } = shell;
     console_only(&user_ctx)?;
-    let path = shared::get_services_path(&env)?;
+    let path = shared::get_services_path(&env);
     let manifests = data::load_manifests(&pool, &path).await;
     let manifest = manifests
         .iter()

@@ -11,6 +11,7 @@
 //! numbers do not add up to anything cannot answer "where did the money go".
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 use std::sync::Arc;
 
@@ -21,8 +22,6 @@ use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::repositories;
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
 
 use super::sync_plane::{is_sync_tab, plane_card_by_id, sync_tab};
 use super::types::{BreadcrumbView, GroupsPageData, MemberSetChipView, TabLinkView};
@@ -58,13 +57,16 @@ fn tabs(on_sync: bool) -> Vec<TabLinkView> {
 }
 
 pub(crate) async fn groups_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<GroupsQuery>,
 ) -> AdminHtmlResult<Response> {
+    let Page {
+        engine,
+        user: user_ctx,
+        marketplace: mkt_ctx,
+    } = shell;
     if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }

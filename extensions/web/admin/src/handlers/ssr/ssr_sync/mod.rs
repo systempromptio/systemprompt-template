@@ -17,6 +17,7 @@
 //! console's alone and every write on it is an administrator's.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 mod access_review;
 mod view;
@@ -36,9 +37,7 @@ use crate::repositories::sync::archive::staging::STAGE_TTL_MINUTES;
 use crate::repositories::sync::attention::access_attention;
 use crate::repositories::sync::history::{SyncHistoryScope, list_sync_history};
 use crate::repositories::sync::registry::planes;
-use crate::repositories::sync::sources::{SourcesView, build_sources};
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::repositories::sync::sources::build_sources;
 
 pub(crate) const DOCS_URL: &str = "/documentation/services-sync";
 pub(crate) const BASE_URL: &str = "/admin/sync";
@@ -94,27 +93,21 @@ fn tabs(active: SyncTab, attention: usize) -> Vec<TabLinkView> {
     ]
 }
 
-// Why: an unreadable profile or cache is the panel's headline, not a
-// 500 — the rest of the page still renders.
-fn visible_sources(env: &AdminEnv) -> (SourcesView, Option<String>) {
-    match build_sources(env) {
-        Ok(s) => (s, None),
-        Err(e) => (empty_sources(), Some(e.to_string())),
-    }
-}
-
 pub(crate) async fn sync_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<SyncQuery>,
 ) -> AdminHtmlResult<Response> {
+    let Page {
+        engine,
+        user: user_ctx,
+        marketplace: mkt_ctx,
+    } = shell;
     if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Console access required.".to_owned()).into());
     }
-    let (sources, sources_unreadable) = visible_sources(&env);
+    let sources = build_sources(&env);
     let history = list_sync_history(&pool, SyncHistoryScope::All, HISTORY_LIMIT).await?;
     let tab = SyncTab::parse(query.tab.as_deref());
     let access_review = if tab == SyncTab::Access {
@@ -159,29 +152,11 @@ pub(crate) async fn sync_page(
             .and_then(HashView::of),
         base_tree_hash: sources.base.tree_hash.as_deref().and_then(HashView::of),
         sources,
-        sources_unreadable,
+        sources_unreadable: None,
         export_planes,
         stage_ttl_minutes: STAGE_TTL_MINUTES,
     };
     Ok(super::render_typed_page(
         &engine, "sync", &page, &user_ctx, &mkt_ctx,
     ))
-}
-
-pub(crate) const fn empty_sources() -> SourcesView {
-    SourcesView {
-        base: crate::repositories::sync::sources::BaseSourceView {
-            version: env!("CARGO_PKG_VERSION"),
-            tree_hash: None,
-            tree_path: String::new(),
-            provenance: "unknown",
-            provenance_error: None,
-        },
-        bundles: Vec::new(),
-        composed_hash: None,
-        last_reconciled_hash: None,
-        restart_pending: false,
-        on_fetch_failure: String::new(),
-        refresh_hint: String::new(),
-    }
 }

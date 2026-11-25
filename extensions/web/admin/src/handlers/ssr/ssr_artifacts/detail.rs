@@ -12,11 +12,12 @@ use systemprompt::identifiers::{ArtifactId, SessionId, UserId};
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::analysis::help::HelpView;
 use crate::handlers::ssr::entity_urls::{request_detail_url, session_detail_url};
-use crate::handlers::ssr::format::{client_label, format_duration_ms, local_time, short_id};
+use crate::handlers::ssr::format::{
+    client_label, format_bytes, format_duration_ms, local_time, short_id,
+};
 use crate::handlers::ssr::page::Page;
 use crate::handlers::ssr::ssr_helpers::render_typed_page;
 use crate::handlers::ssr::ssr_tools::help::artifacts_help;
-use crate::handlers::ssr::format::format_bytes;
 use crate::handlers::ssr::ssr_tools::rows::{kind_icon, kind_label};
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::analytics::artifacts::{

@@ -213,7 +213,7 @@ async fn included_content(
     user_id: &UserId,
 ) -> Result<Vec<WorkspaceView>, String> {
     let services = env.services();
-    let root = crate::handlers::shared::get_services_path(env).map_err(|e| e.to_string())?;
+    let root = crate::handlers::shared::get_services_path(env);
     let url = env.config().api_external_url.clone();
     let filter = TemplateMarketplaceFilter::from_env(Arc::new(pool.clone()), env);
     let cache = MarketplaceCache::default();

@@ -108,7 +108,7 @@ pub(super) fn collect_entity_ids(env: &AdminEnv, entity_type: &str) -> AdminResu
             env.services_view().catalog(),
         )),
         "mcp_server" => {
-            let services_path = shared::get_services_path(env)?;
+            let services_path = shared::get_services_path(env);
             let servers =
                 mcp_servers::list_mcp_servers(&services_path).map_err(AdminError::internal)?;
             Ok(servers

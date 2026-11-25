@@ -44,16 +44,16 @@ pub(crate) fn build_admin_only_routes(
     #[cfg(feature = "mcp")]
     let reads = reads.merge(super::managed_resources::reads());
     let reads = reads.layer(axum_middleware::from_fn_with_state(
-            ROLES_CONSOLE,
-            middleware::require_roles_middleware,
-        ));
+        ROLES_CONSOLE,
+        middleware::require_roles_middleware,
+    ));
     let writes = build_admin_write_routes(write_pool);
     #[cfg(feature = "mcp")]
     let writes = writes.merge(super::managed_resources::writes());
     let writes = writes.layer(axum_middleware::from_fn_with_state(
-            ROLES_MANAGE,
-            middleware::require_roles_middleware,
-        ));
+        ROLES_MANAGE,
+        middleware::require_roles_middleware,
+    ));
     let platform = build_admin_platform_routes(write_pool).layer(
         axum_middleware::from_fn_with_state(ROLES_PLATFORM, middleware::require_roles_middleware),
     );
@@ -203,11 +203,10 @@ fn gateway_write_routes() -> Router<Arc<PgPool>> {
 
 #[cfg(feature = "mcp")]
 fn connector_write_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route(
-            "/connectors/{provider}/reprovision",
-            post(handlers::connector_reprovision::reprovision_connector_handler),
-        )
+    Router::new().route(
+        "/connectors/{provider}/reprovision",
+        post(handlers::connector_reprovision::reprovision_connector_handler),
+    )
 }
 
 // Why: the platform tier is empty of ordinary routes on purpose. It carries
@@ -283,14 +282,12 @@ pub(crate) fn build_self_service_routes(write_pool: &Arc<PgPool>) -> Router {
 }
 
 pub(crate) fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
-    let routes = Router::new()
-        .route("/dashboard", get(handlers::dashboard_handler));
+    let routes = Router::new().route("/dashboard", get(handlers::dashboard_handler));
     #[cfg(feature = "mcp")]
     let routes = routes.merge(plugin_read_routes());
     #[cfg(feature = "agents")]
     let routes = routes.merge(agent_read_routes());
-    routes
-        .with_state(Arc::clone(read_pool))
+    routes.with_state(Arc::clone(read_pool))
 }
 
 #[cfg(feature = "mcp")]

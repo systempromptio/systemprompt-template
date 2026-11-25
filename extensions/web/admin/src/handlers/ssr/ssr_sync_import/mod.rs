@@ -10,6 +10,7 @@
 //! archive is never mistaken for a full one.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 mod view;
 
@@ -20,14 +21,12 @@ use axum::response::Response;
 use sqlx::PgPool;
 
 use self::view::{AbsentPlaneView, ImportPreviewPageData, ManifestView, PreviewKpiView};
-use crate::error::{AdminError, AdminHtmlResult};
+use crate::error::{AdminError, AdminHtmlResult, AdminResult};
 use crate::handlers::ssr::sync_plane::{HashView, PlaneCardOpts, PlaneCardView, plane_card};
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::sync::archive::staging::StagingStore;
 use crate::repositories::sync::plane::DeclarationSource;
 use crate::repositories::sync::registry::planes;
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
 
 fn kpis(cards: &[PlaneCardView], other: usize) -> Vec<PreviewKpiView> {
     let clean = cards.iter().filter(|c| c.is_clean).count();
@@ -59,39 +58,29 @@ fn kpis(cards: &[PlaneCardView], other: usize) -> Vec<PreviewKpiView> {
     ]
 }
 
-pub(crate) async fn import_preview_page(
-    Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
-    State(pool): State<Arc<PgPool>>,
-    Path(stage_id): Path<String>,
-) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_console {
-        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
-    }
-    let Some(stage) = StagingStore::global().get(&stage_id) else {
-        return Err(AdminError::NotFound(
-            "No staged import with that id — it may have expired.".to_owned(),
-        )
-        .into());
-    };
-    let apply_url = format!("/api/public/admin/sync/import/{}/apply", stage.id);
+// Why: one card per plane the archive carries, read against this instance,
+// and a plain row for each plane it leaves out.
+async fn staged_cards(
+    env: &AdminEnv,
+    pool: &PgPool,
+    staged: &std::collections::BTreeMap<&'static str, String>,
+    apply_url: &str,
+) -> AdminResult<(Vec<PlaneCardView>, Vec<AbsentPlaneView>)> {
     let mut cards = Vec::new();
     let mut absent = Vec::new();
     for plane in planes() {
-        match stage.planes.get(plane.id()) {
+        match staged.get(plane.id()) {
             Some(text) => {
                 let opts = PlaneCardOpts {
                     entity_filter: "",
-                    apply_url: Some(apply_url.clone()),
+                    apply_url: Some(apply_url.to_owned()),
                     show_export: false,
                     source_label: Some("the archive"),
                 };
                 cards.push(
                     plane_card(
-                        &env,
-                        &pool,
+                        env,
+                        pool,
                         plane.as_ref(),
                         DeclarationSource::Text(text),
                         &opts,
@@ -106,6 +95,26 @@ pub(crate) async fn import_preview_page(
             }),
         }
     }
+    Ok((cards, absent))
+}
+
+pub(crate) async fn import_preview_page(
+    shell: Page,
+    Extension(env): Extension<AdminEnv>,
+    State(pool): State<Arc<PgPool>>,
+    Path(stage_id): Path<String>,
+) -> AdminHtmlResult<Response> {
+    if !shell.user.is_console {
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
+    }
+    let Some(stage) = StagingStore::global().get(&stage_id) else {
+        return Err(AdminError::NotFound(
+            "No staged import with that id — it may have expired.".to_owned(),
+        )
+        .into());
+    };
+    let apply_url = format!("/api/public/admin/sync/import/{}/apply", stage.id);
+    let (cards, absent) = staged_cards(&env, &pool, &stage.planes, &apply_url).await?;
     let kpis = kpis(&cards, stage.other.len());
     let manifest = stage.manifest.as_ref().map(|m| ManifestView {
         release: m.release.clone(),
@@ -118,7 +127,7 @@ pub(crate) async fn import_preview_page(
     let page = ImportPreviewPageData {
         page: "sync",
         title: "Import preview",
-        can_write: user_ctx.is_admin,
+        can_write: shell.user.is_admin,
         breadcrumbs: vec![
             BreadcrumbView::link("Admin", "/admin"),
             BreadcrumbView::link("Code sync", super::ssr_sync::BASE_URL),
@@ -141,10 +150,10 @@ pub(crate) async fn import_preview_page(
         docs_url: super::ssr_sync::DOCS_URL,
     };
     Ok(super::render_typed_page(
-        &engine,
+        &shell.engine,
         "sync-import",
         &page,
-        &user_ctx,
-        &mkt_ctx,
+        &shell.user,
+        &shell.marketplace,
     ))
 }
