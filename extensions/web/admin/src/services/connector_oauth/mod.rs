@@ -184,7 +184,13 @@ async fn resolve_token(
         return Err(error);
     }
     if refresh || probe {
-        repo::store(&mut tx, user, provider.slug(), &seal(env.cipher()?, &grant)?).await?;
+        repo::store(
+            &mut tx,
+            user,
+            provider.slug(),
+            &seal(env.cipher()?, &grant)?,
+        )
+        .await?;
     }
     if probe {
         apply_verification(&mut account, &grant);

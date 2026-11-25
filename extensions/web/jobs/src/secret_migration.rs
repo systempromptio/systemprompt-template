@@ -63,8 +63,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
             .with_duration(duration_ms));
     }
 
-    let (success_count, error_count) =
-        migrate_secrets(&pool, &rows, cipher, actor_user).await;
+    let (success_count, error_count) = migrate_secrets(&pool, &rows, cipher, actor_user).await;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 

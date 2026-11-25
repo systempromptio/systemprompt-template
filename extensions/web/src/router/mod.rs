@@ -20,12 +20,12 @@ use axum::body::Body;
 use axum::extract::{Request, State};
 use axum::http::Method;
 use axum::response::{IntoResponse, Response};
+use systemprompt::api::ServicesRefresh;
 use systemprompt::extension::RouteGroup;
 use systemprompt::extension::prelude::*;
 use systemprompt::extension::router::{
     BasePath, BodyLimit, RouteLimits, RouteSet, RouteSpec, WebBase,
 };
-use systemprompt::api::ServicesRefresh;
 use systemprompt::governance::policy::GovernanceEngine;
 use systemprompt::models::execution::context::RequestContext;
 use systemprompt::traits::ConfigWatch;
@@ -133,10 +133,7 @@ impl FromState for WebState {
 async fn forward(State(state): State<WebState>, request: Request<Body>) -> Response {
     let (mut parts, body) = request.into_parts();
     let mut carried = axum::http::Extensions::new();
-    if let Some(governance) = parts
-        .extensions
-        .remove::<ConfigWatch<GovernanceEngine>>()
-    {
+    if let Some(governance) = parts.extensions.remove::<ConfigWatch<GovernanceEngine>>() {
         carried.insert(governance);
     }
     if let Some(refresh) = parts.extensions.remove::<ServicesRefresh>() {
