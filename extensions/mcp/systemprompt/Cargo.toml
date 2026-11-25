@@ -10,8 +10,9 @@ homepage.workspace = true
 publish = false
 
 [dependencies]
-# Audit: the toolset host (`mcp::host`) is linked by the `api` feature.
-systemprompt = { workspace = true, features = ["reference"] }
+# Audit: the toolset host (`mcp::host`, `system`) is linked by `api`; the
+# MCP domain (errors, artifact ingest, UI renderer) by `mcp-servers`.
+systemprompt = { workspace = true, features = ["api", "mcp", "mcp-servers"] }
 
 thiserror.workspace = true
 tokio.workspace = true

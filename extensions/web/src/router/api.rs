@@ -8,6 +8,7 @@ use axum::routing::post;
 use systemprompt::users::{UserRepository, UserService};
 
 use super::pools::DbHandles;
+#[cfg(feature = "content")]
 use crate::extension::WebExtension;
 use crate::{admin, api};
 
@@ -18,16 +19,18 @@ pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings) -> Router {
     let webhook_api = admin::hooks_webhook_router(Arc::clone(&db.write), users);
     let secrets_api = admin::secrets_router(Arc::clone(&db.write));
     let bridge_identity = admin::bridge_identity_router(Arc::clone(&db.read));
-    let links_router = api::router(Arc::clone(&db.read), WebExtension::blog_config(settings));
-
-    Router::new()
-        .route(
-            "/auth/session",
-            post(api::auth::set_session)
-                .delete(api::auth::clear_session)
-                .with_state(api::auth::CookieSecure(settings.use_https)),
-        )
-        .merge(links_router)
+    let router = Router::new().route(
+        "/auth/session",
+        post(api::auth::set_session)
+            .delete(api::auth::clear_session)
+            .with_state(api::auth::CookieSecure(settings.use_https)),
+    );
+    #[cfg(feature = "content")]
+    let router = router.merge(api::router(
+        Arc::clone(&db.read),
+        WebExtension::blog_config(settings),
+    ));
+    router
         .merge(bridge_identity)
         .merge(admin::connector_api_router(Arc::clone(&db.write)))
         .merge(webhook_api)

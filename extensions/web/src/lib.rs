@@ -2,7 +2,9 @@
 //!
 //! Aggregates the five web sibling crates (`admin`, `content`, `jobs`,
 //! `shared`, `site`) into a single `WebExtension` registered with the core
-//! runtime. Most of this crate is re-exports — the actual extension entry
+//! runtime. The capability features (`gateway`, `mcp`, `agents`, `content`)
+//! select the console page groups and contributions a flavour compiles;
+//! `jobs` and the public-site contributions exist only with `content`. Most of this crate is re-exports — the actual extension entry
 //! point is [`extension::WebExtension`], which advertises required assets,
 //! HTTP routes, page data providers, and jobs to the host binary.
 //!
@@ -28,6 +30,7 @@ pub mod schemas;
 
 pub use systemprompt_web_admin as admin;
 pub use systemprompt_web_content::{api, repository, services};
+#[cfg(feature = "content")]
 pub use systemprompt_web_jobs as jobs;
 pub use systemprompt_web_shared as shared;
 pub use systemprompt_web_shared::{
@@ -64,6 +67,7 @@ pub use navigation::{
 pub use skills_page::{SkillEntry, SkillsPageConfig, SkillsPagePrerenderer};
 
 pub use extenders::{OrgUrlExtender, ReleaseVersionExtender};
+#[cfg(feature = "content")]
 pub use jobs::ContentIngestionJob;
 pub use repository::{
     ContentRepository, LinkAnalyticsRepository, LinkRepository, SearchRepository,

@@ -6,8 +6,10 @@
 //! values the member provides; the route set forwards each literal prefix to
 //! its router. Every route is `public` at the mount: `/admin` and
 //! `/bridge-auth` are gated by the member's site auth, and the API routers
-//! authenticate each request themselves. There is no root fallback: the
-//! public site is the generator's static output, served by core.
+//! authenticate each request themselves. With `content` there is no root
+//! route: the public site is the generator's static output, served by core.
+//! Without it the flavour serves no public site and `/` redirects to the
+//! console.
 
 mod admin_ssr;
 mod api;
@@ -19,6 +21,8 @@ use axum::Router;
 use axum::body::Body;
 use axum::extract::{Request, State};
 use axum::http::Method;
+#[cfg(not(feature = "content"))]
+use axum::response::Redirect;
 use axum::response::{IntoResponse, Response};
 use systemprompt::extension::RouteGroup;
 use systemprompt::extension::prelude::*;
@@ -56,7 +60,9 @@ const PREFIXES: &[(&str, &str)] = &[
         "/api/public/auth/session",
         "/api/public/auth/session/{*rest}",
     ),
+    #[cfg(feature = "content")]
     ("/api/public/links", "/api/public/links/{*rest}"),
+    #[cfg(feature = "content")]
     ("/api/public/search", "/api/public/search/{*rest}"),
     ("/api/public/hooks", "/api/public/hooks/{*rest}"),
     ("/api/public/govern", "/api/public/govern/{*rest}"),
@@ -170,5 +176,15 @@ pub(crate) fn route_set() -> RouteSet {
                 .route(method, nested, forward, FORWARDED);
         }
     }
+    #[cfg(not(feature = "content"))]
+    {
+        set = set.route(Method::GET, "/", console, FORWARDED);
+    }
     set.build()
+}
+
+#[cfg(not(feature = "content"))]
+async fn console() -> Redirect {
+    std::future::ready(()).await;
+    Redirect::temporary("/admin/")
 }

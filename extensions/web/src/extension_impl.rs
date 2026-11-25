@@ -7,6 +7,7 @@
 use std::sync::Arc;
 
 use systemprompt::config::AppPaths;
+#[cfg(feature = "content")]
 use systemprompt::content::contract::ContentSlot;
 use systemprompt::extension::artifact_ui::DynArtifactUiRenderer;
 use systemprompt::extension::prelude::*;
@@ -18,25 +19,30 @@ use systemprompt::manifest::profile::ProfileView;
 use systemprompt::manifest::services::InstallServicesView;
 use systemprompt::models::auth::DynRequestAuthenticator;
 use systemprompt_web_admin::env::{AdminEnv, AdminEnvParts};
+#[cfg(feature = "gateway")]
 use systemprompt_web_admin::gateway_entitlement::RouteEntitlementGuard;
+#[cfg(feature = "content")]
 use systemprompt_web_site::partials::{
     FooterPartialRenderer, HeadAssetsPartialRenderer, HeaderPartialRenderer, ScriptsPartialRenderer,
 };
+#[cfg(feature = "content")]
 use systemprompt_web_site::partials_animations::{
     AgenticMeshAnimationPartialRenderer, ArchitectureDiagramPartialRenderer,
     CliRemoteAnimationPartialRenderer, MemoryLoopAnimationPartialRenderer,
     RustMeshAnimationPartialRenderer,
 };
 
-use crate::assets::web_assets;
+use crate::WebSettings;
 use crate::extension::WebExtension;
-use crate::homepage::{HomepagePageDataProvider, HomepagePrerenderer};
-use crate::navigation::NavigationPageDataProvider;
 use crate::router::{DbHandles, WebRuntime, route_set};
 use crate::schemas::{migrations, schema_definitions};
+#[cfg(feature = "content")]
 use crate::{
     DocsContentDataProvider, DocsPageDataProvider, OrgUrlExtender, ReleaseVersionExtender,
-    SkillsPagePrerenderer, WebSettings, config_loader,
+    SkillsPagePrerenderer, config_loader,
+    assets::web_assets,
+    homepage::{HomepagePageDataProvider, HomepagePrerenderer},
+    navigation::NavigationPageDataProvider,
 };
 
 // Why: a generic connector's OAuth client is read from a secret the
@@ -44,13 +50,18 @@ use crate::{
 // prefix are declared, so the profile grants them explicitly.
 const CONNECTOR_SECRET_PREFIX: &str = "web_connector_";
 
-const CROSS_TABLES: [&str; 6] = [
-    "managed_installation_receipts",
-    "managed_publications",
-    "managed_resources",
-    "markdown_content",
-    "mcp_tool_executions",
+const CROSS_TABLES: &[&str] = &[
     "users",
+    #[cfg(feature = "mcp")]
+    "managed_installation_receipts",
+    #[cfg(feature = "mcp")]
+    "managed_publications",
+    #[cfg(feature = "mcp")]
+    "managed_resources",
+    #[cfg(feature = "mcp")]
+    "mcp_tool_executions",
+    #[cfg(feature = "content")]
+    "markdown_content",
 ];
 
 impl Extension for WebExtension {
@@ -66,7 +77,7 @@ impl Extension for WebExtension {
         for schema in schema_definitions() {
             c.schema(schema);
         }
-        for table in CROSS_TABLES {
+        for &table in CROSS_TABLES {
             c.cross_table(table);
         }
         c.migrations(migrations())
@@ -124,28 +135,41 @@ impl Extension for WebExtension {
                 let env = r.get::<AdminEnv>()?;
                 Ok(Arc::new(WebRuntime::build(&db, &settings, &env)))
             })
-            .gateway_guard(|r: &Resolved<'_>| {
-                let guard: Arc<dyn GatewayRequestGuard> =
-                    Arc::new(RouteEntitlementGuard::new(r.get::<SubjectSourceCell>()?));
-                Ok(guard)
-            })
             .routes(route_set());
-        systemprompt_web_admin::gateway_safety::contribute_scanners(c);
-        systemprompt_web_admin::marketplace_filter::contribute_marketplace_filter(c);
         crate::admin::authz::contribute_subject_attributes(c);
-        crate::jobs::contribute_jobs(c, declared_assets);
         crate::admin::jobs::contribute_jobs(c);
-        contribute_content(c);
+        #[cfg(feature = "gateway")]
+        contribute_gateway(c);
+        #[cfg(feature = "mcp")]
+        systemprompt_web_admin::marketplace_filter::contribute_marketplace_filter(c);
+        #[cfg(feature = "content")]
+        {
+            crate::jobs::contribute_jobs(c, declared_assets);
+            contribute_content(c);
+        }
         Ok(())
     }
 }
 
+#[cfg(feature = "gateway")]
+fn contribute_gateway(c: &mut Contributions<'_>) {
+    c.gateway_guard(|r: &Resolved<'_>| {
+        let guard: Arc<dyn GatewayRequestGuard> =
+            Arc::new(RouteEntitlementGuard::new(r.get::<SubjectSourceCell>()?));
+        Ok(guard)
+    });
+    systemprompt_web_admin::gateway_safety::contribute_scanners(c);
+}
+
 fn declared_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
-    let mut assets = web_assets(paths);
-    assets.extend(crate::admin::assets::admin_assets(paths));
+    #[cfg_attr(not(feature = "content"), expect(unused_mut, reason = "site assets join only with content"))]
+    let mut assets = crate::admin::assets::admin_assets(paths);
+    #[cfg(feature = "content")]
+    assets.extend(web_assets(paths));
     assets
 }
 
+#[cfg(feature = "content")]
 fn services(r: &Resolved<'_>) -> Result<Arc<WebSettings>, FactoryError> {
     Ok(r.get::<Arc<WebSettings>>()?)
 }
@@ -153,14 +177,17 @@ fn services(r: &Resolved<'_>) -> Result<Arc<WebSettings>, FactoryError> {
 // Why: a content factory cannot decline (`ContentSlotBuilder` takes a
 // factory that returns the provider or fails), so a page whose config file is
 // missing refuses the slot rather than rendering from an invented default.
+#[cfg(feature = "content")]
 #[derive(Debug, thiserror::Error)]
 #[error("{0} is not configured in the services tree")]
 struct MissingSiteConfig(&'static str);
 
+#[cfg(feature = "content")]
 fn required<T>(config: Option<Arc<T>>, what: &'static str) -> Result<Arc<T>, FactoryError> {
     config.ok_or_else(|| FactoryError::Failed(Box::new(MissingSiteConfig(what))))
 }
 
+#[cfg(feature = "content")]
 fn contribute_content(c: &mut Contributions<'_>) {
     let content = c.slot::<ContentSlot>();
     content
@@ -229,6 +256,7 @@ fn contribute_content(c: &mut Contributions<'_>) {
     contribute_partials(content);
 }
 
+#[cfg(feature = "content")]
 macro_rules! component {
     ($content:expr, $renderer:expr) => {
         $content.component_renderer(
@@ -239,6 +267,7 @@ macro_rules! component {
     };
 }
 
+#[cfg(feature = "content")]
 fn contribute_partials(content: &mut systemprompt::content::contract::ContentSlotBuilder) {
     component!(content, HeadAssetsPartialRenderer);
     component!(content, HeaderPartialRenderer);

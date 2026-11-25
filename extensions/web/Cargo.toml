@@ -17,27 +17,30 @@ ignored = ["systemprompt-extension"]
 # One feature per capability a flavour selects; each turns on the matching
 # console page group and the member contributions that need it.
 [features]
-gateway = ["systemprompt-web-admin/gateway"]
-mcp = ["systemprompt-web-admin/mcp"]
-agents = ["mcp", "systemprompt-web-admin/agents"]
-content = ["systemprompt-web-admin/content"]
+gateway = ["systemprompt/ai", "systemprompt-web-admin/gateway"]
+mcp = ["systemprompt/mcp-servers", "systemprompt/marketplace", "systemprompt-web-admin/mcp"]
+agents = ["mcp", "systemprompt/agents", "systemprompt-web-admin/agents"]
+content = [
+    "systemprompt/content",
+    "dep:systemprompt-web-jobs",
+    "systemprompt-web-admin/content",
+]
 
 [lints]
 workspace = true
 
 [dependencies]
 thiserror = { workspace = true }
-# Core facade - provides all systemprompt types via unified API.
-# Audit: uses ai, database, extension, loader, models, traits — requires `full`
-# (ai + loader are gated by the `full` feature).
-systemprompt = { workspace = true, features = ["reference"] }
+# Audit: the member surface (extension router, api, users), governance
+# (security) and config; each capability feature above adds its own.
+systemprompt = { workspace = true, features = ["api", "security", "config"] }
 
 # Local sub-crates
 systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-content = { workspace = true }
 systemprompt-web-site = { workspace = true }
-systemprompt-web-jobs = { workspace = true }
+systemprompt-web-jobs = { workspace = true, optional = true }
 
 # Extension framework — direct dep so the `extension_migrations!()` macro
 # expansion (`::systemprompt_extension::Migration`) resolves.

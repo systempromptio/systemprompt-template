@@ -242,16 +242,54 @@ systemprompt = { workspace = true }
 
 # Local extensions
 systemprompt-web-extension = { workspace = true }
-systemprompt-mcp-agent = { path = "extensions/mcp/systemprompt" }
+systemprompt-mcp-agent = { path = "extensions/mcp/systemprompt", optional = true }
 
-# A build names exactly one flavour:
+# A build names one flavour:
 #   cargo build --no-default-features --features flavour-<name>
-# flavours/<name>/flavour.toml describes each one; scripts/check-flavours.sh
-# keeps the two in step.
+# flavours/<name>/flavour.yaml describes each one; scripts/check-flavours.sh
+# keeps the two in step. Each larger flavour includes the one below it, and
+# full is the union of all four plus Slack and every remaining core capability.
 [features]
-cap-slack = ["systemprompt/slack"]
-cap-teams = ["systemprompt/teams"]
-flavour-full = ["systemprompt/reference", "cap-slack"]
+flavour-gateway = [
+    "systemprompt/runtime",
+    "systemprompt/identity",
+    "systemprompt/analytics",
+    "systemprompt/ai",
+    "systemprompt/cloud",
+    "systemprompt/otel",
+    "systemprompt/bridge",
+    "systemprompt-web-extension/gateway",
+]
+flavour-mcp = [
+    "flavour-gateway",
+    "systemprompt/mcp-servers",
+    "systemprompt/marketplace",
+    "systemprompt-web-extension/mcp",
+    "dep:systemprompt-mcp-agent",
+]
+flavour-agents = [
+    "flavour-mcp",
+    "systemprompt/agents",
+    "systemprompt/agent-runs",
+    "systemprompt/notifications",
+    "systemprompt/brain",
+    "systemprompt-web-extension/agents",
+]
+flavour-site = [
+    "systemprompt/runtime",
+    "systemprompt/identity",
+    "systemprompt/analytics",
+    "systemprompt/content",
+    "systemprompt/files",
+    "systemprompt/files-pdf",
+    "systemprompt-web-extension/content",
+]
+flavour-full = [
+    "flavour-agents",
+    "flavour-site",
+    "systemprompt/reference",
+    "systemprompt/slack",
+]
 
 [lints]
 workspace = true
