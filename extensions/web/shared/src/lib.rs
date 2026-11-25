@@ -24,10 +24,12 @@ pub mod format;
 pub mod ids;
 pub mod models;
 pub mod pagination;
+pub mod settings;
 mod utils;
 
 pub use ids::{GroupId, MarketplaceId, PluginId, ProjectId, RankTier, TierLevel, TraceId, UserId};
 
+pub use settings::WebSettings;
 pub use utils::html_escape;
 
 pub mod branding {

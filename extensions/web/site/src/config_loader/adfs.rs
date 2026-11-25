@@ -4,23 +4,10 @@
 //! SAML URLs are derived here from the profile rather than authored in YAML,
 //! so one committed config is correct on every deployment host.
 
+use std::path::Path;
 use std::sync::Arc;
 
-use systemprompt::config::ProfileBootstrap;
-
-use super::{ConfigError, load_app_paths, load_config_section};
-
-// Why: A deployment points at its own AD FS farm without evicting anyone
-// else's config: `adfs.<profile>.yaml` wins when it is present, and the
-// committed `adfs.yaml` is the default every profile falls back to. The
-// override names its own `idp_metadata_path`, so the two farms' signing
-// certificates sit side by side rather than overwriting one another.
-fn adfs_config_filename() -> String {
-    ProfileBootstrap::get().map_or_else(
-        |_| "adfs.yaml".to_owned(),
-        |profile| format!("adfs.{}.yaml", profile.name),
-    )
-}
+use super::{ConfigError, load_config_section};
 
 // Why: the relying-party identifier and the ACS are the instance's own public
 // URLs, and the profile already names that host. Deriving both from
@@ -29,16 +16,11 @@ fn adfs_config_filename() -> String {
 // tracked literal was right on exactly one host and produced AD FS `MSIS7007`
 // on all the others. An explicit value still wins, for a trust registered
 // against a URL this instance does not serve itself under.
-fn derive_saml_urls(config: &mut systemprompt_web_admin::AdfsConfig) {
+fn derive_saml_urls(config: &mut systemprompt_web_admin::AdfsConfig, api_external_url: &str) {
     if !config.entity_id.is_empty() && !config.acs_url.is_empty() {
         return;
     }
-    let Ok(global) = systemprompt::manifest::Config::get().inspect_err(|e| {
-        tracing::warn!(error = %e, "No profile config; ADFS SAML URLs stay unset");
-    }) else {
-        return;
-    };
-    let base = global.api_external_url.trim_end_matches('/');
+    let base = api_external_url.trim_end_matches('/');
     if base.is_empty() {
         return;
     }
@@ -55,15 +37,13 @@ fn derive_saml_urls(config: &mut systemprompt_web_admin::AdfsConfig) {
     );
 }
 
-pub(super) fn load_adfs_config()
--> Result<Option<Arc<systemprompt_web_admin::AdfsConfig>>, ConfigError> {
-    let profile_filename = adfs_config_filename();
-    let (filename, value) = match load_config_section(&profile_filename)? {
-        Some(value) => (profile_filename, value),
-        None => match load_config_section("adfs.yaml")? {
-            Some(value) => ("adfs.yaml".to_owned(), value),
-            None => return Ok(None),
-        },
+pub(super) fn load_adfs_config(
+    services: &Path,
+    api_external_url: &str,
+) -> Result<Option<Arc<systemprompt_web_admin::AdfsConfig>>, ConfigError> {
+    let filename = "adfs.yaml".to_owned();
+    let Some(value) = load_config_section(services, &filename)? else {
+        return Ok(None);
     };
 
     let mut config: systemprompt_web_admin::AdfsConfig =
@@ -72,17 +52,13 @@ pub(super) fn load_adfs_config()
             message: e.to_string(),
         })?;
 
-    derive_saml_urls(&mut config);
+    derive_saml_urls(&mut config, api_external_url);
 
     // Why: the IdP signing certificate is pinned in the repository as the
     // federation metadata file; a missing file is a config error, not a
     // silent "SSO unavailable".
     if config.enabled {
-        let metadata_path = load_app_paths()?
-            .system()
-            .services()
-            .join("web/config")
-            .join(&config.idp_metadata_path);
+        let metadata_path = services.join("web/config").join(&config.idp_metadata_path);
         config.idp_metadata_xml =
             std::fs::read_to_string(&metadata_path).map_err(|e| ConfigError::Parse {
                 config_name: filename.clone(),

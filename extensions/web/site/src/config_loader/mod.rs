@@ -1,18 +1,18 @@
-//! Bootstrap-time loading of the `services/web/` YAML tree.
+//! Loading of the `services/web/` YAML tree.
 //!
 //! Lives beside the config types it deserialises, so adding a YAML-backed
-//! page section is one edit in this crate. Each section is loaded once into
-//! a `OnceLock`; a load failure is logged and served as "section absent",
-//! never a crash. Runs at extension construction, before any request is
-//! served, so the file-system reads here are not on a hot path.
+//! page section is one edit in this crate. Every load takes the services
+//! directory it reads from; nothing is cached process-wide. A load failure is
+//! logged and served as "section absent", never a crash. The web member loads
+//! each section once, in its provide fns and factories, after admission.
 
-use std::sync::{Arc, OnceLock};
+use std::path::Path;
+use std::sync::Arc;
 
 mod adfs;
 
 use adfs::load_adfs_config;
 
-use systemprompt::config::{AppPaths, ProfileBootstrap};
 use thiserror::Error;
 
 #[doc(hidden)]
@@ -20,18 +20,6 @@ pub mod skills;
 
 pub(crate) use skills::load_skills_page_config;
 
-static BRANDING_CONFIG: OnceLock<Result<Option<BrandingConfig>, String>> = OnceLock::new();
-
-fn load_app_paths() -> Result<AppPaths, ConfigError> {
-    let profile =
-        ProfileBootstrap::get().map_err(|e| ConfigError::PathsUnavailable(e.to_string()))?;
-    AppPaths::from_profile(
-        &profile.paths,
-        profile.path_resolution(),
-        systemprompt::loader::ServicesRootBootstrap::get().map(|root| root.path.as_path()),
-    )
-    .map_err(|e| ConfigError::PathsUnavailable(e.to_string()))
-}
 
 use crate::homepage::HomepageConfig;
 use crate::navigation::{BrandingConfig, NavigationConfig};
@@ -49,8 +37,8 @@ pub enum ConfigError {
     PathsUnavailable(String),
 }
 
-fn load_navigation_config() -> Result<Option<Arc<NavigationConfig>>, ConfigError> {
-    let Some(nav_value) = load_config_section("navigation.yaml")? else {
+fn load_navigation_config(services: &Path) -> Result<Option<Arc<NavigationConfig>>, ConfigError> {
+    let Some(nav_value) = load_config_section(services, "navigation.yaml")? else {
         return Ok(None);
     };
 
@@ -65,8 +53,8 @@ fn load_navigation_config() -> Result<Option<Arc<NavigationConfig>>, ConfigError
     Ok(Some(Arc::new(nav_config)))
 }
 
-fn load_homepage_config() -> Result<Option<Arc<HomepageConfig>>, ConfigError> {
-    let Some(homepage_value) = load_config_section("homepage.yaml")? else {
+fn load_homepage_config(services: &Path) -> Result<Option<Arc<HomepageConfig>>, ConfigError> {
+    let Some(homepage_value) = load_config_section(services, "homepage.yaml")? else {
         return Ok(None);
     };
 
@@ -81,8 +69,8 @@ fn load_homepage_config() -> Result<Option<Arc<HomepageConfig>>, ConfigError> {
     Ok(Some(Arc::new(homepage_config)))
 }
 
-fn load_branding_config() -> Result<Option<BrandingConfig>, ConfigError> {
-    let Some(theme_value) = load_config_section("theme.yaml")? else {
+fn load_branding_config(services: &Path) -> Result<Option<BrandingConfig>, ConfigError> {
+    let Some(theme_value) = load_config_section(services, "theme.yaml")? else {
         return Ok(None);
     };
 
@@ -104,68 +92,47 @@ fn load_branding_config() -> Result<Option<BrandingConfig>, ConfigError> {
 // Why: Both router builds and the HTTP contract suite need the engine
 // configured the same way; the templates read `branding.*` under strict mode,
 // so an engine built without it fails to render every page that has one.
-//
-// Cached: the router build and each prerender context ask for branding
-// independently, and re-reading theme.yaml per caller is pure waste.
 #[must_use]
-pub fn branding_config() -> Option<BrandingConfig> {
-    log_and_discard_err(
-        &BRANDING_CONFIG,
-        load_branding_config,
-        "Branding config error",
-    )
-}
-
-static NAVIGATION_CONFIG: OnceLock<Result<Option<Arc<NavigationConfig>>, String>> = OnceLock::new();
-static HOMEPAGE_CONFIG: OnceLock<Result<Option<Arc<HomepageConfig>>, String>> = OnceLock::new();
-static SKILLS_PAGE_CONFIG: OnceLock<Result<Option<Arc<SkillsPageConfig>>, String>> =
-    OnceLock::new();
-static ADFS_CONFIG: OnceLock<Result<Option<Arc<systemprompt_web_admin::AdfsConfig>>, String>> =
-    OnceLock::new();
-
-#[must_use]
-pub fn navigation_config() -> Option<Arc<NavigationConfig>> {
-    log_and_discard_err(
-        &NAVIGATION_CONFIG,
-        load_navigation_config,
-        "Navigation config error",
-    )
+pub fn branding_config(services: &Path) -> Option<BrandingConfig> {
+    log_and_discard_err(load_branding_config(services), "Branding config error")
 }
 
 #[must_use]
-pub fn homepage_config() -> Option<Arc<HomepageConfig>> {
-    log_and_discard_err(
-        &HOMEPAGE_CONFIG,
-        load_homepage_config,
-        "Homepage config error",
-    )
+pub fn navigation_config(services: &Path) -> Option<Arc<NavigationConfig>> {
+    log_and_discard_err(load_navigation_config(services), "Navigation config error")
 }
 
 #[must_use]
-pub fn skills_page_config() -> Option<Arc<SkillsPageConfig>> {
+pub fn homepage_config(services: &Path) -> Option<Arc<HomepageConfig>> {
+    log_and_discard_err(load_homepage_config(services), "Homepage config error")
+}
+
+#[must_use]
+pub fn skills_page_config(services: &Path) -> Option<Arc<SkillsPageConfig>> {
     log_and_discard_err(
-        &SKILLS_PAGE_CONFIG,
-        load_skills_page_config,
+        load_skills_page_config(services),
         "Skills page config error",
     )
 }
 
 #[must_use]
-pub fn adfs_config() -> Option<Arc<systemprompt_web_admin::AdfsConfig>> {
-    log_and_discard_err(&ADFS_CONFIG, load_adfs_config, "ADFS config error")
+pub fn adfs_config(
+    services: &Path,
+    api_external_url: &str,
+) -> Option<Arc<systemprompt_web_admin::AdfsConfig>> {
+    log_and_discard_err(
+        load_adfs_config(services, api_external_url),
+        "ADFS config error",
+    )
 }
 
 #[doc(hidden)]
-pub fn log_and_discard_err<T: Clone>(
-    lock: &OnceLock<Result<Option<T>, String>>,
-    init: fn() -> Result<Option<T>, ConfigError>,
-    msg: &str,
-) -> Option<T> {
-    match lock.get_or_init(|| init().map_err(|e| e.to_string())) {
-        Ok(val) => val.clone(),
-        Err(message) => {
+pub fn log_and_discard_err<T>(loaded: Result<Option<T>, ConfigError>, msg: &str) -> Option<T> {
+    match loaded {
+        Ok(val) => val,
+        Err(error) => {
             tracing::error!(
-                error = %message,
+                error = %error,
                 config = msg,
                 "Config failed to load; its pages and sections will not render"
             );
@@ -175,20 +142,10 @@ pub fn log_and_discard_err<T: Clone>(
 }
 
 pub(super) fn load_config_section(
+    services: &Path,
     filename: &str,
 ) -> Result<Option<serde_yaml::Value>, ConfigError> {
-    let paths = match load_app_paths() {
-        Ok(p) => p,
-        Err(e) => {
-            tracing::debug!(error = %e, "AppPaths not available for config section");
-            return Ok(None);
-        },
-    };
-
-    let config_path = paths
-        .system()
-        .services()
-        .join(format!("web/config/{filename}"));
+    let config_path = services.join(format!("web/config/{filename}"));
 
     let yaml_content = match std::fs::read_to_string(&config_path) {
         Ok(c) => c,
