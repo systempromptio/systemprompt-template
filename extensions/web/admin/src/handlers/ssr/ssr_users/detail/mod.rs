@@ -7,6 +7,7 @@
 
 use crate::env::AdminEnv;
 
+mod access_connections;
 mod access_overview;
 mod access_view;
 mod context;

@@ -12,15 +12,14 @@ use crate::handlers::ssr::page::Console;
 
 pub(crate) mod banner;
 mod form;
+mod status;
 mod view;
 
 use std::sync::Arc;
 
-use axum::Json;
 use axum::extract::{Extension, Form, Path, State};
 use axum::http::HeaderMap;
 use axum::response::{Redirect, Response};
-use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::ai::AiService;
 
@@ -42,6 +41,8 @@ use view::{
     RecommendationView, ReportPageContext, ReportsPageContext, ThemeView, assessment_icon,
     report_row, scope_label, severity_icon, status_tone, tiles,
 };
+
+pub(crate) use status::status;
 
 pub(crate) const REPORTS_URL: &str = "/admin/analysis/reports";
 const HISTORY_LIMIT: i64 = 100;
@@ -292,27 +293,4 @@ pub(crate) async fn regenerate(
     let row = load_report(&pool, &id).await?;
     let new_id = start(&env, &pool, ai, &shell, &regenerate_form(&row)).await?;
     Ok(report_redirect(&new_id))
-}
-
-// Why: what the loading widget polls: the row's state and, when it failed,
-// why — as JSON, so the page reloads itself once the verdict exists.
-#[derive(Debug, Serialize)]
-pub(crate) struct ReportStatus {
-    status: String,
-    error: Option<String>,
-    elapsed_ms: i64,
-}
-
-pub(crate) async fn status(
-    shell: Page,
-    State(pool): State<Arc<PgPool>>,
-    Path(id): Path<String>,
-) -> AdminResult<Json<ReportStatus>> {
-    require_console(&shell)?;
-    let row = load_report(&pool, &id).await?;
-    Ok(Json(ReportStatus {
-        status: row.status.clone(),
-        error: row.last_error.clone(),
-        elapsed_ms: (chrono::Utc::now() - row.created_at).num_milliseconds(),
-    }))
 }
