@@ -101,11 +101,13 @@ pub(crate) async fn sync_git(
             snapshot_id,
             revision_id,
             commit,
+            reconciliation_id,
         } => serde_json::json!({
             "result": "incoming",
             "snapshot_id": snapshot_id,
             "revision_id": revision_id,
             "commit": commit,
+            "reconciliation_id": reconciliation_id,
         }),
         systemprompt::traits::GitSourceSynced::WithdrawalProposed {
             snapshot_id,
