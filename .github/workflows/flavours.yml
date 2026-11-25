@@ -1,0 +1,79 @@
+name: Flavours
+
+# Every flavour in flavours/index.toml: the flavour lint, then per flavour a
+# clean and a cached image build with deploy metrics (scripts/flavour-metrics.sh
+# --image) and the image smoke (scripts/flavour-smoke.sh). Metrics JSON and the
+# smoke results are uploaded; table.md is appended to the job summary.
+#
+# A runner has no sibling core checkout. While Cargo.toml carries the
+# unreleased-core override table (scripts/core-patch.sh), core cannot be
+# resolved here, so only the lint runs and the plan job says why; once the
+# manifest pins core by git rev the table is gone and the matrix runs.
+
+on:
+  push:
+    branches: [next, future]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: flavours-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Flavour lint and matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      flavours: ${{ steps.plan.outputs.flavours }}
+      buildable: ${{ steps.plan.outputs.buildable }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: bash scripts/check-flavours.sh
+      - id: plan
+        run: |
+          echo "flavours=$(python3 scripts/flavour.py matrix)" >> "$GITHUB_OUTPUT"
+          if grep -qE '^\[(workspace\.metadata\.unreleased-core-patch|patch\.crates-io)\]' Cargo.toml; then
+            echo "buildable=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cargo.toml overrides core with a sibling checkout; flavour images build once core is pinned by git rev."
+          else
+            echo "buildable=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  flavour:
+    name: ${{ matrix.flavour }}
+    needs: plan
+    if: needs.plan.outputs.buildable == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        flavour: ${{ fromJSON(needs.plan.outputs.flavours) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/reclaim-disk
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with:
+          driver: docker
+      - name: Image build and deploy metrics
+        run: bash scripts/flavour-metrics.sh "${{ matrix.flavour }}" --image --bench
+      - name: Image smoke
+        run: bash scripts/flavour-smoke.sh "${{ matrix.flavour }}" --no-build
+      - if: always()
+        run: |
+          if [ -f target/flavour-metrics/table.md ]; then
+            { echo "## Flavour ${{ matrix.flavour }}"; cat target/flavour-metrics/table.md; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: flavour-${{ matrix.flavour }}
+          path: |
+            target/flavour-metrics/
+            target/flavour-smoke/
+          retention-days: 30
