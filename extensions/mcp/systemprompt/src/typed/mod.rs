@@ -51,7 +51,7 @@ use serde::{Deserialize, Serialize};
 // JSON: rows are the CLI's own row objects, heterogeneous by command.
 use serde_json::Value;
 use std::collections::BTreeMap;
-use systemprompt::mcp::McpOutputSchema;
+use systemprompt::extension::mcp::McpOutputSchema;
 
 // Why: a request for more than this is clamped, not refused, and the output
 // says so — a refusal is one more error the model has to reason around.

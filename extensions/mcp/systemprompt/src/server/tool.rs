@@ -8,16 +8,13 @@ use crate::cli;
 use crate::tools::CliInput;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolRequestParams, CallToolResult};
-use rmcp::service::{RequestContext, RoleServer};
 use std::sync::Arc;
-use systemprompt::database::DbPool;
+use systemprompt::extension::mcp::{McpToolHandler, ToolExecution, VerifiedCaller, execute};
 use systemprompt::identifiers::McpExecutionId;
-use systemprompt::mcp::middleware::enforce_rbac_from_registry;
-use systemprompt::mcp::{ArtifactIngest, ClientProfile, McpToolExecutor, McpToolHandler};
+use systemprompt::mcp::ArtifactIngest;
 use systemprompt::models::artifacts::{CliArtifact, TextArtifact};
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
-use systemprompt::security::authz::SharedAuthzHook;
-use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
+use systemprompt::models::mcp::ClientProfile;
 
 pub(super) struct SystempromptToolHandler<'a> {
     pub(super) auth_token: String,
@@ -111,68 +108,13 @@ impl McpToolHandler for SystempromptToolHandler<'_> {
     }
 }
 
-pub(super) async fn authenticate_tool_request(
-    db_pool: &DbPool,
-    tool_name: &str,
-    service_id: &str,
-    ctx: &RequestContext<RoleServer>,
-    authz_hook: &SharedAuthzHook,
-) -> Result<(SysRequestContext, String), McpError> {
-    let server_name = service_id;
-    let rbac_result = enforce_rbac_from_registry(
-        ctx,
-        &systemprompt::identifiers::McpServerId::new(service_id),
-        authz_hook,
-    )
-    .await;
-
-    match rbac_result {
-        Ok(result) => {
-            match result
-                .expect_authenticated("BUG: systemprompt requires OAuth but auth was not enforced")
-            {
-                Ok(authenticated) => {
-                    record_mcp_access(
-                        db_pool,
-                        authenticated.context.user_id(),
-                        server_name,
-                        tool_name,
-                        "authenticated",
-                    )
-                    .await;
-                    let token = authenticated
-                        .auth_token()
-                        .ok_or_else(|| {
-                            McpError::internal_error(
-                                "authenticated request has no bearer token",
-                                None,
-                            )
-                        })?
-                        .to_string();
-                    Ok((authenticated.context.clone(), token))
-                },
-                Err(e) => {
-                    record_mcp_access_rejected(db_pool, server_name, tool_name, e.message.as_ref())
-                        .await;
-                    Err(e)
-                },
-            }
-        },
-        Err(e) => {
-            record_mcp_access_rejected(db_pool, server_name, tool_name, &format!("{e}")).await;
-            Err(e)
-        },
-    }
-}
-
 #[doc(hidden)]
 #[derive(Debug)]
 pub struct Dispatch<'a> {
     pub service_id: &'a str,
-    pub db_pool: &'a DbPool,
-    pub executor: &'a McpToolExecutor,
+    pub executor: &'a dyn ToolExecution,
     pub request: &'a CallToolRequestParams,
-    pub request_context: &'a SysRequestContext,
+    pub caller: &'a VerifiedCaller,
     pub client: &'a ClientProfile,
     pub cli: &'a cli::CliLocation,
     pub ingest: &'a Arc<ArtifactIngest>,
@@ -182,9 +124,7 @@ async fn run_typed<H: McpToolHandler>(
     ctx: &Dispatch<'_>,
     handler: &H,
 ) -> Result<CallToolResult, McpError> {
-    ctx.executor
-        .execute(handler, ctx.request, ctx.request_context, ctx.client)
-        .await
+    execute(ctx.executor, handler, ctx.request, ctx.caller, ctx.client).await
 }
 
 // Why: the typed tools share one constructor shape; matching them here

@@ -2,15 +2,13 @@
 
 use systemprompt::mcp::McpDomainResult;
 use systemprompt::mcp::services::ui_renderer::templates::DashboardRenderer;
-use systemprompt::mcp::services::ui_renderer::{UiRenderer, UiRendererRegistration, UiResource};
+use systemprompt::mcp::services::ui_renderer::{UiRenderer, UiResource};
 use systemprompt::models::a2a::{Artifact, PartContent};
 use systemprompt::models::artifacts::ArtifactType;
 
-struct AdminRenderer;
-
-inventory::submit! {
-    UiRendererRegistration { name: "systemprompt-admin-reports", factory: || std::sync::Arc::new(AdminRenderer) }
-}
+/// Renders the admin report artifacts; contributed to core's `UiSlot`.
+#[derive(Debug, Clone, Copy)]
+pub struct AdminRenderer;
 
 impl UiRenderer for AdminRenderer {
     fn artifact_type(&self) -> ArtifactType {

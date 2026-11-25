@@ -9,21 +9,16 @@ repository.workspace = true
 homepage.workspace = true
 publish = false
 
-[[bin]]
-name = "systemprompt-mcp-agent"
-path = "src/main.rs"
-
 [dependencies]
-# Audit: uses database, identifiers, logging, mcp, models, system (api), traits — requires `full`.
-systemprompt = { workspace = true, features = ["full"] }
+# Audit: the toolset host (`mcp::host`) is linked by the `api` feature.
+systemprompt = { workspace = true, features = ["reference"] }
 
-anyhow.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+axum.workspace = true
+async-trait.workspace = true
 
 rmcp.workspace = true
-
-axum.workspace = true
 
 schemars.workspace = true
 serde.workspace = true
@@ -33,7 +28,6 @@ tracing.workspace = true
 
 shell-words.workspace = true
 chrono.workspace = true
-inventory.workspace = true
 
 systemprompt-mcp-shared.workspace = true
 

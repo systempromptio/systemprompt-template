@@ -6,7 +6,7 @@
 use crate::tools::CliOutput;
 use rmcp::ErrorData as McpError;
 use std::path::PathBuf;
-use systemprompt::config::{ProfileBootstrap, ProfileBootstrapError};
+use systemprompt::manifest::Profile;
 use tokio::process::Command;
 
 /// Why a CLI invocation could not produce output.
@@ -14,13 +14,7 @@ use tokio::process::Command;
 /// rmcp's `ErrorData` is a variant-less wire type, so the typed cause lives
 /// here and is projected onto the wire exactly once, in `From`.
 #[derive(Debug, thiserror::Error)]
-#[expect(
-    variant_size_differences,
-    reason = "small CLI boundary errors retain their concrete causes without heap allocation"
-)]
 pub enum CliError {
-    #[error("profile is not initialised")]
-    Profile(#[from] ProfileBootstrapError),
     #[error("command arguments do not parse")]
     Arguments(#[from] shell_words::ParseError),
     #[error("CLI command did not finish within {}s; narrow the query", CLI_TIMEOUT.as_secs())]
@@ -32,16 +26,13 @@ pub enum CliError {
 impl From<CliError> for McpError {
     fn from(error: CliError) -> Self {
         let message = match &error {
-            CliError::Profile(source) => format!("{error}: {source}"),
             CliError::Arguments(source) => format!("{error}: {source}"),
             CliError::Spawn(source) => format!("{error}: {source}"),
             CliError::Timeout => error.to_string(),
         };
         match error {
             CliError::Arguments(_) => Self::invalid_params(message, None),
-            CliError::Profile(_) | CliError::Timeout | CliError::Spawn(_) => {
-                Self::internal_error(message, None)
-            },
+            CliError::Timeout | CliError::Spawn(_) => Self::internal_error(message, None),
         }
     }
 }
@@ -59,13 +50,12 @@ pub struct CliLocation {
 }
 
 impl CliLocation {
-    pub fn from_profile() -> Result<Self, CliError> {
-        let profile = ProfileBootstrap::get()?;
-
-        Ok(Self {
+    #[must_use]
+    pub fn from_profile(profile: &Profile) -> Self {
+        Self {
             bin: PathBuf::from(&profile.paths.bin).join("systemprompt"),
             workdir: PathBuf::from(&profile.paths.system),
-        })
+        }
     }
 }
 

@@ -6,8 +6,8 @@ use rmcp::ErrorData;
 // JSON: rows are the CLI's own row objects.
 use serde_json::Value;
 use std::collections::BTreeMap;
+use systemprompt::extension::mcp::McpToolHandler;
 use systemprompt::identifiers::McpExecutionId;
-use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::execution::context::RequestContext;
 
 #[derive(Debug, Clone, Copy)]

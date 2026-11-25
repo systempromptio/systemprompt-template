@@ -3,8 +3,8 @@
 use super::{ReportInput, ReportOutput};
 use crate::cli::CliLocation;
 use rmcp::ErrorData;
+use systemprompt::extension::mcp::McpToolHandler;
 use systemprompt::identifiers::McpExecutionId;
-use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::execution::context::RequestContext;
 
 #[derive(Debug, Clone, Copy)]

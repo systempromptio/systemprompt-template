@@ -4,12 +4,12 @@ use rmcp::model::{MetaObject, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use systemprompt::mcp::{
-    McpOutputSchema, McpToolHandler, WEBSITE_URL, default_tool_visibility, tool_ui_meta,
+use systemprompt::extension::mcp::capabilities::{
+    WEBSITE_URL, default_tool_visibility, tool_ui_meta,
 };
+use systemprompt::extension::mcp::{McpOutputSchema, McpToolHandler};
+use systemprompt::identifiers::McpServerId;
 use systemprompt::models::artifacts::CliArtifact;
-
-pub const SERVER_NAME: &str = "systemprompt";
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CliInput {
@@ -40,7 +40,7 @@ pub fn output_schema() -> serde_json::Value {
 }
 
 struct ToolDef<'a> {
-    server_name: &'a str,
+    server_name: &'a McpServerId,
     name: &'a str,
     title: &'a str,
     description: &'a str,
@@ -69,14 +69,14 @@ fn create_tool(def: &ToolDef<'_>) -> Tool {
     tool.input_schema = Arc::new(input_obj);
     tool.output_schema = Some(Arc::new(output_obj));
     tool.meta = Some(MetaObject(tool_ui_meta(
-        &systemprompt::identifiers::McpServerId::new(def.server_name),
+        def.server_name,
         &default_tool_visibility(),
     )));
     tool
 }
 
 #[must_use]
-pub fn list_tools() -> Vec<Tool> {
+pub fn list_tools(server: &McpServerId) -> Vec<Tool> {
     let desc = format!(
         "Execute SystemPrompt CLI commands. Pass the command WITHOUT the 'systemprompt' prefix.\n\n\
         For people's activity, conversations, spend, request logs, audits and the user roster use \
@@ -99,7 +99,7 @@ pub fn list_tools() -> Vec<Tool> {
         Full documentation: {WEBSITE_URL}/docs"
     );
     let mut tools = vec![create_tool(&ToolDef {
-        server_name: SERVER_NAME,
+        server_name: server,
         name: "systemprompt",
         title: "SystemPrompt CLI",
         description: &desc,
@@ -112,33 +112,12 @@ pub fn list_tools() -> Vec<Tool> {
     };
     let cli = &location;
     let token = "";
-    tools.push(
-        crate::reports::ReportHandler { cli, token }
-            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
-    );
-    tools.push(
-        crate::typed::UserActivityHandler { cli, token }
-            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
-    );
-    tools.push(
-        crate::typed::ConversationListHandler { cli, token }
-            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
-    );
-    tools.push(
-        crate::typed::UsageByUserHandler { cli, token }
-            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
-    );
-    tools.push(
-        crate::typed::RequestLogHandler { cli, token }
-            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
-    );
-    tools.push(
-        crate::typed::ConversationAuditHandler { cli, token }
-            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
-    );
-    tools.push(
-        crate::typed::UsersHandler { cli, token }
-            .tool_definition(&systemprompt::identifiers::McpServerId::new(SERVER_NAME)),
-    );
+    tools.push(crate::reports::ReportHandler { cli, token }.tool_definition(server));
+    tools.push(crate::typed::UserActivityHandler { cli, token }.tool_definition(server));
+    tools.push(crate::typed::ConversationListHandler { cli, token }.tool_definition(server));
+    tools.push(crate::typed::UsageByUserHandler { cli, token }.tool_definition(server));
+    tools.push(crate::typed::RequestLogHandler { cli, token }.tool_definition(server));
+    tools.push(crate::typed::ConversationAuditHandler { cli, token }.tool_definition(server));
+    tools.push(crate::typed::UsersHandler { cli, token }.tool_definition(server));
     tools
 }

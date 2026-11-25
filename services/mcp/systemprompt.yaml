@@ -5,8 +5,6 @@
 mcp_servers:
   systemprompt:
     type: internal
-    binary: systemprompt-mcp-agent
-    package: systemprompt
     port: 5010
     enabled: true
     tool_policy: allow
@@ -19,3 +17,5 @@ mcp_servers:
       - admin
       audience: mcp
       client_id: null
+    toolsets:
+    - id: systemprompt

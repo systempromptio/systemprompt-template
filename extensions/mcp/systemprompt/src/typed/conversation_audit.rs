@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 // JSON: the audit card's fields are the CLI's own values.
 use serde_json::Value;
 use std::collections::BTreeMap;
+use systemprompt::extension::mcp::{McpOutputSchema, McpToolHandler};
 use systemprompt::identifiers::McpExecutionId;
-use systemprompt::mcp::{McpOutputSchema, McpToolHandler};
 use systemprompt::models::execution::context::RequestContext;
 
 #[derive(Debug, Clone, Copy)]

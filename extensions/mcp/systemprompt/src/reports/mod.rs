@@ -25,7 +25,7 @@ mod shape;
 
 pub use handler::ReportHandler;
 pub use platform::{normalize_cli, with_dollar_siblings};
-pub use renderer::admin_artifact_shell;
+pub use renderer::{AdminRenderer, admin_artifact_shell};
 pub use shape::{ReportInput, ReportKind, ReportOutput, ReportTable, SourceStatus};
 
 pub(crate) fn invalid(message: impl Into<String>) -> rmcp::ErrorData {

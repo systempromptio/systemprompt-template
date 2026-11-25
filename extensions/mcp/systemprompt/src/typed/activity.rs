@@ -12,8 +12,8 @@ use super::{ConversationListInput, PagedOutput, UserActivityInput, page_limit, r
 use crate::cli::CliLocation;
 use crate::reports::invalid;
 use rmcp::ErrorData;
+use systemprompt::extension::mcp::McpToolHandler;
 use systemprompt::identifiers::McpExecutionId;
-use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::execution::context::RequestContext;
 
 #[derive(Debug, Clone, Copy)]

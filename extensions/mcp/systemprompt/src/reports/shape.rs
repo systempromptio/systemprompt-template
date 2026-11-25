@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 // JSON: upstream report envelopes carry heterogeneous table cells.
 use serde_json::Value;
 use std::collections::BTreeMap;
-use systemprompt::mcp::McpOutputSchema;
+use systemprompt::extension::mcp::McpOutputSchema;
 
 // Why: a FLAT struct with a string discriminator, not a serde-tagged enum. A
 // tagged enum emits a top-level `oneOf` with no `properties`, and Claude Code
