@@ -24,7 +24,6 @@ pub mod format;
 pub mod ids;
 pub mod models;
 pub mod pagination;
-pub mod registry;
 mod utils;
 
 pub use ids::{GroupId, MarketplaceId, PluginId, ProjectId, RankTier, TierLevel, TraceId, UserId};

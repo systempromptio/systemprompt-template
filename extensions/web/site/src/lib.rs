@@ -22,7 +22,7 @@ pub mod format;
 pub mod homepage;
 pub mod navigation;
 pub mod partials;
-mod partials_animations;
+pub mod partials_animations;
 mod repositories;
 pub mod skills_page;
 

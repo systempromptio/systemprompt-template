@@ -11,8 +11,7 @@ publish = false
 
 [dependencies]
 # Audit: uses only identifiers, models, traits — `core` (default) is sufficient.
-systemprompt = { workspace = true }
-inventory = { workspace = true }
+systemprompt = { workspace = true, features = ["config", "loader"] }
 sqlx = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }

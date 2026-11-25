@@ -170,5 +170,3 @@ impl PageDataProvider for DocsPageDataProvider {
         60
     }
 }
-
-systemprompt_web_shared::submit_page_data!(DocsPageDataProvider::new());

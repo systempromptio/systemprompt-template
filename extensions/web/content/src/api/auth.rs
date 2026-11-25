@@ -1,6 +1,7 @@
 //! Session cookie issue and clear for the public content surface.
 
 use axum::Json;
+use axum::extract::State;
 use axum::http::HeaderMap;
 use axum::http::header::SET_COOKIE;
 use serde::Deserialize;
@@ -14,14 +15,17 @@ pub struct SetSessionRequest {
     pub refresh_token: Option<String>,
 }
 
-fn is_secure_context() -> bool {
-    // Why: discard-ok: unreadable config keeps the cookie `Secure` (closed side).
-    systemprompt::manifest::Config::get().map_or(true, |c| c.use_https)
+/// Whether the session cookies carry `Secure`: the profile's `use_https`.
+#[derive(Clone, Copy, Debug)]
+pub struct CookieSecure(pub bool);
+
+const fn secure_flag(secure: CookieSecure) -> &'static str {
+    if secure.0 { "; Secure" } else { "" }
 }
 
-fn build_session_cookies(body: &SetSessionRequest) -> HeaderMap {
+fn build_session_cookies(body: &SetSessionRequest, secure: CookieSecure) -> HeaderMap {
     let max_age = body.expires_in.unwrap_or(3600);
-    let secure_flag = if is_secure_context() { "; Secure" } else { "" };
+    let secure_flag = secure_flag(secure);
     let access_cookie = format!(
         "access_token={}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}{}",
         body.access_token, max_age, secure_flag
@@ -45,8 +49,8 @@ fn build_session_cookies(body: &SetSessionRequest) -> HeaderMap {
     headers
 }
 
-fn build_clear_cookies() -> HeaderMap {
-    let secure_flag = if is_secure_context() { "; Secure" } else { "" };
+fn build_clear_cookies(secure: CookieSecure) -> HeaderMap {
+    let secure_flag = secure_flag(secure);
     let access_cookie =
         format!("access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}");
     let refresh_cookie = format!(
@@ -65,16 +69,16 @@ fn build_clear_cookies() -> HeaderMap {
 }
 
 pub async fn set_session(
-    _req_headers: HeaderMap,
+    State(secure): State<CookieSecure>,
     Json(body): Json<SetSessionRequest>,
 ) -> (HeaderMap, Json<OkResponse>) {
     std::future::ready(()).await;
-    let headers = build_session_cookies(&body);
+    let headers = build_session_cookies(&body, secure);
     (headers, Json(OkResponse { ok: true }))
 }
 
-pub async fn clear_session() -> (HeaderMap, Json<OkResponse>) {
+pub async fn clear_session(State(secure): State<CookieSecure>) -> (HeaderMap, Json<OkResponse>) {
     std::future::ready(()).await;
-    let headers = build_clear_cookies();
+    let headers = build_clear_cookies(secure);
     (headers, Json(OkResponse { ok: true }))
 }

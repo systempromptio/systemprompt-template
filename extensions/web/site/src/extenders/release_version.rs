@@ -53,5 +53,3 @@ impl TemplateDataExtender for ReleaseVersionExtender {
         Ok(())
     }
 }
-
-systemprompt_web_shared::submit_extender!(ReleaseVersionExtender::new());

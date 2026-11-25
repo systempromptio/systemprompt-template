@@ -3,9 +3,6 @@
 
 use std::path::{Path, PathBuf};
 
-use systemprompt::config::{AppPaths, ProfileBootstrap};
-use systemprompt::loader::ServicesRootBootstrap;
-
 use super::{ContentSourceRaw, ContentSourceValidated, ExtensionConfigErrors};
 
 pub(super) fn validate_content_source(
@@ -66,47 +63,19 @@ pub(super) fn validate_content_source(
         override_existing: src.override_existing,
     })
 }
-pub(super) fn resolve_blog_config_path() -> PathBuf {
-    if let Ok(override_path) = std::env::var("BLOG_CONFIG") {
-        return PathBuf::from(override_path);
-    }
-    ProfileBootstrap::get()
-        .map_err(|e| e.to_string())
-        .and_then(|profile| {
-            AppPaths::from_profile(
-                &profile.paths,
-                profile.path_resolution(),
-                ServicesRootBootstrap::get().map(|root| root.path.as_path()),
-            )
-            .map_err(|e| e.to_string())
-        })
-        .map_or_else(
-            |_| PathBuf::from("./services/config/blog.yaml"),
-            |paths| paths.system().services().join("config/blog.yaml"),
-        )
+pub(super) fn blog_config_path(services_dir: &Path) -> PathBuf {
+    services_dir.join("config/blog.yaml")
 }
+
 pub(super) fn resolve_content_source_path(path: &str, base_path: &Path) -> PathBuf {
     if Path::new(path).is_absolute() {
         PathBuf::from(path)
     } else if path.starts_with("./") {
-        let services_dir = ProfileBootstrap::get()
-            .map_err(|e| e.to_string())
-            .and_then(|profile| {
-                AppPaths::from_profile(
-                    &profile.paths,
-                    profile.path_resolution(),
-                    ServicesRootBootstrap::get().map(|root| root.path.as_path()),
-                )
-                .map_err(|e| e.to_string())
-            })
-            .map_or_else(
-                |e| {
-                    tracing::warn!(error = %e, "Failed to get app paths, using fallback services dir");
-                    PathBuf::from("./services")
-                },
-                |p| p.system().services().to_path_buf(),
-            );
-        let clean_path = path.strip_prefix("./services/").unwrap_or(path);
+        let services_dir = base_path.parent().unwrap_or(base_path);
+        let clean_path = path
+            .strip_prefix("./services/")
+            .or_else(|| path.strip_prefix("./"))
+            .unwrap_or(path);
         services_dir.join(clean_path)
     } else {
         base_path.join(path)

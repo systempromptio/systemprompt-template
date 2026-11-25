@@ -60,5 +60,3 @@ impl TemplateDataExtender for OrgUrlExtender {
         Ok(())
     }
 }
-
-systemprompt_web_shared::submit_extender!(OrgUrlExtender::new());
