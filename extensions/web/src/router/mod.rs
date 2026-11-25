@@ -36,6 +36,7 @@ use systemprompt::traits::ConfigWatch;
 use tower::ServiceExt;
 
 pub(crate) use pools::DbHandles;
+use systemprompt_web_admin::dashboard::ConsoleDashboard;
 use systemprompt_web_admin::env::AdminEnv;
 
 const LIMITS: RouteLimits = RouteLimits {
@@ -92,7 +93,12 @@ impl std::fmt::Debug for WebRuntime {
 }
 
 impl WebRuntime {
-    pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings, env: &AdminEnv) -> Self {
+    pub(crate) fn build(
+        db: &DbHandles,
+        settings: &crate::WebSettings,
+        env: &AdminEnv,
+        dashboard: Arc<ConsoleDashboard>,
+    ) -> Self {
         let sso_deps = crate::admin::AdfsDeps {
             config: crate::shared::config_loader::adfs_config(
                 &settings.services_path,
@@ -105,7 +111,7 @@ impl WebRuntime {
         let mut router = Router::new()
             .merge(api::share(db))
             .nest("/api/public", api::build(db, settings));
-        match admin_ssr::build(db, sso_deps, settings, env) {
+        match admin_ssr::build(db, sso_deps, settings, env, dashboard) {
             Some(ssr) => {
                 router = router
                     .nest_service("/admin", ssr.admin)

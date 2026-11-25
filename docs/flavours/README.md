@@ -91,7 +91,11 @@ invalidate each other's build or share a database.
 2. Create `flavours/<name>/` with `flavour.yaml`, `profile.overlay.yaml` and
    `README.md` (copy `flavours/full/` and narrow it), and add the name to
    `flavours/index.yaml`.
-3. Run `bash scripts/check-flavours.sh`, then `just docker-build <name>`,
+3. Write `flavours/<name>/services/web/config/dashboard.yaml` (landing,
+   home cards, nav sections) from the nav item ids in
+   `extensions/web/admin/src/dashboard/registry/`; an id the flavour does not
+   compile refuses boot, so the file is checked the first time it starts.
+4. Run `bash scripts/check-flavours.sh`, then `just docker-build <name>`,
    `just smoke <name> --no-build` and `just metrics <name>`.
 
 ## Metrics

@@ -1,5 +1,6 @@
 //! Loading of the `services/web/config/` YAML the console needs on every
-//! flavour: the branding section of `theme.yaml` and the ADFS SSO config.
+//! flavour: the branding section of `theme.yaml`, the ADFS SSO config and
+//! the dashboard.
 //!
 //! Every load takes the services directory it reads from; nothing is cached
 //! process-wide. A load failure is logged and served as "section absent",
@@ -15,6 +16,7 @@ use thiserror::Error;
 
 use crate::BrandingConfig;
 use crate::adfs::AdfsConfig;
+use crate::dashboard::DashboardConfig;
 
 #[derive(Debug, Error)]
 pub enum ConfigError {
@@ -24,6 +26,8 @@ pub enum ConfigError {
         #[source]
         source: std::io::Error,
     },
+    #[error("required config {} is missing", path.display())]
+    Missing { path: PathBuf },
     #[error("failed to parse {config_name}")]
     Parse {
         config_name: String,
@@ -61,6 +65,14 @@ pub fn adfs_config(services: &Path, api_external_url: &str) -> Option<Arc<AdfsCo
         adfs::load_adfs_config(services, api_external_url),
         "ADFS config error",
     )
+}
+
+pub fn dashboard_config(services: &Path) -> Result<DashboardConfig, ConfigError> {
+    const FILE: &str = "dashboard.yaml";
+    let value = load_config_section(services, FILE)?.ok_or_else(|| ConfigError::Missing {
+        path: services.join("web/config").join(FILE),
+    })?;
+    parse_section(value, FILE)
 }
 
 #[doc(hidden)]

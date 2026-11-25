@@ -47,6 +47,11 @@ The image uses the `slim` runtime. It needs no provider key; `ADMIN_EMAIL` on fi
 `/` is the published site; `/admin/` serves the base console and the content
 pages. No gateway, MCP or agent pages.
 
+The sidebar, the home cards and the landing page come from
+`flavours/site/services/web/config/dashboard.yaml`, which overrides
+`services/web/config/dashboard.yaml`. Naming an item whose page this
+flavour does not compile refuses boot with the console feature it needs.
+
 ## CLI groups
 
 `admin`, `analytics`, `core`, `infra`, `plugins`, `web`. `cloud` is not

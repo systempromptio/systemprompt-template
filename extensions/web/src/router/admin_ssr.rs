@@ -23,13 +23,15 @@ pub(crate) fn build(
     sso_deps: admin::AdfsDeps,
     settings: &crate::WebSettings,
     env: &systemprompt_web_admin::env::AdminEnv,
+    dashboard: Arc<admin::dashboard::ConsoleDashboard>,
 ) -> Option<SsrRouters> {
     let admin_dir = settings.admin_template_dir.clone();
     let branding = config_loader::branding_config(&settings.services_path);
     let engine = admin::templates::AdminTemplateEngine::new(&admin_dir)
         .map_err(|e| tracing::error!(error = %e, "Failed to initialize admin template engine"))
         .ok()?
-        .with_branding(branding);
+        .with_branding(branding)
+        .with_dashboard(dashboard);
     Some(SsrRouters {
         bridge_auth: admin::bridge_auth_ssr_router(Arc::clone(&db.read), engine.clone()),
         admin: admin::admin_ssr_router(

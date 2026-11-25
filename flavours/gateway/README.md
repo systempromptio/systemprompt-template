@@ -51,9 +51,14 @@ devices, governance, access control, sync, usage analytics) and the gateway
 pages (policies, routes, quotas, request and cost analytics). `/` redirects to
 the console: there is no public site. No MCP, plugin, skill or agent pages.
 
+The sidebar, the home cards and the landing page come from
+`flavours/gateway/services/web/config/dashboard.yaml`, which overrides
+`services/web/config/dashboard.yaml`. Naming an item whose page this
+flavour does not compile refuses boot with the console feature it needs.
+
 ## CLI groups
 
-`admin`, `analytics`, `cloud`, `core`, `infra`, `plugins`, `web`. The
+`admin`, `analytics`, `build`, `cloud`, `core`, `infra`, `plugins`, `web`. The
 marketplace and MCP subcommands and `admin agents` are not compiled in.
 
 ## Configuration

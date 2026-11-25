@@ -1,27 +1,24 @@
 {{!--
-  One sidebar link that owns sub-pages. `leaf` is the page id of the link's
-  own page, `child` the id of the record pages beneath it. On a child page the
-  link takes the expanded ancestor state and the open record is drawn under it,
-  named from the last breadcrumb, so the reader sees where they are and the
-  way back in one glance.
+  One sidebar link, from a console dashboard nav item. `item.leaf` is the
+  page id of the link's own page, `item.child` / `item.child2` the ids of
+  the record pages beneath it. On a child page the link takes the expanded
+  ancestor state and the open record is drawn under it, named from the last
+  breadcrumb, so the reader sees where they are and the way back in one
+  glance.
 
-    {{#> nav-item href="/admin/users" text="Users" leaf="users" child="user-detail" page=page}}
-      {{#*inline "nav_icon"}}<svg …></svg>{{/inline}}
-    {{/nav-item}}
-
-  `text`, not `label`: a partial hash parameter shadows the same name on every
-  breadcrumb iterated inside the child branch. Static labels containing HTML
-  entities use the nav_text inline partial to avoid escaping hash literals twice.
+    {{> nav-item item=this page=@root.page}}
 --}}
-<a href="{{href}}"{{#if child2}}{{navState page leaf child child2}}{{else}}{{navState page leaf child}}{{/if}}{{#if scope_nav}} data-scope-nav{{/if}}>
-    {{#> nav_icon}}{{/nav_icon}}
-    {{#> nav_text}}{{text}}{{/nav_text}}
+<a href="{{item.href}}"{{navState page item.leaf item.child item.child2}}{{#if item.scope_nav}} data-scope-nav{{/if}}>
+    {{{item.icon}}}
+    {{item.text}}
+    {{#if item.attention}}{{#if @root.access_attention}}<span class="sp-nav-attention" title="{{@root.access_attention}} entities where code and this database disagree">{{@root.access_attention}}<span class="sp-u-sr-only"> entities need review</span></span>{{/if}}{{/if}}
 </a>
 {{#*inline "nav_child"}}
 <div class="sp-nav-branch">
-    <a class="sp-nav-child is-active" href="" aria-current="page" title="{{#each breadcrumbs}}{{#if @last}}{{this.label}}{{/if}}{{/each}}">
-        <span class="sp-nav-child__text">{{#each breadcrumbs}}{{#if @last}}{{this.label}}{{/if}}{{/each}}</span>
+    <a class="sp-nav-child is-active" href="" aria-current="page" title="{{#each @root.breadcrumbs}}{{#if @last}}{{this.label}}{{/if}}{{/each}}">
+        <span class="sp-nav-child__text">{{#each @root.breadcrumbs}}{{#if @last}}{{this.label}}{{/if}}{{/each}}</span>
     </a>
 </div>
 {{/inline}}
-{{#if (eq page child)}}{{> nav_child}}{{else}}{{#if child2}}{{#if (eq page child2)}}{{> nav_child}}{{/if}}{{/if}}{{/if}}
+{{#if item.child}}{{#if (eq page item.child)}}{{> nav_child}}{{/if}}{{/if}}
+{{#if item.child2}}{{#if (eq page item.child2)}}{{> nav_child}}{{/if}}{{/if}}

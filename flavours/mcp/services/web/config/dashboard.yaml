@@ -1,0 +1,43 @@
+# Console dashboard (mcp flavour): the landing page, the home cards above the
+# overview figures, and the sidebar. Items are nav item ids from the console's
+# registry (extensions/web/admin/src/dashboard/registry/); an id whose page
+# this build does not compile refuses boot. Unknown keys are refused.
+landing: overview
+home:
+  - item: mcp_servers
+    title: "Servers"
+    note: "The MCP servers this instance hosts."
+  - item: sessions
+    title: "Tool calls"
+    note: "Sessions and the tool calls inside them."
+  - item: governance
+    title: "Denied calls"
+    note: "Tool calls the policy chain refused."
+  - item: plugins
+    title: "Plugins"
+    note: "Installable bundles of skills and servers."
+  - item: skills
+    title: "Skills"
+    note: "Every skill the marketplaces carry."
+  - item: access_control
+    title: "Access control"
+    note: "Who may use which server, plugin and skill."
+nav:
+  - id: activity
+    title: "Activity"
+    items: [overview, analytics, requests, sessions, conversations]
+  - id: platform
+    title: "MCP"
+    items: [mcp_servers, plugins, skills, marketplaces, analysis_versions]
+  - id: governance
+    title: "Governance"
+    items: [governance, approvals, secrets, gateway, gateway_policies, quotas]
+  - id: people
+    title: "People & access"
+    items: [users, groups, projects, roles, access_control, devices]
+  - id: developer
+    title: "Platform"
+    items: [sync, configuration, lifecycle, observability]
+  - id: account
+    title: "Account"
+    items: [profile, history, settings, connect, connectors]

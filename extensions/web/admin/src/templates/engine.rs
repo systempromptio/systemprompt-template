@@ -11,6 +11,7 @@ use serde::Serialize;
 use thiserror::Error;
 
 use super::helpers;
+use crate::dashboard::ConsoleDashboard;
 use systemprompt_web_shared::BrandingConfig;
 
 /// Errors raised while building or rendering the admin Handlebars engine.
@@ -58,6 +59,7 @@ type Result<T> = std::result::Result<T, AdminTemplateError>;
 pub struct AdminTemplateEngine {
     hbs: Arc<Handlebars<'static>>,
     branding: Option<BrandingConfig>,
+    dashboard: Arc<ConsoleDashboard>,
 }
 
 impl AdminTemplateEngine {
@@ -76,6 +78,7 @@ impl AdminTemplateEngine {
         Ok(Self {
             hbs: Arc::new(hbs),
             branding: None,
+            dashboard: Arc::default(),
         })
     }
 
@@ -88,6 +91,17 @@ impl AdminTemplateEngine {
     #[must_use]
     pub const fn branding(&self) -> Option<&BrandingConfig> {
         self.branding.as_ref()
+    }
+
+    #[must_use]
+    pub fn with_dashboard(mut self, dashboard: Arc<ConsoleDashboard>) -> Self {
+        self.dashboard = dashboard;
+        self
+    }
+
+    #[must_use]
+    pub fn dashboard(&self) -> &ConsoleDashboard {
+        &self.dashboard
     }
 
     fn register_partials_recursive(

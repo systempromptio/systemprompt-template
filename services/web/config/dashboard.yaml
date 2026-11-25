@@ -1,0 +1,46 @@
+# Console dashboard (full flavour, every page grouped): the landing page, the home cards above the
+# overview figures, and the sidebar. Items are nav item ids from the console's
+# registry (extensions/web/admin/src/dashboard/registry/); an id whose page
+# this build does not compile refuses boot. Unknown keys are refused.
+landing: overview
+home:
+  - item: analytics
+    title: "Spend"
+    note: "Cost by person, project and model."
+  - item: requests
+    title: "Requests"
+    note: "Every model call through the gateway."
+  - item: mcp_servers
+    title: "MCP servers"
+    note: "The servers this instance hosts."
+  - item: by_person
+    title: "Agents"
+    note: "Agent activity, person by person."
+  - item: governance
+    title: "Audit"
+    note: "Every decision the policy chain took."
+  - item: docs
+    title: "Content"
+    note: "The published site and its documentation."
+nav:
+  - id: activity
+    title: "AI activity"
+    items: [overview, analytics, by_person]
+  - id: people
+    title: "People & access"
+    items: [users, groups, projects, roles, access_control, devices]
+  - id: analysis
+    title: "Analysis"
+    items: [analysis_conversations, analysis_skills, analysis_reports, analysis_versions]
+  - id: governance
+    title: "Governance"
+    items: [governance, approvals, secrets, quotas, gateway_policies]
+  - id: platform
+    title: "Platform"
+    items: [marketplaces, plugins, skills, mcp_servers, gateway, sync, configuration, lifecycle, observability]
+  - id: account
+    title: "Account"
+    items: [profile, history, settings, connect, connectors, docs]
+  - id: developer
+    title: "Developer"
+    items: [requests, sessions, conversations, traces, tools]

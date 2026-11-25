@@ -5,6 +5,7 @@
 use serde::Serialize;
 use systemprompt_web_shared::{BrandingConfig, RankTier, UserId};
 
+use crate::dashboard::{NavItemView, NavSectionView};
 use crate::numeric;
 use crate::types::{MarketplaceContext, UserContext};
 
@@ -86,6 +87,28 @@ pub(crate) struct BrandingShell<'a> {
 }
 
 #[derive(Debug, Serialize)]
+struct NavSectionShell<'a> {
+    id: &'a str,
+    title: &'a str,
+    items: Vec<&'a NavItemView>,
+}
+
+fn visible_nav(nav: &[NavSectionView], is_console: bool) -> Vec<NavSectionShell<'_>> {
+    nav.iter()
+        .map(|section| NavSectionShell {
+            id: section.id(),
+            title: section.title(),
+            items: section
+                .items()
+                .iter()
+                .filter(|item| is_console || !item.console())
+                .collect(),
+        })
+        .filter(|section| !section.items.is_empty())
+        .collect()
+}
+
+#[derive(Debug, Serialize)]
 pub(crate) struct PageShell<'a, T> {
     #[serde(skip_serializing_if = "Option::is_none")]
     branding: Option<&'a BrandingConfig>,
@@ -107,6 +130,7 @@ pub(crate) struct PageShell<'a, T> {
     // Why: the sidebar's count of access-control entities where code and the
     // database disagree and nobody has decided yet. Console viewers only.
     access_attention: usize,
+    nav_sections: Vec<NavSectionShell<'a>>,
     #[serde(flatten)]
     page: &'a T,
 }
@@ -114,6 +138,7 @@ pub(crate) struct PageShell<'a, T> {
 impl<'a, T: Serialize> PageShell<'a, T> {
     pub(crate) fn new(
         branding: Option<&'a BrandingConfig>,
+        nav: &'a [NavSectionView],
         user_ctx: &'a UserContext,
         mkt_ctx: &'a MarketplaceContext,
         page_id: Option<&str>,
@@ -139,6 +164,7 @@ impl<'a, T: Serialize> PageShell<'a, T> {
             } else {
                 0
             },
+            nav_sections: visible_nav(nav, user_ctx.is_console),
             page,
         }
     }

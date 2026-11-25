@@ -1,0 +1,31 @@
+# Console dashboard (site flavour): the landing page, the home cards above the
+# overview figures, and the sidebar. Items are nav item ids from the console's
+# registry (extensions/web/admin/src/dashboard/registry/); an id whose page
+# this build does not compile refuses boot. Unknown keys are refused.
+landing: overview
+home:
+  - item: docs
+    title: "Content"
+    note: "The published site and its documentation."
+  - item: analytics
+    title: "Traffic"
+    note: "Who reads what, and from where."
+  - item: configuration
+    title: "Publishing"
+    note: "The configuration the site is published from."
+nav:
+  - id: activity
+    title: "Traffic"
+    items: [overview, analytics, sessions, conversations]
+  - id: governance
+    title: "Governance"
+    items: [governance, approvals, secrets]
+  - id: people
+    title: "People & access"
+    items: [users, groups, projects, roles, access_control, devices]
+  - id: platform
+    title: "Platform"
+    items: [sync, configuration, lifecycle, observability]
+  - id: account
+    title: "Account"
+    items: [profile, history, settings, docs]

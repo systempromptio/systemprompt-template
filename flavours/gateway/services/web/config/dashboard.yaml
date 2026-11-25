@@ -1,0 +1,40 @@
+# Console dashboard (gateway flavour): the landing page, the home cards above the
+# overview figures, and the sidebar. Items are nav item ids from the console's
+# registry (extensions/web/admin/src/dashboard/registry/); an id whose page
+# this build does not compile refuses boot. Unknown keys are refused.
+landing: overview
+home:
+  - item: analytics
+    title: "Spend"
+    note: "Cost by person, project and model."
+  - item: requests
+    title: "Requests"
+    note: "Every model call through the gateway."
+  - item: gateway
+    title: "Models"
+    note: "Providers and routes the gateway serves."
+  - item: gateway_policies
+    title: "Policies"
+    note: "The rules each request is checked against."
+  - item: quotas
+    title: "Quotas"
+    note: "Budgets and their current windows."
+  - item: governance
+    title: "Audit"
+    note: "Every decision the policy chain took."
+nav:
+  - id: activity
+    title: "Gateway"
+    items: [overview, analytics, requests, sessions, conversations]
+  - id: governance
+    title: "Policy"
+    items: [gateway, gateway_policies, quotas, governance, approvals, secrets]
+  - id: people
+    title: "People & access"
+    items: [users, groups, projects, roles, access_control, devices]
+  - id: platform
+    title: "Platform"
+    items: [sync, configuration, lifecycle, observability]
+  - id: account
+    title: "Account"
+    items: [profile, history, settings]

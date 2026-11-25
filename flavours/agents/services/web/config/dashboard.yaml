@@ -1,0 +1,43 @@
+# Console dashboard (agents flavour): the landing page, the home cards above the
+# overview figures, and the sidebar. Items are nav item ids from the console's
+# registry (extensions/web/admin/src/dashboard/registry/); an id whose page
+# this build does not compile refuses boot. Unknown keys are refused.
+landing: overview
+home:
+  - item: by_person
+    title: "Agents"
+    note: "Agent activity, person by person."
+  - item: traces
+    title: "Runs"
+    note: "Every agent run, step by step."
+  - item: conversations
+    title: "Conversations"
+    note: "What everyone has been asking."
+  - item: traces
+    title: "Traces"
+    note: "Latency and failures across a run."
+  - item: tools
+    title: "Tools"
+    note: "Every tool result, from every client."
+nav:
+  - id: activity
+    title: "Agents"
+    items: [overview, analytics, by_person, conversations, sessions, requests]
+  - id: analysis
+    title: "Analysis"
+    items: [analysis_conversations, analysis_skills, analysis_reports, analysis_versions]
+  - id: developer
+    title: "Runs"
+    items: [traces, tools]
+  - id: platform
+    title: "Platform"
+    items: [mcp_servers, plugins, skills, marketplaces, sync, configuration, lifecycle, observability]
+  - id: governance
+    title: "Governance"
+    items: [governance, approvals, secrets, gateway, gateway_policies, quotas]
+  - id: people
+    title: "People & access"
+    items: [users, groups, projects, roles, access_control, devices]
+  - id: account
+    title: "Account"
+    items: [profile, history, settings, connect, connectors]

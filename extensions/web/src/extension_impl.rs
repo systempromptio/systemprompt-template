@@ -18,6 +18,7 @@ use systemprompt::manifest::ConfigView;
 use systemprompt::manifest::profile::ProfileView;
 use systemprompt::manifest::services::InstallServicesView;
 use systemprompt::models::auth::DynRequestAuthenticator;
+use systemprompt_web_admin::dashboard::ConsoleDashboard;
 use systemprompt_web_admin::env::{AdminEnv, AdminEnvParts};
 #[cfg(feature = "gateway")]
 use systemprompt_web_admin::gateway_entitlement::RouteEntitlementGuard;
@@ -133,11 +134,18 @@ impl Extension for WebExtension {
                     git_sync: r.git_source_sync().ok(),
                 }))
             })
+            .provide::<Arc<ConsoleDashboard>, _>(|r: &Resolved<'_>| {
+                let settings = r.get::<Arc<WebSettings>>()?;
+                ConsoleDashboard::load(&settings.services_path)
+                    .map(Arc::new)
+                    .map_err(|e| ProvideError::Failed(Box::new(e)))
+            })
             .provide_after_governance::<Arc<WebRuntime>, _>(|r: &Resolved<'_>| {
                 let db = DbHandles::resolve(r)?;
                 let settings = r.get::<Arc<WebSettings>>()?;
                 let env = r.get::<AdminEnv>()?;
-                Ok(Arc::new(WebRuntime::build(&db, &settings, &env)))
+                let dashboard = r.get::<Arc<ConsoleDashboard>>()?;
+                Ok(Arc::new(WebRuntime::build(&db, &settings, &env, dashboard)))
             })
             .routes(route_set());
         crate::admin::authz::contribute_subject_attributes(c);

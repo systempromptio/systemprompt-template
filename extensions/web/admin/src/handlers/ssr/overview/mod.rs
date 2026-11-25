@@ -7,6 +7,9 @@
 //! overview never becomes a place to read numbers off rather than a place to
 //! start from.
 //!
+//! The home cards above the figures, and the landing page `/admin` itself
+//! redirects to when it is not this one, come from the console dashboard.
+//!
 //! A non-console viewer is redirected to their profile rather than refused:
 //! every page this shell offers them would refuse them anyway, so a 403 here
 //! would be a dead end where a redirect is a door.
@@ -23,6 +26,7 @@ use axum::response::{IntoResponse, Redirect, Response};
 use serde::Deserialize;
 use sqlx::PgPool;
 
+use crate::dashboard::HomeCardView;
 use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -39,6 +43,13 @@ pub(crate) struct OverviewQuery {
     pub preset: Option<String>,
 }
 
+#[derive(Debug, serde::Serialize)]
+struct OverviewWithHome<'a, P> {
+    #[serde(flatten)]
+    page: P,
+    home: &'a [HomeCardView],
+}
+
 pub(crate) async fn overview_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -49,10 +60,17 @@ pub(crate) async fn overview_page(
     if !user_ctx.is_console {
         return Ok(Redirect::to("/admin/profile").into_response());
     }
+    let dashboard = engine.dashboard();
+    if dashboard.landing() != "/admin" {
+        return Ok(Redirect::to(dashboard.landing()).into_response());
+    }
 
     let range = OverviewRange::from_query(query.preset.as_deref());
     let loaded = data::load_overview(&pool, range).await;
-    let page = view::overview_page(range, &loaded);
+    let page = OverviewWithHome {
+        page: view::overview_page(range, &loaded),
+        home: dashboard.home(),
+    };
 
     Ok(super::render_typed_page(
         &engine, "overview", &page, &user_ctx, &mkt_ctx,

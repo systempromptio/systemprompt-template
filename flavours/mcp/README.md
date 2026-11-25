@@ -47,6 +47,11 @@ The image uses the `slim` runtime. It needs one provider key (`ANTHROPIC_API_KEY
 servers, plugins, skills, marketplace, connectors, bridge distribution). `/`
 redirects to the console. No agent, conversation or trace pages.
 
+The sidebar, the home cards and the landing page come from
+`flavours/mcp/services/web/config/dashboard.yaml`, which overrides
+`services/web/config/dashboard.yaml`. Naming an item whose page this
+flavour does not compile refuses boot with the console feature it needs.
+
 ## CLI groups
 
 `admin`, `analytics`, `cloud`, `core`, `infra`, `plugins`, `web`, with the MCP
