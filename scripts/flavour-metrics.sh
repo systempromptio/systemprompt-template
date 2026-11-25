@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Measure flavours: image, deploy and developer-loop numbers.
 #   scripts/flavour-metrics.sh FLAVOUR|all [--image] [--dev] [--bench]
-#       [--compare OLD.json] [--keep]
+#       [--compare OLD.json] [--keep] [--no-clean]
 # --image  stripped binary bytes, image bytes (uncompressed, gzip), layers,
 #          crates in the dependency closure, clean and cached image build
 #          seconds, migrate seconds on a fresh database, boot-to-healthy
 #          seconds and idle RSS 30 s after healthy (the default mode)
+# --no-clean  with --image: skip the clean compile (keeps the previous
+#          build.clean_seconds) and time only the cached image build
 # --bench  with --image: hey p50/p99 against /api/v1/health
 # --dev    cargo check and clippy (--all-targets -D warnings), each clean (a
 #          fresh CARGO_TARGET_DIR) and incremental after touching src/lib.rs and
@@ -18,15 +20,16 @@
 # Writes target/flavour-metrics/<flavour>.json and target/flavour-metrics/table.md.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
-selection="${1:?usage: flavour-metrics.sh FLAVOUR|all [--image] [--dev] [--bench] [--compare OLD.json] [--keep]}"
+selection="${1:?usage: flavour-metrics.sh FLAVOUR|all [--image] [--dev] [--bench] [--compare OLD.json] [--keep] [--no-clean]}"
 shift
-do_image=false do_dev=false do_bench=false keep=false compare=""
+do_image=false do_dev=false do_bench=false keep=false compare="" clean=true
 while [ $# -gt 0 ]; do
     case "$1" in
         --image) do_image=true; shift ;;
         --dev) do_dev=true; shift ;;
         --bench) do_bench=true; do_image=true; shift ;;
         --keep) keep=true; shift ;;
+        --no-clean) clean=false; shift ;;
         --compare) compare="${2:?}"; shift 2 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
@@ -71,9 +74,11 @@ core_rev() {
 measure_image() {
     local flavour="$1" image="systemprompt-template:$1" features
     features="$(flavour_py features "$flavour")"
-    echo "  image build (clean compile: the flavour's target cache is reset)"
-    timed build.reset bash scripts/flavour-build.sh "$flavour" --target cache-reset -- --no-cache
-    timed build.clean_seconds bash scripts/flavour-build.sh "$flavour" --tag "$image" -- --no-cache
+    if [ "$clean" = true ]; then
+        echo "  image build (clean compile: the flavour's target cache is reset)"
+        timed build.reset bash scripts/flavour-build.sh "$flavour" --target cache-reset -- --no-cache
+        timed build.clean_seconds bash scripts/flavour-build.sh "$flavour" --tag "$image" -- --no-cache
+    fi
     timed build.cached_seconds bash scripts/flavour-build.sh "$flavour" --tag "$image"
     local total=0 size
     while IFS= read -r bin; do
@@ -98,7 +103,9 @@ measure_image() {
     if [ "$(flavour_get "$flavour" requires_ai_key)" = true ]; then ai_key=sk-ant-metrics-placeholder; fi
     printf 'ADMIN_EMAIL=metrics@example.invalid\nPOSTGRES_PASSWORD=metrics\nANTHROPIC_API_KEY=%s\nHTTP_PORT=0\nFLAVOUR=%s\nIMAGE=%s\n' \
         "$ai_key" "$flavour" "$image" > "$env_file"
-    local compose=(docker compose --env-file "$env_file" -p "$project" -f docker-compose.yml)
+    local base_args=(--env-file "$env_file" -p "$project" -f docker-compose.yml)
+    flavour_isolated_override "$work/isolated.yml" "$image" app "${base_args[@]}"
+    local compose=(docker compose "${base_args[@]}" -f "$work/isolated.yml")
     "${compose[@]}" up -d --wait postgres > /dev/null
     local start; start="$(now)"
     "${compose[@]}" up -d app > /dev/null
@@ -106,15 +113,23 @@ measure_image() {
     port="$("${compose[@]}" port app 8080 | head -1 | sed 's/.*://')"
     base="http://localhost:$port"
     for _ in $(seq 1 300); do
+        if [ "$(docker inspect -f '{{.RestartCount}}' "$("${compose[@]}" ps -q app)")" -gt 0 ]; then break; fi
         if curl -fs --max-time 2 "$base/api/v1/health" 2>/dev/null | jq -e '.status == "healthy"' > /dev/null 2>&1; then healthy=true; break; fi
         sleep 1
     done
     if [ "$healthy" = true ]; then
         put deploy.boot_to_healthy_seconds "$(since "$start")"
         "${compose[@]}" exec -T postgres psql -U systemprompt -d postgres -qc 'CREATE DATABASE sp_metrics_fresh' > /dev/null
-        timed deploy.migrate_fresh_seconds "${compose[@]}" exec -T \
-            -e SYSTEMPROMPT_DATABASE_URL=postgres://systemprompt:metrics@postgres:5432/sp_metrics_fresh \
-            app /app/bin/systemprompt infra db migrate
+        timed deploy.migrate_fresh_seconds "${compose[@]}" exec -T app /app/bin/systemprompt \
+            --database-url postgres://systemprompt:metrics@postgres:5432/sp_metrics_fresh infra db migrate
+        local second; second="$(now)"
+        "${compose[@]}" restart app > /dev/null
+        healthy=false
+        for _ in $(seq 1 300); do
+            if curl -fs --max-time 2 "$base/api/v1/health" 2>/dev/null | jq -e '.status == "healthy"' > /dev/null 2>&1; then healthy=true; break; fi
+            sleep 1
+        done
+        if [ "$healthy" = true ]; then put deploy.second_boot_to_healthy_seconds "$(since "$second")"; else put deploy.second_boot_to_healthy_seconds null; fi
         sleep 30
         put deploy.idle_rss_bytes "$(docker stats --no-stream --format '{{.MemUsage}}' "$("${compose[@]}" ps -q app)" | cut -d/ -f1 | to_bytes)"
         if [ "$do_bench" = true ]; then
@@ -129,7 +144,7 @@ measure_image() {
         fi
     else
         put deploy.boot_to_healthy_seconds null
-        put_str deploy.error "not healthy within 300 s"
+        put_str deploy.error "not healthy: $("${compose[@]}" logs --no-color app 2>&1 | grep -m1 -E 'Error|ERROR' | cut -c1-400)"
     fi
     "${compose[@]}" down -v --remove-orphans > /dev/null 2>&1 || true
 }

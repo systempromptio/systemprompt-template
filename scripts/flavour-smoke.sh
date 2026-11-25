@@ -84,9 +84,8 @@ record() {
     printf '%-4s %s %s\n' "$2" "$1" "${3:+($3)}"
 }
 set_image() {
-    jq -n --arg service "$app_service" --arg image "$1" '
-        {services: {($service): ({image: $image}
-            + (if $service == "systemprompt" then {ports: ["127.0.0.1::8080"]} else {} end))}}' > "$work/image.yml"
+    flavour_isolated_override "$work/image.yml" "$1" "$app_service" \
+        --env-file "$work/smoke.env" -p "$project" -f "$compose_file"
 }
 http_status() { curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$@" || true; }
 wait_ready() {
@@ -94,6 +93,10 @@ wait_ready() {
     port="$("${compose[@]}" port "$app_service" 8080 | head -1 | tr -d '\r' | sed 's/.*://')"
     base="http://${SMOKE_HOST:-localhost}:$port"
     for _ in $(seq 1 120); do
+        if [ "$(docker inspect -f '{{.RestartCount}}' "$("${compose[@]}" ps -q "$app_service")" 2>/dev/null || echo 0)" -gt 0 ]; then
+            echo "$image exited during boot" >&2
+            return 1
+        fi
         # Why: the early-bind listener answers 200 {"status":"starting"} while
         # the server is still bootstrapping, so a bare 200 proves nothing.
         if curl --max-time 3 -fs "$base/api/v1/health" 2>/dev/null | jq -e '.status == "healthy"' > /dev/null 2>&1 \
@@ -191,6 +194,16 @@ while IFS= read -r server; do
         record "mcp tools/list $server" fail "$(printf '%s' "$tools" | tail -1)"
     fi
 done < <(flavour_get "$flavour" smoke.mcp_servers)
+
+landing="$(flavour_get "$flavour" smoke.root_redirect 2>/dev/null || true)"
+if [ -n "$landing" ]; then
+    root="$(curl -s --max-time 10 -D - "$base/" || true)"
+    if printf '%s' "$root" | grep -qiE "^location: $landing\s*$|http-equiv=\"refresh\" content=\"0; url=$landing\""; then
+        record "/ sends to $landing" pass ""
+    else
+        record "/ sends to $landing" fail "$(printf '%s' "$root" | head -1 | tr -d '\r')"
+    fi
+fi
 
 code="$(http_status "$base/v1/models")"
 if [ "$(flavour_get "$flavour" smoke.models_endpoint)" = true ]; then
