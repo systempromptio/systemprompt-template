@@ -1,11 +1,9 @@
 //! Server-rendered admin dashboard router.
 
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::Router;
 
-use systemprompt::config::{AppPaths, ProfileBootstrap};
 
 use super::pools::DbHandles;
 use systemprompt_web_site::config_loader;
@@ -20,9 +18,13 @@ pub(crate) struct SsrRouters {
     pub bridge_auth: Router,
 }
 
-pub(crate) fn build(db: &DbHandles, sso_deps: admin::AdfsDeps) -> Option<SsrRouters> {
-    let admin_dir = admin_template_dir()?;
-    let branding = config_loader::branding_config();
+pub(crate) fn build(
+    db: &DbHandles,
+    sso_deps: admin::AdfsDeps,
+    settings: &crate::WebSettings,
+) -> Option<SsrRouters> {
+    let admin_dir = settings.admin_template_dir.clone();
+    let branding = config_loader::branding_config(&settings.services_path);
     let engine = admin::templates::AdminTemplateEngine::new(&admin_dir)
         .map_err(|e| tracing::error!(error = %e, "Failed to initialize admin template engine"))
         .ok()?
@@ -37,18 +39,4 @@ pub(crate) fn build(db: &DbHandles, sso_deps: admin::AdfsDeps) -> Option<SsrRout
             db.owner.clone(),
         ),
     })
-}
-
-fn admin_template_dir() -> Option<PathBuf> {
-    let profile = ProfileBootstrap::get()
-        .map_err(|e| tracing::error!(error = %e, "Profile unavailable for admin template dir"))
-        .ok()?;
-    let paths = AppPaths::from_profile(
-        &profile.paths,
-        profile.path_resolution(),
-        systemprompt::loader::ServicesRootBootstrap::get().map(|root| root.path.as_path()),
-    )
-    .map_err(|e| tracing::error!(error = %e, "App paths unavailable for admin template dir"))
-    .ok()?;
-    Some(paths.storage().files().join("admin"))
 }

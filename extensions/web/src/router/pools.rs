@@ -1,9 +1,11 @@
-//! Database handle extraction from the type-erased extension context.
+//! The database handles and system owner the web routers are built from,
+//! resolved in the member's provide fn.
 
 use std::sync::Arc;
 
 use systemprompt::database::{Database, DbPool};
-use systemprompt::extension::prelude::ExtensionContext;
+use systemprompt::extension::prelude::{MissingDependency, Resolved};
+use systemprompt::manifest::services::SystemAdmin;
 use systemprompt::oauth::SessionCreationService;
 use systemprompt::prelude::PgPool;
 use systemprompt::users::{SessionRepository, UserService};
@@ -18,9 +20,9 @@ pub(crate) struct DbHandles {
 }
 
 impl DbHandles {
-    pub(crate) fn from_context(ctx: &dyn ExtensionContext) -> Option<Self> {
-        let db_handle = ctx.database();
-        let db = db_handle.as_any().downcast_ref::<Database>()?;
+    pub(crate) fn resolve(r: &Resolved<'_>) -> Result<Self, MissingDependency> {
+        let database = r.get::<DbPool>()?;
+        let db = database.as_ref();
         let read = db.pool();
         let write = db.write_pool();
         let db = Arc::new(Database::from_pools(
@@ -31,7 +33,7 @@ impl DbHandles {
             read,
             write,
             db,
-            owner: ctx.system_owner_id(),
+            owner: r.get::<SystemAdmin>()?.id().clone(),
         })
     }
 }

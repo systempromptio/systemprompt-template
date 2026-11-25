@@ -12,7 +12,7 @@ publish = false
 # extension_migrations!() expands to ::systemprompt_extension paths; machete
 # cannot see macro-expansion usage.
 [package.metadata.cargo-machete]
-ignored = ["systemprompt-extension", "inventory"]
+ignored = ["systemprompt-extension"]
 
 [lints]
 workspace = true
@@ -22,12 +22,6 @@ workspace = true
 # Audit: uses ai, database, extension, loader, models, traits — requires `full`
 # (ai + loader are gated by the `full` feature).
 systemprompt = { workspace = true, features = ["reference"] }
-# Link the Core extensions declared by `WebExtension::dependencies()` so their
-# inventory registrations and migrations are present in the final binary.
-systemprompt-security = { workspace = true }
-systemprompt-users = { workspace = true }
-systemprompt-content = { workspace = true }
-systemprompt-marketplace = { workspace = true }
 
 # Local sub-crates
 systemprompt-web-shared = { workspace = true }
@@ -39,10 +33,10 @@ systemprompt-web-jobs = { workspace = true }
 # Extension framework — direct dep so the `extension_migrations!()` macro
 # expansion (`::systemprompt_extension::Migration`) resolves.
 systemprompt-extension = { workspace = true }
-inventory = { workspace = true }
 
 # Web framework
 axum = { workspace = true }
+tower = { workspace = true }
 
 # Utilities
 tracing = { workspace = true }

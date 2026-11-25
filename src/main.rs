@@ -1,12 +1,17 @@
 //! Entry point for the systemprompt.io template binary.
 //!
-//! Thin by design: every capability is registered at compile time by the
-//! extension crates under `extensions/`, and this delegates to the published
-//! `systemprompt` core runtime.
+//! The binary is the reference composition with the template's members added
+//! with install standing: the web extension and the `systemprompt` MCP
+//! toolset, which the binary hosts as `admin mcp serve --server systemprompt`.
 
-use systemprompt_template as _;
+use std::process::ExitCode;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    Box::pin(systemprompt_template::cli::run()).await
+use systemprompt_mcp_agent::SystempromptMcpExtension;
+use systemprompt_web_extension::WebExtension;
+
+fn main() -> Result<ExitCode, systemprompt::RunError> {
+    systemprompt::reference()
+        .with(WebExtension)
+        .with(SystempromptMcpExtension)
+        .run()
 }

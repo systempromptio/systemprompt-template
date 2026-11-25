@@ -19,7 +19,7 @@
 // Why: The admin template engine needs the same branding the server builds it
 // with; the HTTP contract suite would otherwise render every page against a
 // different context than production.
-pub use systemprompt_web_site::config_loader::branding_config;
+pub use systemprompt_web_site::config_loader::{self, branding_config};
 pub mod extension;
 mod extension_impl;
 mod router;
@@ -31,7 +31,7 @@ pub use systemprompt_web_content::{api, repository, services};
 pub use systemprompt_web_jobs as jobs;
 pub use systemprompt_web_shared as shared;
 pub use systemprompt_web_shared::{
-    BrandingConfig, config, config_errors, error, html_escape, models,
+    BrandingConfig, WebSettings, config, config_errors, error, html_escape, models,
 };
 pub use systemprompt_web_site::{
     assets, docs, extenders, homepage, navigation, partials, skills_page,

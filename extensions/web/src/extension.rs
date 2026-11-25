@@ -1,65 +1,42 @@
-//! The `WebExtension` value and its lazily-loaded configuration handles.
+//! The `WebExtension` composition member and the configuration it loads from
+//! the profile's services tree.
 //!
-//! Config loading lives in `systemprompt_web_site::config_loader`, beside
-//! the types it deserialises; this type only fronts it for the `Extension`
-//! impl in `extension_impl`.
+//! Config loading lives in `systemprompt_web_site::config_loader`, beside the
+//! types it deserialises; every read takes the services directory from the
+//! member's [`WebSettings`], so nothing is cached process-wide.
 
 use std::sync::Arc;
 
-use crate::SkillsPageConfig;
+use crate::WebSettings;
 use crate::config::BlogConfigValidated;
-use crate::homepage::HomepageConfig;
-use crate::navigation::NavigationConfig;
-use systemprompt_web_site::config_loader;
 
-use systemprompt::extension::prelude::*;
-
+/// The template's web member: schemas, jobs, content providers, governance
+/// providers and the web-root route set.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct WebExtension;
 
 impl WebExtension {
-    pub const PREFIX: &'static str = "web";
+    pub const ID: &'static str = "web";
 
     #[must_use]
     pub const fn new() -> Self {
         Self
     }
 
-    // Why: Backed by [`BlogConfigValidated::cached`], so every consumer sees the
-    // same load result; a load failure is logged and treated as "no config".
+    // Why: a load failure is logged and treated as "no config", so link
+    // generation and the content APIs run unconfigured rather than failing
+    // boot.
     #[must_use]
-    pub fn blog_config() -> Option<Arc<BlogConfigValidated>> {
-        match BlogConfigValidated::cached() {
+    pub fn blog_config(settings: &WebSettings) -> Option<Arc<BlogConfigValidated>> {
+        match BlogConfigValidated::load_for_services(&settings.services_path) {
             Ok(config) => config,
-            Err(message) => {
+            Err(errors) => {
                 tracing::error!(
-                    error = %message,
+                    error = %errors,
                     "Blog config error: link generation and content APIs will run unconfigured"
                 );
                 None
             },
         }
     }
-
-    #[must_use]
-    pub fn navigation_config() -> Option<Arc<NavigationConfig>> {
-        config_loader::navigation_config()
-    }
-
-    #[must_use]
-    pub fn homepage_config() -> Option<Arc<HomepageConfig>> {
-        config_loader::homepage_config()
-    }
-
-    #[must_use]
-    pub fn skills_page_config() -> Option<Arc<SkillsPageConfig>> {
-        config_loader::skills_page_config()
-    }
-
-    #[must_use]
-    pub fn adfs_config() -> Option<Arc<systemprompt_web_admin::AdfsConfig>> {
-        config_loader::adfs_config()
-    }
 }
-
-register_extension!(WebExtension);
