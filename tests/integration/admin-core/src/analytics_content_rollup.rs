@@ -11,7 +11,7 @@ use chrono::{Duration, Utc};
 use systemprompt_web_admin::repositories::analytics::content_rollup::aggregate_engagement_stats;
 
 use crate::fixtures::unique;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 pub async fn insert_content(pool: &sqlx::PgPool, id: &str, slug: &str, source_id: &str) {
     sqlx::query(

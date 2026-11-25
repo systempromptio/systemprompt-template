@@ -2,6 +2,7 @@
 //! first-class MCP server with a live, green state, never as something the
 //! person was "signed into automatically".
 
+use systemprompt::manifest::services::ServicesConfig;
 use systemprompt_web_admin::test_support::{Connection, connector_card};
 
 fn control_plane(entitled: bool) -> Connection {
@@ -35,7 +36,7 @@ fn control_plane(entitled: bool) -> Connection {
 
 #[test]
 fn an_admin_sees_the_control_plane_as_a_connected_server() {
-    let card = connector_card(&control_plane(true));
+    let card = connector_card(&ServicesConfig::default(), &control_plane(true));
     assert_eq!(card.monogram, "Sp");
     assert_eq!(card.kind, "Control plane");
     assert_eq!(card.status_label, "Connected");
@@ -51,7 +52,7 @@ fn an_admin_sees_the_control_plane_as_a_connected_server() {
 
 #[test]
 fn a_plain_user_is_told_the_control_plane_is_not_open_to_them() {
-    let card = connector_card(&control_plane(false));
+    let card = connector_card(&ServicesConfig::default(), &control_plane(false));
     assert_ne!(card.status_label, "Built in");
     assert_eq!(card.tone, "muted");
     assert!(!card.can_test);

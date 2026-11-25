@@ -271,9 +271,6 @@ mod util_ranges;
 mod util_svg_pure;
 
 #[cfg(test)]
-mod vertex_rate_card_routes;
-
-
 #[cfg(test)]
 mod ingestion_identity;
 

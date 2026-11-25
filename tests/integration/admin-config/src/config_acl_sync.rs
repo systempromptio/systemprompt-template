@@ -10,7 +10,8 @@
 use std::path::Path;
 
 use sqlx::PgPool;
-use systemprompt::governance::authz::{DASHBOARD_SOURCE, RegisteredEntities};
+use systemprompt::governance::authz::RegisteredEntities;
+use systemprompt_web_admin::authz::CONSOLE_SOURCE;
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, build_declared_set,
 };
@@ -24,7 +25,7 @@ use systemprompt_web_admin::repositories::access_control::sync::{SyncMode, apply
 use systemprompt_web_admin::repositories::config::rules_yaml_loader::parse_rules_doc;
 
 use crate::fixtures::{insert_acl_entity, unique, write_services_file};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 const RULES: &str = "access-control/rules.yaml";
 
@@ -78,7 +79,7 @@ async fn insert_only_adds_the_missing_and_leaves_everything_else() {
     let dir = tempfile::tempdir().expect("temp services dir");
     let server = unique("srv");
     write_services_file(dir.path(), RULES, &rules_yaml(&server, "india-devs"));
-    insert_rule(&db.pool, &server, "group", "uk", DASHBOARD_SOURCE).await;
+    insert_rule(&db.pool, &server, "group", "uk", CONSOLE_SOURCE).await;
 
     let set = declared(dir.path()).await;
     let outcome = apply_sync(&db.pool, &set, SyncMode::InsertOnly)
@@ -90,7 +91,7 @@ async fn insert_only_adds_the_missing_and_leaves_everything_else() {
     let rows = rule_rows(&db.pool, &server).await;
     assert!(
         rows.iter()
-            .any(|r| r.0 == "group" && r.1 == "uk" && r.3 == DASHBOARD_SOURCE)
+            .any(|r| r.0 == "group" && r.1 == "uk" && r.3 == CONSOLE_SOURCE)
     );
     assert!(
         rows.iter()
@@ -122,8 +123,8 @@ async fn overwrite_corrects_and_deletes_governed_rows_but_spares_user_and_undecl
     let other = unique("other");
     write_services_file(dir.path(), RULES, &rules_yaml(&server, "india-devs"));
     insert_rule(&db.pool, &server, "group", "uk", "yaml").await;
-    insert_rule(&db.pool, &server, "user", "someone", DASHBOARD_SOURCE).await;
-    insert_rule(&db.pool, &other, "group", "uk", DASHBOARD_SOURCE).await;
+    insert_rule(&db.pool, &server, "user", "someone", CONSOLE_SOURCE).await;
+    insert_rule(&db.pool, &other, "group", "uk", CONSOLE_SOURCE).await;
     sqlx::query(
         "UPDATE access_control_entities SET default_included = true
          WHERE entity_type = 'mcp_server' AND entity_id = $1",

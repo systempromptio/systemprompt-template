@@ -7,7 +7,7 @@ use systemprompt::identifiers::{ContextId, UserId};
 use systemprompt_web_admin::repositories::analysis::conversations::detail::find_conversation_facts;
 
 use crate::fixtures::{new_context_id, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn detail_keeps_required_fact_metrics_when_directory_and_judge_rows_are_absent() {

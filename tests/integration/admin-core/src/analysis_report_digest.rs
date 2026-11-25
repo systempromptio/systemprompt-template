@@ -13,7 +13,7 @@ use systemprompt_web_admin::repositories::analysis::reports::{
 };
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 struct Fact<'a> {
     context_id: &'a str,

@@ -1,10 +1,10 @@
 //! Consent state and grants are isolated by principal and provider.
 
 use crate::fixtures::{insert_user, unique, user_id};
-use crate::tempdb::TempDb;
 use systemprompt_web_admin::repositories::users::connector_credentials::{
     self as repo, EncryptedGrant,
 };
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn consent_is_single_use_and_bound_to_the_user_and_provider() {
@@ -261,7 +261,7 @@ async fn configured_provider_ids_preserve_accounts_and_single_use_consent() {
 
 #[tokio::test]
 async fn active_account_scope_uses_current_roles_and_rejects_inactive_accounts() {
-    use systemprompt::governance::policy::types::AccessScope;
+    use systemprompt::governance::policy::AccessScope;
     use systemprompt_web_admin::authz::account_scope;
     let Some(db) = TempDb::create().await else {
         return;

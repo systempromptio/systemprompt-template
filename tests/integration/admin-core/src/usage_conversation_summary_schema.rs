@@ -6,7 +6,7 @@ use systemprompt::extension::ExtensionRegistry;
 use systemprompt::database::{Database, install_extension_schemas_full};
 
 use crate::fixtures::{insert_user, unclaimed_email};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn existing_transcripts_gain_search_before_the_declarative_index() {

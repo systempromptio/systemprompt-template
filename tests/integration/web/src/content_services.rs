@@ -20,7 +20,7 @@ use systemprompt_web_shared::error::BlogError;
 use systemprompt_web_shared::models::{SearchRequest, UtmParams};
 
 use crate::fixtures::{content_params, link_params, source_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn content_service_creates_and_reads_back_by_string_id() {

@@ -15,7 +15,7 @@ use crate::fixtures::{
     RequestSpec, insert_context, insert_request, insert_session, insert_user, unclaimed_email,
     unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 // `ContextId::new_unchecked` panics on anything that is not a UUID v4, so
 // context ids here are minted as UUIDs rather than with the suite's readable

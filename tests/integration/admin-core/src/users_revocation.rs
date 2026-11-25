@@ -12,7 +12,7 @@ use systemprompt_web_admin::repositories::users::revocation::{
 };
 
 use crate::fixtures::{insert_session, insert_user, insert_user_full, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 async fn live_api_keys(pool: &sqlx::PgPool, user: &str) -> i64 {
     sqlx::query_scalar(

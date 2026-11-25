@@ -2,11 +2,11 @@
 //! other.
 
 use crate::fixtures::{insert_user, unique, user_id};
-use crate::tempdb::TempDb;
 use systemprompt_web_admin::repositories::users::connector_accounts as accounts;
 use systemprompt_web_admin::repositories::users::connector_credentials::{
     self as credentials, EncryptedGrant,
 };
+use template_test_common::TempDb;
 
 async fn connect(db: &TempDb, user: &str, provider: &str) -> i64 {
     let user = user_id(user);

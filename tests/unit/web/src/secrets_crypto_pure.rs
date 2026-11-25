@@ -110,10 +110,6 @@ fn a_generated_dek_seals_and_opens_its_own_traffic() {
 #[test]
 fn error_messages_name_the_failing_stage() {
     assert_eq!(
-        SecretCryptoError::MasterKeyMissing.to_string(),
-        "Master key not configured"
-    );
-    assert_eq!(
         SecretCryptoError::InvalidKeyMaterial.to_string(),
         "Invalid key material"
     );

@@ -2,9 +2,9 @@
 //! them.
 //!
 //! `UsageAnomalyJob`, `UsageDailyRollupJob` and `PluginUsageRetentionJob` are
-//! private to their crate — the scheduler reaches them through the inventory,
-//! and so does this suite, by name out of `extension_jobs()`. That is the same
-//! entry point production uses, so the SQL each job runs, the thresholds it
+//! reached the way the scheduler reaches them — by name out of the jobs
+//! the admitted web member contributes. That is the same entry point
+//! production uses, so the SQL each job runs, the thresholds it
 //! applies, and its re-run behaviour are all exercised rather than only the
 //! pure helpers beside them.
 //!
@@ -18,13 +18,11 @@ use sqlx::PgPool;
 use systemprompt::database::Database;
 use systemprompt::identifiers::{Actor, UserId};
 use systemprompt::traits::{Job, JobContext};
-use systemprompt_web_jobs::extension_jobs;
 
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
-// The scheduler finds jobs by name out of the inventory; so does this.
 fn job(name: &str) -> Arc<dyn Job> {
-    extension_jobs()
+    template_test_common::composition::member_jobs("web")
         .into_iter()
         .find(|j| j.name() == name)
         .unwrap_or_else(|| panic!("`{name}` is registered with the web extension"))

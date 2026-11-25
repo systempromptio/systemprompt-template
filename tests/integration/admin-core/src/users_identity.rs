@@ -6,7 +6,7 @@ use systemprompt_web_admin::repositories::users;
 use systemprompt_web_admin::types::{CreateUserRequest, UpdateUserRequest};
 
 use crate::fixtures::{insert_user, insert_user_full, set_department, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn create_request(user_id: &str, email: &str) -> CreateUserRequest {
     CreateUserRequest {

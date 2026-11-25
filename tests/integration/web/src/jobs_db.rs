@@ -14,7 +14,7 @@ use systemprompt_web_content::repository::ContentRepository;
 use systemprompt_web_jobs::ContentAnalyticsAggregationJob;
 
 use crate::fixtures::content_params;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn blog_source() -> SourceId {
     SourceId::new("blog".to_string())

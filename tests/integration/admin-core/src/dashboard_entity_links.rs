@@ -13,7 +13,7 @@ use systemprompt_web_admin::repositories::dashboard::conversation_analytics::{
 };
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn link<'a>(
     session_id: &'a str,

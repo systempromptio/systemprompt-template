@@ -16,7 +16,7 @@ use systemprompt_web_admin::repositories::scope::{Attribution, SubjectScope};
 use systemprompt_web_admin::util::time_range::{TimeRange, TimeRangePreset};
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn window(days_back: i64) -> TimeRange {
     let now = Utc::now();

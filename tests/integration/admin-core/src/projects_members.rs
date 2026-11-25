@@ -7,8 +7,8 @@ use systemprompt_web_admin::repositories::projects::members::{
 };
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
 use systemprompt_web_shared::ProjectId;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn a_manual_member_is_listed_with_its_source() {

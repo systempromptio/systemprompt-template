@@ -13,7 +13,7 @@ use crate::fixtures::{
     DecisionSpec, EventSpec, RequestSpec, insert_decision, insert_event, insert_request,
     insert_session, insert_user, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn resolve_trace_session_returns_none_for_an_unknown_id() {

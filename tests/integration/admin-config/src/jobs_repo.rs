@@ -3,7 +3,7 @@
 use systemprompt_web_admin::repositories::jobs::list_jobs;
 
 use crate::fixtures::unique;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 async fn insert_job(pool: &sqlx::PgPool, name: &str, enabled: bool) -> String {
     let id = unique("job");

@@ -16,7 +16,7 @@ use systemprompt_web_admin::types::access_control::{
 };
 
 use crate::fixtures::{AclRuleSpec, insert_acl_rule, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn allow_user(user_id: &str) -> AccessControlRuleInput {
     AccessControlRuleInput {

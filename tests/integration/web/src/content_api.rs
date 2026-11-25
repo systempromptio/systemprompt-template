@@ -29,7 +29,7 @@ use systemprompt_web_shared::models::{CampaignLink, RecordClickParams};
 use tower::ServiceExt as _;
 
 use crate::fixtures::{content_params, link_params};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 const BASE_URL: &str = "https://example.test";
 
@@ -791,10 +791,8 @@ async fn getting_an_article_that_does_not_exist_is_a_404() {
 
 #[tokio::test]
 async fn setting_a_session_issues_an_access_cookie_and_a_refresh_cookie() {
-    crate::jobs_context::install_config();
-
     let (headers, _) = systemprompt_web_content::api::auth::set_session(
-        HeaderMap::new(),
+        State(systemprompt_web_content::api::auth::CookieSecure(true)),
         axum::Json(systemprompt_web_content::api::auth::SetSessionRequest {
             access_token: "access-abc".to_owned(),
             expires_in: Some(120),
@@ -809,7 +807,10 @@ async fn setting_a_session_issues_an_access_cookie_and_a_refresh_cookie() {
         cookies[0]
             .starts_with("access_token=access-abc; Path=/; HttpOnly; SameSite=Lax; Max-Age=120")
     );
-    assert!(cookies[0].contains("; Secure"), "the test config is https");
+    assert!(
+        cookies[0].contains("; Secure"),
+        "a secure-cookie mount sets Secure"
+    );
     assert!(cookies[1].contains("refresh_token=refresh-xyz"));
     assert!(
         cookies[1].contains("Path=/api/public/auth"),
@@ -819,10 +820,8 @@ async fn setting_a_session_issues_an_access_cookie_and_a_refresh_cookie() {
 
 #[tokio::test]
 async fn a_session_with_no_refresh_token_issues_only_the_access_cookie() {
-    crate::jobs_context::install_config();
-
     let (headers, body) = systemprompt_web_content::api::auth::set_session(
-        HeaderMap::new(),
+        State(systemprompt_web_content::api::auth::CookieSecure(true)),
         axum::Json(systemprompt_web_content::api::auth::SetSessionRequest {
             access_token: "access-only".to_owned(),
             expires_in: None,
@@ -843,9 +842,10 @@ async fn a_session_with_no_refresh_token_issues_only_the_access_cookie() {
 
 #[tokio::test]
 async fn clearing_a_session_expires_both_cookies() {
-    crate::jobs_context::install_config();
-
-    let (headers, body) = systemprompt_web_content::api::auth::clear_session().await;
+    let (headers, body) = systemprompt_web_content::api::auth::clear_session(State(
+        systemprompt_web_content::api::auth::CookieSecure(true),
+    ))
+    .await;
 
     assert!(body.ok);
     let cookies = set_cookies(&headers);

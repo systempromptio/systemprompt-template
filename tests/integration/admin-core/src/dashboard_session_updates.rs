@@ -15,7 +15,7 @@ use systemprompt_web_admin::repositories::dashboard::usage_aggregations::{
 use systemprompt_web_admin::test_support::SessionAnalysis;
 
 use crate::fixtures::{SummarySpec, insert_summary, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn analysis() -> SessionAnalysis {
     SessionAnalysis {

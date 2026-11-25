@@ -37,8 +37,6 @@ mod link_repository;
 mod mcp_cli;
 #[cfg(test)]
 mod mcp_dispatch;
-#[cfg(test)]
-mod mcp_protocol;
 #[cfg(all(test, unix))]
 mod mcp_report_handler;
 #[cfg(test)]
@@ -47,7 +45,3 @@ mod mcp_server;
 mod search_repository;
 #[cfg(test)]
 mod site_docs_db;
-#[cfg(test)]
-mod tempdb;
-#[cfg(test)]
-mod web_router;

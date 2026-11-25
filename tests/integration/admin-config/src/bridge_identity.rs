@@ -8,7 +8,7 @@ use systemprompt_web_admin::repositories::bridge::{
 };
 
 use crate::fixtures::{insert_user, insert_user_with_roles, unique, user_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn device_params<'a>(name: &'a str, platform: &'a str) -> EnrollDeviceParams<'a> {
     EnrollDeviceParams {

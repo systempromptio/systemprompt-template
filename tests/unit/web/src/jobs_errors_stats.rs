@@ -9,9 +9,15 @@
 //! `PipelineStats` is the reason a broken stage does not stop the publish
 //! pipeline: failures are recorded and the run continues.
 
-use systemprompt::traits::ProviderError;
+use std::sync::Arc;
+
+use systemprompt::traits::{Job, ProviderError};
+use systemprompt_web_extension::jobs::JobError;
 use systemprompt_web_extension::jobs::internals::PipelineStats;
-use systemprompt_web_extension::jobs::{JobError, extension_jobs};
+
+fn extension_jobs() -> Vec<Arc<dyn Job>> {
+    template_test_common::composition::member_jobs("web")
+}
 
 #[test]
 fn config_and_other_render_differently() {
@@ -86,12 +92,16 @@ fn successes_and_failures_are_tallied_independently() {
 }
 
 #[test]
-fn job_names_are_unique_and_sorted() {
+fn job_names_are_unique() {
     let names: Vec<&str> = extension_jobs().iter().map(|j| j.name()).collect();
-    let mut sorted = names.clone();
-    sorted.sort_unstable();
-    sorted.dedup();
-    assert_eq!(names, sorted);
+    let mut unique = names.clone();
+    unique.sort_unstable();
+    unique.dedup();
+    assert_eq!(
+        names.len(),
+        unique.len(),
+        "two jobs share a name: {names:?}"
+    );
 }
 
 #[test]

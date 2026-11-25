@@ -71,8 +71,6 @@ mod mcp_servers_yaml;
 #[cfg(test)]
 mod req_026_audit_completeness;
 #[cfg(test)]
-mod tempdb;
-#[cfg(test)]
 mod tool_activity_intent_rows;
 #[cfg(test)]
 mod traces_list;

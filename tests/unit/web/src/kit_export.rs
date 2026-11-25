@@ -20,7 +20,7 @@ fn services_root() -> std::path::PathBuf {
 #[test]
 fn shipped_marketplace_export_round_trips_without_instance_access_or_mcp_files() {
     let services_root = services_root();
-    let services = ConfigLoader::load_from_path(&services_root.join("config/config.yaml"))
+    let services = ConfigLoader::load_from_path(&services_root.join("config/config.yaml"), None)
         .expect("load configured services");
     let declared_plugins: Vec<String> = services
         .marketplaces
@@ -98,7 +98,7 @@ fn shipped_marketplace_export_round_trips_without_instance_access_or_mcp_files()
 #[test]
 fn export_refuses_an_unknown_marketplace_without_creating_a_tree() {
     let services_root = services_root();
-    let services = ConfigLoader::load_from_path(&services_root.join("config/config.yaml"))
+    let services = ConfigLoader::load_from_path(&services_root.join("config/config.yaml"), None)
         .expect("load configured services");
     let out = tempfile::tempdir().expect("kit output directory");
 

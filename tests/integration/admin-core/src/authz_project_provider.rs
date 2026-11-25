@@ -16,7 +16,7 @@ use systemprompt_web_admin::authz::project::{
 use crate::fixtures::{
     insert_project, insert_project_member, insert_user, unclaimed_email, unique, unique_project,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn the_provider_resolves_a_users_projects() {

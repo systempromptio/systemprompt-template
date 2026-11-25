@@ -1,6 +1,11 @@
 //! Hosted connector refresh uses provider credentials and fails closed.
 
+use std::sync::Arc;
 use systemprompt_web_admin::connector_oauth::{Grant, Provider, refresh_at};
+
+use sqlx::PgPool;
+use systemprompt_web_admin::env::AdminEnv;
+use template_test_common::env::{EnvFixture, services_config};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 fn grant() -> Grant {
@@ -26,6 +31,18 @@ fn grant() -> Grant {
         resource_name: String::new(),
         authorization_scheme: "Bearer".into(),
     }
+}
+
+fn closed_pool() -> Arc<PgPool> {
+    Arc::new(
+        sqlx::postgres::PgPoolOptions::new()
+            .connect_lazy("postgres://test:test@localhost:1/test")
+            .unwrap(),
+    )
+}
+
+fn env() -> AdminEnv {
+    EnvFixture::empty(&closed_pool()).env
 }
 
 async fn endpoint(body: &'static str) -> (String, tokio::task::JoinHandle<String>) {
@@ -131,7 +148,7 @@ async fn refresh_sends_the_user_grant_and_preserves_rotation() {
     let (url, mock) =
         endpoint(r#"{"access_token":"fresh","refresh_token":"rotated","expires_in":3600}"#).await;
     let mut credential = grant();
-    refresh_at(&mut credential, &url).await.unwrap();
+    refresh_at(&env(), &mut credential, &url).await.unwrap();
     assert_eq!(credential.access_token, "fresh");
     assert_eq!(credential.refresh_token.as_deref(), Some("rotated"));
     let request = mock.await.unwrap();
@@ -149,7 +166,7 @@ async fn refresh_sends_the_user_grant_and_preserves_rotation() {
 #[tokio::test]
 async fn revoked_grants_are_authentication_failures() {
     let (url, mock) = endpoint(r#"{"error":"invalid_grant"}"#).await;
-    let error = refresh_at(&mut grant(), &url).await.unwrap_err();
+    let error = refresh_at(&env(), &mut grant(), &url).await.unwrap_err();
     assert_eq!(error.status(), axum::http::StatusCode::UNAUTHORIZED);
     mock.await.unwrap();
 }
@@ -164,7 +181,7 @@ async fn a_retired_refresh_token_is_an_authentication_failure_not_an_outage() {
         r#"{"error":"unauthorized_client","error_description":"refresh_token is invalid"}"#,
     )
     .await;
-    let error = refresh_at(&mut grant(), &url).await.unwrap_err();
+    let error = refresh_at(&env(), &mut grant(), &url).await.unwrap_err();
     assert_eq!(error.status(), axum::http::StatusCode::UNAUTHORIZED);
     assert!(
         error.to_string().contains("unauthorized_client"),
@@ -176,7 +193,7 @@ async fn a_retired_refresh_token_is_an_authentication_failure_not_an_outage() {
 #[tokio::test]
 async fn a_4xx_without_an_oauth_error_body_still_retires_the_grant() {
     let (url, mock) = endpoint_with_status(400, "Bad Request", r#"{}"#).await;
-    let error = refresh_at(&mut grant(), &url).await.unwrap_err();
+    let error = refresh_at(&env(), &mut grant(), &url).await.unwrap_err();
     assert_eq!(error.status(), axum::http::StatusCode::UNAUTHORIZED);
     mock.await.unwrap();
 }
@@ -186,7 +203,7 @@ async fn token_endpoint_outages_stay_upstream_errors() {
     for (status, reason) in [(503, "Service Unavailable"), (429, "Too Many Requests")] {
         let (url, mock) = endpoint_with_status(status, reason, r#"{"error":"server_error"}"#).await;
         let mut credential = grant();
-        let error = refresh_at(&mut credential, &url).await.unwrap_err();
+        let error = refresh_at(&env(), &mut credential, &url).await.unwrap_err();
         assert_eq!(
             error.status(),
             axum::http::StatusCode::BAD_GATEWAY,
@@ -204,7 +221,7 @@ async fn token_endpoint_outages_stay_upstream_errors() {
 #[tokio::test]
 async fn empty_access_tokens_cannot_pass_refresh() {
     let (url, mock) = endpoint(r#"{"access_token":"","expires_in":3600}"#).await;
-    assert!(refresh_at(&mut grant(), &url).await.is_err());
+    assert!(refresh_at(&env(), &mut grant(), &url).await.is_err());
     mock.await.unwrap();
 }
 
@@ -332,11 +349,10 @@ fn generic_oauth_cannot_send_credentials_outside_approved_origins() {
 async fn gateway_does_not_allow_a_request_when_its_policy_database_is_unavailable() {
     use systemprompt::extension::{GatewayDenyKind, GatewayGuardRequest, GatewayRequestGuard};
     use systemprompt_web_admin::gateway_entitlement::RouteEntitlementGuard;
-    let pool = sqlx::postgres::PgPoolOptions::new()
-        .connect_lazy("postgres://test:test@localhost:1/test")
-        .unwrap();
+    let pool = closed_pool();
     pool.close().await;
-    let database = systemprompt::database::Database::from_pools(std::sync::Arc::new(pool), None);
+    let guard = RouteEntitlementGuard::new(EnvFixture::empty(&pool).env.subjects().clone());
+    let database = systemprompt::database::Database::from_pools(pool, None);
     let user_id = systemprompt::identifiers::UserId::new("00000000-0000-0000-0000-000000000001");
     let model = systemprompt::identifiers::ModelId::new("test-model");
     let route = systemprompt::identifiers::RouteId::new("test-route");
@@ -351,22 +367,14 @@ async fn gateway_does_not_allow_a_request_when_its_policy_database_is_unavailabl
         attribution: &attribution,
         api_key_id: None,
     };
-    let denial = RouteEntitlementGuard
-        .check(&database, &request)
-        .await
-        .unwrap_err();
+    let denial = guard.check(&database, &request).await.unwrap_err();
     assert!(matches!(denial.kind, GatewayDenyKind::Unavailable));
     assert_eq!(denial.retry_after_seconds, 5);
     let unresolved = GatewayGuardRequest {
         route_id: None,
         ..request
     };
-    assert!(
-        RouteEntitlementGuard
-            .check(&database, &unresolved)
-            .await
-            .is_ok()
-    );
+    assert!(guard.check(&database, &unresolved).await.is_ok());
 }
 
 #[tokio::test]
@@ -402,9 +410,9 @@ async fn fourth_configured_connector_completes_oauth_and_mcp_verification() {
     let yaml = format!(
         "mcp_servers:\n  fourth-mcp:\n    type: external\n    endpoint: {origin}/mcp\n    enabled: true\n    display_in_web: false\n    oauth: {{required: false, scopes: [user], audience: mcp, client_id: null}}\n    connector: {{adapter: generic, scopes: [tools:read]}}\n"
     );
-    let config = root.path().join("config.yaml");
-    std::fs::write(&config, yaml).unwrap();
-    systemprompt::loader::ServicesBootstrap::init_from_path(&config).unwrap();
+    let fixture = EnvFixture::new(&closed_pool(), services_config(&yaml), root.path());
+    let env = fixture.env;
+    let services = env.services();
     let ca = reqwest::Certificate::from_pem(&std::fs::read(root.path().join("ca.pem")).unwrap())
         .unwrap();
     let http = reqwest::Client::builder()
@@ -414,9 +422,10 @@ async fn fourth_configured_connector_completes_oauth_and_mcp_verification() {
         .build()
         .unwrap();
     let provider = Provider::try_from("fourth-mcp".to_owned()).unwrap();
-    assert!(provider.configured() && provider.requires_auth());
+    assert!(provider.configured(&services) && provider.requires_auth(&services));
     let callback = "https://dashboard.example.test/api/public/connectors/fourth-mcp/callback";
     let (url, mut grant) = generic::authorize_with_client(
+        &env,
         generic::Consent {
             user: "active-user",
             state: "test-state",
@@ -435,20 +444,22 @@ async fn fourth_configured_connector_completes_oauth_and_mcp_verification() {
     assert_eq!(params["state"], "test-state");
     assert_eq!(params["code_challenge_method"], "S256");
     assert!(!url.as_str().contains("test-verifier"));
-    exchange_with_client(&mut grant, "test-code", callback, &http)
+    exchange_with_client(&env, &mut grant, "test-code", callback, &http)
         .await
         .unwrap();
     assert_eq!(grant.access_token, "access-token");
     assert!(grant.verifier.is_empty());
-    systemprompt_web_admin::connector_oauth::refresh_with_client(&mut grant, &http)
+    systemprompt_web_admin::connector_oauth::refresh_with_client(&env, &mut grant, &http)
         .await
         .unwrap();
     assert_eq!(grant.refresh_token.as_deref(), Some("refresh-token"));
-    verify::verify_with_client(&mut grant, &http).await.unwrap();
+    verify::verify_with_client(&env, &mut grant, &http)
+        .await
+        .unwrap();
     assert_eq!(grant.resource_name, format!("{origin}/mcp"));
     assert!(grant.account_id.is_empty());
     grant.configuration_binding = "changed-config".into();
-    assert!(generic::validate_grant(&grant).is_err());
+    assert!(generic::validate_grant(&env, &grant).is_err());
 }
 
 #[test]
@@ -513,9 +524,9 @@ async fn offline_params_connector_sends_its_authorization_params_and_reads_useri
     let yaml = format!(
         "mcp_servers:\n  drive_knowledge:\n    type: external\n    endpoint: {origin}/mcp\n    enabled: true\n    display_in_web: false\n    oauth: {{required: false, scopes: [user], audience: mcp, client_id: null}}\n    connector:\n      adapter: generic\n      display_name: Drive knowledge\n      scopes: [openid, email, tools:read]\n      authorization_params: {{access_type: offline, prompt: consent}}\n      identity: userinfo\n"
     );
-    let config = root.path().join("config.yaml");
-    std::fs::write(&config, yaml).unwrap();
-    systemprompt::loader::ServicesBootstrap::init_from_path(&config).unwrap();
+    let fixture = EnvFixture::new(&closed_pool(), services_config(&yaml), root.path());
+    let env = fixture.env;
+    let services = env.services();
     let ca = reqwest::Certificate::from_pem(&std::fs::read(root.path().join("ca.pem")).unwrap())
         .unwrap();
     let http = reqwest::Client::builder()
@@ -525,9 +536,10 @@ async fn offline_params_connector_sends_its_authorization_params_and_reads_useri
         .build()
         .unwrap();
     let provider = Provider::try_from("drive_knowledge".to_owned()).unwrap();
-    assert_eq!(provider.display_name(), "Drive knowledge");
+    assert_eq!(provider.display_name(&services), "Drive knowledge");
     let callback = "https://dashboard.example.test/api/public/connectors/drive_knowledge/callback";
     let (url, mut grant) = generic::authorize_with_client(
+        &env,
         generic::Consent {
             user: "active-user",
             state: "test-state",
@@ -550,10 +562,12 @@ async fn offline_params_connector_sends_its_authorization_params_and_reads_useri
         grant.authorization_issuer, origin,
         "the issuer is banked as the AS declares it"
     );
-    exchange_with_client(&mut grant, "test-code", callback, &http)
+    exchange_with_client(&env, &mut grant, "test-code", callback, &http)
         .await
         .unwrap();
-    verify::verify_with_client(&mut grant, &http).await.unwrap();
+    verify::verify_with_client(&env, &mut grant, &http)
+        .await
+        .unwrap();
     assert_eq!(grant.account_id, "1029384756");
     assert_eq!(grant.account_name, "pilot.tester@example.test");
     assert_eq!(grant.resource_name, format!("{origin}/mcp"));
@@ -561,13 +575,12 @@ async fn offline_params_connector_sends_its_authorization_params_and_reads_useri
 
 #[tokio::test]
 async fn subject_attribute_failure_is_not_an_empty_membership() {
-    let pool = sqlx::postgres::PgPoolOptions::new()
-        .connect_lazy("postgres://test:test@localhost:1/test")
-        .unwrap();
+    let pool = closed_pool();
     pool.close().await;
+    let env = EnvFixture::empty(&pool).env;
     let user = systemprompt::identifiers::UserId::new("00000000-0000-0000-0000-000000000001");
     assert!(
-        systemprompt_web_admin::authz::subject_attributes_for(&pool, &user)
+        systemprompt_web_admin::authz::subject_attributes_for(env.subjects(), &user)
             .await
             .is_err()
     );
@@ -588,6 +601,9 @@ async fn gateway_rejects_incompatible_database_handles_even_when_reported_connec
         fn as_any(&self) -> &dyn std::any::Any {
             self
         }
+        fn into_any(self: Arc<Self>) -> Arc<dyn std::any::Any + Send + Sync> {
+            self
+        }
     }
 
     let user_id = UserId::new("gateway-foreign-database-consumer");
@@ -604,7 +620,9 @@ async fn gateway_rejects_incompatible_database_handles_even_when_reported_connec
         attribution: &attribution,
         api_key_id: None,
     };
-    let denial = RouteEntitlementGuard
+    let guard =
+        RouteEntitlementGuard::new(EnvFixture::empty(&closed_pool()).env.subjects().clone());
+    let denial = guard
         .check(&ForeignDatabase, &request)
         .await
         .expect_err("unknown database implementations cannot authorize routes");

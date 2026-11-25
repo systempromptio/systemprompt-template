@@ -18,7 +18,7 @@ use crate::fixtures::{
     insert_acl_rule, insert_group, insert_group_member, insert_user, insert_user_full,
     unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn one_entity(entity_type: &str, entity_id: &str) -> Vec<SectionInput> {
     vec![(

@@ -9,7 +9,7 @@ use crate::fixtures::{
     DecisionSpec, RequestSpec, insert_decision, insert_request, insert_session, insert_user,
     unclaimed_email, unique, wide_window,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn get_filter_options_is_empty_before_any_decision() {

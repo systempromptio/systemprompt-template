@@ -7,7 +7,7 @@ use systemprompt_web_admin::repositories::dashboard::commits::{NewUserCommit, in
 use systemprompt_web_admin::repositories::dashboard::usage_rollups;
 
 use crate::fixtures::{RequestSpec, insert_request, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn insert_user_commit_dedupes_on_user_cwd_and_hash() {

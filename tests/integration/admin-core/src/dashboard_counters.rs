@@ -19,7 +19,7 @@ use crate::fixtures::{
     EventSpec, insert_activity, insert_event, insert_user, insert_user_full, unclaimed_email,
     unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn get_activity_stats_is_zero_before_any_activity() {

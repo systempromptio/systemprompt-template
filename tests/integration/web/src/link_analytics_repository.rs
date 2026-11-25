@@ -10,7 +10,7 @@ use systemprompt_web_content::repository::{
 use systemprompt_web_shared::models::TrackClickParams;
 
 use crate::fixtures::{content_params, link_params, source_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn session(id: &str) -> SessionId {
     SessionId::new(id.to_string())

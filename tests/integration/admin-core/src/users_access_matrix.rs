@@ -9,6 +9,8 @@
 //! decided and that the extension dimensions (department, organization) reached
 //! the resolver at all.
 
+use std::sync::Arc;
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_web_admin::repositories::users::access_control::{
@@ -19,7 +21,8 @@ use crate::fixtures::{
     AclRuleSpec, insert_acl_rule, insert_user, insert_user_full, set_department, unclaimed_email,
     unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
+use template_test_common::env::EnvFixture;
 
 // One section holding a single skill, which is what every test below grades.
 pub fn one_skill(entity_id: &str) -> Vec<SectionInput> {
@@ -45,8 +48,9 @@ async fn set_default_included(pool: &PgPool, entity_type: &str, entity_id: &str,
     .expect("set entity default");
 }
 
-pub async fn grade(pool: &PgPool, user: &UserId, entity_id: &str) -> MatrixRow {
-    let matrix = resolve_user_matrix(pool, user, one_skill(entity_id))
+pub async fn grade(pool: &Arc<PgPool>, user: &UserId, entity_id: &str) -> MatrixRow {
+    let fixture = EnvFixture::empty(pool);
+    let matrix = resolve_user_matrix(&fixture.env, pool, user, one_skill(entity_id))
         .await
         .expect("resolve matrix")
         .expect("user found");
@@ -61,9 +65,14 @@ async fn resolve_user_matrix_returns_none_for_an_unknown_user() {
         return;
     };
 
-    let matrix = resolve_user_matrix(&db.pool, &UserId::new(unique("nobody")), Vec::new())
-        .await
-        .expect("resolve matrix");
+    let matrix = resolve_user_matrix(
+        &EnvFixture::empty(&db.pool).env,
+        &db.pool,
+        &UserId::new(unique("nobody")),
+        Vec::new(),
+    )
+    .await
+    .expect("resolve matrix");
 
     assert!(matrix.is_none());
     db.cleanup().await;
@@ -78,10 +87,15 @@ async fn resolve_user_matrix_reports_identity_and_membership() {
     let user = insert_user(&db.pool, &unique("user"), &email).await;
     set_department(&db.pool, &user, "Platform").await;
 
-    let matrix = resolve_user_matrix(&db.pool, &user, Vec::new())
-        .await
-        .expect("resolve matrix")
-        .expect("user found");
+    let matrix = resolve_user_matrix(
+        &EnvFixture::empty(&db.pool).env,
+        &db.pool,
+        &user,
+        Vec::new(),
+    )
+    .await
+    .expect("resolve matrix")
+    .expect("user found");
 
     assert_eq!(matrix.user.id, user.as_str());
     assert_eq!(matrix.user.email.as_deref(), Some(email.as_str()));
@@ -102,10 +116,15 @@ async fn resolve_user_matrix_reports_unassigned_membership_without_a_profile() {
     };
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("nodept")).await;
 
-    let matrix = resolve_user_matrix(&db.pool, &user, Vec::new())
-        .await
-        .expect("resolve matrix")
-        .expect("user found");
+    let matrix = resolve_user_matrix(
+        &EnvFixture::empty(&db.pool).env,
+        &db.pool,
+        &user,
+        Vec::new(),
+    )
+    .await
+    .expect("resolve matrix")
+    .expect("user found");
 
     assert!(matrix.user.group_ids.iter().any(|id| id == "unassigned"));
     assert!(matrix.user.project_ids.is_empty());

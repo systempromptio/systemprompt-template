@@ -20,7 +20,7 @@ use systemprompt_web_admin::repositories::scope::SubjectScope;
 use crate::fixtures::{
     DecisionSpec, insert_decision, insert_user, unclaimed_email, unique, wide_window,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 // Why: the scope every one of these runs under. The fixtures insert for a
 // single user, so scoping to that user isolates the assertions from the

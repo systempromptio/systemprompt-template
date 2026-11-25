@@ -13,7 +13,7 @@ use systemprompt_web_admin::repositories::users::roles::{
 };
 
 use crate::fixtures::{insert_user, insert_user_full, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn roles(list: &[&str]) -> Vec<String> {
     list.iter().map(|r| (*r).to_owned()).collect()

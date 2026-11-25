@@ -10,8 +10,8 @@ workspace = true
 
 [dependencies]
 template-test-common = { workspace = true }
-# The profile gateway types (GatewayConfig, GatewayRoute, RouteRequirements,
-# ProviderRegistry, ModelGovernance) via the facade's `models` module — pure
-# config, no database or runtime needed.
+# The catalog and gateway types (ResolvedCatalog, GatewayRoute,
+# RouteRequirements, ModelGovernance) via the facade's `manifest` module —
+# pure config, no database or runtime needed.
 systemprompt = { workspace = true }
 serde_yaml = { workspace = true }

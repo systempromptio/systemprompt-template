@@ -1,6 +1,7 @@
 //! The drift engine: code versus database, classified.
 
-use systemprompt::governance::authz::{Access, DASHBOARD_SOURCE, RegisteredEntities};
+use systemprompt::governance::authz::{Access, RegisteredEntities};
+use systemprompt_web_admin::authz::CONSOLE_SOURCE;
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, DeclaredSet, build_declared_set,
 };
@@ -91,7 +92,7 @@ fn missing_changed_and_orphan_rows_are_each_classified() {
                 "uk",
                 Access::Allow,
                 "hand",
-                DASHBOARD_SOURCE,
+                CONSOLE_SOURCE,
             ),
             row(
                 "atlassian",
@@ -107,7 +108,7 @@ fn missing_changed_and_orphan_rows_are_each_classified() {
                 "uk",
                 Access::Allow,
                 "hand",
-                DASHBOARD_SOURCE,
+                CONSOLE_SOURCE,
             ),
         ],
         &[entity("atlassian", true)],
@@ -223,7 +224,7 @@ fn a_different_justification_alone_is_drift_and_user_rows_are_invisible() {
                 "someone",
                 Access::Deny,
                 "",
-                DASHBOARD_SOURCE,
+                CONSOLE_SOURCE,
             ),
         ],
         &[entity("atlassian", false)],

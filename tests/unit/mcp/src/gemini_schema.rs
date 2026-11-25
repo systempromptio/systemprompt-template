@@ -5,12 +5,14 @@
 //! list, not just that tool.
 
 use serde_json::Value;
+use systemprompt::identifiers::McpServerId;
 use systemprompt::wire::schema::gemini_declaration_violations;
+use systemprompt_mcp_agent::server::TOOLSET_ID;
 use systemprompt_mcp_agent::tools::list_tools;
 
 #[test]
 fn every_listed_tool_input_schema_is_gemini_declarable() {
-    let tools = list_tools();
+    let tools = list_tools(&McpServerId::new(TOOLSET_ID));
     assert!(!tools.is_empty());
     for tool in &tools {
         let schema = Value::Object(tool.input_schema.as_ref().clone());
@@ -25,7 +27,7 @@ fn every_listed_tool_input_schema_is_gemini_declarable() {
 
 #[test]
 fn report_days_is_a_plain_integer_with_a_default() {
-    let tools = list_tools();
+    let tools = list_tools(&McpServerId::new(TOOLSET_ID));
     let report = tools
         .iter()
         .find(|t| t.name.as_ref() == "admin_report")
@@ -48,7 +50,7 @@ fn report_days_is_a_plain_integer_with_a_default() {
 // lets a client omit the field rather than invent one.
 #[test]
 fn every_typed_tool_property_is_a_single_typed_scalar_with_a_default_or_required() {
-    let tools = list_tools();
+    let tools = list_tools(&McpServerId::new(TOOLSET_ID));
     for name in [
         "usage_by_user",
         "request_log",

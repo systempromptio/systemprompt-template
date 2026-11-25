@@ -6,7 +6,7 @@ use systemprompt_web_admin::repositories::marketplace::webhook::{
 };
 
 use crate::fixtures::{unique, user_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn usage_params<'a>(
     user: &'a UserId,

@@ -9,7 +9,7 @@ use systemprompt_web_admin::repositories::gateway_routes::editor::{
 use systemprompt_web_admin::repositories::gateway_routes::rows::list_gateway_routes;
 use systemprompt_web_admin::types::{GatewayRouteView, RouteFallbackView};
 
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn route(id: &str, pattern: &str) -> GatewayRouteView {
     GatewayRouteView {

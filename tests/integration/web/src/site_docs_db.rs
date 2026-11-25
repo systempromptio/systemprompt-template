@@ -16,7 +16,7 @@ use systemprompt_web_shared::models::{ContentKind, ContentLinkMetadata, CreateCo
 use systemprompt_web_site::docs::DocsContentDataProvider;
 
 use crate::fixtures::content_params;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn documentation() -> SourceId {
     SourceId::new("documentation".to_string())

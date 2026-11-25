@@ -9,7 +9,7 @@
 use systemprompt_web_admin::repositories::dashboard::traffic::list_traffic_country_timeseries;
 
 use crate::dashboard_traffic_queries::{SessionSpec, insert_traffic_session};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn list_traffic_country_timeseries_is_empty_with_no_sessions() {

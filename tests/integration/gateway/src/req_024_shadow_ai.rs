@@ -2,76 +2,54 @@
 //! can be detected and, where policy requires, blocked or escalated through
 //! the governed platform."
 //!
-//! The gateway's exposure decision (`GatewayConfig::is_model_exposed`) is the
-//! blocking half: with `allow_unlisted_models: false` a model that is neither
-//! routed nor in any provider catalog is refused, so traffic to an
-//! un-governed model cannot pass through the platform. The tests also
-//! document the opt-in open posture — `allow_unlisted_models: true` plus a
-//! `default_provider` — so the closed default is visibly a choice, not an
-//! accident.
+//! The gateway's dispatch decision (`ResolvedCatalog::resolve`) is the
+//! blocking half: a model that is not in the catalog is refused, and a route
+//! glob never exposes a name the catalog does not declare, so traffic to an
+//! un-governed model cannot pass through the platform. There is no open
+//! posture to opt into.
 
-use systemprompt::identifiers::ProviderId;
-use systemprompt::manifest::services::ModelGovernance;
-use systemprompt::wire::WireProtocol;
+use systemprompt::manifest::services::ModelRequest;
+use systemprompt::manifest::services::catalog::{ResolveError, ResolvedCatalog};
 
-use crate::support::{config, model, provider, registry, route};
+use crate::support::{catalog, provider};
 
-fn one_provider_registry() -> systemprompt::manifest::services::ProviderRegistry {
-    registry(vec![provider(
-        "governed-provider",
-        WireProtocol::Anthropic,
-        ModelGovernance::default(),
-        vec![model("governed-model")],
-    )])
+fn governed_catalog() -> ResolvedCatalog {
+    catalog(
+        &[provider("governed-provider", "anthropic")],
+        "models:\n  governed-model: { clients: [] }\ndeployments:\n  governed-model: [governed-provider/api]\ngateway:\n  enabled: false\n  routes:\n    - id: governed\n      models: \"governed-*\"\n",
+    )
+    .expect("the catalog resolves")
 }
 
 #[test]
-fn an_unlisted_model_is_not_exposed_under_the_closed_posture() {
-    let reg = one_provider_registry();
-    let cfg = config(vec![route("governed", "governed-*", "governed-provider")]);
+fn an_unlisted_model_is_refused() {
+    let cat = governed_catalog();
 
-    assert!(
-        !cfg.is_model_exposed(&reg, "shadow-model"),
-        "a model with no route and no catalog entry is refused"
-    );
+    match cat.resolve(&ModelRequest::new("shadow-model")) {
+        Err(ResolveError::UnknownModel { requested }) => assert_eq!(requested, "shadow-model"),
+        other => panic!("a model with no catalog entry is refused, got {other:?}"),
+    }
 }
 
 #[test]
-fn routed_and_cataloged_models_are_exposed() {
-    let reg = one_provider_registry();
-    let cfg = config(vec![route("governed", "governed-*", "governed-provider")]);
+fn a_cataloged_model_is_dispatched() {
+    let cat = governed_catalog();
 
-    assert!(
-        cfg.is_model_exposed(&reg, "governed-anything"),
-        "a route pattern match exposes the model"
-    );
-    assert!(
-        cfg.is_model_exposed(&reg, "governed-model"),
-        "a provider catalog entry exposes the model even without its own route"
-    );
+    let target = cat
+        .resolve(&ModelRequest::new("governed-model"))
+        .expect("a catalog model resolves");
+    assert_eq!(target.route.as_ref().map(|r| r.as_str()), Some("governed"));
 }
 
 #[test]
-fn allow_unlisted_models_with_a_default_provider_opens_the_allowlist() {
-    let reg = one_provider_registry();
-    let mut cfg = config(vec![]);
-    cfg.allow_unlisted_models = true;
-    cfg.default_provider = Some(ProviderId::new("governed-provider"));
+fn a_route_glob_does_not_expose_an_uncataloged_model() {
+    let cat = governed_catalog();
 
     assert!(
-        cfg.is_model_exposed(&reg, "shadow-model"),
-        "the open posture forwards unlisted models to the default provider"
-    );
-}
-
-#[test]
-fn allow_unlisted_models_without_a_default_provider_still_refuses() {
-    let reg = one_provider_registry();
-    let mut cfg = config(vec![]);
-    cfg.allow_unlisted_models = true;
-
-    assert!(
-        !cfg.is_model_exposed(&reg, "shadow-model"),
-        "the flag alone opens nothing — there is nowhere to send the traffic"
+        matches!(
+            cat.resolve(&ModelRequest::new("governed-anything")),
+            Err(ResolveError::UnknownModel { .. })
+        ),
+        "a route pattern match alone exposes nothing"
     );
 }

@@ -6,17 +6,19 @@
 //! database: the loop only ever calls `drift` and, on an empty projection,
 //! `apply` once as the boot actor in overwrite mode.
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
+use systemprompt_web_admin::env::AdminEnv;
 use systemprompt_web_admin::error::AdminResult;
 use systemprompt_web_admin::repositories::sync::boot::{BOOT_ORDER, reconcile_plane};
 use systemprompt_web_admin::repositories::sync::plane::{
     Actor, ApplyOutcome, Export, PlaneDrift, SyncMode, SyncPlane,
 };
 use systemprompt_web_admin::repositories::sync::state::BOOT_ACTOR;
+use template_test_common::env::EnvFixture;
 
 #[derive(Debug, Clone)]
 struct Call {
@@ -60,12 +62,13 @@ impl SyncPlane for FakePlane {
         "fake_rows"
     }
 
-    async fn drift(&self, _pool: &PgPool) -> AdminResult<PlaneDrift> {
+    async fn drift(&self, _env: &AdminEnv, _pool: &PgPool) -> AdminResult<PlaneDrift> {
         Ok(self.drift.clone())
     }
 
     async fn apply(
         &self,
+        _env: &AdminEnv,
         _pool: &PgPool,
         mode: SyncMode,
         actor: Actor<'_>,
@@ -80,7 +83,7 @@ impl SyncPlane for FakePlane {
         })
     }
 
-    async fn export(&self, _pool: &PgPool) -> AdminResult<Option<Export>> {
+    async fn export(&self, _env: &AdminEnv, _pool: &PgPool) -> AdminResult<Option<Export>> {
         Ok(None)
     }
 }
@@ -93,6 +96,10 @@ fn pool() -> PgPool {
         .expect("lazy pool")
 }
 
+fn env() -> AdminEnv {
+    EnvFixture::empty(&Arc::new(pool())).env
+}
+
 #[tokio::test]
 async fn an_empty_projection_is_seeded_once_as_the_boot_actor() {
     let plane = FakePlane::with(PlaneDrift {
@@ -101,7 +108,9 @@ async fn an_empty_projection_is_seeded_once_as_the_boot_actor() {
         is_clean: false,
         ..PlaneDrift::default()
     });
-    let boot = reconcile_plane(&pool(), &plane).await.expect("boot");
+    let boot = reconcile_plane(&env(), &pool(), &plane)
+        .await
+        .expect("boot");
     assert!(boot.seeded);
     assert_eq!(boot.inserted, 3);
     assert_eq!(boot.drift_rows, 0);
@@ -120,7 +129,9 @@ async fn a_populated_projection_is_only_compared() {
         rows: vec![],
         ..PlaneDrift::default()
     });
-    let boot = reconcile_plane(&pool(), &plane).await.expect("boot");
+    let boot = reconcile_plane(&env(), &pool(), &plane)
+        .await
+        .expect("boot");
     assert!(!boot.seeded, "a populated projection is never re-seeded");
     assert!(plane.calls().is_empty(), "nothing is written on a restart");
     assert_eq!(boot.in_db, 2);
@@ -134,7 +145,9 @@ async fn an_empty_declaration_seeds_nothing() {
         is_clean: true,
         ..PlaneDrift::default()
     });
-    let boot = reconcile_plane(&pool(), &plane).await.expect("boot");
+    let boot = reconcile_plane(&env(), &pool(), &plane)
+        .await
+        .expect("boot");
     assert!(!boot.seeded);
     assert!(plane.calls().is_empty());
 }
@@ -146,7 +159,7 @@ async fn an_unreadable_declaration_fails_the_boot() {
         unreadable: Some("services tree could not be composed: dangling include".to_owned()),
         ..PlaneDrift::default()
     });
-    let err = reconcile_plane(&pool(), &plane)
+    let err = reconcile_plane(&env(), &pool(), &plane)
         .await
         .expect_err("boot refuses");
     let message = err.to_string();

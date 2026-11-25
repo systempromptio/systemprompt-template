@@ -6,13 +6,8 @@
 //! passed here could still fail on the first populated database.
 
 use std::path::PathBuf;
-use std::sync::Arc;
 
-use systemprompt::database::install_extension_schemas_full;
-use systemprompt::extension::ExtensionRegistry;
-use systemprompt_marketplace as _;
-use systemprompt_users as _;
-use systemprompt_web_content as _;
+use systemprompt::database::{MigrationConfig, SchemaName, install_admitted_schemas};
 use template_test_common::{TempDb, db_or_skip, empty_db_or_skip, repo_path};
 
 use crate::catalog;
@@ -74,28 +69,6 @@ fn ladder() -> Vec<Rung> {
     rungs
 }
 
-// Why: core's content and managed-resources extensions register their
-// migrations through the injected list rather than `inventory`, so the
-// installer sees the set the server runs at boot only once they are injected.
-fn discover_registry() -> ExtensionRegistry {
-    let _ = std::hint::black_box(systemprompt_content::ContentExtension);
-    let _ = systemprompt::extension::runtime_config::set_injected_extensions(
-        systemprompt::extension::runtime_config::InjectedExtensions {
-            extensions: vec![
-                Arc::new(systemprompt_content::ContentExtension),
-                Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
-            ],
-            ..Default::default()
-        },
-    );
-    let registry = ExtensionRegistry::discover().expect("discover extension registrations");
-    assert!(
-        !registry.is_empty(),
-        "no extensions linked into the test binary"
-    );
-    registry
-}
-
 // Why: restore the rung, seed its hot tables and upgrade it with the current
 // installer; the caller owns the database.
 async fn restore_and_upgrade(db: &TempDb, rung: &Rung) {
@@ -107,13 +80,16 @@ async fn restore_and_upgrade(db: &TempDb, rung: &Rung) {
         .execute(&*db.pool)
         .await
         .unwrap_or_else(|e| panic!("seed the release {} hot tables: {e}", rung.version));
-    let registry = discover_registry();
+    let admitted = systemprompt_template::composition()
+        .declare()
+        .and_then(systemprompt::Declared::admit_unprofiled)
+        .expect("the template composition admits");
     let database = db.db_pool();
-    if let Err(e) = install_extension_schemas_full(
-        &registry,
-        database.write(),
-        &[],
-        systemprompt::database::MigrationConfig::default(),
+    if let Err(e) = install_admitted_schemas(
+        admitted.built(),
+        database.session(),
+        &SchemaName::public(),
+        MigrationConfig::default(),
     )
     .await
     {

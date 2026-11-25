@@ -16,7 +16,7 @@ use systemprompt_web_admin::repositories::dashboard::usage_aggregations::{
 use systemprompt_web_admin::types::{EVENT_POST_TOOL_USE, EVENT_POST_TOOL_USE_FAILURE};
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 struct DailyRow {
     event_count: i64,

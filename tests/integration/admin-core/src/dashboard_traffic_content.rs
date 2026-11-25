@@ -12,7 +12,7 @@ use crate::dashboard_traffic_queries::{
     insert_content_metrics, insert_view, insert_view_yesterday,
 };
 use crate::fixtures::unique;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn list_content_performance_reads_the_precomputed_rollup_for_seven_days() {

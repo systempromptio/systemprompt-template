@@ -8,13 +8,13 @@ use systemprompt_web_admin::repositories::secrets::secret_migration::{
 };
 
 use crate::fixtures::{insert_env_var, insert_secret_env_var, insert_user, unique, user_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
+use template_test_common::env::member_cipher;
 
-const MASTER_KEY: [u8; 32] = [7u8; 32];
 
 // Stores `value` as a sealed secret the way the handler path would.
 async fn store_secret(pool: &sqlx::PgPool, user: &str, plugin: &str, name: &str, value: &str) {
-    let dek = get_or_create_user_dek(pool, &user_id(user), &MASTER_KEY)
+    let dek = get_or_create_user_dek(pool, &user_id(user), &*member_cipher())
         .await
         .expect("issue dek");
     let nonce = generate_nonce();
@@ -113,7 +113,7 @@ async fn update_encrypted_value_clears_the_plaintext_column() {
     let user = unique("u");
     insert_user(&db.pool, &user).await;
     let id = insert_secret_env_var(&db.pool, &user, "plug", "LEGACY", "plaintext").await;
-    let dek = get_or_create_user_dek(&db.pool, &user_id(&user), &MASTER_KEY)
+    let dek = get_or_create_user_dek(&db.pool, &user_id(&user), &*member_cipher())
         .await
         .expect("issue dek");
     let nonce = generate_nonce();

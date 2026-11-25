@@ -1,6 +1,6 @@
 //! The subject dimensions the gateway's quota windows key on: the
-//! installation-wide `organization`, the re-exposed `role`, and the ordering
-//! that puts a person's attribution key first.
+//! installation-wide `organization` and its place above core's `role`, and the
+//! ordering that puts a person's attribution key first.
 
 #![allow(
     clippy::expect_used,
@@ -10,13 +10,12 @@
     reason = "test code: panics are the assertion mechanism"
 )]
 
-use systemprompt::governance::authz::{ROLE_PRECEDENCE, RuleType};
+use systemprompt::governance::authz::ROLE_PRECEDENCE;
 use systemprompt_web_admin::authz::group::group_dimension;
 use systemprompt_web_admin::authz::organization::{
     ORGANIZATION_DEFAULT, organization_dimension, organization_rule_type,
 };
 use systemprompt_web_admin::authz::primary::lead_with_primary;
-use systemprompt_web_admin::authz::role::{effective_roles, role_dimension};
 
 fn ids(values: &[&str]) -> Vec<String> {
     values.iter().map(|v| (*v).to_owned()).collect()
@@ -37,22 +36,6 @@ fn organization_is_the_widest_band_and_names_the_policy_subject() {
         "everyone holds it, so it must lose to every narrower statement"
     );
     assert_eq!(ORGANIZATION_DEFAULT, "default");
-}
-
-#[test]
-fn role_re_exposes_core_dimension_unchanged() {
-    let dimension = role_dimension();
-    assert_eq!(dimension.rule_type, RuleType::ROLE);
-    assert_eq!(dimension.precedence, ROLE_PRECEDENCE);
-}
-
-#[test]
-fn manual_grants_lead_and_a_role_held_both_ways_is_listed_once() {
-    let roles = effective_roles(ids(&["platform_admin"]), ids(&["platform_admin", "user"]));
-    assert_eq!(roles, ids(&["platform_admin", "user"]));
-
-    let directory_only = effective_roles(Vec::new(), ids(&["user"]));
-    assert_eq!(directory_only, ids(&["user"]));
 }
 
 #[test]

@@ -5,7 +5,7 @@ use systemprompt::identifiers::SessionId;
 use systemprompt_web_admin::repositories::dashboard::hooks_track;
 
 use crate::fixtures::{EventSpec, insert_event, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 pub async fn insert_mcp_execution(pool: &sqlx::PgPool, user: &str, tool: &str, status: &str) {
     sqlx::query(

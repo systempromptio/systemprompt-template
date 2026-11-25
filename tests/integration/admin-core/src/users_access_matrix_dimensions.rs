@@ -1,23 +1,14 @@
 //! `repositories::users::access_control::matrix` — the multi-section shape of
 //! the grid and how it grades rows core's entity vocabulary does not know.
-//!
-//! The `department` dimension is deliberately NOT covered here. It reaches the
-//! resolver through `authz::subject_attributes_for`, which memoises its
-//! provider set — and the pool those providers hold — in a process-global
-//! `OnceLock`. This suite gives every test its own throwaway database in one
-//! process, so whichever test resolves first pins the registry to *its*
-//! database and every later department lookup reads the wrong one. Core's
-//! `user` and `role` dimensions take the pool per call and are unaffected, so
-//! the tests below exercise those plus the multi-section shape of the grid and
-//! an entity type core's `EntityKind` does not know.
 
 use systemprompt_web_admin::repositories::users::access_control::{
     filter_catalog_for_user, resolve_user_matrix,
 };
 
 use crate::fixtures::{AclRuleSpec, insert_acl_rule, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
 use crate::users_access_matrix::one_skill;
+use template_test_common::TempDb;
+use template_test_common::env::EnvFixture;
 
 #[tokio::test]
 async fn resolve_user_matrix_falls_back_to_the_default_for_an_unrecognised_entity_type() {
@@ -31,7 +22,7 @@ async fn resolve_user_matrix_falls_back_to_the_default_for_an_unrecognised_entit
         vec![(unique("entity"), "A Drive".to_owned(), None)],
     )];
 
-    let matrix = resolve_user_matrix(&db.pool, &user, sections)
+    let matrix = resolve_user_matrix(&EnvFixture::empty(&db.pool).env, &db.pool, &user, sections)
         .await
         .expect("resolve matrix")
         .expect("user found");
@@ -76,7 +67,7 @@ async fn resolve_user_matrix_grades_every_row_of_every_section() {
         ),
     ];
 
-    let matrix = resolve_user_matrix(&db.pool, &user, sections)
+    let matrix = resolve_user_matrix(&EnvFixture::empty(&db.pool).env, &db.pool, &user, sections)
         .await
         .expect("resolve matrix")
         .expect("user found");
@@ -108,10 +99,15 @@ async fn filter_catalog_for_user_is_the_same_grading_as_resolve_user_matrix() {
     )
     .await;
 
-    let matrix = filter_catalog_for_user(&db.pool, &user, one_skill(&skill))
-        .await
-        .expect("filter catalog")
-        .expect("user found");
+    let matrix = filter_catalog_for_user(
+        &EnvFixture::empty(&db.pool).env,
+        &db.pool,
+        &user,
+        one_skill(&skill),
+    )
+    .await
+    .expect("filter catalog")
+    .expect("user found");
 
     assert_eq!(matrix.sections[0].rows[0].effective, "allow");
     assert_eq!(matrix.sections[0].rows[0].source.layer, "user");

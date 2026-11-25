@@ -11,7 +11,7 @@ use systemprompt_web_admin::repositories::analytics::{conversations, list_agents
 use crate::fixtures::{
     EventSpec, RequestSpec, insert_event, insert_request, insert_user, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn list_context_list_reports_a_contexts_rollup() {

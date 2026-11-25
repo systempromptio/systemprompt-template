@@ -13,25 +13,24 @@
 
 use std::sync::Arc;
 
-use systemprompt::ai::repository::{AiGatewayPolicyRepository, AiQuotaBucketRepository};
+use systemprompt::ai::repository::{
+    AiGatewayPolicyRepository, AiQuotaBucketRepository, GatewayPolicyWrite,
+};
 use systemprompt::database::{Database, DbPool};
 use systemprompt::gateway::policies::PolicyResolver;
 use systemprompt::gateway::quota::{
     QuotaEstimate, QuotaSubjects, ReserveOutcome, ReserveParams, precheck_and_reserve,
 };
-use systemprompt::gateway::{
-    GatewayPolicyConfig, GatewayPolicyIngestOptions, GatewayPolicyIngestionService, QuotaMode,
-    QuotaWindow, SafetyMode,
-};
+use systemprompt::gateway::{GatewayPolicyConfig, QuotaWindow};
+use systemprompt::governance::authz::SubjectProviderSet;
 use systemprompt::identifiers::UserId;
-use systemprompt::manifest::profile::QuotaConfig;
-use systemprompt::manifest::services::QuotaFaultMode;
+use systemprompt::manifest::profile::{QuotaConfig, UnappliedPlaneMode};
+use systemprompt::manifest::services::{EnforcementMode, QuotaFaultMode};
 use systemprompt::models::attribution::RequestAttribution;
 use systemprompt::traits::CacheEpochs;
-use systemprompt::governance::authz::SubjectProviderSet;
 
 use crate::fixtures::unique;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn shipped_policies() -> GatewayPolicyConfig {
     let path = template_test_common::repo_path("services/gateway/policies.yaml");
@@ -49,21 +48,28 @@ fn db_pool(db: &TempDb) -> DbPool {
 
 async fn ingest_shipped(db: &TempDb) -> DbPool {
     let pool = db_pool(db);
-    let repo = AiGatewayPolicyRepository::new(&pool);
-    let report = GatewayPolicyIngestionService::from_repository(repo)
-        .ingest_config(
-            &shipped_policies(),
-            GatewayPolicyIngestOptions {
-                override_existing: true,
-                delete_orphans: false,
+    let cfg = shipped_policies();
+    cfg.validate().expect("the shipped file validates");
+    assert!(
+        !cfg.policies.is_empty(),
+        "at least the default-quotas row lands"
+    );
+    let mut conn = db.pool.acquire().await.expect("acquire a connection");
+    for entry in &cfg.policies {
+        let spec = serde_json::to_value(&entry.spec).expect("the policy spec encodes");
+        AiGatewayPolicyRepository::upsert_on(
+            &mut conn,
+            &GatewayPolicyWrite {
+                name: &entry.name,
+                spec: &spec,
+                enabled: entry.enabled,
+                priority: entry.priority,
+                source: "fixture",
             },
         )
         .await
-        .expect("the shipped policy ingests");
-    assert!(
-        report.inserted + report.updated >= 1,
-        "at least the default-quotas row landed: {report:?}"
-    );
+        .expect("the shipped policy is written");
+    }
     pool
 }
 
@@ -77,8 +83,8 @@ fn the_shipped_file_declares_warn_on_both_gateway_planes() {
         .find(|p| p.enabled)
         .expect("an enabled policy")
         .spec;
-    assert_eq!(spec.quota_mode, QuotaMode::Warn);
-    assert_eq!(spec.safety.mode, SafetyMode::Warn);
+    assert_eq!(spec.quota_mode, EnforcementMode::Warn);
+    assert_eq!(spec.safety.mode, EnforcementMode::Warn);
     assert!(
         !spec.quota_windows.is_empty(),
         "the windows stay declared under warn — they are the hypothesis being measured"
@@ -98,10 +104,14 @@ async fn the_resolver_keeps_both_warn_switches_after_ingestion() {
     let pool = ingest_shipped(&db).await;
 
     let repo = AiGatewayPolicyRepository::new(&pool);
-    let resolved = PolicyResolver::from_repository(repo, CacheEpochs::new())
-        .resolve(QuotaFaultMode::default())
-        .await
-        .expect("policy row resolves");
+    let resolved = PolicyResolver::from_repository(
+        repo,
+        CacheEpochs::new().view(),
+        UnappliedPlaneMode::default(),
+    )
+    .resolve(QuotaFaultMode::default())
+    .await
+    .expect("policy row resolves");
 
     assert!(
         resolved.quota_mode.is_warn(),
@@ -131,10 +141,14 @@ async fn an_exhausted_window_is_still_detected_so_the_warn_carries_a_reason() {
     };
     let pool = ingest_shipped(&db).await;
     let repo = AiGatewayPolicyRepository::new(&pool);
-    let resolved = PolicyResolver::from_repository(repo, CacheEpochs::new())
-        .resolve(QuotaFaultMode::default())
-        .await
-        .expect("policy row resolves");
+    let resolved = PolicyResolver::from_repository(
+        repo,
+        CacheEpochs::new().view(),
+        UnappliedPlaneMode::default(),
+    )
+    .resolve(QuotaFaultMode::default())
+    .await
+    .expect("policy row resolves");
     assert!(resolved.quota_mode.is_warn());
 
     let user_window = resolved

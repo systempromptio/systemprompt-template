@@ -11,13 +11,14 @@ use systemprompt_web_admin::repositories::secrets::secret_resolve::{
 };
 
 use crate::fixtures::{insert_secret_env_var, insert_user, unique, user_id};
-use crate::tempdb::TempDb;
+use systemprompt::identifiers::PluginId;
+use template_test_common::TempDb;
+use template_test_common::env::member_cipher;
 
-const MASTER_KEY: [u8; 32] = [7u8; 32];
 
 // Stores `value` as a sealed secret the way the handler path would.
 async fn store_secret(pool: &sqlx::PgPool, user: &str, plugin: &str, name: &str, value: &str) {
-    let dek = get_or_create_user_dek(pool, &user_id(user), &MASTER_KEY)
+    let dek = get_or_create_user_dek(pool, &user_id(user), &*member_cipher())
         .await
         .expect("issue dek");
     let nonce = generate_nonce();
@@ -43,14 +44,14 @@ async fn insert_audit_entry_then_list_audit_log_round_trips() {
     let user = unique("u");
     insert_user(&db.pool, &user).await;
 
-    insert_audit_entry(&db.pool, &user_id(&user), "plug", "created")
+    insert_audit_entry(&db.pool, &user_id(&user), &PluginId::new("plug"), "created")
         .await
         .expect("write audit entry");
-    insert_audit_entry(&db.pool, &user_id(&user), "plug", "deleted")
+    insert_audit_entry(&db.pool, &user_id(&user), &PluginId::new("plug"), "deleted")
         .await
         .expect("write second audit entry");
 
-    let rows = list_audit_log(&db.pool, &user_id(&user), "plug")
+    let rows = list_audit_log(&db.pool, &user_id(&user), &PluginId::new("plug"))
         .await
         .expect("list audit log");
 
@@ -68,11 +69,11 @@ async fn list_audit_log_is_scoped_to_one_plugin() {
     };
     let user = unique("u");
     insert_user(&db.pool, &user).await;
-    insert_audit_entry(&db.pool, &user_id(&user), "plug-a", "created")
+    insert_audit_entry(&db.pool, &user_id(&user), &PluginId::new("plug-a"), "created")
         .await
         .expect("write audit entry");
 
-    let rows = list_audit_log(&db.pool, &user_id(&user), "plug-b")
+    let rows = list_audit_log(&db.pool, &user_id(&user), &PluginId::new("plug-b"))
         .await
         .expect("list audit log");
 
@@ -89,7 +90,7 @@ async fn insert_audit_entry_rejects_an_unknown_action() {
     let user = unique("u");
     insert_user(&db.pool, &user).await;
 
-    let result = insert_audit_entry(&db.pool, &user_id(&user), "plug", "exfiltrated").await;
+    let result = insert_audit_entry(&db.pool, &user_id(&user), &PluginId::new("plug"), "exfiltrated").await;
 
     assert!(
         result.is_err(),
@@ -107,7 +108,7 @@ async fn create_resolution_token_can_be_consumed_once() {
     let user = unique("u");
     insert_user(&db.pool, &user).await;
 
-    let token = create_resolution_token(&db.pool, &user_id(&user), "plug")
+    let token = create_resolution_token(&db.pool, &user_id(&user), &PluginId::new("plug"))
         .await
         .expect("create token");
     let (resolved_user, resolved_plugin) = validate_and_consume_token(&db.pool, &token)
@@ -115,8 +116,8 @@ async fn create_resolution_token_can_be_consumed_once() {
         .expect("consume token");
     let replay = validate_and_consume_token(&db.pool, &token).await;
 
-    assert_eq!(resolved_user, user);
-    assert_eq!(resolved_plugin, "plug");
+    assert_eq!(resolved_user.as_str(), user);
+    assert_eq!(resolved_plugin.as_str(), "plug");
     assert!(replay.is_err(), "a one-shot token must not be reusable");
 
     db.cleanup().await;
@@ -130,7 +131,7 @@ async fn create_resolution_token_stores_only_the_hash() {
     let user = unique("u");
     insert_user(&db.pool, &user).await;
 
-    let token = create_resolution_token(&db.pool, &user_id(&user), "plug")
+    let token = create_resolution_token(&db.pool, &user_id(&user), &PluginId::new("plug"))
         .await
         .expect("create token");
 
@@ -153,7 +154,7 @@ async fn validate_and_consume_token_rejects_an_expired_token() {
     };
     let user = unique("u");
     insert_user(&db.pool, &user).await;
-    let token = create_resolution_token(&db.pool, &user_id(&user), "plug")
+    let token = create_resolution_token(&db.pool, &user_id(&user), &PluginId::new("plug"))
         .await
         .expect("create token");
     sqlx::query("UPDATE secret_resolution_tokens SET expires_at = NOW() - INTERVAL '1 minute' WHERE user_id = $1")
@@ -192,7 +193,7 @@ async fn resolve_secrets_for_plugin_returns_only_that_plugins_secrets() {
     store_secret(&db.pool, &user, "plug-a", "A_TOKEN", "alpha").await;
     store_secret(&db.pool, &user, "plug-b", "B_TOKEN", "beta").await;
 
-    let resolved = resolve_secrets_for_plugin(&db.pool, &user_id(&user), "plug-a", &MASTER_KEY)
+    let resolved = resolve_secrets_for_plugin(&db.pool, &user_id(&user), &PluginId::new("plug-a"), &*member_cipher())
         .await
         .expect("resolve secrets");
 
@@ -211,7 +212,7 @@ async fn resolve_secrets_for_plugin_audits_the_access() {
     insert_user(&db.pool, &user).await;
     store_secret(&db.pool, &user, "plug", "A_TOKEN", "alpha").await;
 
-    resolve_secrets_for_plugin(&db.pool, &user_id(&user), "plug", &MASTER_KEY)
+    resolve_secrets_for_plugin(&db.pool, &user_id(&user), &PluginId::new("plug"), &*member_cipher())
         .await
         .expect("resolve secrets");
 
@@ -236,7 +237,7 @@ async fn resolve_secrets_for_plugin_skips_unsealed_rows() {
     insert_user(&db.pool, &user).await;
     insert_secret_env_var(&db.pool, &user, "plug", "LEGACY", "plaintext").await;
 
-    let resolved = resolve_secrets_for_plugin(&db.pool, &user_id(&user), "plug", &MASTER_KEY)
+    let resolved = resolve_secrets_for_plugin(&db.pool, &user_id(&user), &PluginId::new("plug"), &*member_cipher())
         .await
         .expect("resolve secrets");
 

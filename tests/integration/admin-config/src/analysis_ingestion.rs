@@ -1,7 +1,7 @@
 //! Ingestion identity boundaries: a delivery cannot change owner or digest,
 //! and a conflicting retry is rejected rather than re-applied.
 use crate::fixtures::{insert_user, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn ingestion_rejects_owner_changes_and_conflicting_retries() {

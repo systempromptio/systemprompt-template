@@ -11,7 +11,7 @@ use crate::fixtures::{
     insert_session, insert_user, narrow_window, project_scope, set_project, unclaimed_email,
     unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn page() -> TracePage {
     TracePage {

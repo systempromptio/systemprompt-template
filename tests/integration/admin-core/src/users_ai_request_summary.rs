@@ -13,7 +13,7 @@ use crate::fixtures::{
     LEGACY_CONTEXT_ID, RequestSpec, insert_request, insert_user, new_context_id, unclaimed_email,
     unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn the_summary_counts_conversations_without_the_legacy_sentinel() {

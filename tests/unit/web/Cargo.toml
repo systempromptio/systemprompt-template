@@ -31,3 +31,4 @@ serde_yaml = { workspace = true }
 sqlx = { workspace = true }
 zip = { workspace = true }
 async-trait = { workspace = true }
+template-test-common = { workspace = true }

@@ -1,7 +1,7 @@
 //! A failed completion write must retain encrypted evidence and replay exactly
 //! once.
 use crate::fixtures::{insert_session, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 use std::sync::Arc;
 use systemprompt::database::{Database, DbPool};
 use systemprompt::gateway::captures::CapturedToolUse;

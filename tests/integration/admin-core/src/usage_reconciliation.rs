@@ -24,7 +24,7 @@ use systemprompt_web_admin::repositories::users::usage::get_usage_window;
 use systemprompt_web_admin::util::time_range::{TimeRange, TimeRangePreset};
 
 use crate::fixtures::{RequestSpec, insert_request, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 // Why: the dashboard takes an explicit range and the profile pane takes a
 // trailing day count, so the two are only comparable when the range is exactly

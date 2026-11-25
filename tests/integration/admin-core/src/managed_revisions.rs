@@ -2,7 +2,6 @@
 //! links.
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use systemprompt::database::{Database, DbPool};
@@ -11,6 +10,7 @@ use systemprompt::marketplace::managed::{
     AssetDigest, AssetFile, ClientEvidence, ComparisonEvidence, ManagedError, ManagedRepository,
     NewResource, NewRevision, ResourceKind, RevisionFiles, SnapshotProvenance, SourceSpec,
 };
+use template_test_common::TempDb;
 
 // Why: the managed repository opens its handles from a `DbPool`, so each test
 // wraps its throwaway pool in one.
@@ -448,6 +448,7 @@ async fn reviewed_publications_are_idempotent_fenced_and_generation_pinned() {
         operation_key: unique("initial-adoption"),
         comparison_evidence: evidence_recorded("kind", "unevaluated_baseline"),
         limitations: "Initial adoption is not an improvement claim".to_owned(),
+        cohort: None,
     };
     let initial = repo
         .review_and_publish(&owner, &owner, &initial_request)
@@ -488,6 +489,7 @@ async fn reviewed_publications_are_idempotent_fenced_and_generation_pinned() {
         operation_key: unique("unevidenced-improvement"),
         comparison_evidence: ComparisonEvidence::default(),
         limitations: "An improvement without evidence must be rejected".to_owned(),
+        cohort: None,
     };
     assert!(
         repo.review_and_publish(&owner, &owner, &unevidenced)
@@ -506,6 +508,7 @@ async fn reviewed_publications_are_idempotent_fenced_and_generation_pinned() {
                 operation_key: unique("publish-improvement"),
                 comparison_evidence: evidence_recorded("review", "independent human"),
                 limitations: "Fixture comparison only".to_owned(),
+                cohort: None,
             },
         )
         .await
@@ -538,10 +541,11 @@ async fn reviewed_publications_are_idempotent_fenced_and_generation_pinned() {
         operation_key: unique("stale-rollback"),
         comparison_evidence: evidence_recorded("reason", "stale"),
         limitations: String::new(),
+        cohort: None,
     };
     assert!(matches!(
         repo.review_and_publish(&owner, &owner, &stale).await,
-        Err(ManagedError::Conflict(_))
+        Err(ManagedError::Conflict { .. })
     ));
     let withdrawal = repo
         .review_and_publish(
@@ -555,6 +559,7 @@ async fn reviewed_publications_are_idempotent_fenced_and_generation_pinned() {
                 operation_key: unique("withdraw"),
                 comparison_evidence: evidence_recorded("reason", "upstream_deleted"),
                 limitations: "Disk content must not become authoritative".to_owned(),
+                cohort: None,
             },
         )
         .await
@@ -633,6 +638,7 @@ async fn publication_races_corruption_receipts_and_rollback_fail_closed() {
                 operation_key: unique("lifecycle-initial"),
                 comparison_evidence: evidence_recorded("kind", "baseline"),
                 limitations: "Initial adoption".to_owned(),
+                cohort: None,
             },
         )
         .await
@@ -669,6 +675,7 @@ async fn publication_races_corruption_receipts_and_rollback_fail_closed() {
         operation_key: key,
         comparison_evidence: evidence_recorded("review", "concurrent human"),
         limitations: "Concurrent review".to_owned(),
+        cohort: None,
     };
     let race_a = request(candidate_a.clone(), unique("race-a"));
     let race_b = request(candidate_b.clone(), unique("race-b"));
@@ -765,6 +772,7 @@ async fn publication_races_corruption_receipts_and_rollback_fail_closed() {
                 operation_key: unique("rollback"),
                 comparison_evidence: evidence_recorded("receipt_id", receipt.id.as_str()),
                 limitations: "Return to retained baseline".to_owned(),
+                cohort: None,
             },
         )
         .await

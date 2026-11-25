@@ -8,7 +8,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-use systemprompt::database::Database;
+use systemprompt::governance::authz::{
+    Access, AccessControlRepository, EntityKind, RuleType, UpsertRuleParams,
+};
 use systemprompt::identifiers::{LibraryArtifactId, MarketplaceId, PluginId, UserId};
 use systemprompt::manifest::services::MarketplaceAccess;
 use systemprompt::marketplace::{
@@ -16,9 +18,6 @@ use systemprompt::marketplace::{
 };
 use systemprompt::models::bridge::manifest::{
     AgentEntry, ArtifactEntry, HookEntry, ManagedMcpServer, PluginEntry, SkillEntry,
-};
-use systemprompt::governance::authz::{
-    Access, AccessControlRepository, EntityKind, RuleType, UpsertRuleParams,
 };
 use systemprompt_web_admin::marketplace_filter::TemplateMarketplaceFilter;
 
@@ -33,7 +32,8 @@ fn membership_of(id: &MarketplaceId, access: MarketplaceAccess) -> MarketplaceMe
         ..MarketplaceMembership::default()
     }
 }
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
+use template_test_common::env::EnvFixture;
 
 fn plugin_entry(id: &str) -> PluginEntry {
     serde_json::from_value(serde_json::json!({
@@ -91,11 +91,12 @@ struct Harness {
 impl Harness {
     async fn create_or_skip() -> Option<Self> {
         let db = TempDb::create().await?;
-        let database: systemprompt::database::DbPool = Arc::new(Database::from_pools(
+        let fixture = EnvFixture::empty(&db.pool);
+        let filter: Arc<dyn MarketplaceFilter> = Arc::new(TemplateMarketplaceFilter::new(
             Arc::clone(&db.pool),
-            Some(Arc::clone(&db.pool)),
+            fixture.env.subjects().clone(),
+            fixture.env.services_view().clone(),
         ));
-        let filter = TemplateMarketplaceFilter::from_db(&database).expect("build filter");
         let repo = AccessControlRepository::from_pool(Arc::clone(&db.pool));
         Some(Self { db, filter, repo })
     }
@@ -116,7 +117,7 @@ impl Harness {
                 rule_value: role,
                 access,
                 justification: None,
-                source: systemprompt::governance::authz::DASHBOARD_SOURCE,
+                source: systemprompt_web_admin::authz::CONSOLE_SOURCE,
             })
             .await
             .expect("upsert rule");
@@ -460,7 +461,7 @@ async fn a_group_rule_admits_only_members_of_that_group() {
             rule_value: &group,
             access: Access::Allow,
             justification: None,
-            source: systemprompt::governance::authz::DASHBOARD_SOURCE,
+            source: systemprompt_web_admin::authz::CONSOLE_SOURCE,
         })
         .await
         .expect("upsert group rule");

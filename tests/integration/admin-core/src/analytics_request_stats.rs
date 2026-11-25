@@ -10,7 +10,7 @@ use crate::fixtures::{
     DecisionSpec, RequestSpec, insert_decision, insert_request, insert_session, insert_user,
     narrow_window, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 
 #[tokio::test]
