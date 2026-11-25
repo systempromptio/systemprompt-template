@@ -31,20 +31,6 @@ use crate::types::Role;
 
 pub(crate) const SYNC_URL: &str = "/admin/sync?tab=access";
 
-// Why: the page every "access" link lands on — the entity's own panel. A
-// kind with no catalog detail page (a gateway route, say) has none.
-#[must_use]
-pub(crate) fn entity_access_url(entity_type: &str, entity_id: &str) -> Option<String> {
-    let base = match entity_type {
-        "marketplace" => "/admin/marketplaces",
-        "plugin" => "/admin/plugins",
-        "skill" => "/admin/skills",
-        "mcp_server" => "/admin/mcp",
-        "gateway_route" => "/admin/gateway/routes",
-        _ => return None,
-    };
-    Some(format!("{base}/{}#access", urlencoding::encode(entity_id)))
-}
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct PanelRequest<'a> {

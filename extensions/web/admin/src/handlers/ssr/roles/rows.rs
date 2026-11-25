@@ -6,7 +6,7 @@
 //! [`RolesQuery`] and writes a view type; nothing here filters.
 
 use crate::handlers::ssr::entity_kind::entity_kind_label;
-use crate::handlers::ssr::entity_panel::entity_access_url;
+use crate::handlers::ssr::entity_urls::entity_access_url;
 use crate::handlers::ssr::types::SortHeaderView;
 use crate::repositories::config::gateway::RouteLabels;
 use crate::repositories::roles::entitlements::RoleEntitlementRow;

@@ -4,6 +4,7 @@ mod breadcrumb;
 mod charts;
 mod groups;
 mod groups_listing;
+#[cfg(feature = "gateway")]
 mod pickable_user;
 mod pie;
 mod project_report;
@@ -19,6 +20,7 @@ pub(crate) use breadcrumb::*;
 pub(crate) use charts::*;
 pub(crate) use groups::*;
 pub(crate) use groups_listing::*;
+#[cfg(feature = "gateway")]
 pub(crate) use pickable_user::*;
 pub(crate) use pie::*;
 pub(crate) use project_report::*;

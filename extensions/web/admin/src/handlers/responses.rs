@@ -42,7 +42,9 @@ macro_rules! list_response {
     };
 }
 
+#[cfg(feature = "mcp")]
 list_response!(PluginsListResponse, plugins);
+#[cfg(feature = "agents")]
 list_response!(AgentsListResponse, agents);
 list_response!(SecretsListResponse, secrets);
 list_response!(JobsListResponse, jobs);

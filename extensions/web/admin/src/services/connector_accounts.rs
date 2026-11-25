@@ -83,6 +83,7 @@ impl Entitlement {
     }
 }
 
+#[cfg(feature = "mcp")]
 fn not_entitled_message(services: &ServicesConfig, provider: &Provider) -> &'static str {
     if provider.is_session_attested(services) {
         "This connector is not open to your account"
@@ -91,6 +92,7 @@ fn not_entitled_message(services: &ServicesConfig, provider: &Provider) -> &'sta
     }
 }
 
+#[cfg(feature = "mcp")]
 pub(crate) async fn require_entitlement(
     pool: &PgPool,
     services: &ServicesConfig,

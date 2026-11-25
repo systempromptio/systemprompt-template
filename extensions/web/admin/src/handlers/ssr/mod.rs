@@ -13,12 +13,15 @@ use axum::extract::Query;
 use axum::response::{Html, IntoResponse, Redirect, Response};
 
 
+
+
 pub(crate) mod analysis_urls;
 mod approvals;
 mod context;
 pub(crate) mod conversation_header;
 mod devices;
 pub(crate) mod entity_kind;
+#[cfg(any(feature = "gateway", feature = "mcp"))]
 pub(crate) mod entity_panel;
 pub(crate) mod entity_urls;
 pub(crate) mod format;
@@ -34,6 +37,7 @@ mod overview;
 pub(crate) mod page;
 pub(crate) mod people_chart;
 pub(crate) mod people_view;
+#[cfg(feature = "gateway")]
 pub(crate) mod pickable_users;
 mod roles;
 pub(crate) mod secrets_audit;

@@ -67,8 +67,9 @@ pub mod test_support {
     pub use crate::handlers::catalog::mcp::status_of;
     #[cfg(feature = "mcp")]
     pub use crate::handlers::catalog::sorting::{
-        SortColumn, direction, matches, preserved_search, sort_headers,
+        direction, matches, preserved_search, sort_headers,
     };
+    pub use crate::handlers::ssr::types::table::{SortColumn, SortHeaderView};
     #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::ai_context::build_full_context;
     #[cfg(feature = "agents")]
@@ -101,7 +102,6 @@ pub mod test_support {
         ConnectorCardView, card as connector_card,
     };
     pub use crate::handlers::ssr::ssr_history::command_name as history_command_name;
-    #[cfg(feature = "agents")]
     pub use crate::handlers::ssr::transcript_view::{
         ConversationView, EmptyReason, ParsedAssistant, SideCallRowView, SideCallsView, StepView,
         ThreadView, ToolChipView, ToolUseMarker, TranscriptMetaView, TranscriptOptions,

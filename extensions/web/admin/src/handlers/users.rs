@@ -31,6 +31,7 @@ pub(crate) async fn extract_user_from_cookie(
 // token carries `Mcp`, not `Api`. Widening happens here rather than in
 // `extract_user_from_cookie` so the browser-session path keeps its single
 // audience.
+#[cfg(feature = "mcp")]
 pub(crate) async fn extract_mcp_accessor_user(
     env: &AdminEnv,
     headers: &HeaderMap,

@@ -16,6 +16,7 @@ use crate::util::month_range::{MonthQuery, parse_month_range};
 use crate::util::time_range::{TimeRange, TimeRangePreset};
 
 pub(crate) const RETAINED_DAYS: [u32; 5] = [1, 7, 30, 90, 365];
+#[cfg(feature = "mcp")]
 const MAX_RETAINED_DAYS: i64 = 366;
 
 // Why: the export's own ceiling on a live custom range, matching the widest
@@ -31,7 +32,9 @@ pub(crate) struct WindowQuery {
     from: Option<String>,
     to: Option<String>,
     days: Option<u32>,
+    #[cfg(feature = "mcp")]
     start: Option<String>,
+    #[cfg(feature = "mcp")]
     end: Option<String>,
     month: Option<String>,
 }
@@ -41,6 +44,7 @@ pub(crate) fn resolve(kind: Window, query: &WindowQuery) -> AdminResult<Option<E
         Window::None => Ok(None),
         Window::Live => live(query).map(Some),
         Window::Days => days_only(query).map(Some),
+        #[cfg(feature = "mcp")]
         Window::Retained => retained(query).map(Some),
         Window::Month => Ok(Some(month(query))),
     }
@@ -138,6 +142,7 @@ fn days_only(query: &WindowQuery) -> AdminResult<ExportWindow> {
     })
 }
 
+#[cfg(feature = "mcp")]
 // Why: the dialog's end control is a date, and a reader who picks 1–30
 // September means to include the 30th; a date-only end therefore closes at
 // the following midnight. An end with a time is taken as given.
@@ -147,6 +152,7 @@ fn inclusive_end(value: Option<&str>) -> AdminResult<Option<DateTime<Utc>>> {
     Ok(end.map(|e| if date_only { e + Duration::days(1) } else { e }))
 }
 
+#[cfg(feature = "mcp")]
 fn retained(query: &WindowQuery) -> AdminResult<ExportWindow> {
     let start = bound(query.start.as_deref(), "start")?;
     let end = inclusive_end(query.end.as_deref())?;

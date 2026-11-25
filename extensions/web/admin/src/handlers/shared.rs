@@ -23,12 +23,14 @@ pub(crate) fn get_services_path(env: &AdminEnv) -> AdminResult<PathBuf> {
     Ok(env.active_services_root())
 }
 
+#[cfg(feature = "gateway")]
 // Why: the composed root is a content-addressed overlay the next refresh
 // replaces, so anything that edits a file must edit the baked tree.
 pub(crate) fn get_baked_services_path(env: &AdminEnv) -> AdminResult<PathBuf> {
     Ok(env.baked_services_root())
 }
 
+#[cfg(feature = "gateway")]
 // Why: the gateway editor writes the services file the loader reads, never the
 // profile — the routes are implementation configuration shipped with the image.
 pub(crate) fn get_gateway_file_path(env: &AdminEnv) -> AdminResult<PathBuf> {
