@@ -35,6 +35,12 @@ services:
         required: false
     environment:
       ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL to an address you control}
+      # Interpolated from the shell or the --env-file compose reads (.env by
+      # default); the entrypoint treats a blank value as unset.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      EXTERNAL_URL: ${EXTERNAL_URL:-}
       DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres:5432/systemprompt
     ports:
       - "${HTTP_PORT:-8080}:8080"

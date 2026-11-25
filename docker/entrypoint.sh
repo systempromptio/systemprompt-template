@@ -41,6 +41,33 @@ if [ -n "${SYSTEMPROMPT_DATA_DIR:-}" ]; then
     python3 /app/container-state.py attach
 fi
 
+postgres_ready=false
+wait_for_postgres() {
+    # Probe DATABASE_URL directly when provided (managed Postgres, e.g. Render);
+    # fall back to the compose-style host/user/db vars otherwise.
+    if [ -n "${DATABASE_URL:-}" ]; then
+        pg_probe() { pg_isready -d "$DATABASE_URL"; }
+        echo "Waiting for Postgres at DATABASE_URL host..."
+    else
+        PG_HOST="${PG_HOST:-postgres}"
+        PG_USER="${PG_USER:-systemprompt}"
+        PG_DB="${PG_DB:-systemprompt}"
+        pg_probe() { pg_isready -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB"; }
+        echo "Waiting for Postgres at ${PG_HOST}..."
+    fi
+    i=0
+    until pg_probe >/dev/null 2>&1; do
+        i=$((i + 1))
+        if [ "$i" -ge 300 ]; then
+            echo "ERROR: Postgres did not become ready within 300s." >&2
+            exit 1
+        fi
+        sleep 1
+    done
+    echo "Postgres is ready."
+    postgres_ready=true
+}
+
 PROFILE_DIR="${SYSTEMPROMPT_PROFILE_DIR:-/app/.systemprompt/profiles/docker}"
 PROFILE_FILE="$PROFILE_DIR/profile.yaml"
 SECRETS_FILE="$PROFILE_DIR/secrets.json"
@@ -127,7 +154,22 @@ else
             echo "  an environment variable on this service, then start again." >&2
             exit 1
         fi
-        /app/bin/systemprompt admin setup -e docker \
+        # Why: setup logs in to the database it records and writes nothing when
+        # it cannot, so it is handed DATABASE_URL's parts (it reads no URL) once
+        # Postgres answers.
+        wait_for_postgres
+        db_parts="$(python3 -c 'import sys
+from urllib.parse import unquote, urlsplit
+u = urlsplit(sys.argv[1])
+print(u.hostname or "localhost", u.port or 5432, unquote(u.username or ""), u.path.lstrip("/"), sep="\n")
+print(unquote(u.password or ""))' "$DATABASE_URL")"
+        db_host="$(printf '%s\n' "$db_parts" | sed -n 1p)"
+        db_port="$(printf '%s\n' "$db_parts" | sed -n 2p)"
+        db_user="$(printf '%s\n' "$db_parts" | sed -n 3p)"
+        db_name="$(printf '%s\n' "$db_parts" | sed -n 4p)"
+        printf '%s\n' "$db_parts" | sed -n 5p | /app/bin/systemprompt admin setup -e docker \
+            --db-host "$db_host" --db-port "$db_port" \
+            --db-user "$db_user" --db-name "$db_name" --db-password-stdin \
             --admin-email "$ADMIN_EMAIL" \
             "$@" --yes --no-migrate
 
@@ -162,28 +204,7 @@ fi
 
 export SYSTEMPROMPT_PROFILE="$PROFILE_FILE"
 
-# Probe DATABASE_URL directly when provided (managed Postgres, e.g. Render);
-# fall back to the compose-style host/user/db vars otherwise.
-if [ -n "${DATABASE_URL:-}" ]; then
-    pg_probe() { pg_isready -d "$DATABASE_URL"; }
-    echo "Waiting for Postgres at DATABASE_URL host..."
-else
-    PG_HOST="${PG_HOST:-postgres}"
-    PG_USER="${PG_USER:-systemprompt}"
-    PG_DB="${PG_DB:-systemprompt}"
-    pg_probe() { pg_isready -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB"; }
-    echo "Waiting for Postgres at ${PG_HOST}..."
-fi
-i=0
-until pg_probe >/dev/null 2>&1; do
-    i=$((i + 1))
-    if [ "$i" -ge 300 ]; then
-        echo "ERROR: Postgres did not become ready within 300s." >&2
-        exit 1
-    fi
-    sleep 1
-done
-echo "Postgres is ready."
+if [ "$postgres_ready" = false ]; then wait_for_postgres; fi
 
 echo "Running database migrations..."
 # A managed volume/database outlives the image, so a database seeded by an older
