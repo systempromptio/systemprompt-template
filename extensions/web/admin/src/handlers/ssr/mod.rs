@@ -37,7 +37,7 @@ mod overview;
 pub(crate) mod page;
 pub(crate) mod people_chart;
 pub(crate) mod people_view;
-#[cfg(feature = "gateway")]
+#[cfg(any(feature = "gateway", feature = "mcp"))]
 pub(crate) mod pickable_users;
 mod roles;
 pub(crate) mod secrets_audit;

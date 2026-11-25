@@ -38,9 +38,9 @@ pub(crate) const ALL: &[&dyn DataSet] = &[
     &datasets::dashboard_cost::ProviderCosts,
     &datasets::dashboard_cost::ProviderCostByDay,
     &datasets::dashboard_cost::ContainerUsage,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     &datasets::analysis_skills::Skills,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     &datasets::analysis_skill_conversations::SkillConversations,
     #[cfg(feature = "agents")]
     &datasets::analysis_conversations::ClassifiedConversations,
@@ -48,9 +48,9 @@ pub(crate) const ALL: &[&dyn DataSet] = &[
     &datasets::analysis_conversations::Breakdown,
     #[cfg(feature = "agents")]
     &datasets::analysis_conversation::ConversationTurns,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     &datasets::analysis_skill_runs::SkillRuns,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     &datasets::analysis_skill_runs::KitReleaseImpact,
     #[cfg(feature = "mcp")]
     &datasets::versions::Marketplaces,

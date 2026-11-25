@@ -9,7 +9,7 @@
 pub(crate) mod conversation_detail;
 #[cfg(feature = "agents")]
 pub(crate) mod conversations;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod help;
 #[cfg(feature = "mcp")]
 pub(crate) mod inventory_actions;
@@ -23,18 +23,18 @@ pub(crate) mod marketplace_versions;
 pub(crate) mod reports;
 #[cfg(feature = "mcp")]
 pub(crate) mod revisions;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod ribbon;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod skill_detail;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod skill_runs;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod skills;
 pub(crate) mod time;
 #[cfg(feature = "mcp")]
 pub(crate) mod tone;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) use skill_detail::skill_page;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub use skill_detail::{SkillRef, parse_skill_key};

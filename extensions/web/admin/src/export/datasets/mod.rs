@@ -6,11 +6,11 @@
 pub(crate) mod analysis_conversation;
 #[cfg(feature = "agents")]
 pub(crate) mod analysis_conversations;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod analysis_skill_conversations;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod analysis_skill_runs;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod analysis_skills;
 #[cfg(feature = "agents")]
 pub(crate) mod contexts;

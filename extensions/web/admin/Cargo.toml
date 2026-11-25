@@ -74,7 +74,7 @@ async-trait = { workspace = true }
 governance-ssr = []
 # Console page groups a flavour may leave out. The base console (identity,
 # governance, access control, sync, overview, usage analytics) is always built.
-gateway = ["systemprompt/ai"]
+gateway = []
 mcp = ["systemprompt/mcp-servers", "systemprompt/marketplace"]
 agents = ["mcp", "systemprompt/agents", "systemprompt/ai"]
 content = ["systemprompt/content"]

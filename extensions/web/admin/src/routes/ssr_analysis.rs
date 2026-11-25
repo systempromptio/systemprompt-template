@@ -29,14 +29,6 @@ fn catalog_analysis_routes() -> Router<Arc<PgPool>> {
             post(handlers::ssr::analysis::inventory_actions::sync_inventory),
         )
         .route(
-            "/analysis/skills",
-            get(handlers::ssr::analysis::skills::page),
-        )
-        .route(
-            "/analysis/skills/{skill}",
-            get(handlers::ssr::analysis::skill_page),
-        )
-        .route(
             "/analysis/inventory/{entry_id}/bind",
             post(handlers::ssr::analysis::inventory_actions::bind),
         )
@@ -65,6 +57,14 @@ fn catalog_analysis_routes() -> Router<Arc<PgPool>> {
 #[cfg(feature = "agents")]
 fn conversation_analysis_routes() -> Router<Arc<PgPool>> {
     Router::new()
+        .route(
+            "/analysis/skills",
+            get(handlers::ssr::analysis::skills::page),
+        )
+        .route(
+            "/analysis/skills/{skill}",
+            get(handlers::ssr::analysis::skill_page),
+        )
         .route(
             "/analysis/conversations",
             get(handlers::ssr::analysis::conversations::page),

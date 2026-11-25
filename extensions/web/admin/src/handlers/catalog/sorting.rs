@@ -10,7 +10,7 @@
 // sort-header builder, and `lib.rs` and the catalog views name the type
 // through it.
 pub(crate) use crate::handlers::ssr::types::SortHeaderView;
-pub use crate::handlers::ssr::types::table::SortColumn;
+pub(crate) use crate::handlers::ssr::types::table::SortColumn;
 
 // Why: The header row for `columns`, given the base path and the applied order.
 //

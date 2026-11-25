@@ -95,7 +95,7 @@ pub mod test_support {
     pub use crate::handlers::ssr::analysis::time::{
         parse as parse_window_bound, render as render_window_bound,
     };
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     pub use crate::handlers::ssr::analysis::{SkillRef, parse_skill_key};
     #[cfg(feature = "mcp")]
     pub use crate::handlers::ssr::ssr_connectors_cards::{

@@ -184,7 +184,7 @@ impl Table {
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Window {
     Live,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     Retained,
     Days,
     Month,

@@ -8,7 +8,7 @@
 
 #[cfg(feature = "agents")]
 use systemprompt::identifiers::ContextId;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 use systemprompt::identifiers::MarketplaceId;
 
 #[cfg(feature = "agents")]
@@ -29,7 +29,7 @@ pub(crate) fn analysis_skill_url(skill_key: &str) -> String {
     format!("{ANALYSIS_SKILLS_URL}/{}", urlencoding::encode(skill_key))
 }
 
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) fn analysis_version_url(marketplace: &MarketplaceId, hash: Option<&str>) -> String {
     let base = format!(
         "{ANALYSIS_VERSIONS_URL}/{}",
