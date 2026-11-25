@@ -1,3 +1,6 @@
+# Postgres plus one flavour's image. Parameters: FLAVOUR (default full),
+# IMAGE (default systemprompt-template:<FLAVOUR>), HTTP_PORT (default 8080).
+#   FLAVOUR=full docker compose -p sp-full up
 services:
   postgres:
     image: postgres:18-alpine
@@ -19,15 +22,17 @@ services:
       retries: 10
 
   app:
-    # Default: build from source. To use a pre-published image, comment `build:`
-    # and uncomment `image:` below (requires GHCR publishing workflow).
-    build: .
-    # image: ghcr.io/systempromptio/systemprompt-template:latest
+    # One file for every flavour: FLAVOUR picks the locally built image
+    # (`just docker-build <flavour>`), IMAGE names any other one, e.g.
+    # ghcr.io/systempromptio/systemprompt-template:latest.
+    image: ${IMAGE:-systemprompt-template:${FLAVOUR:-full}}
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL to an address you control}
       DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres:5432/systemprompt

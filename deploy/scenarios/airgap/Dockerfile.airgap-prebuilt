@@ -12,8 +12,7 @@
 #
 # Prerequisite (run from repo root):
 #   just build --release    # builds against the path-patched sibling core
-#   cp -L target/release/systemprompt           deploy/scenarios/airgap/.bin/systemprompt
-#   cp -L target/release/systemprompt-mcp-agent deploy/scenarios/airgap/.bin/systemprompt-mcp-agent
+#   cp -L target/flavour-full/release/systemprompt deploy/scenarios/airgap/.bin/systemprompt
 # The host-build step is wired into the airgap recipe in justfile so the
 # operator runs `just airgap` once and gets a binary that knows about the
 # trusted-hosts allowlist.
@@ -40,7 +39,6 @@ RUN mkdir -p /app/bin /app/logs /app/storage /app/web /app/services/profiles/doc
 # we cannot COPY target/release/* directly — the airgap recipe dereference-
 # copies the binaries into deploy/scenarios/airgap/.bin/ (gitignored) first.
 COPY deploy/scenarios/airgap/.bin/systemprompt            /app/bin/systemprompt
-COPY deploy/scenarios/airgap/.bin/systemprompt-mcp-agent  /app/bin/systemprompt-mcp-agent
 
 COPY services /app/services
 COPY storage /app/storage

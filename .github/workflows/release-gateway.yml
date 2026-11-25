@@ -127,7 +127,7 @@ jobs:
           # everywhere this repo compiles C, mirroring the justfile build recipe.
           CC: clang
           CXX: clang++
-        run: cargo build --release --workspace --locked --target ${{ matrix.target }}
+        run: cargo build --release --locked --no-default-features --features flavour-full --bin systemprompt --target ${{ matrix.target }}
 
       - name: Stage artefacts
         shell: bash
@@ -138,7 +138,7 @@ jobs:
           mkdir -p "dist/${stage}"
           ext=""
           [ "${{ runner.os }}" = "Windows" ] && ext=".exe"
-          for b in systemprompt systemprompt-mcp-agent; do
+          for b in systemprompt; do
             cp "target/${{ matrix.target }}/release/${b}${ext}" "dist/${stage}/"
           done
           cp -r services "dist/${stage}/"
@@ -296,7 +296,7 @@ jobs:
           - Manual: download `systemprompt-gateway-<version>-<target>.tar.gz`
             (`linux-amd64`, `linux-arm64`, `darwin-arm64`; on Windows run the
             gateway via Docker), verify against `SHA256SUMS.gateway`, extract.
-            Contents: `systemprompt`, `systemprompt-mcp-agent`, `services/`,
+            Contents: `systemprompt`, `services/`,
             `web/`.
 
           ## Verify signature
@@ -425,7 +425,6 @@ jobs:
 
             def install
               bin.install "systemprompt"
-              bin.install "systemprompt-mcp-agent"
               libexec.install "services"
               libexec.install "web" if File.exist?("web")
               libexec.install "storage"

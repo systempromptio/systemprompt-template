@@ -1,7 +1,9 @@
 #!/bin/sh
 # Container entrypoint for systemprompt-template.
 # Authors a profile via `systemprompt admin setup` on first boot,
-# waits for Postgres, runs migrations, starts the server.
+# waits for Postgres, runs migrations, starts the server. The image's flavour
+# (Dockerfile ARGs) decides whether a provider key is required
+# (FLAVOUR_REQUIRES_AI_KEY) and whether the site is published (FLAVOUR_SITE).
 set -eu
 umask 077
 profile_created=false
@@ -89,9 +91,13 @@ print(path if path.is_absolute() else profile.parent / path)' "$PROFILE_FILE")"
         fi
     fi
 else
-    if [ -z "${ANTHROPIC_API_KEY:-}" ] && [ -z "${OPENAI_API_KEY:-}" ] && [ -z "${GEMINI_API_KEY:-}" ]; then
-        echo "ERROR: set at least one of ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY in .env" >&2
-        exit 1
+    if [ "${FLAVOUR_REQUIRES_AI_KEY:-true}" = true ]; then
+        if [ -z "${ANTHROPIC_API_KEY:-}" ] && [ -z "${OPENAI_API_KEY:-}" ] && [ -z "${GEMINI_API_KEY:-}" ]; then
+            echo "ERROR: set at least one of ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY in .env" >&2
+            exit 1
+        fi
+    else
+        unset ANTHROPIC_API_KEY OPENAI_API_KEY GEMINI_API_KEY
     fi
     if [ -z "${DATABASE_URL:-}" ]; then
         echo "ERROR: DATABASE_URL is required." >&2
@@ -101,10 +107,12 @@ else
     if [ ! -f "$PROFILE_FILE" ]; then
         echo "Generating profile via admin setup..."
         # Default provider = first configured key (setup picks up the
-        # ANTHROPIC/OPENAI/GEMINI_API_KEY env vars itself).
-        if [ -n "${ANTHROPIC_API_KEY:-}" ]; then DEFAULT_PROVIDER=anthropic
-        elif [ -n "${OPENAI_API_KEY:-}" ]; then DEFAULT_PROVIDER=openai
-        else DEFAULT_PROVIDER=gemini
+        # ANTHROPIC/OPENAI/GEMINI_API_KEY env vars itself); a flavour without
+        # AI names none.
+        set --
+        if [ -n "${ANTHROPIC_API_KEY:-}" ]; then set -- --default-provider anthropic
+        elif [ -n "${OPENAI_API_KEY:-}" ]; then set -- --default-provider openai
+        elif [ -n "${GEMINI_API_KEY:-}" ]; then set -- --default-provider gemini
         fi
         # Why: core requires --admin-email since 0.41.0. It refuses to invent
         # one because the address is shown as the operator's identity on the
@@ -120,7 +128,7 @@ else
         fi
         /app/bin/systemprompt admin setup -e docker \
             --admin-email "$ADMIN_EMAIL" \
-            --default-provider "$DEFAULT_PROVIDER" --yes --no-migrate
+            "$@" --yes --no-migrate
 
         profile_created=true
 
@@ -193,9 +201,11 @@ echo "Ensuring bootstrap admin user..."
 # serve 404 until a later tick lands on them. The manual runner takes no lock:
 # render here, on every node, before the server accepts traffic. A failure is
 # logged rather than fatal so a content problem never takes the gateway down.
-echo "Publishing web assets for this node..."
-if ! /app/bin/systemprompt infra jobs run publish_pipeline; then
-    echo "WARN: publish_pipeline failed; the public site may 404 on this node until the next scheduled run." >&2
+if [ "${FLAVOUR_SITE:-true}" = true ]; then
+    echo "Publishing web assets for this node..."
+    if ! /app/bin/systemprompt infra jobs run publish_pipeline; then
+        echo "WARN: publish_pipeline failed; the public site may 404 on this node until the next scheduled run." >&2
+    fi
 fi
 
 echo "Starting services..."
