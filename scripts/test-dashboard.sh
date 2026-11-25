@@ -3,11 +3,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export SQLX_OFFLINE=true
-if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/local/secrets.json ]; then
+if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/${FLAVOUR:-full}/secrets.json ]; then
     SYSTEMPROMPT_TEST_DATABASE_URL=$(python3 - <<'PY'
 import json
 from urllib.parse import urlsplit, urlunsplit
-with open('.systemprompt/profiles/local/secrets.json') as f:
+with open('.systemprompt/profiles/${FLAVOUR:-full}/secrets.json') as f:
     url = urlsplit(json.load(f)['database_url'])
 print(urlunsplit((url.scheme, url.netloc, '/postgres', '', '')))
 PY

@@ -61,14 +61,22 @@ compiles the patched core anyway.
 ## Quick Start
 
 ```bash
-# First-time setup: writes .systemprompt/profiles/local/, starts Docker Postgres,
-# runs publish_pipeline. With no key arg, the CLI prompts for which provider to
-# use; the chosen provider becomes ai.default_provider (others disabled) and the
-# gateway default. Passing keys is non-interactive — the first becomes default.
-just setup-local                                                          # interactive provider pick
-just setup-local <anthropic_key> [openai_key] [gemini_key] [http_port=8080] [pg_port=5432]
+# Flavours (flavours/index.toml, docs/flavours/README.md): every build, run and
+# test recipe targets FLAVOUR (env, default full). FLAVOUR_PYTHON names a
+# Python 3.11+ when python3 is older (scripts/flavour.py needs tomllib).
+just flavours                                                             # name + description
 
-# No toolchain? Install the release's binaries into target/release/ instead
+# First-time setup of a flavour: writes .systemprompt/profiles/<flavour>/, starts
+# Docker Postgres, builds into target/flavour-<flavour>/, migrates, bootstraps and
+# (for a flavour with a site) publishes. With no key, the CLI prompts for the
+# provider; passing keys is non-interactive — the first becomes the default.
+just setup full                                                           # interactive provider pick
+just setup full --anthropic-key <k> [--openai-key <k>] [--gemini-key <k>] [--http-port 8080] [--pg-port 5432]
+
+# Image, smoke and metrics per flavour
+just docker-build full && just smoke full --no-build && just metrics full --image --dev
+
+# No toolchain? Install the release's binaries into target/flavour-full/release/ instead
 just fetch-release [X.Y.Z]                                                # linux-amd64/arm64, darwin-arm64
 
 # Build (locked dependencies, SQLX_OFFLINE=true; no database changes)

@@ -474,12 +474,12 @@ just scaled-down
 
 ## Connecting a client
 
-The `enterprise-demo` plugin, its skills, agents, and MCP servers ship with the template, but plugin assignment is **per-user** — `setup-local` populates the global registry and `01-seed-data.sh` forks `enterprise-demo` into the active session's user. Whoever is authenticated when you run the seed gets the plugin.
+The `enterprise-demo` plugin, its skills, agents, and MCP servers ship with the template, but plugin assignment is **per-user** — `just setup` populates the global registry and `01-seed-data.sh` forks `enterprise-demo` into the active session's user. Whoever is authenticated when you run the seed gets the plugin.
 
 Bring up the template:
 
 ```bash
-just setup-local <anthropic_key> [openai_key] [gemini_key]
+just setup full --anthropic-key <key>   # or --openai-key / --gemini-key
 just start
 ```
 

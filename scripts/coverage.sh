@@ -54,10 +54,10 @@ TBASE="${COVERAGE_TARGET_DIR:-$ROOT/coverage-report/target}"
 rm -rf "$PROFDIR" "$ROOT/coverage-report/tests.profdata"
 mkdir -p "$PROFDIR"
 
-if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/local/secrets.json ]; then
+if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/${FLAVOUR:-full}/secrets.json ]; then
     SYSTEMPROMPT_TEST_DATABASE_URL=$(python3 -c "
 import json, urllib.parse as up
-u = up.urlsplit(json.load(open('.systemprompt/profiles/local/secrets.json'))['database_url'])
+u = up.urlsplit(json.load(open('.systemprompt/profiles/${FLAVOUR:-full}/secrets.json'))['database_url'])
 print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
     export SYSTEMPROMPT_TEST_DATABASE_URL
 fi

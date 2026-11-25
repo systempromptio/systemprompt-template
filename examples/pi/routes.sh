@@ -29,7 +29,7 @@ ADDED=false
 while read -r id pattern provider; do
   # Why: a route naming a provider the profile does not declare fails
   # Profile::validate, so every later CLI call and the next server start abort
-  # on an unreadable profile. setup-local declares only the providers it was
+  # on an unreadable profile. `just setup` declares only the providers it was
   # given keys for, so the demo's optional models have to be skipped rather
   # than written blind.
   if ! grep -q "^- name: $provider\$" "$PROFILE_YAML"; then

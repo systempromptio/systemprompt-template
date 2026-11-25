@@ -38,7 +38,6 @@ RUN mkdir -p /app/bin /app/logs /app/storage /app/web /app/services/profiles/doc
 # the context. `just scaled-up` / run.sh dereference-copy the binaries into
 # deploy/scenarios/scaled/.bin/ (gitignored) before building.
 COPY deploy/scenarios/scaled/.bin/systemprompt            /app/bin/systemprompt
-COPY deploy/scenarios/scaled/.bin/systemprompt-mcp-agent  /app/bin/systemprompt-mcp-agent
 
 COPY services /app/services
 COPY storage /app/storage

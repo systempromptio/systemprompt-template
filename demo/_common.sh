@@ -41,16 +41,16 @@ fi
 # ── Token loading ──────────────────────────────
 TOKEN_FILE="$DEMO_ROOT/.token"
 USER_TOKEN_FILE="$DEMO_ROOT/.token.user"
-# Default to the local dev profile; fall back to the container-authored docker
-# profile when local doesn't exist (e.g. running demos inside the image).
+# Default to the flavour's dev profile (FLAVOUR, default full); fall back to the
+# container-authored docker profile when it doesn't exist (e.g. running demos inside the image).
 if [[ -z "${PROFILE:-}" ]]; then
-  if [[ ! -d "$PROJECT_DIR/.systemprompt/profiles/local" && -d "$PROJECT_DIR/.systemprompt/profiles/docker" ]]; then
+  if [[ ! -d "$PROJECT_DIR/.systemprompt/profiles/${FLAVOUR:-full}" && -d "$PROJECT_DIR/.systemprompt/profiles/docker" ]]; then
     PROFILE=docker
   else
-    PROFILE=local
+    PROFILE="${FLAVOUR:-full}"
   fi
 fi
-# Derive BASE_URL from the active profile so demos work when setup-local was
+# Derive BASE_URL from the active profile so demos work when `just setup` was
 # invoked with non-default ports. Precedence: BASE_URL env > profile.yaml
 # api_server_url > localhost:8080.
 _derive_base_url() {

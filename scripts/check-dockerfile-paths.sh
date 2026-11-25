@@ -10,10 +10,10 @@
 #
 # Two rules:
 #   1. every `systemprompt-mcp-<name>` a Dockerfile OR a workflow names must be
-#      declared as `binary:` by some extensions/mcp/*/manifest.yaml. Workflows
-#      count because release.yml's smoke step asserts the binaries are in the
-#      image (`docker run --entrypoint ls ... /app/bin/<binary>`), so a deleted
-#      one fails the release there as surely as in the build.
+#      a binary some flavour ships (`binaries` in flavours/<name>/flavour.toml,
+#      read through scripts/flavour.py). Workflows count because a release
+#      smoke step that asserts a binary is in the image fails as surely as the
+#      build when the binary is gone.
 #   2. in the ROOT Dockerfile only, every COPY source must be TRACKED. Its
 #      build context is the repository root (`COPY . /src`), so a path there is
 #      checkable — but it must be checked against git, not the disk: release.yml
@@ -27,15 +27,16 @@ cd "$(dirname "$0")/.."
 
 fail=0
 
-declared=$(grep -h '^[[:space:]]*binary:' extensions/mcp/*/manifest.yaml 2>/dev/null |
-    sed 's/.*binary:[[:space:]]*//' | tr -d '"' | sort -u)
+declared=$(for flavour in $("${FLAVOUR_PYTHON:-python3}" scripts/flavour.py list); do
+    "${FLAVOUR_PYTHON:-python3}" scripts/flavour.py get "$flavour" binaries
+done | sort -u)
 
 while IFS= read -r file; do
     [ -f "$file" ] || continue
 
     for binary in $(grep -oE 'systemprompt-mcp-[a-z0-9-]+' "$file" | sort -u); do
         if ! printf '%s\n' "$declared" | grep -qx "$binary"; then
-            echo "$file: names '$binary', which no extensions/mcp/*/manifest.yaml declares"
+            echo "$file: names '$binary', which no flavour ships (flavours/*/flavour.toml binaries)"
             fail=1
         fi
     done

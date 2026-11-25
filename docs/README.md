@@ -40,10 +40,10 @@ Maintainers: the release process (versioning, tag scheme, retention, rollback) i
 
 ### Running a second clone side-by-side
 
-`just setup-local` accepts port overrides after the three key positions. To run a second clone on HTTP 8081 and Postgres 5433:
+`just setup <flavour>` takes port overrides. To run a second clone on HTTP 8081 and Postgres 5433:
 
 ```bash
-just setup-local <anthropic_key> "" "" 8081 5433
+just setup full --anthropic-key <key> --http-port 8081 --pg-port 5433
 ```
 
 ### Docker Compose and secrets

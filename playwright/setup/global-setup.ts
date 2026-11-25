@@ -30,7 +30,7 @@ function resolveIssuer(baseURL: string): string {
   if (process.env.E2E_JWT_ISSUER) return process.env.E2E_JWT_ISSUER;
   try {
     const profile = readFileSync(
-      join(REPO, '.systemprompt', 'profiles', 'local', 'profile.yaml'),
+      join(REPO, '.systemprompt', 'profiles', process.env.FLAVOUR ?? 'full', 'profile.yaml'),
       'utf8',
     );
     const m = profile.match(/^\s*jwt_issuer:\s*(\S+)/m);
@@ -118,7 +118,7 @@ export default async function globalSetup(config: FullConfig) {
     signingPem = readFileSync(process.env.E2E_SIGNING_KEY, 'utf8');
   } else {
     const secrets = JSON.parse(readFileSync(
-      join(REPO, '.systemprompt', 'profiles', 'local', 'secrets.json'), 'utf8',
+      join(REPO, '.systemprompt', 'profiles', process.env.FLAVOUR ?? 'full', 'secrets.json'), 'utf8',
     ));
     signingPem = secrets.signing_key_pem
       ? Buffer.from(secrets.signing_key_pem, 'base64').toString('utf8')

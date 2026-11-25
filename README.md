@@ -34,16 +34,16 @@ This repository is the **evaluation template**: Core plus configuration, an admi
 
 ## Quick start
 
-Install Docker, [just](https://just.systems/) and Rust through rustup. The repo pins its toolchain in [rust-toolchain.toml](rust-toolchain.toml); the workspace requires Rust 1.96+. Local setup provisions PostgreSQL 18 and asks for an AI provider key.
+Install Docker, [just](https://just.systems/) and Rust through rustup. The repo pins its toolchain in [rust-toolchain.toml](rust-toolchain.toml); the workspace requires Rust 1.96+. Local setup provisions PostgreSQL 18 and asks for an AI provider key. The template builds as one of several [flavours](docs/flavours/README.md); `just flavours` lists them and `full` is everything.
 
 ```bash
 git clone https://github.com/systempromptio/systemprompt-template
 cd systemprompt-template
-just setup-local
+just setup full
 just start
 ```
 
-Open **http://localhost:8080**. Setup builds the binary, provisions the local profile and database, runs migrations and publishes assets. Inference uses your chosen provider account.
+Open **http://localhost:8080**. Setup builds the flavour, provisions its profile and database, runs migrations and publishes assets. Inference uses your chosen provider account.
 
 For non-interactive setup, pass provider keys as documented in the [installation guide](docs/README.md). That guide also covers containers, deployment platforms and alternate ports.
 

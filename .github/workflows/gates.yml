@@ -228,23 +228,22 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: "22"
-      # The stack needs only the server and the MCP agent it spawns
-      # (services/mcp/systemprompt.yaml). This tier used to run `just build`
-      # (the whole debug workspace) and then setup-local's full-workspace
-      # release build on top; setup-local is now told not to build (last arg).
-      - name: Build the server and MCP agent
+      # The stack needs only the server binary (it hosts the systemprompt MCP
+      # server in process), built in debug into the flavour's target dir, where
+      # `just setup full --no-build` and `just start` look for it.
+      - name: Build the full flavour server
         timeout-minutes: 45
         run: |
           bash scripts/check-core-ref.sh
-          cargo build --locked --workspace --bin systemprompt --bin systemprompt-mcp-agent
-      # setup-local brings up its own Docker Postgres, so this job takes no
+          CARGO_TARGET_DIR=target/flavour-full cargo build --locked --no-default-features --features "$(python3 scripts/flavour.py features full)" --bin systemprompt
+      # `just setup` brings up its own Docker Postgres, so this job takes no
       # `services:` block: the seed then reads the same profile secrets a
       # developer's machine does. The key is a placeholder and is never used —
-      # no page spec exercises inference, and setup-local refuses to generate
-      # a profile with no provider key at all off a TTY.
-      - name: Provision the local profile
+      # no page spec exercises inference, and setup refuses to generate a
+      # profile for a flavour with AI without a provider key off a TTY.
+      - name: Provision the full flavour profile
         timeout-minutes: 10
-        run: just setup-local "sk-ant-e2e-placeholder" "" "" 8080 5432 e2e@example.invalid false
+        run: just setup full --anthropic-key sk-ant-e2e-placeholder --http-port 8080 --pg-port 5432 --admin-email e2e@example.invalid --no-build
       # `infra services start` holds the terminal for the life of the server.
       - name: Start the stack (detached)
         run: nohup just start > e2e-server.log 2>&1 &

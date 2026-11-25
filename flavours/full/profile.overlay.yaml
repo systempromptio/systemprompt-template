@@ -1,0 +1,3 @@
+# Profile keys this flavour sets on top of what `admin setup` writes.
+# `full` runs the profile exactly as setup authors it, so it sets none.
+{}
