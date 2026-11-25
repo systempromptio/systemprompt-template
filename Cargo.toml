@@ -40,7 +40,7 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.87.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt = { version = "0.87.0", default-features = false, features = ["core"] }
 systemprompt-security = { version = "0.87.0" }
 systemprompt-users = { version = "0.87.0" }
 systemprompt-content = { version = "0.87.0" }
