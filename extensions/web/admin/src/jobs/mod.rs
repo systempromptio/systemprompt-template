@@ -10,6 +10,7 @@
 mod error;
 
 mod access_expiry;
+#[cfg(feature = "content")]
 mod content_analytics;
 #[cfg(feature = "agents")]
 mod conversation_judge;
@@ -28,6 +29,7 @@ use systemprompt::extension::Contributions;
 pub use error::JobError;
 
 pub use access_expiry::{AccessExpiryJob, ExpirySweep, lost_manage_role};
+#[cfg(feature = "content")]
 pub use content_analytics::ContentAnalyticsAggregationJob;
 #[cfg(feature = "agents")]
 pub use conversation_judge::ConversationJudgeJob;
@@ -45,8 +47,9 @@ use usage_anomaly::UsageAnomalyJob;
 pub fn contribute_jobs(c: &mut Contributions<'_>) {
     #[cfg(feature = "agents")]
     c.job(ConversationJudgeJob);
+    #[cfg(feature = "content")]
+    c.job(ContentAnalyticsAggregationJob);
     c.job(AccessExpiryJob)
-        .job(ContentAnalyticsAggregationJob)
         .job(ConversationRollupJob)
         .job(GovernanceBootstrapJob)
         .job(PluginUsageRetentionJob)

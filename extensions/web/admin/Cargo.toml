@@ -76,8 +76,8 @@ governance-ssr = []
 # governance, access control, sync, overview, usage analytics) is always built.
 gateway = []
 mcp = ["systemprompt/mcp-servers", "systemprompt/marketplace"]
-agents = ["mcp", "systemprompt/agents", "systemprompt/ai"]
-content = ["systemprompt/content"]
+agents = ["mcp", "systemprompt/ai"]
+content = []
 
 [lints]
 workspace = true

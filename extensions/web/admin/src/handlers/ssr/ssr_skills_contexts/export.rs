@@ -1,7 +1,7 @@
 //! Activity by person as the export surface reads it.
 
 use crate::error::AdminResult;
-use crate::export::datasets::requests::time_range;
+use crate::export::window::time_range;
 use crate::export::model::ExportContext;
 use crate::repositories;
 use crate::repositories::analytics::conversation_rows::{

@@ -2,6 +2,7 @@
 
 pub mod agents;
 pub mod artifacts;
+#[cfg(feature = "content")]
 pub mod content_rollup;
 pub mod context_detail;
 pub mod context_tool_calls;

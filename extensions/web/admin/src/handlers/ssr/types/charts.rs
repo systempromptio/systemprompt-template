@@ -9,24 +9,20 @@
 //! The Inference Requests and Evals pages both build these, so a fix to how a
 //! chart reads lands on both at once.
 
-#[cfg(any(feature = "gateway", feature = "agents"))]
+#[cfg(feature = "gateway")]
 use serde::Serialize;
 
 #[cfg(feature = "gateway")]
-use crate::handlers::ssr::format::format_duration_ms;
-#[cfg(any(feature = "gateway", feature = "agents"))]
-use crate::handlers::ssr::format::format_cost;
+use crate::handlers::ssr::format::{format_cost, format_duration_ms};
 #[cfg(feature = "gateway")]
-use crate::repositories::analytics::request_stats::{LatencyBucket, RequestStats};
-#[cfg(any(feature = "gateway", feature = "agents"))]
-use crate::repositories::analytics::request_stats::TimeBucket;
-#[cfg(any(feature = "gateway", feature = "agents"))]
+use crate::repositories::analytics::request_stats::{LatencyBucket, RequestStats, TimeBucket};
+#[cfg(feature = "gateway")]
 use crate::util::time_range::TimeRange;
 
 // Why: the view carries its own axis labels — y_max/y_mid label the gridlines
 // the partial draws, x_* label the window the buckets span — so the template
 // never derives a scale and the axis cannot disagree with the bars.
-#[cfg(any(feature = "gateway", feature = "agents"))]
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct ChartView {
     // Why: serialized as chart_title — the layout partial's `title=` hash
@@ -45,7 +41,7 @@ pub(crate) struct ChartView {
     pub empty_message: &'static str,
 }
 
-#[cfg(any(feature = "gateway", feature = "agents"))]
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct ChartBarView {
     pub pct: i64,
@@ -128,7 +124,7 @@ pub(crate) fn traffic_chart(buckets: &[TimeBucket], range: &TimeRange) -> ChartV
     }
 }
 
-#[cfg(any(feature = "gateway", feature = "agents"))]
+#[cfg(feature = "gateway")]
 pub(crate) fn cost_chart(buckets: &[TimeBucket], range: &TimeRange) -> ChartView {
     let max = buckets
         .iter()
@@ -176,12 +172,12 @@ pub(crate) fn bar_pct(value: i64, max: i64) -> i64 {
     pct.clamp(2, 100)
 }
 
-#[cfg(any(feature = "gateway", feature = "agents"))]
+#[cfg(feature = "gateway")]
 fn midpoint(range: &TimeRange) -> chrono::DateTime<chrono::Utc> {
     range.from + (range.to - range.from) / 2
 }
 
-#[cfg(any(feature = "gateway", feature = "agents"))]
+#[cfg(feature = "gateway")]
 fn format_bucket_time(ts: &chrono::DateTime<chrono::Utc>) -> String {
     ts.with_timezone(&chrono::Local)
         .format("%b %d %H:%M")

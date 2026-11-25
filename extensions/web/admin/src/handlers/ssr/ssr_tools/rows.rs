@@ -4,7 +4,7 @@
 use serde::Serialize;
 
 use crate::handlers::ssr::analysis_urls::analysis_skill_url;
-use crate::handlers::ssr::format::{format_duration_ms, local_time, relative_time, short_num};
+use crate::handlers::ssr::format::{format_bytes, format_duration_ms, local_time, relative_time};
 use crate::repositories::analysis::tools::ToolActivityRow;
 
 const INPUT_CLIP: usize = 72;
