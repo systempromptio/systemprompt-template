@@ -227,7 +227,7 @@ pub(crate) async fn build_bridge_profile_data(
         .map(|a| a.id.clone())
         .collect::<Vec<_>>();
     let allowed = access
-        .allowed(systemprompt_security::authz::EntityKind::Agent, &ids)
+        .allowed(systemprompt::governance::authz::EntityKind::Agent, &ids)
         .await?;
     agents
         .items

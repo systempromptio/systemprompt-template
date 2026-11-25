@@ -13,7 +13,7 @@ use axum::http::header::CACHE_CONTROL;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt_security::authz::EntityKind;
+use systemprompt::governance::authz::EntityKind;
 
 pub(super) async fn token(
     State(pool): State<Arc<PgPool>>,

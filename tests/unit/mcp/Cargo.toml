@@ -13,7 +13,7 @@ systemprompt-mcp-shared = { workspace = true }
 systemprompt-mcp-agent = { workspace = true }
 rmcp = { workspace = true }
 tokio = { workspace = true }
-systemprompt = { workspace = true, features = ["full"] }
+systemprompt = { workspace = true, features = ["reference"] }
 axum = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

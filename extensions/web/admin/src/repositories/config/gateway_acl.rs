@@ -1,11 +1,11 @@
 //! Thin gateway-route convenience wrappers around the unified
-//! `systemprompt_security::authz` core crate.
+//! `systemprompt::governance::authz` core crate.
 //!
 //! Types and the resolver are re-exported directly from
-//! `systemprompt_security::authz` so handler call sites compile unchanged. The
-//! repository functions below preserve the historical `(pool, route_id, ...)`
-//! signatures while delegating
-//! to [`systemprompt_security::authz::AccessControlRepository`] with
+//! `systemprompt::governance::authz` so handler call sites compile unchanged.
+//! The repository functions below preserve the historical `(pool, route_id,
+//! ...)` signatures while delegating
+//! to [`systemprompt::governance::authz::AccessControlRepository`] with
 //! `entity_type = "gateway_route"`. Use the core repository directly for any
 //! new entity types (`mcp_server`, etc.).
 //!
@@ -17,12 +17,12 @@ use std::sync::Arc;
 use systemprompt::identifiers::RouteId;
 
 use sqlx::PgPool;
-use systemprompt_security::authz::{
+use systemprompt::governance::authz::{
     AccessControlRepository, AuthzError, EntityKind, EntityRow, UpsertRuleParams,
 };
 
-pub use systemprompt_security::authz::resolver::resolve;
-pub use systemprompt_security::authz::{Access, AccessRule, Decision, RuleType};
+pub use systemprompt::governance::authz::resolver::resolve;
+pub use systemprompt::governance::authz::{Access, AccessRule, Decision, RuleType};
 
 const ENTITY_TYPE: EntityKind = EntityKind::GatewayRoute;
 
@@ -69,7 +69,7 @@ pub async fn upsert_rule(
             rule_value,
             access,
             justification: None,
-            source: systemprompt_security::authz::DASHBOARD_SOURCE,
+            source: systemprompt::governance::authz::DASHBOARD_SOURCE,
         })
         .await
         .map_err(|e| map_err(&e))

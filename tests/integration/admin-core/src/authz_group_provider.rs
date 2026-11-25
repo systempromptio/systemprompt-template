@@ -7,7 +7,7 @@
 
 use std::sync::Arc;
 
-use systemprompt_security::authz::SubjectAttributeProvider;
+use systemprompt::governance::authz::SubjectAttributeProvider;
 use systemprompt_web_admin::authz::group::{GroupAttributeProvider, group_rule_type, invalidate};
 
 use crate::fixtures::{

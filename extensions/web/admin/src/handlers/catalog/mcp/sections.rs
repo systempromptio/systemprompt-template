@@ -8,7 +8,7 @@ use std::sync::Arc;
 use systemprompt::identifiers::McpServerId;
 
 use sqlx::PgPool;
-use systemprompt_security::authz::{AccessControlRepository, EntityKind};
+use systemprompt::governance::authz::{AccessControlRepository, EntityKind};
 
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
 use crate::repositories;

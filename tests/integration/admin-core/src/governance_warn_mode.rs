@@ -17,10 +17,10 @@ use std::path::PathBuf;
 
 use serde_json::json;
 use systemprompt::identifiers::{CallId, McpToolName, PolicyId, SessionId, TraceId, UserId};
-use systemprompt_security::authz::list_governance_warnings;
-use systemprompt_security::authz::types::DecisionTag;
-use systemprompt_security::policy::types::AccessScope;
-use systemprompt_security::policy::{
+use systemprompt::governance::authz::list_governance_warnings;
+use systemprompt::governance::authz::types::DecisionTag;
+use systemprompt::governance::policy::types::AccessScope;
+use systemprompt::governance::policy::{
     AgentScope, AuditOrigin, AuditTarget, ChainEntryResult, DecisionAudit, Evaluation,
     GovernanceConfig, GovernanceEngine, GovernedInput, GovernedTarget, McpToolInput, PolicyContext,
     PolicyMode, PrincipalSnapshot, RateCounts, record_decision,

@@ -7,10 +7,10 @@
 //! would read it off the user's row instead.
 
 use async_trait::async_trait;
-use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{
+use systemprompt::governance::authz::{
     AuthzError, RuleType, SubjectAttributeProvider, SubjectDimension,
 };
+use systemprompt::identifiers::UserId;
 
 const ORGANIZATION_SLUG: &str = "organization";
 

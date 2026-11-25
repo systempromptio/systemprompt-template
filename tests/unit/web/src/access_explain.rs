@@ -4,7 +4,7 @@
 
 use chrono::Utc;
 use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{
+use systemprompt::governance::authz::{
     ParentChainIndex, RuleType, SubjectAttributes, SubjectDimension,
 };
 use systemprompt_web_admin::repositories::users::access_control::MatrixSubject;

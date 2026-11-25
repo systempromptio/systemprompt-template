@@ -5,10 +5,10 @@
 
 use axum::http::HeaderMap;
 use axum::response::Response;
+use systemprompt::governance::authz::{Decision, DenyReason};
 use systemprompt::identifiers::{ClientId, UserId};
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::OauthError;
-use systemprompt_security::authz::{Decision, DenyReason};
 
 use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_issuer};
 

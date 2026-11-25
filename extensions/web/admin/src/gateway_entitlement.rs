@@ -1,20 +1,18 @@
 //! Gateway guard enforcing which routes a caller is entitled to.
 //!
-//! Registered through `register_gateway_guard!` and consulted by the gateway
-//! on every `/v1/messages` request right after the quota precheck. The
-//! resolved route is a `gateway_route` entity, so this is the ordinary authz
-//! resolver run over the same rules the access matrix shows, with every
-//! subject dimension in the ladder. A denial is 403: no amount of retrying
-//! buys a model the caller is not entitled to.
+//! Contributed by `WebExtension::contribute` through `gateway_guard` and
+//! consulted by the gateway on every `/v1/messages` request right after the
+//! quota precheck. The resolved route is a `gateway_route` entity, so this is
+//! the ordinary authz resolver run over the same rules the access matrix shows,
+//! with every subject dimension in the ladder. A denial is 403: no amount of
+//! retrying buys a model the caller is not entitled to.
 
 use sqlx::PgPool;
-use systemprompt::extension::{
-    GatewayDenyReason, GatewayGuardRequest, GatewayRequestGuard, register_gateway_guard,
-};
+use systemprompt::extension::{GatewayDenyReason, GatewayGuardRequest, GatewayRequestGuard};
+use systemprompt::governance::authz::resolver::{ResolveInput, resolve};
+use systemprompt::governance::authz::{Decision, EntityRef};
 use systemprompt::identifiers::{RouteId, UserId};
 use systemprompt::traits::DatabaseHandle;
-use systemprompt_security::authz::resolver::{ResolveInput, resolve};
-use systemprompt_security::authz::{Decision, EntityRef};
 
 use crate::authz;
 use crate::repositories::config::gateway_acl;
@@ -104,5 +102,3 @@ async fn load_roles(pool: &PgPool, user_id: &UserId) -> Result<Vec<String>, sqlx
     }
     Ok(identity.roles)
 }
-
-register_gateway_guard!(RouteEntitlementGuard);

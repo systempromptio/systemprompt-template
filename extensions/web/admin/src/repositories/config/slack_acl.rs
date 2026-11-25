@@ -12,8 +12,8 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
+use systemprompt::governance::authz::{AccessControlIngestionService, IngestOptions};
 use systemprompt::loader::ConfigLoader;
-use systemprompt_security::authz::{AccessControlIngestionService, IngestOptions};
 use systemprompt_web_shared::error::MarketplaceError;
 
 // Why: an unreadable services config is not this loader's failure to report —

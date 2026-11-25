@@ -12,7 +12,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use systemprompt_security::authz::Access;
+use systemprompt::governance::authz::Access;
 
 use super::declared::{DeclaredEntity, DeclaredKey, DeclaredRule, DeclaredSet};
 pub use super::orphan::{OrphanOrigin, OrphanRule};

@@ -8,7 +8,7 @@
 use std::path::Path;
 
 use sha2::{Digest, Sha256};
-use systemprompt::security::policy::GovernanceConfig;
+use systemprompt::governance::policy::GovernanceConfig;
 
 use crate::error::{AdminError, AdminResult};
 

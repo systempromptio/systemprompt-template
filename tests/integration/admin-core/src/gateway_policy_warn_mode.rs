@@ -28,7 +28,7 @@ use systemprompt::manifest::profile::QuotaConfig;
 use systemprompt::manifest::services::QuotaFaultMode;
 use systemprompt::models::attribution::RequestAttribution;
 use systemprompt::traits::CacheEpochs;
-use systemprompt_security::authz::SubjectProviderSet;
+use systemprompt::governance::authz::SubjectProviderSet;
 
 use crate::fixtures::unique;
 use crate::tempdb::TempDb;

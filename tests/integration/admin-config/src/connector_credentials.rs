@@ -261,7 +261,7 @@ async fn configured_provider_ids_preserve_accounts_and_single_use_consent() {
 
 #[tokio::test]
 async fn active_account_scope_uses_current_roles_and_rejects_inactive_accounts() {
-    use systemprompt_security::policy::types::AccessScope;
+    use systemprompt::governance::policy::types::AccessScope;
     use systemprompt_web_admin::authz::account_scope;
     let Some(db) = TempDb::create().await else {
         return;

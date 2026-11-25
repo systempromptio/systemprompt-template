@@ -1,7 +1,7 @@
 //! Applying an access template: one subject written for, or cleared from,
 //! every entity of a kind, with the outcome tallied per entity.
 
-use systemprompt_security::authz::{
+use systemprompt::governance::authz::{
     Access, AccessControlRepository, DASHBOARD_SOURCE, EntityKind, RuleType, UpsertRuleParams,
 };
 

@@ -1,7 +1,7 @@
 //! Per-user access matrix: the effective grant for every catalog entity.
 //!
-//! This calls the same [`systemprompt_security::authz::resolver::resolve`] that
-//! `POST /govern/authz` calls, over the same rules and the same subject
+//! This calls the same [`systemprompt::governance::authz::resolver::resolve`]
+//! that `POST /govern/authz` calls, over the same rules and the same subject
 //! dimensions, so a cell here and a decision at the enforcement point cannot
 //! disagree. Every subject dimension this extension declares (see
 //! [`crate::authz`]) takes part, exactly as at the enforcement point.
@@ -18,8 +18,8 @@ use crate::authz::dimensions;
 use crate::types::access_control::AccessControlRule;
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::governance::authz::SubjectDimension;
 use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::SubjectDimension;
 
 #[derive(Debug, Serialize)]
 pub struct UserMatrix {
@@ -115,11 +115,13 @@ pub(super) async fn resolve_sections_for(
 pub(super) struct ResolutionInputs {
     pub(super) rules: Vec<AccessControlRule>,
     pub(super) defaults: HashMap<(String, String), bool>,
-    pub(super) chains: systemprompt_security::authz::ParentChainIndex,
+    pub(super) chains: systemprompt::governance::authz::ParentChainIndex,
 }
 
 pub(super) async fn resolution_inputs(pool: &PgPool) -> Result<ResolutionInputs, sqlx::Error> {
-    use systemprompt_security::authz::{AccessControlRepository, ChainSources, ParentChainIndex};
+    use systemprompt::governance::authz::{
+        AccessControlRepository, ChainSources, ParentChainIndex,
+    };
     let services = systemprompt::loader::ServicesBootstrap::get()
         .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
     let repo = AccessControlRepository::from_pool(std::sync::Arc::new(pool.clone()));

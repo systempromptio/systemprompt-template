@@ -3,13 +3,13 @@
 use std::sync::Arc;
 
 use axum::http::{HeaderMap, header};
-use systemprompt::identifiers::CallId;
-use systemprompt::traits::SessionAnalytics;
-use systemprompt_security::policy::{
+use systemprompt::governance::policy::{
     AuditOrigin, AuditTarget, ChainEntryOutcome, ChainEntryResult, DecisionAudit, record_decision,
 };
+use systemprompt::identifiers::CallId;
+use systemprompt::traits::SessionAnalytics;
 
-use systemprompt_security::policy::types::AccessScope;
+use systemprompt::governance::policy::types::AccessScope;
 
 use super::super::types::AuthDenialParams;
 use super::authn::deny_for_auth_failure;

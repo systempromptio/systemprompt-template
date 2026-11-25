@@ -3,7 +3,7 @@ use super::super::types::{GovernanceDecision, GovernanceResponse, HookSpecificOu
 use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use systemprompt_security::authz::Decision;
+use systemprompt::governance::authz::Decision;
 pub(super) fn build_response(decision: &Decision, hook_event_name: &'static str) -> Response {
     // Why: lint-ok: http-error — builds the decision body itself
     let permission_decision = GovernanceDecision::from_decision(decision);

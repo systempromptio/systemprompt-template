@@ -28,11 +28,11 @@ async fn authz_database_failure_returns_http_200_with_an_explicit_deny() {
     let router = systemprompt_web_admin::hooks_webhook_router(
         pool.clone(),
         sessions,
-        systemprompt_security::policy::RateWindowRepository::new(pool.as_ref().clone()),
+        systemprompt::governance::policy::RateWindowRepository::new(pool.as_ref().clone()),
     );
     pool.close().await;
     let payload = serde_json::json!({
-        "entity": systemprompt_security::authz::EntityRef::McpServer(systemprompt::identifiers::McpServerId::try_new("atlassian").expect("valid test identifier")),
+        "entity": systemprompt::governance::authz::EntityRef::McpServer(systemprompt::identifiers::McpServerId::try_new("atlassian").expect("valid test identifier")),
         "user_id": "00000000-0000-0000-0000-000000000001",
         "trace_id": "00000000-0000-0000-0000-000000000002",
         "roles": ["admin"]

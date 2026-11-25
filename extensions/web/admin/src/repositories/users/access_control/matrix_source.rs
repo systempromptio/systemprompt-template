@@ -5,8 +5,8 @@
 //! by a role rule and by a closed default are different facts to an operator
 //! reading the matrix.
 
+use systemprompt::governance::authz::{DenyReason, MatchedBy};
 use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{DenyReason, MatchedBy};
 
 use super::matrix::MatrixSource;
 

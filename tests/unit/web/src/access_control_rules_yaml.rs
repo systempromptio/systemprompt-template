@@ -4,7 +4,7 @@
 //! compares against it, the sync writes it, the export inverts it. Each test
 //! pins one rule of that projection with no database in the way.
 
-use systemprompt_security::authz::{Access, EntityKind, RegisteredEntities};
+use systemprompt::governance::authz::{Access, EntityKind, RegisteredEntities};
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, DeclaredKey, build_declared_set,
 };

@@ -1,7 +1,7 @@
 //! Projection of a raw hook payload onto the policy engine's governed types.
 
+use systemprompt::governance::policy::{GovernedInput, GovernedTarget, McpToolInput};
 use systemprompt::identifiers::McpToolName;
-use systemprompt_security::policy::{GovernedInput, GovernedTarget, McpToolInput};
 
 use crate::types::webhook::HookEventPayload;
 

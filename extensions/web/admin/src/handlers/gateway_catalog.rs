@@ -17,9 +17,9 @@ use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 
+use systemprompt::governance::authz::EntityRef;
+use systemprompt::governance::authz::resolver::ResolveInput;
 use systemprompt::identifiers::{RouteId, UserId};
-use systemprompt_security::authz::EntityRef;
-use systemprompt_security::authz::resolver::ResolveInput;
 
 use crate::authz::{dimensions, subject_attributes_for};
 use crate::error::{AdminError, AdminResult};
@@ -156,7 +156,7 @@ struct AclDetectAudit<'a> {
     ai_request_id: &'a str,
     model: &'a str,
     matched_route_id: &'a str,
-    reason: &'a systemprompt_security::authz::DenyReason,
+    reason: &'a systemprompt::governance::authz::DenyReason,
 }
 
 pub(crate) async fn detect_after_the_fact(

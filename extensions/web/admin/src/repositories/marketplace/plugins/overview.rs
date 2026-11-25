@@ -71,7 +71,7 @@ pub async fn list_plugins_for_user(
     services_path: &Path,
     user: &systemprompt::identifiers::UserId,
 ) -> Result<Vec<PluginOverview>, crate::error::AdminError> {
-    use systemprompt_security::authz::EntityKind;
+    use systemprompt::governance::authz::EntityKind;
     let mut plugins = list_plugins_for_roles_full(services_path, &["admin".to_owned()])
         .map_err(crate::error::AdminError::internal)?;
     plugins.retain(|p| p.enabled);

@@ -9,11 +9,11 @@
 //! configuration (`services/ai/gateway.yaml`, `services/ai/providers.yaml`),
 //! read from the `ServicesBootstrap` cell the process booted with.
 
+use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
 use systemprompt::identifiers::RouteId;
 use systemprompt::loader::ServicesBootstrap;
 use systemprompt::manifest::ServicesConfig;
 use systemprompt::manifest::services::ProviderRegistry;
-use systemprompt::security::authz::{EntityKind, RegisteredEntities};
 use systemprompt_web_shared::error::MarketplaceError;
 
 use crate::types::{GatewayRouteView, RouteFallbackView};

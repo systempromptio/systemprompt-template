@@ -18,7 +18,7 @@ use systemprompt::models::bridge::manifest::{
     AgentEntry, ArtifactEntry, HookEntry, ManagedMcpServer, PluginEntry, SkillEntry,
 };
 use systemprompt::manifest::services::MarketplaceAccess;
-use systemprompt_security::authz::{EntityKind, EntityRef};
+use systemprompt::governance::authz::{EntityKind, EntityRef};
 use systemprompt_web_admin::authz::group::{group_dimension, group_rule_type};
 use systemprompt_web_admin::authz::project::{project_dimension, project_rule_type};
 

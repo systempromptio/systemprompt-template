@@ -21,7 +21,7 @@ use systemprompt::gateway::{
 };
 use systemprompt::wire::canonical::{CanonicalRequest, CanonicalResponse};
 
-use systemprompt_security::policy::{GovernanceEngine, GovernedInput, SecretScanner};
+use systemprompt::governance::policy::{GovernanceEngine, GovernedInput, SecretScanner};
 
 #[derive(Debug, Clone, Default)]
 pub struct SecretsScanner {

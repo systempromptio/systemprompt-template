@@ -10,7 +10,7 @@
 use std::path::Path;
 
 use sqlx::PgPool;
-use systemprompt_security::authz::{DASHBOARD_SOURCE, RegisteredEntities};
+use systemprompt::governance::authz::{DASHBOARD_SOURCE, RegisteredEntities};
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, build_declared_set,
 };

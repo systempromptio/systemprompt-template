@@ -1,6 +1,6 @@
 //! The drift engine: code versus database, classified.
 
-use systemprompt_security::authz::{Access, DASHBOARD_SOURCE, RegisteredEntities};
+use systemprompt::governance::authz::{Access, DASHBOARD_SOURCE, RegisteredEntities};
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, DeclaredSet, build_declared_set,
 };

@@ -12,7 +12,7 @@ use rmcp::ServerHandler;
 use sqlx::PgPool;
 use systemprompt::database::Database;
 use systemprompt::identifiers::McpServerId;
-use systemprompt::security::authz::{DenyAllHook, SharedAuthzHook};
+use systemprompt::governance::authz::{DenyAllHook, SharedAuthzHook};
 use systemprompt_mcp_agent::{SystempromptServer, tools};
 
 use crate::tempdb::TempDb;

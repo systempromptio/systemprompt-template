@@ -10,7 +10,7 @@
     reason = "test code: panics are the assertion mechanism"
 )]
 
-use systemprompt_security::authz::{ROLE_PRECEDENCE, RuleType};
+use systemprompt::governance::authz::{ROLE_PRECEDENCE, RuleType};
 use systemprompt_web_admin::authz::group::group_dimension;
 use systemprompt_web_admin::authz::organization::{
     ORGANIZATION_DEFAULT, organization_dimension, organization_rule_type,

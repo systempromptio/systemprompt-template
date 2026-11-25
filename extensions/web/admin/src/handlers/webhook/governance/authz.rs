@@ -1,5 +1,5 @@
 //! `POST /govern/authz` — extension webhook implementing
-//! [`systemprompt_security::authz::AuthzDecisionHook`] as an HTTP endpoint.
+//! [`systemprompt::governance::authz::AuthzDecisionHook`] as an HTTP endpoint.
 //!
 //! Core's gateway and MCP enforcement sites POST an [`AuthzRequest`] here;
 //! this handler loads the matching rules from `access_control_rules`, runs
@@ -22,13 +22,13 @@ use sqlx::PgPool;
 use std::borrow::Cow;
 use systemprompt::identifiers::Actor;
 
-use systemprompt_security::authz::{
+use systemprompt::governance::authz::{
     AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, ChainSources, Decision,
     DecisionTag, DenyReason, EntityRow, ParentChainIndex, ResolveBase,
 };
 
 use crate::authz::{dimensions, subject_attributes_for};
-use systemprompt_security::authz::{GovernanceDecisionRecord, insert_governance_decision};
+use systemprompt::governance::authz::{GovernanceDecisionRecord, insert_governance_decision};
 
 const POLICY_NAME: &str = "authz";
 

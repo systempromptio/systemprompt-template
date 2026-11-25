@@ -7,7 +7,7 @@
 //! scope themselves to entity ids they minted, because a deployment may carry
 //! grants written by the governance bootstrap.
 
-use systemprompt_security::authz::EntityKind;
+use systemprompt::governance::authz::EntityKind;
 use systemprompt_web_admin::repositories::users::access_control::{
     bulk_set_rules, list_all_rules, list_rules_for_entity, set_entity_rules,
 };

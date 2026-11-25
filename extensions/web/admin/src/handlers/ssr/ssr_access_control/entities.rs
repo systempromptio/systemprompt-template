@@ -9,7 +9,7 @@
 
 use chrono::Utc;
 use serde::Deserialize;
-use systemprompt_security::authz::DASHBOARD_SOURCE;
+use systemprompt::governance::authz::DASHBOARD_SOURCE;
 
 use super::bands::{band_label, band_rank, chips, resolution};
 use super::summary::{self, options};

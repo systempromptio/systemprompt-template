@@ -8,8 +8,8 @@ use axum::extract::{Extension, Path, Query, State};
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
 use systemprompt::identifiers::UserId;
-use systemprompt::security::authz::{EntityKind, RegisteredEntities};
 
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::error::{AdminError, AdminResult};

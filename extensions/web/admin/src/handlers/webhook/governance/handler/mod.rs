@@ -14,14 +14,14 @@ use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use sqlx::PgPool;
-use systemprompt::identifiers::{CallId, ClientId, PluginId, SessionId, UserId};
-use systemprompt::oauth::SessionCreationService;
-use systemprompt_security::authz::Decision;
-use systemprompt_security::policy::types::AccessScope;
-use systemprompt_security::policy::{
+use systemprompt::governance::authz::Decision;
+use systemprompt::governance::policy::types::AccessScope;
+use systemprompt::governance::policy::{
     AgentScope, AuditOrigin, AuditTarget, DecisionAudit, GovernedInput, GovernedTarget,
     PolicyContext, PrincipalSnapshot, RateChargeSubject, RateWindowRepository, record_decision,
 };
+use systemprompt::identifiers::{CallId, ClientId, PluginId, SessionId, UserId};
+use systemprompt::oauth::SessionCreationService;
 
 use crate::authz::AccountStanding;
 use crate::repositories::dashboard::usage_aggregations::ingestion;

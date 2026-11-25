@@ -19,12 +19,12 @@
 //! without it a `subject: role` window has nothing to key on. The same goes
 //! for `organization`, which is why it exists as a dimension at all.
 //! Adding another — cost centre, clearance, jurisdiction — means writing a
-//! provider beside them and one
-//! `register_subject_attribute_provider!` call; no core change, and no edit to
+//! provider beside them and one `subject_attributes` line in
+//! [`contribute_subject_attributes`]; no core change, and no edit to
 //! the resolve call sites, because they all read the registry through
 //! [`subject_attributes_for`] and [`dimensions`].
 //!
-//! [p]: systemprompt_security::authz::SubjectAttributeProvider
+//! [p]: systemprompt::governance::authz::SubjectAttributeProvider
 
 mod account;
 pub use account::{AccountStanding, account_scope, account_standing};
@@ -40,11 +40,14 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{
+use systemprompt::database::DbPool;
+use systemprompt::extension::{Contributions, FactoryError, Resolved};
+use systemprompt::governance::authz::{
     AuthzHookContext, NullAuditSink, SharedSubjectAttributeProvider, SubjectAttributes,
     SubjectDimension, dimensions_of, discover_subject_providers, gather_subject_attributes,
 };
+use systemprompt::identifiers::UserId;
+use systemprompt::traits::authz::SubjectAttributeProvider;
 
 use crate::authz::connector::ConnectorAttributeProvider;
 use crate::authz::group::GroupAttributeProvider;
@@ -52,34 +55,36 @@ use crate::authz::organization::OrganizationAttributeProvider;
 use crate::authz::project::ProjectAttributeProvider;
 use crate::authz::role::RoleAttributeProvider;
 
-systemprompt_security::register_subject_attribute_provider!(|ctx| {
-    let provider: SharedSubjectAttributeProvider =
-        Arc::new(GroupAttributeProvider::new(Arc::clone(&ctx.pool)));
-    provider
-});
+pub fn contribute_subject_attributes(c: &mut Contributions<'_>) {
+    c.subject_attributes(|r: &Resolved<'_>| {
+        let provider: Arc<dyn SubjectAttributeProvider> =
+            Arc::new(GroupAttributeProvider::new(pg_pool(r)?));
+        Ok(provider)
+    })
+    .subject_attributes(|r: &Resolved<'_>| {
+        let provider: Arc<dyn SubjectAttributeProvider> =
+            Arc::new(ProjectAttributeProvider::new(pg_pool(r)?));
+        Ok(provider)
+    })
+    .subject_attributes(|r: &Resolved<'_>| {
+        let provider: Arc<dyn SubjectAttributeProvider> =
+            Arc::new(ConnectorAttributeProvider::new(pg_pool(r)?));
+        Ok(provider)
+    })
+    .subject_attributes(|_r: &Resolved<'_>| {
+        let provider: Arc<dyn SubjectAttributeProvider> = Arc::new(OrganizationAttributeProvider);
+        Ok(provider)
+    })
+    .subject_attributes(|r: &Resolved<'_>| {
+        let provider: Arc<dyn SubjectAttributeProvider> =
+            Arc::new(RoleAttributeProvider::new(pg_pool(r)?));
+        Ok(provider)
+    });
+}
 
-systemprompt_security::register_subject_attribute_provider!(|ctx| {
-    let provider: SharedSubjectAttributeProvider =
-        Arc::new(ProjectAttributeProvider::new(Arc::clone(&ctx.pool)));
-    provider
-});
-
-systemprompt_security::register_subject_attribute_provider!(|ctx| {
-    let provider: SharedSubjectAttributeProvider =
-        Arc::new(ConnectorAttributeProvider::new(Arc::clone(&ctx.pool)));
-    provider
-});
-
-systemprompt_security::register_subject_attribute_provider!(|_ctx| {
-    let provider: SharedSubjectAttributeProvider = Arc::new(OrganizationAttributeProvider);
-    provider
-});
-
-systemprompt_security::register_subject_attribute_provider!(|ctx| {
-    let provider: SharedSubjectAttributeProvider =
-        Arc::new(RoleAttributeProvider::new(Arc::clone(&ctx.pool)));
-    provider
-});
+fn pg_pool(r: &Resolved<'_>) -> Result<Arc<PgPool>, FactoryError> {
+    Ok(r.get::<DbPool>()?.pool())
+}
 
 struct Registry {
     providers: Vec<SharedSubjectAttributeProvider>,

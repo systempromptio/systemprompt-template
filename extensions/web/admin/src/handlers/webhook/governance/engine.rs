@@ -8,7 +8,7 @@
 //! Postgres and shared by every engine, so this one is handed the same
 //! cluster-wide window repository.
 
-use systemprompt_security::policy::{GovernanceEngine, RateWindowRepository};
+use systemprompt::governance::policy::{GovernanceEngine, RateWindowRepository};
 
 pub(crate) fn engine(
     rate_windows: &RateWindowRepository,

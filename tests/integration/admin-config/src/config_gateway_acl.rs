@@ -2,7 +2,7 @@
 //! access-control repository.
 
 use systemprompt::identifiers::RouteId;
-use systemprompt_security::authz::{Access, EntityKind, RuleType};
+use systemprompt::governance::authz::{Access, EntityKind, RuleType};
 use systemprompt_web_admin::repositories::config::gateway_acl;
 
 use crate::fixtures::{count_rows, insert_acl_entity, unique};

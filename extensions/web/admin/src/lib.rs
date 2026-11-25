@@ -102,7 +102,7 @@ pub mod test_support {
 pub fn hooks_webhook_router(
     pool: Arc<PgPool>,
     session_service: Arc<systemprompt::oauth::SessionCreationService>,
-    rate_windows: systemprompt_security::policy::RateWindowRepository,
+    rate_windows: systemprompt::governance::policy::RateWindowRepository,
 ) -> Router {
     Router::new()
         .route(

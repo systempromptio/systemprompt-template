@@ -2,7 +2,7 @@
 //! in the database.
 //!
 //! Core builds the policy chain from the file at boot
-//! (`systemprompt::security::policy::GovernanceConfig::load`) and reads
+//! (`systemprompt::governance::policy::GovernanceConfig::load`) and reads
 //! nothing here. The tables hold the same chain so the sync page can show
 //! drift, record what was applied and by whom, and export it back as the
 //! file; a change lands in enforcement only after a restart, and every

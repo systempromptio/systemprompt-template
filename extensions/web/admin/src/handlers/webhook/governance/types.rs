@@ -2,7 +2,7 @@
 //!
 //! The on-the-wire response shape is dictated by the Anthropic Claude Code
 //! hook contract ([`HookSpecificOutput`]). The audit blob types
-//! (`DecisionAudit` and friends) live in [`systemprompt_security::policy`];
+//! (`DecisionAudit` and friends) live in [`systemprompt::governance::policy`];
 //! this module keeps only what is specific to this extension's HTTP surface.
 
 use axum::http::HeaderMap;
@@ -10,9 +10,9 @@ use serde::Serialize;
 use std::sync::Arc;
 
 use sqlx::PgPool;
+use systemprompt::governance::authz::{Decision, DecisionTag};
 use systemprompt::identifiers::{PluginId, SessionId};
 use systemprompt::oauth::SessionCreationService;
-use systemprompt_security::authz::{Decision, DecisionTag};
 
 /// Anthropic-mandated wire enum for `permissionDecision`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]

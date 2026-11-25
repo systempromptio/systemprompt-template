@@ -35,7 +35,7 @@ pub(crate) async fn list_agents_handler(
         .map(|a| a.id.to_string())
         .collect::<Vec<_>>();
     let allowed = access
-        .allowed(systemprompt_security::authz::EntityKind::Agent, &ids)
+        .allowed(systemprompt::governance::authz::EntityKind::Agent, &ids)
         .await?;
     let filtered: Vec<_> = agents
         .into_iter()

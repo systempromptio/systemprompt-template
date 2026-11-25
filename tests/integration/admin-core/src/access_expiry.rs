@@ -7,7 +7,7 @@
 
 use std::sync::Arc;
 
-use systemprompt_security::authz::SubjectAttributeProvider;
+use systemprompt::governance::authz::SubjectAttributeProvider;
 use systemprompt_web_admin::authz::group::GroupAttributeProvider;
 use systemprompt_web_admin::repositories::groups::members::{
     list_group_ids_for_user, list_group_members,

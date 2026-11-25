@@ -1,5 +1,5 @@
-use systemprompt_security::policy::governed::{GovernedInput, McpToolInput};
-use systemprompt_security::policy::{GovernanceConfig, GovernanceEngine};
+use systemprompt::governance::policy::governed::{GovernedInput, McpToolInput};
+use systemprompt::governance::policy::{GovernanceConfig, GovernanceEngine};
 
 fn shipped_engine() -> GovernanceEngine {
     let path = crate::support::repo_root().join("services/governance/config.yaml");

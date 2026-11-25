@@ -3,7 +3,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use systemprompt_security::authz::AccessRule;
+use systemprompt::governance::authz::AccessRule;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct EntityAccessResponse {

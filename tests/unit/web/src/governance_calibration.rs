@@ -2,10 +2,10 @@ use systemprompt::gateway::SafetyScanner;
 use systemprompt::identifiers::{CallId, SessionId, UserId};
 use systemprompt::wire::canonical::{CanonicalContent, CanonicalMessage, CanonicalRequest, Role};
 use systemprompt::wire::inspect::{SurfaceBudget, string_leaves};
-use systemprompt_security::authz::types::Decision;
-use systemprompt_security::policy::secrets::redact_spans;
-use systemprompt_security::policy::types::AccessScope;
-use systemprompt_security::policy::{
+use systemprompt::governance::authz::types::Decision;
+use systemprompt::governance::policy::secrets::redact_spans;
+use systemprompt::governance::policy::types::AccessScope;
+use systemprompt::governance::policy::{
     AgentScope, GovernanceConfig, GovernanceEngine, GovernedInput, GovernedTarget, McpToolInput,
     PolicyContext, RateCounts,
 };

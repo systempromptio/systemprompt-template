@@ -3,11 +3,11 @@
 use crate::error::{AdminError, AdminResult};
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{
+use systemprompt::governance::authz::{
     AccessControlRepository, BulkKeepQuery, ChainSources, EntityKind, ParentChainIndex,
     SubjectAttributes, allowed_ids,
 };
+use systemprompt::identifiers::UserId;
 
 pub(crate) struct CatalogAccess {
     repo: AccessControlRepository,

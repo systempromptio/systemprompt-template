@@ -8,7 +8,7 @@ use systemprompt::database::Database;
 use systemprompt::identifiers::UserId;
 use systemprompt::marketplace::{MarketplaceCandidate, MarketplaceFilter};
 use systemprompt::models::bridge::manifest::ManagedMcpServer;
-use systemprompt_security::authz::{AccessControlRepository, EntityKind};
+use systemprompt::governance::authz::{AccessControlRepository, EntityKind};
 use systemprompt_web_admin::authz::connector::connector_rule_type;
 use systemprompt_web_admin::authz::subject_attributes_for;
 use systemprompt_web_admin::marketplace_filter::TemplateMarketplaceFilter;

@@ -12,7 +12,7 @@
 //! `registered_routes` has to turn that into "enforce nothing" instead.
 
 use axum::http::StatusCode;
-use systemprompt::security::authz::{AuthzError, EntityKind};
+use systemprompt::governance::authz::{AuthzError, EntityKind};
 use systemprompt_web_admin::error::AdminError;
 use systemprompt_web_admin::repositories::config::gateway::registered_routes;
 

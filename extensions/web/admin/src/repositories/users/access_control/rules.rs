@@ -7,7 +7,7 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::security::authz::{
+use systemprompt::governance::authz::{
     AccessControlRepository, AuthzError, DASHBOARD_SOURCE, EntityKind,
 };
 

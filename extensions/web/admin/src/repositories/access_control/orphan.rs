@@ -2,7 +2,7 @@
 //! from, and whether an overwrite from code retires it.
 
 use serde::Serialize;
-use systemprompt_security::authz::DASHBOARD_SOURCE;
+use systemprompt::governance::authz::DASHBOARD_SOURCE;
 
 use super::drift::BandRuleRow;
 

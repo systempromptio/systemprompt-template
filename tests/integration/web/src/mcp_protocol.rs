@@ -23,7 +23,7 @@ use systemprompt::mcp::{ArtifactIngest, artifact_resource_uri};
 use systemprompt::models::artifacts::{CliArtifact, TextArtifact};
 use systemprompt::models::execution::context::RequestContext;
 use systemprompt::models::mcp::ExecutionSource;
-use systemprompt::security::authz::{DenyAllHook, SharedAuthzHook};
+use systemprompt::governance::authz::{DenyAllHook, SharedAuthzHook};
 use systemprompt::traits::InjectContextHeaders;
 use systemprompt_mcp_agent::SystempromptServer;
 use tower::ServiceExt as _;

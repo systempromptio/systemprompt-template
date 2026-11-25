@@ -10,10 +10,10 @@
 //! have decided something but a narrower band won) or *no rule*.
 
 use serde::Serialize;
-use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{
+use systemprompt::governance::authz::{
     ParentChainIndex, RuleType, SubjectAttributes, SubjectDimension,
 };
+use systemprompt::identifiers::UserId;
 
 use super::matrix_resolution::{MatrixCell, resolve_effective_with};
 use super::matrix_subject::MatrixSubject;

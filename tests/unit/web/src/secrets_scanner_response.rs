@@ -8,7 +8,7 @@ use systemprompt::wire::canonical::{
     CanonicalContent, CanonicalMessage, CanonicalRequest, CanonicalResponse, Role,
 };
 use systemprompt::wire::inspect::{SurfaceBudget, string_leaves};
-use systemprompt_security::policy::{GovernanceConfig, GovernanceEngine};
+use systemprompt::governance::policy::{GovernanceConfig, GovernanceEngine};
 use systemprompt_web_admin::gateway_safety::SecretsScanner;
 
 const TOKEN: &str = "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

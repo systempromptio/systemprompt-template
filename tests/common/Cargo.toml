@@ -16,7 +16,7 @@ systemprompt-marketplace = { workspace = true }
 # path the server runs at boot, and that path only sees migrations from crates
 # actually linked into the test binary. Linking them here is what makes one
 # harness usable by every suite.
-systemprompt = { workspace = true, features = ["full"] }
+systemprompt = { workspace = true, features = ["reference"] }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-content = { workspace = true }
 systemprompt-web-extension = { workspace = true }

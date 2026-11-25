@@ -13,10 +13,10 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::identifiers::MarketplaceId;
-use systemprompt_security::authz::{
+use systemprompt::governance::authz::{
     Access, AccessControlRepository, EntityKind, RuleType, UpsertRuleParams,
 };
+use systemprompt::identifiers::MarketplaceId;
 use systemprompt_web_shared::GroupId;
 
 use crate::error::{AdminError, AdminResult};
@@ -74,7 +74,7 @@ pub async fn set_group_marketplaces(
             rule_value: group_id.as_str(),
             access: Access::Allow,
             justification: Some(JUSTIFICATION),
-            source: systemprompt_security::authz::DASHBOARD_SOURCE,
+            source: systemprompt::governance::authz::DASHBOARD_SOURCE,
         })
         .await
         .map_err(AdminError::internal)?;

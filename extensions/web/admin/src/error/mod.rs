@@ -209,10 +209,10 @@ impl From<systemprompt::oauth::OauthError> for AdminError {
     }
 }
 
-impl From<systemprompt::security::authz::AuthzError> for AdminError {
-    fn from(value: systemprompt::security::authz::AuthzError) -> Self {
+impl From<systemprompt::governance::authz::AuthzError> for AdminError {
+    fn from(value: systemprompt::governance::authz::AuthzError) -> Self {
         match value {
-            systemprompt::security::authz::AuthzError::Validation(msg) => Self::BadRequest(msg),
+            systemprompt::governance::authz::AuthzError::Validation(msg) => Self::BadRequest(msg),
             other => Self::Internal(Box::new(other)),
         }
     }

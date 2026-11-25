@@ -17,7 +17,7 @@ use systemprompt::models::origin::{
     ClientAttestation, ClientEvidence, ClientKind, InboundWireProtocol, RequestOrigin,
 };
 use systemprompt::traits::{BackgroundTasks, CacheEpochs};
-use systemprompt_security::policy::types::AccessScope;
+use systemprompt::governance::policy::types::AccessScope;
 
 async fn profile() -> tempfile::TempDir {
     let dir = tempfile::tempdir().expect("profile directory");

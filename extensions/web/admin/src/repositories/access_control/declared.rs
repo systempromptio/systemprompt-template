@@ -14,8 +14,8 @@ use std::fmt;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
-use systemprompt_security::authz::ingestion::glob::glob_matches;
-use systemprompt_security::authz::{Access, EntityKind, RegisteredEntities};
+use systemprompt::governance::authz::ingestion::glob::glob_matches;
+use systemprompt::governance::authz::{Access, EntityKind, RegisteredEntities};
 
 use crate::repositories::config::rules_yaml_types::{
     BandSpec, EntityDecl, EntityRef, RulesDoc, access_of,

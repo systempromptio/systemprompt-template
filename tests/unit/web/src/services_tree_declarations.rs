@@ -14,7 +14,7 @@ use std::path::PathBuf;
 
 use systemprompt::loader::ConfigLoader;
 use systemprompt::manifest::services::ServicesConfig;
-use systemprompt_security::authz::{EntityKind, RegisteredEntities};
+use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, DeclaredSet, build_declared_set,
 };
@@ -225,7 +225,7 @@ fn no_export_carries_a_person() {
             entity_id: "systemprompt".to_owned(),
             rule_type: "user".to_owned(),
             rule_value: "someone@example.com".to_owned(),
-            access: systemprompt_security::authz::Access::Allow,
+            access: systemprompt::governance::authz::Access::Allow,
             justification: Some("override".to_owned()),
             source: "dashboard".to_owned(),
             valid_until: None,
@@ -236,7 +236,7 @@ fn no_export_carries_a_person() {
             entity_id: "systemprompt".to_owned(),
             rule_type: "group".to_owned(),
             rule_value: "engineering".to_owned(),
-            access: systemprompt_security::authz::Access::Allow,
+            access: systemprompt::governance::authz::Access::Allow,
             justification: Some("team".to_owned()),
             source: "yaml".to_owned(),
             valid_until: None,

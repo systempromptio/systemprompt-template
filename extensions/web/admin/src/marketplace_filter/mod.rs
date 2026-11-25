@@ -13,12 +13,12 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
+use systemprompt::governance::authz::AccessControlRepository;
 use systemprompt::identifiers::UserId;
 use systemprompt::marketplace::{
     KeepSetsSubject, MarketplaceCandidate, MarketplaceFilter, MarketplaceFilterError, keep_sets,
     register_marketplace_filter,
 };
-use systemprompt_security::authz::AccessControlRepository;
 
 use crate::authz::{dimensions, subject_attributes_for};
 use crate::repositories::users::queries::find_user_access_profile;

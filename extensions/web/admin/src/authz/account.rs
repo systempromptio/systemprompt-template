@@ -2,8 +2,8 @@
 //! stored roles.
 
 use sqlx::PgPool;
+use systemprompt::governance::policy::types::AccessScope;
 use systemprompt::identifiers::UserId;
-use systemprompt_security::policy::types::AccessScope;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AccountStanding {

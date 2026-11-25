@@ -16,7 +16,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use chrono::{DateTime, Utc};
-use systemprompt_security::authz::{Access, EntityKind};
+use systemprompt::governance::authz::{Access, EntityKind};
 
 use super::drift::{BandRuleRow, EntityDefaultRow};
 use crate::repositories::config::rules_yaml_types::{

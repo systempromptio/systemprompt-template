@@ -104,7 +104,7 @@ pub fn compute_chain_drift(declared: &DeclaredChain, staged: &DeclaredChain) -> 
 fn header(exported_at: chrono::DateTime<chrono::Utc>) -> String {
     format!(
         "# Governance policy chain. Core builds the chain from this file at boot\n\
-         # (systemprompt::security::policy::GovernanceConfig::load); the console stages\n\
+         # (systemprompt::governance::policy::GovernanceConfig::load); the console stages\n\
          # the same chain in `governance_chain` and /admin/sync compares the two.\n\
          # A change here is enforced after the next restart.\n\
          #\n\

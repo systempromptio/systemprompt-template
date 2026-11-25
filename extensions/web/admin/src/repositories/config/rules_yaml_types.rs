@@ -22,7 +22,7 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use systemprompt_security::authz::{Access, EntityKind};
+use systemprompt::governance::authz::{Access, EntityKind};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

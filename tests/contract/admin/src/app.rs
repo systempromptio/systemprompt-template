@@ -73,7 +73,7 @@ impl App {
         let hooks = admin::hooks_webhook_router(
             Arc::clone(pool),
             session_service(pool),
-            systemprompt_security::policy::RateWindowRepository::new(pool.as_ref().clone()),
+            systemprompt::governance::policy::RateWindowRepository::new(pool.as_ref().clone()),
         );
 
         // `secrets_router` and `share_manifest_router` are merged at the root
