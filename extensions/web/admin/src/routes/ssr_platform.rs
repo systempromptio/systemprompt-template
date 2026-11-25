@@ -8,7 +8,9 @@
 use std::sync::Arc;
 
 use axum::Router;
-use axum::routing::{get, post};
+use axum::routing::get;
+#[cfg(feature = "gateway")]
+use axum::routing::post;
 use sqlx::PgPool;
 
 use crate::handlers;
@@ -17,6 +19,40 @@ use crate::handlers;
 // flattened out of the old `/catalog/` prefix, plus the gateway that routes
 // model traffic to the providers behind them.
 pub(super) fn routes() -> Router<Arc<PgPool>> {
+    let routes = Router::new()
+        // Why: the Platform group's home — every kind of configuration the
+        // instance loads, where it comes from and whether the database
+        // agrees.
+        .route("/configuration", get(handlers::ssr::configuration_page))
+        // Why: the retention ledger — measurements, archives and the health
+        // report the retention_* jobs write — beside Configuration, where the
+        // windows and the cleanup job's last run are shown.
+        .route("/lifecycle", get(handlers::ssr::lifecycle_page))
+        .route(
+            "/lifecycle/archive/{tier}/{period}/{file}",
+            get(handlers::ssr::lifecycle_archive_download),
+        )
+        // Why: Code sync — the sources and the archive that move declarations
+        // between the repository and this instance, and the access review
+        // that settles the access-control plane entity by entity.
+        .route("/sync", get(handlers::ssr::sync_page))
+        .route(
+            "/sync/import/{stage_id}",
+            get(handlers::ssr::import_preview_page),
+        )
+        .route(
+            "/system/observability",
+            get(handlers::ssr::observability_page),
+        );
+    #[cfg(feature = "mcp")]
+    let routes = routes.merge(catalog_routes());
+    #[cfg(feature = "gateway")]
+    let routes = routes.merge(gateway_routes());
+    routes
+}
+
+#[cfg(feature = "mcp")]
+fn catalog_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/mcp", get(handlers::catalog::mcp::mcp_servers_page))
         .route(
@@ -41,27 +77,12 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
             "/skills/{skill_id}",
             get(handlers::catalog::skill_detail_page),
         )
+}
+
+#[cfg(feature = "gateway")]
+fn gateway_routes() -> Router<Arc<PgPool>> {
+    Router::new()
         .route("/gateway", get(handlers::ssr::gateway_page))
-        // Why: the Platform group's home — every kind of configuration the
-        // instance loads, where it comes from and whether the database
-        // agrees.
-        .route("/configuration", get(handlers::ssr::configuration_page))
-        // Why: the retention ledger — measurements, archives and the health
-        // report the retention_* jobs write — beside Configuration, where the
-        // windows and the cleanup job's last run are shown.
-        .route("/lifecycle", get(handlers::ssr::lifecycle_page))
-        .route(
-            "/lifecycle/archive/{tier}/{period}/{file}",
-            get(handlers::ssr::lifecycle_archive_download),
-        )
-        // Why: Code sync — the sources and the archive that move declarations
-        // between the repository and this instance, and the access review
-        // that settles the access-control plane entity by entity.
-        .route("/sync", get(handlers::ssr::sync_page))
-        .route(
-            "/sync/import/{stage_id}",
-            get(handlers::ssr::import_preview_page),
-        )
         .route(
             "/gateway/routes/{route_id}",
             get(handlers::ssr::gateway_route_page),
@@ -75,9 +96,5 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
         .route(
             "/gateway/policies/delete",
             post(handlers::ssr::delete_gateway_policy),
-        )
-        .route(
-            "/system/observability",
-            get(handlers::ssr::observability_page),
         )
 }

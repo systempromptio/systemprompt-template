@@ -5,7 +5,7 @@
 
 use async_trait::async_trait;
 
-use super::requests::time_range;
+use crate::export::window::time_range;
 use crate::error::AdminResult;
 use crate::export::model::{Cell, CellKind, Column, DataSet, ExportContext, Table, Window};
 use crate::handlers::ssr::ssr_tools::{Lens, export_rows};

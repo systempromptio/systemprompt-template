@@ -16,7 +16,8 @@ use crate::handlers::ssr::format::{client_label, format_duration_ms, local_time,
 use crate::handlers::ssr::page::Page;
 use crate::handlers::ssr::ssr_helpers::render_typed_page;
 use crate::handlers::ssr::ssr_tools::help::artifacts_help;
-use crate::handlers::ssr::ssr_tools::rows::{format_bytes, kind_icon, kind_label};
+use crate::handlers::ssr::format::format_bytes;
+use crate::handlers::ssr::ssr_tools::rows::{kind_icon, kind_label};
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::analytics::artifacts::{
     ArtifactDetail, ArtifactFindingRow, find_artifact,

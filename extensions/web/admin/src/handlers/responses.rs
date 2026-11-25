@@ -23,6 +23,7 @@ pub(crate) struct AuditLogEntry {
     pub created_at: String,
 }
 
+#[cfg(feature = "mcp")]
 #[derive(Serialize, Debug)]
 pub(crate) struct PluginEnvResponse {
     pub definitions: Vec<crate::handlers::plugins_env::PluginVariableDef>,

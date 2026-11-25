@@ -94,3 +94,17 @@ pub(crate) fn attestation_title(attestation: &str) -> String {
         |tier| tier.label().to_owned(),
     )
 }
+
+pub(crate) fn format_bytes(bytes: i64) -> String {
+    if bytes <= 0 {
+        return "\u{2014}".to_owned();
+    }
+    if bytes < 1024 {
+        return format!("{bytes} B");
+    }
+    let kib = bytes / 1024;
+    if kib < 1024 {
+        return format!("{kib} KiB");
+    }
+    format!("{} MiB", short_num(kib / 1024))
+}

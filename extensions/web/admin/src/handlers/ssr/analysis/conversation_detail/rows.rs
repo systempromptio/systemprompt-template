@@ -13,7 +13,8 @@ use crate::handlers::ssr::analysis_urls::{analysis_skill_url, analysis_version_u
 use crate::handlers::ssr::format::{
     format_cost, format_duration_ms, format_token_total, local_time,
 };
-use crate::handlers::ssr::ssr_tools::rows::{format_bytes, kind_icon, kind_label};
+use crate::handlers::ssr::format::format_bytes;
+use crate::handlers::ssr::ssr_tools::rows::{kind_icon, kind_label};
 use crate::repositories::analysis::conversations::ConversationFactRow;
 use crate::repositories::analysis::conversations::planes::{
     ConversationDecisionRow, ConversationSafetyRow, ConversationSkillRow, ConversationToolCallRow,

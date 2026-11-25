@@ -3,7 +3,7 @@
 use serde::Serialize;
 use systemprompt::identifiers::{Email, SessionId, UserId};
 
-use super::role::{ROLES_CONSOLE, ROLES_PLATFORM, Role, has_any};
+use super::role::{ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM, Role, has_any};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct UserContext {
@@ -38,7 +38,7 @@ pub fn roles_grant_console(roles: &[String]) -> bool {
 
 #[must_use]
 pub fn roles_grant_manage(roles: &[String]) -> bool {
-    systemprompt_mcp_shared::access_policy::roles_grant_manage(roles)
+    has_any(roles, ROLES_MANAGE)
 }
 
 #[must_use]

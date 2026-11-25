@@ -13,12 +13,21 @@ use sqlx::PgPool;
 use crate::export;
 
 pub(super) fn routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let routes = Router::new()
         .route("/export/{dataset}", get(export::handler::export_file))
         .route(
             "/export/{dataset}/preview",
             get(export::handler::export_preview),
-        )
+        );
+    #[cfg(feature = "agents")]
+    let routes = routes.merge(transcript_routes());
+    routes
+        .merge(legacy_routes())
+}
+
+#[cfg(feature = "agents")]
+fn transcript_routes() -> Router<Arc<PgPool>> {
+    Router::new()
         // Why: static segments win over `{dataset}`, so the transcript
         // routes sit beside the table route; no dataset may be named
         // `transcripts`. (They were `/export/conversation(s)`, which shadowed
@@ -35,7 +44,6 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
             "/export/transcripts/{context_id}",
             get(export::document::handler::export_conversation),
         )
-        .merge(legacy_routes())
 }
 
 // Why: the per-page CSV URLs that predate the export surface, kept at their

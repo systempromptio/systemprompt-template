@@ -10,7 +10,8 @@ use systemprompt::identifiers::UserId;
 use systemprompt::manifest::services::ServicesConfig;
 use systemprompt::models::auth::Permission;
 
-pub(crate) use super::connector_readiness::probe_session_connection;
+#[cfg(feature = "mcp")]
+pub(crate) use super::connector_probe::probe_session_connection;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Connection {

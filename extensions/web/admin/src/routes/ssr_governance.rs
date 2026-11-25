@@ -18,7 +18,7 @@ use crate::handlers;
 // a call — decide it, hold it for a person, or record a credential it touched —
 // and an operator tuning one reads the other two.
 pub(super) fn routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let routes = Router::new()
         .route("/governance", get(handlers::ssr::governance_page))
         .route(
             "/governance/warnings.csv",
@@ -36,11 +36,13 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
         .route(
             "/governance/secrets.csv",
             get(crate::export::legacy::secrets_csv),
-        )
-        // Why: usage against ceiling per subject — the read side of the quota
-        // windows the gateway policy editor writes.
-        .route(
-            "/governance/quotas",
-            get(handlers::ssr::governance_quotas_page),
-        )
+        );
+    // Why: usage against ceiling per subject — the read side of the quota
+    // windows the gateway policy editor writes.
+    #[cfg(feature = "gateway")]
+    let routes = routes.route(
+        "/governance/quotas",
+        get(handlers::ssr::governance_quotas_page),
+    );
+    routes
 }

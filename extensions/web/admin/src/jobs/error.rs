@@ -10,6 +10,7 @@ pub enum JobError {
     #[error(transparent)]
     Identifier(#[from] systemprompt::identifiers::error::IdValidationError),
     #[error(transparent)]
+    #[cfg(feature = "agents")]
     Ai(#[from] systemprompt::ai::error::AiError),
     #[error(transparent)]
     Provider(#[from] ProviderError),

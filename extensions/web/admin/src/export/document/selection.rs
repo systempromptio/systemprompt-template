@@ -46,6 +46,7 @@ impl Selection {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum TranscriptSource {
     Sessions,
+    #[cfg(feature = "agents")]
     Analysis,
     Conversations,
     History,
@@ -55,6 +56,7 @@ impl TranscriptSource {
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::Sessions => "sessions",
+            #[cfg(feature = "agents")]
             Self::Analysis => "analysis",
             Self::Conversations => "conversations",
             Self::History => "history",
@@ -67,7 +69,9 @@ impl TranscriptSource {
     // resolves none for it; the ledger pages keep the live one.
     pub(crate) const fn window(self) -> Window {
         match self {
-            Self::Sessions | Self::Analysis => Window::Live,
+            Self::Sessions => Window::Live,
+            #[cfg(feature = "agents")]
+            Self::Analysis => Window::Live,
             Self::Conversations | Self::History => Window::None,
         }
     }
@@ -75,6 +79,7 @@ impl TranscriptSource {
     fn parse(value: &str) -> Option<Self> {
         [
             Self::Sessions,
+            #[cfg(feature = "agents")]
             Self::Analysis,
             Self::Conversations,
             Self::History,
@@ -110,6 +115,7 @@ pub(crate) async fn resolve_selection(
     let w = window::resolve(source.window(), &ctx.query()?)?;
     let mut selection = match source {
         TranscriptSource::Sessions => sessions_set(pool, user, ctx, range_of(required(w)?)).await?,
+        #[cfg(feature = "agents")]
         TranscriptSource::Analysis => analysis_set(pool, user, ctx, range_of(required(w)?)).await?,
         TranscriptSource::Conversations => history_set(pool, user, ctx, HistoryView::Org).await?,
         TranscriptSource::History => history_set(pool, user, ctx, HistoryView::Own).await?,
@@ -211,6 +217,7 @@ async fn sessions_set(
     })
 }
 
+#[cfg(feature = "agents")]
 async fn analysis_set(
     pool: &PgPool,
     user: &UserContext,
