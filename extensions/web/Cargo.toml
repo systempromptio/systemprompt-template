@@ -21,7 +21,7 @@ workspace = true
 # Core facade - provides all systemprompt types via unified API.
 # Audit: uses ai, database, extension, loader, models, traits — requires `full`
 # (ai + loader are gated by the `full` feature).
-systemprompt = { workspace = true, features = ["full"] }
+systemprompt = { workspace = true, features = ["reference"] }
 # Link the Core extensions declared by `WebExtension::dependencies()` so their
 # inventory registrations and migrations are present in the final binary.
 systemprompt-security = { workspace = true }

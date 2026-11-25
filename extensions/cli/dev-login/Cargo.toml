@@ -15,7 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Audit: uses config (ProfileBootstrap, SecretsBootstrap), logging, models, system (AppContext) — requires `full`.
-systemprompt = { workspace = true, features = ["full"] }
+systemprompt = { workspace = true, features = ["reference"] }
 systemprompt-web-admin = { workspace = true }
 
 anyhow.workspace = true
