@@ -16,6 +16,7 @@ mod content_analytics;
 mod conversation_judge;
 mod conversation_rollup;
 mod governance_bootstrap;
+#[cfg(feature = "gateway")]
 mod quota_month_window;
 mod retention;
 mod scope_defaults;
@@ -35,6 +36,7 @@ pub use content_analytics::ContentAnalyticsAggregationJob;
 pub use conversation_judge::ConversationJudgeJob;
 pub use conversation_rollup::ConversationRollupJob;
 pub use governance_bootstrap::GovernanceBootstrapJob;
+#[cfg(feature = "gateway")]
 pub use quota_month_window::QuotaMonthWindowJob;
 pub use retention::{RetentionDailyReportJob, RetentionExportMonthlyJob, RetentionExportWeeklyJob};
 pub use scope_defaults::ScopeDefaultsJob;
@@ -49,11 +51,12 @@ pub fn contribute_jobs(c: &mut Contributions<'_>) {
     c.job(ConversationJudgeJob);
     #[cfg(feature = "content")]
     c.job(ContentAnalyticsAggregationJob);
+    #[cfg(feature = "gateway")]
+    c.job(QuotaMonthWindowJob);
     c.job(AccessExpiryJob)
         .job(ConversationRollupJob)
         .job(GovernanceBootstrapJob)
         .job(PluginUsageRetentionJob)
-        .job(QuotaMonthWindowJob)
         .job(RetentionDailyReportJob)
         .job(RetentionExportMonthlyJob)
         .job(RetentionExportWeeklyJob)

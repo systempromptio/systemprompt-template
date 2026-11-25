@@ -73,6 +73,7 @@ const PREFIXES: &[(&str, &str)] = &[
         "/api/public/api/v1/secrets/{*rest}",
     ),
     ("/api/public/secrets", "/api/public/secrets/{*rest}"),
+    #[cfg(feature = "mcp")]
     ("/api/public/connectors", "/api/public/connectors/{*rest}"),
     ("/api/public/bridge", "/api/public/bridge/{*rest}"),
     ("/share", "/share/{*rest}"),

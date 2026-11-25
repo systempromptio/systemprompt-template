@@ -30,9 +30,10 @@ pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings) -> Router {
         Arc::clone(&db.read),
         WebExtension::blog_config(settings),
     ));
+    #[cfg(feature = "mcp")]
+    let router = router.merge(admin::connector_api_router(Arc::clone(&db.write)));
     router
         .merge(bridge_identity)
-        .merge(admin::connector_api_router(Arc::clone(&db.write)))
         .merge(webhook_api)
         .merge(secrets_api)
         .nest("/admin", admin_api)

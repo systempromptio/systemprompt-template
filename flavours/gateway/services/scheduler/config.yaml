@@ -121,6 +121,11 @@ scheduler:
       owner: admin
       enabled: true
 
+    - name: conversation_rollup
+      extension: web
+      owner: admin
+      enabled: true
+
   bootstrap_jobs:
     - governance_bootstrap
     - database_cleanup

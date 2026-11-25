@@ -35,10 +35,12 @@ pub(crate) fn build(
         admin: admin::admin_ssr_router(
             &db.db,
             Arc::clone(&db.read),
-            engine,
-            sso_deps,
             db.owner.clone(),
-            env,
+            admin::AdminSsrShell {
+                engine,
+                sso_deps,
+                env,
+            },
         ),
     })
 }
