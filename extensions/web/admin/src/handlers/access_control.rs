@@ -160,7 +160,7 @@ pub(crate) async fn user_matrix_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id): Path<String>,
 ) -> AdminResult<Response> {
-    let services_path = shared::get_services_path(&env)?;
+    let services_path = shared::get_services_path(&env);
 
     let sections = build_matrix_sections(&env, &services_path);
 

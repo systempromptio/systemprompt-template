@@ -1,11 +1,13 @@
 //! Rollups derived from hook events as sessions progress.
 
+#[cfg(feature = "agents")]
 mod ai_summaries;
 mod daily;
 pub(crate) mod ingestion;
 pub(crate) mod session_updates;
 mod statusline;
 
+#[cfg(feature = "agents")]
 pub use ai_summaries::update_session_ai_summary_structured;
 pub use daily::{DailyAggregationParams, refresh_session_summary, upsert_daily_aggregation};
 pub use session_updates::{

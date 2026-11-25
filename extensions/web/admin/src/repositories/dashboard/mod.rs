@@ -7,6 +7,7 @@ pub mod conversation_analytics;
 pub mod hooks_track;
 pub mod overview;
 pub mod queries;
+#[cfg(feature = "agents")]
 pub mod session_analyses;
 pub mod traffic;
 pub mod usage_aggregations;

@@ -1,5 +1,6 @@
 //! Candidate comparison, publication, distribution and installation handlers.
 
+use crate::handlers::ssr::page::Caller;
 use std::sync::Arc;
 
 use axum::extract::{Path, Query};
@@ -18,13 +19,13 @@ use crate::routes::managed_state::ManagedState;
 use crate::types::UserContext;
 
 pub(crate) async fn create_candidate(
-    Extension(env): Extension<AdminEnv>,
-    Extension(_user): Extension<UserContext>,
+    caller: Caller,
     Extension(state): Extension<Arc<ManagedState>>,
     Path(id): Path<ResourceRevisionId>,
     headers: HeaderMap,
     Json(input): Json<systemprompt::marketplace::managed::TextCandidate>,
 ) -> AdminResult<(StatusCode, Json<ResourceRevisionId>)> {
+    let Caller { env, .. } = caller;
     require_write_origin(&env, &headers)?;
     Ok((
         StatusCode::CREATED,

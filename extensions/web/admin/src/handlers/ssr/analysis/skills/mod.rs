@@ -241,7 +241,7 @@ pub(crate) async fn page(
         offset: 0,
         skills: None,
     };
-    let index = InventoryIndex::build(&env, &crate::handlers::shared::get_services_path(&env)?);
+    let index = InventoryIndex::build(&env, &crate::handlers::shared::get_services_path(&env));
     let (rows, adoption, audience) = tokio::join!(
         list_skill_facts(&pool, &window, &filter),
         async {

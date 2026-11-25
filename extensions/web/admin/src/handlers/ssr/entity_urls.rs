@@ -22,3 +22,31 @@ pub(crate) fn request_detail_url(request: &AiRequestId) -> String {
 pub(crate) fn trace_detail_url(trace: &TraceId) -> String {
     format!("/admin/traces/{}", urlencoding::encode(trace.as_str()))
 }
+
+// Why: the page every "access" link lands on — the entity's own panel. A
+// kind with no catalog detail page in this build has none.
+#[must_use]
+pub(crate) fn entity_access_url(entity_type: &str, entity_id: &str) -> Option<String> {
+    let base = entity_access_base(entity_type)?;
+    Some(format!("{base}/{}#access", urlencoding::encode(entity_id)))
+}
+
+const ENTITY_ACCESS_PAGES: &[(&str, &str)] = &[
+    #[cfg(feature = "mcp")]
+    ("marketplace", "/admin/marketplaces"),
+    #[cfg(feature = "mcp")]
+    ("plugin", "/admin/plugins"),
+    #[cfg(feature = "mcp")]
+    ("skill", "/admin/skills"),
+    #[cfg(feature = "mcp")]
+    ("mcp_server", "/admin/mcp"),
+    #[cfg(feature = "gateway")]
+    ("gateway_route", "/admin/gateway/routes"),
+];
+
+fn entity_access_base(entity_type: &str) -> Option<&'static str> {
+    ENTITY_ACCESS_PAGES
+        .iter()
+        .find(|(kind, _)| *kind == entity_type)
+        .map(|(_, base)| *base)
+}

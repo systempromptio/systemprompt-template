@@ -7,6 +7,7 @@
 //! states are silent everywhere else.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 mod columns;
 mod detail;
@@ -84,15 +85,18 @@ async fn load_runtime(pool: &PgPool) -> Runtime {
 }
 
 pub(crate) async fn mcp_servers_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<McpListQuery>,
 ) -> AdminHtmlResult<Response> {
+    let Page {
+        engine,
+        user: user_ctx,
+        marketplace: mkt_ctx,
+    } = shell;
     console_only(&user_ctx)?;
-    let path = shared::get_services_path(&env)?;
+    let path = shared::get_services_path(&env);
 
     let catalog = super::data::load_catalog(&env, &path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_MCP_SERVER).await;
@@ -183,7 +187,7 @@ pub(crate) async fn mcp_detail_page(
     Query(query): Query<McpDetailQuery>,
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
-    let path = shared::get_services_path(&env)?;
+    let path = shared::get_services_path(&env);
 
     let catalog = super::data::load_catalog(&env, &path, &user_ctx.roles);
     let server = catalog.mcp.iter().find(|s| s.id == mcp_id);

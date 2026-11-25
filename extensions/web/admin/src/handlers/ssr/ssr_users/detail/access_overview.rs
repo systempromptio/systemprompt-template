@@ -4,13 +4,16 @@
 
 use crate::env::AdminEnv;
 
+#[cfg(feature = "mcp")]
 use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+#[cfg(feature = "mcp")]
 use systemprompt::marketplace::{AssembleRequest, ManifestService, MarketplaceCache};
 
+#[cfg(feature = "mcp")]
 use crate::marketplace_filter::TemplateMarketplaceFilter;
 use crate::repositories::users::access_control::UserMatrix;
 use crate::repositories::users::queries;
@@ -134,17 +137,18 @@ impl AccessOverview {
 pub(super) async fn load(env: &AdminEnv, pool: &PgPool, user_id: &UserId) -> AccessOverview {
     let services = env.services();
     let (catalog, connections, runtime) = tokio::join!(
-        included_content(env, pool, user_id),
+        catalog_content(env, pool, user_id),
         connector_accounts::get_connections(pool, &services, user_id),
         queries::get_user_runtime_detail(pool, user_id),
     );
     let mut view = AccessOverview::default();
     match catalog {
-        Ok(workspaces) => {
+        Some(Ok(workspaces)) => {
             view.catalog_available = true;
             view.workspaces = workspaces;
         },
-        Err(e) => tracing::warn!(error = %e, "user access: included content unavailable"),
+        Some(Err(e)) => tracing::warn!(error = %e, "user access: included content unavailable"),
+        None => {},
     }
     match connections {
         Ok(snapshot) => {
@@ -184,13 +188,32 @@ pub(super) async fn load(env: &AdminEnv, pool: &PgPool, user_id: &UserId) -> Acc
     view
 }
 
+#[cfg(feature = "mcp")]
+async fn catalog_content(
+    env: &AdminEnv,
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Option<Result<Vec<WorkspaceView>, String>> {
+    Some(included_content(env, pool, user_id).await)
+}
+
+#[cfg(not(feature = "mcp"))]
+fn catalog_content(
+    _env: &AdminEnv,
+    _pool: &PgPool,
+    _user_id: &UserId,
+) -> std::future::Ready<Option<Result<Vec<WorkspaceView>, String>>> {
+    std::future::ready(None)
+}
+
+#[cfg(feature = "mcp")]
 async fn included_content(
     env: &AdminEnv,
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<WorkspaceView>, String> {
     let services = env.services();
-    let root = crate::handlers::shared::get_services_path(env).map_err(|e| e.to_string())?;
+    let root = crate::handlers::shared::get_services_path(env);
     let url = env.config().api_external_url.clone();
     let filter = TemplateMarketplaceFilter::from_env(Arc::new(pool.clone()), env);
     let cache = MarketplaceCache::default();

@@ -18,7 +18,7 @@ use crate::env::AdminEnv;
 
 use sqlx::PgPool;
 
-use super::plane::{Actor, SyncMode, SyncPlane};
+use super::plane::{Actor, ApplyBy, SyncMode, SyncPlane};
 use super::registry::find_plane;
 use crate::error::{AdminError, AdminResult};
 
@@ -73,7 +73,14 @@ pub async fn reconcile_plane(
     };
     if drift.in_db == 0 && drift.declared_count > 0 {
         let outcome = plane
-            .apply(env, pool, SyncMode::Overwrite, Actor::Boot)
+            .apply(
+                env,
+                pool,
+                ApplyBy {
+                    mode: SyncMode::Overwrite,
+                    actor: Actor::Boot,
+                },
+            )
             .await?;
         boot.seeded = true;
         boot.inserted = outcome.inserted;

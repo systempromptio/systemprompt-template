@@ -82,6 +82,13 @@ pub enum Actor<'a> {
     User(&'a UserId),
 }
 
+/// Who applies a plane, and in which direction.
+#[derive(Debug, Clone, Copy)]
+pub struct ApplyBy<'a> {
+    pub mode: SyncMode,
+    pub actor: Actor<'a>,
+}
+
 impl Actor<'_> {
     #[must_use]
     pub fn as_str(&self) -> &str {
@@ -166,8 +173,7 @@ pub trait SyncPlane: Send + Sync {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
     ) -> AdminResult<ApplyOutcome>;
     // Why: the same apply narrowed to named entities. Only a plane whose
     // rows carry an entity dimension opts in; the default refuses so a
@@ -176,12 +182,11 @@ pub trait SyncPlane: Send + Sync {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
         scope: EntityScope<'_>,
     ) -> AdminResult<ApplyOutcome> {
         match scope {
-            EntityScope::All => self.apply(env, pool, mode, actor).await,
+            EntityScope::All => self.apply(env, pool, by).await,
             EntityScope::Entities(_) => Err(AdminError::Unprocessable(format!(
                 "the {} plane cannot be applied for single entities",
                 self.label()
@@ -216,12 +221,11 @@ pub trait SyncPlane: Send + Sync {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
         from: DeclarationSource<'_>,
     ) -> AdminResult<ApplyOutcome> {
         match from {
-            DeclarationSource::Disk => self.apply(env, pool, mode, actor).await,
+            DeclarationSource::Disk => self.apply(env, pool, by).await,
             DeclarationSource::Text(_) => Err(self.text_unsupported()),
         }
     }

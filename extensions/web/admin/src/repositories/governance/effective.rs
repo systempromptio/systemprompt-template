@@ -88,7 +88,7 @@ fn collect_gateway_ids(env: &AdminEnv) -> Vec<String> {
 }
 
 fn collect_mcp_ids(env: &AdminEnv) -> Result<Vec<String>, AdminError> {
-    let services_path = shared::get_services_path(env)?;
+    let services_path = shared::get_services_path(env);
     let servers = mcp_servers::list_mcp_servers(&services_path)
         .map_err(|e| AdminError::internal(e.to_string()))?;
     Ok(servers

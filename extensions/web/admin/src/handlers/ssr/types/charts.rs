@@ -9,15 +9,20 @@
 //! The Inference Requests and Evals pages both build these, so a fix to how a
 //! chart reads lands on both at once.
 
+#[cfg(feature = "gateway")]
 use serde::Serialize;
 
+#[cfg(feature = "gateway")]
 use crate::handlers::ssr::format::{format_cost, format_duration_ms};
+#[cfg(feature = "gateway")]
 use crate::repositories::analytics::request_stats::{LatencyBucket, RequestStats, TimeBucket};
+#[cfg(feature = "gateway")]
 use crate::util::time_range::TimeRange;
 
 // Why: the view carries its own axis labels — y_max/y_mid label the gridlines
 // the partial draws, x_* label the window the buckets span — so the template
 // never derives a scale and the axis cannot disagree with the bars.
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct ChartView {
     // Why: serialized as chart_title — the layout partial's `title=` hash
@@ -36,12 +41,14 @@ pub(crate) struct ChartView {
     pub empty_message: &'static str,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct ChartBarView {
     pub pct: i64,
     pub tooltip: String,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct HistogramView {
     pub bars: Vec<HistogramBarView>,
@@ -53,6 +60,7 @@ pub(crate) struct HistogramView {
     pub p95_display: Option<String>,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct HistogramBarView {
     pub label: String,
@@ -64,6 +72,7 @@ pub(crate) struct HistogramBarView {
 // Why: bars scale to the busiest bin so the shape reads at a glance, and that
 // bin is flagged so the partial can tint it. The p50 / p95 captions come from
 // the same stats the KPI strip prints, so the two cannot disagree.
+#[cfg(feature = "gateway")]
 pub(crate) fn histogram_view(buckets: &[LatencyBucket], stats: &RequestStats) -> HistogramView {
     let max = buckets.iter().map(|b| b.count).max().unwrap_or(0);
     let has_data = buckets.iter().any(|b| b.count > 0);
@@ -84,6 +93,7 @@ pub(crate) fn histogram_view(buckets: &[LatencyBucket], stats: &RequestStats) ->
     }
 }
 
+#[cfg(feature = "gateway")]
 pub(crate) fn traffic_chart(buckets: &[TimeBucket], range: &TimeRange) -> ChartView {
     let max = buckets.iter().map(|b| b.requests).max().unwrap_or(0);
     let total: i64 = buckets.iter().map(|b| b.requests).sum();
@@ -114,6 +124,7 @@ pub(crate) fn traffic_chart(buckets: &[TimeBucket], range: &TimeRange) -> ChartV
     }
 }
 
+#[cfg(feature = "gateway")]
 pub(crate) fn cost_chart(buckets: &[TimeBucket], range: &TimeRange) -> ChartView {
     let max = buckets
         .iter()
@@ -161,10 +172,12 @@ pub(crate) fn bar_pct(value: i64, max: i64) -> i64 {
     pct.clamp(2, 100)
 }
 
+#[cfg(feature = "gateway")]
 fn midpoint(range: &TimeRange) -> chrono::DateTime<chrono::Utc> {
     range.from + (range.to - range.from) / 2
 }
 
+#[cfg(feature = "gateway")]
 fn format_bucket_time(ts: &chrono::DateTime<chrono::Utc>) -> String {
     ts.with_timezone(&chrono::Local)
         .format("%b %d %H:%M")

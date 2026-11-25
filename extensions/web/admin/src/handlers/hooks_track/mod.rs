@@ -25,7 +25,9 @@ use crate::repositories::marketplace::webhook;
 use crate::types::webhook::HookEventPayload;
 use auth::extract_and_validate_jwt;
 use axum::Json;
-use axum::extract::{Extension, Query, State};
+use axum::extract::rejection::ExtensionRejection;
+use axum::extract::{Extension, FromRequestParts, Query, State};
+use axum::http::request::Parts;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use sha2::Digest;
@@ -39,17 +41,44 @@ pub(crate) struct TrackQuery {
     plugin_id: Option<PluginId>,
 }
 
+// Why: the three services the hook pipeline fans an event out to, read from
+// the router's extensions as one so the handler's signature stays the request.
+pub(crate) struct HookServices {
+    event_hub: EventHub,
+    env: AdminEnv,
+    ai_service: Option<Arc<AiService>>,
+}
+
+impl<S: Send + Sync> FromRequestParts<S> for HookServices {
+    type Rejection = ExtensionRejection;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let Extension(event_hub) = Extension::<EventHub>::from_request_parts(parts, state).await?;
+        let Extension(env) = Extension::<AdminEnv>::from_request_parts(parts, state).await?;
+        let Extension(ai_service) =
+            Extension::<Option<Arc<AiService>>>::from_request_parts(parts, state).await?;
+        Ok(Self {
+            event_hub,
+            env,
+            ai_service,
+        })
+    }
+}
+
 pub(crate) async fn handle_hook_track(
-    Extension(event_hub): Extension<EventHub>,
-    Extension(env): Extension<AdminEnv>,
+    services: HookServices,
     Query(track): Query<TrackQuery>,
-    Extension(ai_service): Extension<Option<Arc<AiService>>>,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     // JSON: protocol boundary — the third-party hook envelope, parsed into typed
     // events by `HookEventPayload::from_value` after the raw copy is retained
     Json(mut raw): Json<serde_json::Value>,
 ) -> AdminResult<Response> {
+    let HookServices {
+        event_hub,
+        env,
+        ai_service,
+    } = services;
     let (user_id, plugin_id, jwt_token) =
         extract_and_validate_jwt(&env, &headers, track.plugin_id).await?;
     tracing::trace!(payload = %helpers::sanitize_metadata(&raw), "Hook track received payload");

@@ -14,10 +14,10 @@
 //! for the contract and its one documented gap (the first minute after
 //! the rewrite, while core's policy cache is stale).
 
+use crate::repositories::gateway_policies::month_window_db::refresh_month_windows;
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
-use crate::repositories::gateway_policies::month_window_db::refresh_month_windows;
 
 use crate::jobs::error::JobError;
 

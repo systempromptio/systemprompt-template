@@ -17,8 +17,8 @@ use sqlx::PgPool;
 
 use super::access_control::applied_from;
 use super::plane::{
-    ActionCounts, Actor, ApplyOutcome, DriftKpi, DriftRow, Export, PlaneDrift, SyncMode, SyncPlane,
-    resolution,
+    ActionCounts, ApplyBy, ApplyOutcome, DriftKpi, DriftRow, Export, PlaneDrift, SyncMode,
+    SyncPlane, resolution,
 };
 use super::state::{Applied, record_applied, record_declared};
 use crate::error::AdminResult;
@@ -195,9 +195,9 @@ impl SyncPlane for GovernancePlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
     ) -> AdminResult<ApplyOutcome> {
+        let ApplyBy { mode, actor } = by;
         let declared = declared_chain_now(env)?;
         let existing = list_chain_policies(pool).await?;
         let mut outcome = ApplyOutcome::default();

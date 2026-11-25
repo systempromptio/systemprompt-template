@@ -28,19 +28,17 @@ mod transcript;
 
 use std::sync::Arc;
 
-use sqlx::PgPool;
-use systemprompt::database::DbPool;
-use systemprompt::identifiers::Actor;
-use systemprompt::models::ai::DynAiProvider;
-use systemprompt::traits::{Job, JobContext, JobResult};
 use crate::env::AdminEnv;
 use crate::repositories::analytics::context_detail::{
     list_context_requests, list_messages_for_requests,
 };
 use crate::repositories::analytics::context_tool_calls::list_tool_calls_for_requests;
-use crate::test_support::{
-    TranscriptOptions, build_conversation, transcript_request_ids,
-};
+use crate::test_support::{TranscriptOptions, build_conversation, transcript_request_ids};
+use sqlx::PgPool;
+use systemprompt::database::DbPool;
+use systemprompt::identifiers::Actor;
+use systemprompt::models::ai::DynAiProvider;
+use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::jobs::JobError;
 

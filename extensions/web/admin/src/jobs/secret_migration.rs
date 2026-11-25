@@ -1,10 +1,10 @@
 //! `secret_migration` job: encrypts plaintext secrets under each user's data
 //! key, which is wrapped by the web member's conferred cipher.
 
+use crate::env::AdminEnv;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult, MemberCipher};
-use crate::env::AdminEnv;
 
 use crate::jobs::error::JobError;
 use crate::repositories::secrets::{secret_crypto, secret_keys, secret_migration};
@@ -63,8 +63,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
             .with_duration(duration_ms));
     }
 
-    let (success_count, error_count) =
-        migrate_secrets(&pool, &rows, cipher, actor_user).await;
+    let (success_count, error_count) = migrate_secrets(&pool, &rows, cipher, actor_user).await;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 

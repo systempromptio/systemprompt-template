@@ -223,10 +223,7 @@ pub(super) async fn load_access(
     pool: &PgPool,
     group_id: &GroupId,
 ) -> Vec<AccessSectionView> {
-    let Ok(services_path) = crate::handlers::shared::get_services_path(env) else {
-        tracing::warn!("services path unavailable; group access matrix skipped");
-        return Vec::new();
-    };
+    let services_path = crate::handlers::shared::get_services_path(env);
     let mut sections = crate::handlers::access_control::build_matrix_sections(env, &services_path);
     if !sections.iter().any(|(kind, _, _)| kind == "marketplace") {
         let rows: Vec<(String, String, Option<String>)> = load_marketplaces(env)

@@ -19,14 +19,12 @@ use sqlx::PgPool;
 
 use super::audience_filter::{self, Narrowed};
 use super::audience_focus;
-use super::entities::AcQuery;
 use super::view::{
     AcAudienceCellView, AcAudienceColumnGroupView, AcAudienceColumnView, AcAudienceLegendView,
     AcAudienceRowGroupView, AcAudienceRowView, AudienceGridView,
 };
 use crate::handlers::ssr::entity_kind::{entity_kind_label, entity_kind_plural, entity_kind_rank};
 use crate::repositories;
-use crate::repositories::access_control::rules::LedgerRuleRow;
 use crate::repositories::users::access_control::{
     MatrixSubject, SectionInput, group_subject, project_subject, resolve_subject_matrices,
     role_subject,
@@ -255,9 +253,9 @@ pub(super) async fn grid(
     pool: &PgPool,
     audience: Audience,
     sections: &[SectionInput],
-    query: &AcQuery,
-    ledger: &[LedgerRuleRow],
+    inputs: super::TabInputs<'_>,
 ) -> AudienceGridView {
+    let super::TabInputs { query, ledger } = inputs;
     if audience.subjects.is_empty() || sections.is_empty() {
         return AudienceGridView::default();
     }

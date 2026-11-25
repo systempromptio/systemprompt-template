@@ -8,6 +8,7 @@
 //! across the entity list and detail pages; the rules live here so a cost reads
 //! the same on the sessions list as it does on the session it links to.
 
+#[cfg(feature = "agents")]
 use serde::Serialize;
 
 pub(crate) use systemprompt_web_shared::format::{
@@ -54,6 +55,7 @@ pub(crate) fn relative_time(t: chrono::DateTime<chrono::Utc>) -> String {
     }
 }
 
+#[cfg(feature = "agents")]
 // Why: `ai_requests.client_kind` is a closed set the core enum owns; a value
 // this build does not know (a newer core) is shown as it was stored rather
 // than mislabelled, so the chip never lies.
@@ -62,6 +64,7 @@ pub(crate) fn client_label(client_kind: &str) -> String {
         .map_or_else(|_| client_kind.to_owned(), |kind| kind.label().to_owned())
 }
 
+#[cfg(feature = "agents")]
 // Why: one client badge — the label names the client, the tone and title say
 // how strongly `ai_requests.client_attestation` evidences it.
 #[derive(Debug, Clone, Serialize)]
@@ -71,6 +74,7 @@ pub(crate) struct ClientChipView {
     pub title: String,
 }
 
+#[cfg(feature = "agents")]
 // Why: the tier decides the tone, never the client — a host-token Claude Code
 // and a user-agent Claude Code read as the same client at different
 // confidence, which is exactly the distinction the column records.
@@ -88,9 +92,24 @@ pub(crate) fn client_chip(client_kind: &str, attestation: &str) -> ClientChipVie
     }
 }
 
+#[cfg(feature = "agents")]
 pub(crate) fn attestation_title(attestation: &str) -> String {
     systemprompt::models::origin::ClientAttestation::parse(attestation).map_or_else(
         |_| format!("Attestation: {attestation}"),
         |tier| tier.label().to_owned(),
     )
+}
+
+pub(crate) fn format_bytes(bytes: i64) -> String {
+    if bytes <= 0 {
+        return "\u{2014}".to_owned();
+    }
+    if bytes < 1024 {
+        return format!("{bytes} B");
+    }
+    let kib = bytes / 1024;
+    if kib < 1024 {
+        return format!("{kib} KiB");
+    }
+    format!("{} MiB", short_num(kib / 1024))
 }

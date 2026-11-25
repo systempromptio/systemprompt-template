@@ -24,7 +24,7 @@ pub fn read_or_text(
     match from {
         DeclarationSource::Text(text) => Ok(Some(text.to_owned())),
         DeclarationSource::Disk => {
-            let path: PathBuf = services_root(env)?.join(source_file);
+            let path: PathBuf = services_root(env).join(source_file);
             match std::fs::read_to_string(&path) {
                 Ok(s) => Ok(Some(s)),
                 Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),

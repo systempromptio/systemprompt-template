@@ -10,7 +10,9 @@
 mod error;
 
 mod access_expiry;
+#[cfg(feature = "content")]
 mod content_analytics;
+#[cfg(feature = "agents")]
 mod conversation_judge;
 mod conversation_rollup;
 mod governance_bootstrap;
@@ -27,7 +29,9 @@ use systemprompt::extension::Contributions;
 pub use error::JobError;
 
 pub use access_expiry::{AccessExpiryJob, ExpirySweep, lost_manage_role};
+#[cfg(feature = "content")]
 pub use content_analytics::ContentAnalyticsAggregationJob;
+#[cfg(feature = "agents")]
 pub use conversation_judge::ConversationJudgeJob;
 pub use conversation_rollup::ConversationRollupJob;
 pub use governance_bootstrap::GovernanceBootstrapJob;
@@ -41,9 +45,11 @@ pub use usage_rollup::UsageDailyRollupJob;
 use usage_anomaly::UsageAnomalyJob;
 
 pub fn contribute_jobs(c: &mut Contributions<'_>) {
+    #[cfg(feature = "agents")]
+    c.job(ConversationJudgeJob);
+    #[cfg(feature = "content")]
+    c.job(ContentAnalyticsAggregationJob);
     c.job(AccessExpiryJob)
-        .job(ContentAnalyticsAggregationJob)
-        .job(ConversationJudgeJob)
         .job(ConversationRollupJob)
         .job(GovernanceBootstrapJob)
         .job(PluginUsageRetentionJob)
@@ -63,6 +69,7 @@ pub fn contribute_jobs(c: &mut Contributions<'_>) {
 /// structs are.
 #[doc(hidden)]
 pub mod internals {
+    #[cfg(feature = "agents")]
     pub use super::conversation_judge::{
         Category, Classification, ConversationClassifier, JudgeParams, JudgeVerdict, Outcome,
         TranscriptMeta, classification_schema, parse_classification, render_transcript,

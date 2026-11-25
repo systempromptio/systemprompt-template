@@ -34,11 +34,9 @@ use systemprompt::traits::{Job, JobContext, JobResult};
 
 use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
 
-use crate::jobs::error::JobError;
 use crate::env::AdminEnv;
-use crate::repositories::config::gateway::{
-    dispatchable_route_ids, registered_routes,
-};
+use crate::jobs::error::JobError;
+use crate::repositories::config::gateway::{dispatchable_route_ids, registered_routes};
 use crate::repositories::config::slack_acl::load_slack_apps;
 use crate::repositories::sync::boot::reconcile_all;
 use crate::repositories::sync::sources_db::record_service_sources;

@@ -9,10 +9,10 @@
 //!   attribute to roles, resolves the identity, and mints the session.
 //!
 //! Module layout: the loaded YAML is `systemprompt_web_shared::adfs`;
-//! [`provider`] (the SP and `IdP` descriptors built from it), [`start`] (the redirect), [`callback`] (the
-//! ACS handler), [`identity`] (claim gating + federated resolution),
-//! [`session`] (the session JWT mint and cookie shared by every browser
-//! sign-in, the development login link included).
+//! [`provider`] (the SP and `IdP` descriptors built from it), [`start`] (the
+//! redirect), [`callback`] (the ACS handler), [`identity`] (claim gating +
+//! federated resolution), [`session`] (the session JWT mint and cookie shared
+//! by every browser sign-in, the development login link included).
 
 mod callback;
 mod identity;

@@ -10,16 +10,7 @@ use crate::handlers;
 use crate::routes::admin_groups;
 
 pub(super) fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
-    Router::new()
-        .route("/gateway", get(handlers::get_gateway_handler))
-        .route(
-            "/gateway/catalog/for-user/{user_id}",
-            get(handlers::gateway_catalog::for_user_handler),
-        )
-        .route(
-            "/gateway/acl/detect",
-            get(handlers::gateway_catalog::detect_handler),
-        )
+    let routes = Router::new()
         .route("/users", get(handlers::list_users_handler))
         .route(
             "/users/{user_id}/detail",
@@ -58,8 +49,6 @@ pub(super) fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
             "/users/{user_id}/scope-defaults",
             get(handlers::scope_defaults::get_user_scope_defaults_handler),
         )
-        .merge(admin_groups::group_read_routes())
-        .merge(admin_groups::project_read_routes())
         .route(
             "/users/search",
             get(handlers::gateway_access::search_users_handler),
@@ -71,6 +60,25 @@ pub(super) fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
         .route(
             "/access-control/entity-access/all",
             get(handlers::entity_access::list_all_entity_access_handler),
-        )
+        );
+    #[cfg(feature = "gateway")]
+    let routes = routes.merge(gateway_read_routes());
+    routes
+        .merge(admin_groups::group_read_routes())
+        .merge(admin_groups::project_read_routes())
         .with_state(Arc::clone(read_pool))
+}
+
+#[cfg(feature = "gateway")]
+fn gateway_read_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/gateway", get(handlers::get_gateway_handler))
+        .route(
+            "/gateway/catalog/for-user/{user_id}",
+            get(handlers::gateway_catalog::for_user_handler),
+        )
+        .route(
+            "/gateway/acl/detect",
+            get(handlers::gateway_catalog::detect_handler),
+        )
 }

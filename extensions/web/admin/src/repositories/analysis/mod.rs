@@ -12,6 +12,7 @@ pub mod conversations;
 pub mod inventory_index;
 pub mod marketplace_versions;
 pub mod plugin_eval;
+#[cfg(feature = "mcp")]
 pub mod publications;
 pub mod reports;
 pub mod skills;

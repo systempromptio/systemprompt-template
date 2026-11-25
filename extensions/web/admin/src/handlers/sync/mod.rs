@@ -31,7 +31,7 @@ pub(crate) use refresh::refresh_sources_handler;
 use crate::activity::{self, NewActivity, PlaneApply};
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::sync::plane::{
-    Actor, ApplyOutcome, EntityScope, PlaneDrift, SyncMode, SyncPlane,
+    Actor, ApplyBy, ApplyOutcome, EntityScope, PlaneDrift, SyncMode, SyncPlane,
 };
 use crate::repositories::sync::registry::{find_plane, planes};
 use crate::repositories::sync::sources::{SourcesView, build_sources};
@@ -135,7 +135,7 @@ pub(crate) async fn status_handler(
     Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
 ) -> AdminResult<Response> {
-    let sources = build_sources(&env)?;
+    let sources = build_sources(&env);
     let mut out = Vec::new();
     for plane in planes() {
         out.push(plane_status(&env, &pool, plane.as_ref()).await?);
@@ -170,8 +170,10 @@ pub(crate) async fn apply_handler(
         .apply_scoped(
             &env,
             &pool,
-            body.mode,
-            Actor::User(&user_ctx.user_id),
+            ApplyBy {
+                mode: body.mode,
+                actor: Actor::User(&user_ctx.user_id),
+            },
             scope,
         )
         .await?;

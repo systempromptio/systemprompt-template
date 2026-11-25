@@ -10,7 +10,8 @@ use systemprompt::identifiers::UserId;
 use systemprompt::manifest::services::ServicesConfig;
 use systemprompt::models::auth::Permission;
 
-pub(crate) use super::connector_readiness::probe_session_connection;
+#[cfg(feature = "mcp")]
+pub(crate) use super::connector_probe::probe_session_connection;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Connection {
@@ -82,6 +83,7 @@ impl Entitlement {
     }
 }
 
+#[cfg(feature = "mcp")]
 fn not_entitled_message(services: &ServicesConfig, provider: &Provider) -> &'static str {
     if provider.is_session_attested(services) {
         "This connector is not open to your account"
@@ -90,6 +92,7 @@ fn not_entitled_message(services: &ServicesConfig, provider: &Provider) -> &'sta
     }
 }
 
+#[cfg(feature = "mcp")]
 pub(crate) async fn require_entitlement(
     pool: &PgPool,
     services: &ServicesConfig,
@@ -110,14 +113,24 @@ pub(crate) async fn require_entitlement(
     Ok(())
 }
 
+#[derive(Clone, Copy)]
+struct ConnectionState<'a> {
+    status: &'a str,
+    configured: bool,
+    entitled: bool,
+}
+
 fn actions_for(
     services: &ServicesConfig,
     provider: &Provider,
     row: Option<&repo::ProviderConnection>,
-    status: &str,
-    configured: bool,
-    entitled: bool,
+    state: ConnectionState<'_>,
 ) -> Vec<String> {
+    let ConnectionState {
+        status,
+        configured,
+        entitled,
+    } = state;
     let mut actions = Vec::new();
     if configured && entitled && provider.is_session_attested(services) {
         actions.push("test".into());
@@ -191,7 +204,16 @@ fn describe(
         } else {
             row.and_then(|r| r.verified_at.map(|t| t.to_rfc3339()))
         },
-        actions: actions_for(services, provider, row, status, configured, entitled),
+        actions: actions_for(
+            services,
+            provider,
+            row,
+            ConnectionState {
+                status,
+                configured,
+                entitled,
+            },
+        ),
     }
 }
 

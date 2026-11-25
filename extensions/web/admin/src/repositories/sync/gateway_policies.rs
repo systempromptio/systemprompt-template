@@ -18,7 +18,7 @@ use sqlx::PgPool;
 use super::access_control::applied_from;
 use super::declaration::read_or_text;
 use super::plane::{
-    ActionCounts, Actor, ApplyOutcome, DeclarationSource, DriftKpi, DriftRow, Export, PlaneDrift,
+    ActionCounts, ApplyBy, ApplyOutcome, DeclarationSource, DriftKpi, DriftRow, Export, PlaneDrift,
     SyncMode, SyncPlane, resolution,
 };
 use super::state::{Applied, record_applied, record_declared};
@@ -193,10 +193,9 @@ impl SyncPlane for GatewayPoliciesPlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        self.apply_from(env, pool, mode, actor, DeclarationSource::Disk)
+        self.apply_from(env, pool, by, DeclarationSource::Disk)
             .await
     }
 
@@ -204,10 +203,10 @@ impl SyncPlane for GatewayPoliciesPlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
         from: DeclarationSource<'_>,
     ) -> AdminResult<ApplyOutcome> {
+        let ApplyBy { mode, actor } = by;
         let declared = declared_policies_from(env, from)?;
         let existing = list_policies(pool).await?;
         let mut outcome = ApplyOutcome::default();

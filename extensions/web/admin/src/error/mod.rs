@@ -5,6 +5,7 @@
 //! each call site. Logging happens once, in `into_response`.
 
 mod html;
+#[cfg(feature = "mcp")]
 mod managed;
 mod orchestration;
 

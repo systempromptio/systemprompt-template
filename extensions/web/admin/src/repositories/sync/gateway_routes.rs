@@ -18,8 +18,8 @@ use sqlx::PgPool;
 
 use super::access_control::applied_from;
 use super::plane::{
-    ActionCounts, Actor, ApplyOutcome, DriftKpi, DriftRow, Export, PlaneDrift, SyncMode, SyncPlane,
-    resolution,
+    ActionCounts, Actor, ApplyBy, ApplyOutcome, DriftKpi, DriftRow, Export, PlaneDrift, SyncMode,
+    SyncPlane, resolution,
 };
 use super::state::{Applied, record_applied, record_declared};
 use crate::error::AdminResult;
@@ -245,9 +245,9 @@ impl SyncPlane for GatewayRoutesPlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
     ) -> AdminResult<ApplyOutcome> {
+        let ApplyBy { mode, actor } = by;
         let declared = declared_routes_now(env)?;
         let outcome = write_declared(pool, &declared, mode).await?;
         // Why: the boot seed came from the file, so the file already says
@@ -255,7 +255,7 @@ impl SyncPlane for GatewayRoutesPlane {
         // comments. A person's apply may have kept console rows the file
         // lacks, and those must reach the file core boots from.
         if matches!(actor, Actor::User(_)) {
-            regenerate_gateway_file(pool, &gateway_file_path(env)?).await?;
+            regenerate_gateway_file(pool, &gateway_file_path(env)).await?;
         }
         record_applied(
             pool,
@@ -273,7 +273,7 @@ impl SyncPlane for GatewayRoutesPlane {
 
     async fn export(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<Option<Export>> {
         let rows = list_gateway_routes(pool).await?;
-        let file = std::fs::read_to_string(gateway_file_path(env)?)
+        let file = std::fs::read_to_string(gateway_file_path(env))
             .map_err(|e| crate::error::AdminError::invalid("gateway.yaml could not be read", e))?;
         let body = render_routes_export(&file, &rows).map_err(|e| {
             crate::error::AdminError::invalid("gateway.yaml could not be rendered", e)

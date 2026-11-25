@@ -10,13 +10,10 @@ homepage.workspace = true
 publish = false
 
 [dependencies]
-systemprompt-mcp-shared = { workspace = true }
 semver = "1"
 # Foundation
 systemprompt-web-shared = { workspace = true }
-# Audit: uses ai, identifiers, models, oauth, security — requires `full`.
-systemprompt = { workspace = true, features = ["reference"] }
-systemprompt-security = { workspace = true }
+systemprompt = { workspace = true, features = ["runtime", "identity", "analytics", "loader"] }
 
 # Database
 sqlx = { workspace = true }
@@ -78,8 +75,8 @@ governance-ssr = []
 # Console page groups a flavour may leave out. The base console (identity,
 # governance, access control, sync, overview, usage analytics) is always built.
 gateway = []
-mcp = []
-agents = ["mcp"]
+mcp = ["systemprompt/mcp-servers", "systemprompt/marketplace"]
+agents = ["mcp", "systemprompt/ai"]
 content = []
 
 [lints]

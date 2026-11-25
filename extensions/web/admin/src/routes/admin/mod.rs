@@ -40,27 +40,32 @@ pub(crate) fn build_admin_only_routes(
     // stays with the admin roles. The platform tier is narrower still: an AD
     // mapping decides what the directory grants everyone, so only
     // `platform_admin` may move one.
-    let reads = build_admin_read_routes_inner(read_pool)
-        .merge(super::managed_resources::reads())
-        .layer(axum_middleware::from_fn_with_state(
-            ROLES_CONSOLE,
-            middleware::require_roles_middleware,
-        ));
-    let writes = build_admin_write_routes(write_pool)
-        .merge(super::managed_resources::writes())
-        .layer(axum_middleware::from_fn_with_state(
-            ROLES_MANAGE,
-            middleware::require_roles_middleware,
-        ));
+    let reads = build_admin_read_routes_inner(read_pool);
+    #[cfg(feature = "mcp")]
+    let reads = reads.merge(super::managed_resources::reads());
+    let reads = reads.layer(axum_middleware::from_fn_with_state(
+        ROLES_CONSOLE,
+        middleware::require_roles_middleware,
+    ));
+    let writes = build_admin_write_routes(write_pool);
+    #[cfg(feature = "mcp")]
+    let writes = writes.merge(super::managed_resources::writes());
+    let writes = writes.layer(axum_middleware::from_fn_with_state(
+        ROLES_MANAGE,
+        middleware::require_roles_middleware,
+    ));
     let platform = build_admin_platform_routes(write_pool).layer(
         axum_middleware::from_fn_with_state(ROLES_PLATFORM, middleware::require_roles_middleware),
     );
 
-    let managed = Arc::new(super::managed_state::ManagedState::new(db, owner));
-    reads
-        .merge(writes)
-        .merge(platform)
-        .layer(axum::Extension(managed))
+    let routes = reads.merge(writes).merge(platform);
+    #[cfg(feature = "mcp")]
+    let routes = routes.layer(axum::Extension(Arc::new(
+        super::managed_state::ManagedState::new(db, owner),
+    )));
+    #[cfg(not(feature = "mcp"))]
+    let _ = (db, owner);
+    routes
 }
 
 // Why: the access-control writes are their own table — every route here edits
@@ -129,6 +134,56 @@ fn build_sync_write_routes() -> Router<Arc<PgPool>> {
 }
 
 fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
+    let routes = Router::new()
+        .route(
+            "/users",
+            post(handlers::users_bootstrap::create_user_handler),
+        )
+        .route(
+            "/users/{user_id}",
+            put(handlers::update_user_handler).delete(handlers::delete_user_handler),
+        )
+        .route(
+            "/users/{user_id}/share-token",
+            post(handlers::share::issue_share_token_handler),
+        )
+        .route(
+            "/users/{user_id}/sessions",
+            get(handlers::list_user_sessions_handler)
+                .delete(handlers::revoke_all_user_sessions_handler),
+        )
+        .route(
+            "/users/{user_id}/sessions/{session_id}",
+            delete(handlers::revoke_user_session_handler),
+        )
+        .route(
+            "/users/{user_id}/roles",
+            put(handlers::roles::set_user_roles_handler),
+        )
+        .route(
+            "/users/{user_id}/scope-defaults",
+            put(handlers::scope_defaults::set_user_scope_defaults_handler),
+        )
+        .route(
+            "/scope-defaults/recompute",
+            post(handlers::scope_defaults::recompute_scope_defaults_handler),
+        );
+    #[cfg(feature = "gateway")]
+    let routes = routes.merge(gateway_write_routes());
+    #[cfg(feature = "mcp")]
+    let routes = routes.merge(connector_write_routes());
+    routes
+        .merge(build_access_control_write_routes())
+        .merge(build_sync_write_routes())
+        .merge(admin_groups::group_write_routes())
+        .merge(admin_groups::project_write_routes())
+        .merge(build_management_write_routes())
+        .merge(build_approval_write_routes())
+        .with_state(Arc::clone(write_pool))
+}
+
+#[cfg(feature = "gateway")]
+fn gateway_write_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/gateway", patch(handlers::update_gateway_settings_handler))
         .route(
@@ -144,50 +199,14 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             "/gateway/routes/reorder",
             post(handlers::reorder_gateway_routes_handler),
         )
-        .route(
-            "/users",
-            post(handlers::users_bootstrap::create_user_handler),
-        )
-        .route(
-            "/users/{user_id}",
-            put(handlers::update_user_handler).delete(handlers::delete_user_handler),
-        )
-        .route(
-            "/users/{user_id}/share-token",
-            post(handlers::share::issue_share_token_handler),
-        )
-        .route(
-            "/connectors/{provider}/reprovision",
-            post(handlers::connector_reprovision::reprovision_connector_handler),
-        )
-        .route(
-            "/users/{user_id}/sessions",
-            get(handlers::list_user_sessions_handler)
-                .delete(handlers::revoke_all_user_sessions_handler),
-        )
-        .route(
-            "/users/{user_id}/sessions/{session_id}",
-            delete(handlers::revoke_user_session_handler),
-        )
-        .merge(build_access_control_write_routes())
-        .merge(build_sync_write_routes())
-        .route(
-            "/users/{user_id}/roles",
-            put(handlers::roles::set_user_roles_handler),
-        )
-        .route(
-            "/users/{user_id}/scope-defaults",
-            put(handlers::scope_defaults::set_user_scope_defaults_handler),
-        )
-        .route(
-            "/scope-defaults/recompute",
-            post(handlers::scope_defaults::recompute_scope_defaults_handler),
-        )
-        .merge(admin_groups::group_write_routes())
-        .merge(admin_groups::project_write_routes())
-        .merge(build_management_write_routes())
-        .merge(build_approval_write_routes())
-        .with_state(Arc::clone(write_pool))
+}
+
+#[cfg(feature = "mcp")]
+fn connector_write_routes() -> Router<Arc<PgPool>> {
+    Router::new().route(
+        "/connectors/{provider}/reprovision",
+        post(handlers::connector_reprovision::reprovision_connector_handler),
+    )
 }
 
 // Why: the platform tier is empty of ordinary routes on purpose. It carries
@@ -263,14 +282,27 @@ pub(crate) fn build_self_service_routes(write_pool: &Arc<PgPool>) -> Router {
 }
 
 pub(crate) fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
+    let routes = Router::new().route("/dashboard", get(handlers::dashboard_handler));
+    #[cfg(feature = "mcp")]
+    let routes = routes.merge(plugin_read_routes());
+    #[cfg(feature = "agents")]
+    let routes = routes.merge(agent_read_routes());
+    routes.with_state(Arc::clone(read_pool))
+}
+
+#[cfg(feature = "mcp")]
+fn plugin_read_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/dashboard", get(handlers::dashboard_handler))
         .route("/plugins", get(handlers::list_plugins_handler))
         .route(
             "/plugins/{plugin_id}/env",
             get(handlers::list_plugin_env_handler),
         )
+}
+
+#[cfg(feature = "agents")]
+fn agent_read_routes() -> Router<Arc<PgPool>> {
+    Router::new()
         .route("/agents", get(handlers::list_agents_handler))
         .route("/agents/{agent_id}", get(handlers::get_agent_handler))
-        .with_state(Arc::clone(read_pool))
 }

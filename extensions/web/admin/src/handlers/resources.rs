@@ -21,7 +21,7 @@ pub(crate) async fn list_agents_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
 ) -> AdminResult<Response> {
-    let services_path = shared::get_services_path(&env)?;
+    let services_path = shared::get_services_path(&env);
     let agents = repositories::config::agents::list_configured_agents(&services_path)
         .map_err(AdminError::internal)?;
     // Why: `admin`, not `is_console`. The unfiltered list includes
@@ -50,7 +50,7 @@ pub(crate) async fn get_agent_handler(
     Extension(env): Extension<AdminEnv>,
     Path(agent_id): Path<String>,
 ) -> AdminResult<Response> {
-    let services_path = shared::get_services_path(&env)?;
+    let services_path = shared::get_services_path(&env);
     let agent = repositories::config::agents::find_agent(&services_path, &AgentId::new(agent_id))
         .map_err(AdminError::internal)?
         .ok_or_else(|| AdminError::NotFound("Agent not found".to_owned()))?;

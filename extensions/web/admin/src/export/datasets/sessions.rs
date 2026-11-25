@@ -2,9 +2,9 @@
 
 use async_trait::async_trait;
 
-use super::requests::time_range;
 use crate::error::AdminResult;
 use crate::export::model::{Cell, CellKind, Column, DataSet, ExportContext, Table, Window};
+use crate::export::window::time_range;
 use crate::handlers::ssr::ssr_sessions_list::export::export_rows;
 use crate::repositories::analytics::conversation_rows::ConversationRow;
 use systemprompt::identifiers::{SessionId, UserId};

@@ -26,9 +26,10 @@ pub mod event_hub;
 pub(crate) mod export;
 pub mod gateway_entitlement;
 pub mod gateway_safety;
-pub mod jobs;
 pub(crate) mod handlers;
+pub mod jobs;
 mod marketplace_context;
+#[cfg(feature = "mcp")]
 pub mod marketplace_filter;
 mod middleware;
 pub mod numeric;
@@ -49,11 +50,12 @@ pub use handlers::adfs_auth::{
     AdfsDeps, AdfsError, AssertionClaims, FlowState, clear_state_cookie, permissions_for_roles,
     read_state_cookie, state_cookie,
 };
+#[cfg(feature = "mcp")]
 pub use handlers::connector_auth::router as connector_api_router;
 pub use handlers::dev_login::{
     DEV_LOGIN_PATH, dev_login_allowed, dev_login_enabled, dev_login_url,
 };
-pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
+pub use routes::{AdminSsrShell, admin_ssr_router, bridge_auth_ssr_router};
 pub use services::{connector_oauth, identity_token};
 pub use types::{
     CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent,
@@ -61,28 +63,40 @@ pub use types::{
 };
 
 pub mod test_support {
+    #[cfg(feature = "mcp")]
     pub use crate::handlers::catalog::mcp::status_of;
+    #[cfg(feature = "mcp")]
     pub use crate::handlers::catalog::sorting::{
-        SortColumn, direction, matches, preserved_search, sort_headers,
+        direction, matches, preserved_search, sort_headers,
     };
+    #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::ai_context::build_full_context;
+    #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::ai_summary::build_request_context;
+    #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::ai_summary_types::{
         SessionAnalysis, session_analysis_schema, validate_analysis,
     };
+    #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::commits::{
         ParsedCommit, is_commit_command, parse_commit_stdout, response_stdout,
     };
+    #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::loc::{LocDelta, compute_loc_delta};
+    #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::session_summary::GeneratedSessionSummary;
+    #[cfg(feature = "mcp")]
     pub use crate::handlers::resolve_principal;
+    #[cfg(feature = "mcp")]
     pub use crate::handlers::ssr::analysis::marketplace_versions::diff::{
         Change, ManifestDiff, SkillChange, diff as manifest_diff,
     };
     pub use crate::handlers::ssr::analysis::time::{
         parse as parse_window_bound, render as render_window_bound,
     };
+    #[cfg(feature = "agents")]
     pub use crate::handlers::ssr::analysis::{SkillRef, parse_skill_key};
+    #[cfg(feature = "mcp")]
     pub use crate::handlers::ssr::ssr_connectors_cards::{
         ConnectorCardView, card as connector_card,
     };
@@ -93,6 +107,7 @@ pub mod test_support {
         TranscriptRequestIds, TurnView, build_conversation, meta_view, parse_assistant, preview,
         short_id, strip_system_reminders, tidy_lines, transcript_request_ids,
     };
+    pub use crate::handlers::ssr::types::table::{SortColumn, SortHeaderView};
     pub use crate::repositories::analysis::inventory_index::MarketplaceAudience;
     pub use crate::services::connector_accounts::{
         Connection, ConnectionSnapshot, get_connections,
@@ -104,17 +119,20 @@ pub fn hooks_webhook_router(
     pool: Arc<PgPool>,
     users: Arc<dyn systemprompt::traits::UserProvider>,
 ) -> Router {
-    Router::new()
+    let routes = Router::new()
+        .route("/hooks/govern", post(handlers::govern_tool_use))
+        .route("/govern/authz", post(handlers::govern_authz))
+        .route("/hooks/statusline", post(handlers::track_statusline_event))
+        .route("/hooks/transcript", post(handlers::track_transcript_event));
+    #[cfg(feature = "agents")]
+    let routes = routes
         .route(
             "/hooks/track",
             post(handlers::hooks_track::handle_hook_track),
         )
-        .route("/hooks/govern", post(handlers::govern_tool_use))
-        .route("/govern/authz", post(handlers::govern_authz))
-        .route("/hooks/statusline", post(handlers::track_statusline_event))
-        .route("/hooks/transcript", post(handlers::track_transcript_event))
+        .layer(Extension(None::<Arc<systemprompt::ai::AiService>>));
+    routes
         .layer(Extension(event_hub::EventHub::default()))
-        .layer(Extension(None::<Arc<systemprompt::ai::AiService>>))
         .layer(Extension(users))
         .with_state(pool)
 }

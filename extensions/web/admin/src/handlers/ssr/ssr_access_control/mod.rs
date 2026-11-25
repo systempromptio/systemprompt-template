@@ -12,6 +12,7 @@
 //! here is the CONSOLE tier so a project manager can audit.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 mod audience;
 mod audience_filter;
@@ -40,8 +41,6 @@ use crate::repositories::access_control::rules::{
 use crate::repositories::config::gateway::{RouteLabels, get_route_labels_from_services};
 use crate::repositories::sync::access_control::{declared_now, drift_now};
 use crate::repositories::sync::attention::access_attention;
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
 
 use entities::{AcQuery, BASE_URL, DOCS_URL, EntitiesInput, SYNC_URL};
 use person::PersonCheckView;
@@ -124,21 +123,29 @@ async fn declared_drift(
     }
 }
 
+// Why: what the request asked for and the ledger it is read against — every
+// tab's body is a function of the two.
+#[derive(Clone, Copy)]
+pub(super) struct TabInputs<'a> {
+    pub(super) query: &'a AcQuery,
+    pub(super) ledger: &'a [LedgerRuleRow],
+}
+
 async fn tab_body(
     env: &AdminEnv,
     pool: &PgPool,
     services_path: &std::path::Path,
     tab: AcTab,
-    query: &AcQuery,
-    ledger: &[LedgerRuleRow],
+    inputs: TabInputs<'_>,
 ) -> AdminHtmlResult<TabBody> {
+    let query = inputs.query;
     let mut body = TabBody::default();
     match tab {
         AcTab::Audience => {
             let audience = audience::audience(pool).await;
             body.audiences = audience.columns.len();
             let sections = build_matrix_sections(env, services_path);
-            body.audience = audience::grid(env, pool, audience, &sections, query, ledger).await;
+            body.audience = audience::grid(env, pool, audience, &sections, inputs).await;
         },
         AcTab::Person => {
             body.person = Some(person::build(pool, query.q.as_deref()).await);
@@ -150,31 +157,34 @@ async fn tab_body(
     Ok(body)
 }
 
-pub(crate) async fn access_control_page(
-    Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
-    State(pool): State<Arc<PgPool>>,
-    Query(query): Query<AcQuery>,
-) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_console {
-        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
-    }
+fn moved_link(query: &AcQuery) -> Option<Response> {
     // Why: the plane's Sync tab moved to Code sync; an old `?tab=sync` link
     // follows it there rather than rendering the ledger it did not ask for.
     if query.tab.as_deref() == Some("sync") {
-        return Ok(Redirect::to(SYNC_URL).into_response());
+        return Some(Redirect::to(SYNC_URL).into_response());
     }
-    let tab = AcTab::parse(query.tab.as_deref());
     // Why: the editor's old deep link, `?user=`, lands on that person's own
     // Access tab — a temporary redirect, since the old one was permanent and
     // browsers cache those.
-    if let Some(user) = query.user.as_deref().filter(|u| !u.is_empty()) {
-        let target = format!("/admin/users/{}?tab=access", urlencoding::encode(user));
-        return Ok(Redirect::to(&target).into_response());
+    let user = query.user.as_deref().filter(|u| !u.is_empty())?;
+    let target = format!("/admin/users/{}?tab=access", urlencoding::encode(user));
+    Some(Redirect::to(&target).into_response())
+}
+
+pub(crate) async fn access_control_page(
+    shell: Page,
+    Extension(env): Extension<AdminEnv>,
+    State(pool): State<Arc<PgPool>>,
+    Query(query): Query<AcQuery>,
+) -> AdminHtmlResult<Response> {
+    if !shell.user.is_console {
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
-    let services_path = shared::get_services_path(&env)?;
+    if let Some(moved) = moved_link(&query) {
+        return Ok(moved);
+    }
+    let tab = AcTab::parse(query.tab.as_deref());
+    let services_path = shared::get_services_path(&env);
 
     let stats = data::load_stats(&pool).await;
     let ledger_rows = list_ledger_rules(&pool)
@@ -184,7 +194,11 @@ pub(crate) async fn access_control_page(
     let open_entities = count_open_entities(&pool).await?;
 
     let (drift, declared_count, declared_unreadable) = declared_drift(&env, &pool).await;
-    let body = tab_body(&env, &pool, &services_path, tab, &query, &ledger_rows).await?;
+    let inputs = TabInputs {
+        query: &query,
+        ledger: &ledger_rows,
+    };
+    let body = tab_body(&env, &pool, &services_path, tab, inputs).await?;
     let labels = route_labels(&env);
 
     let capped = i64::try_from(ledger_rows.len()).unwrap_or(i64::MAX) >= RULE_CAP;
@@ -212,7 +226,7 @@ pub(crate) async fn access_control_page(
     let page = AccessControlPageData {
         page: "access-control",
         title: "Access control",
-        can_write: user_ctx.is_admin,
+        can_write: shell.user.is_admin,
         stats,
         breadcrumbs: vec![
             BreadcrumbView::link("Admin", "/admin"),
@@ -233,10 +247,10 @@ pub(crate) async fn access_control_page(
     };
 
     Ok(super::render_typed_page(
-        &engine,
+        &shell.engine,
         "access-control",
         &page,
-        &user_ctx,
-        &mkt_ctx,
+        &shell.user,
+        &shell.marketplace,
     ))
 }

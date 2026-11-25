@@ -4,25 +4,29 @@
 //! Every page is `/analysis/<noun>` with the entity's identity as the next
 //! segment — the Platform section's `/<noun>/{id}` shape, one level in.
 
+#[cfg(feature = "mcp")]
 use crate::handlers;
 use axum::Router;
+#[cfg(feature = "mcp")]
 use axum::routing::{get, post};
 use sqlx::PgPool;
 use std::sync::Arc;
 
 pub(super) fn routes() -> Router<Arc<PgPool>> {
+    let routes = Router::new();
+    #[cfg(feature = "mcp")]
+    let routes = routes.merge(catalog_analysis_routes());
+    #[cfg(feature = "agents")]
+    let routes = routes.merge(conversation_analysis_routes());
+    routes
+}
+
+#[cfg(feature = "mcp")]
+fn catalog_analysis_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route(
             "/analysis/inventory/sync",
             post(handlers::ssr::analysis::inventory_actions::sync_inventory),
-        )
-        .route(
-            "/analysis/skills",
-            get(handlers::ssr::analysis::skills::page),
-        )
-        .route(
-            "/analysis/skills/{skill}",
-            get(handlers::ssr::analysis::skill_page),
         )
         .route(
             "/analysis/inventory/{entry_id}/bind",
@@ -39,6 +43,27 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
         .route(
             "/analysis/revisions/{id}",
             get(handlers::ssr::analysis::revisions::revision_page),
+        )
+        .route(
+            "/analysis/publications/review",
+            post(handlers::ssr::analysis::lifecycle::review),
+        )
+        .route(
+            "/analysis/publications/withdrawals",
+            post(handlers::ssr::analysis::lifecycle::decide_withdrawal),
+        )
+}
+
+#[cfg(feature = "agents")]
+fn conversation_analysis_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route(
+            "/analysis/skills",
+            get(handlers::ssr::analysis::skills::page),
+        )
+        .route(
+            "/analysis/skills/{skill}",
+            get(handlers::ssr::analysis::skill_page),
         )
         .route(
             "/analysis/conversations",
@@ -72,13 +97,5 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
         .route(
             "/analysis/conversations/{context_id}/judge",
             post(handlers::ssr::analysis::conversation_detail::judge_now),
-        )
-        .route(
-            "/analysis/publications/review",
-            post(handlers::ssr::analysis::lifecycle::review),
-        )
-        .route(
-            "/analysis/publications/withdrawals",
-            post(handlers::ssr::analysis::lifecycle::decide_withdrawal),
         )
 }

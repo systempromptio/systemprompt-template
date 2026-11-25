@@ -2,7 +2,7 @@
 
 use serde::Serialize;
 
-use crate::handlers::ssr::ssr_tools::rows::format_bytes;
+use crate::handlers::ssr::format::format_bytes;
 use crate::repositories::lifecycle::{ArchiveRow, HealthReportDoc, HealthReportRow, MeasureRow};
 
 #[derive(Debug, Clone, Serialize)]

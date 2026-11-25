@@ -60,10 +60,7 @@ pub async fn build_manifest(
     actor: &str,
     exported: &[ExportedPlane<'_>],
 ) -> AdminResult<ArchiveManifest> {
-    // Why: discard-ok: an unreadable profile or cache leaves the hashes blank
-    let sources = build_sources(env)
-        .inspect_err(|e| tracing::warn!(error = %e, "sync export: sources unreadable"))
-        .ok();
+    let sources = build_sources(env);
     let mut planes = Vec::with_capacity(exported.len());
     for e in exported {
         let state = find_sync_state(pool, e.plane.id()).await?;
@@ -82,8 +79,8 @@ pub async fn build_manifest(
         release: env!("CARGO_PKG_VERSION").to_owned(),
         exported_at: Utc::now(),
         exported_by: actor.to_owned(),
-        base_tree_hash: sources.as_ref().and_then(|s| s.base.tree_hash.clone()),
-        composed_hash: sources.and_then(|s| s.composed_hash),
+        base_tree_hash: sources.base.tree_hash,
+        composed_hash: sources.composed_hash,
         planes,
     })
 }

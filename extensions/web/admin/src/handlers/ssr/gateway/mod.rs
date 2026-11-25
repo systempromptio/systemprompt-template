@@ -15,6 +15,7 @@
 //! through untouched. The page never writes YAML itself.
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 mod models;
 mod route_detail;
@@ -33,8 +34,7 @@ use crate::handlers::ssr::ssr_helpers::render_typed_page;
 use crate::handlers::ssr::types::{BreadcrumbView, TabLinkView};
 use crate::repositories;
 use crate::repositories::config::gateway::{RouteLabels, get_route_labels_from_services};
-use crate::templates::AdminTemplateEngine;
-use crate::types::{GatewayConfigView, MarketplaceContext, UserContext};
+use crate::types::{GatewayConfigView, UserContext};
 
 pub(crate) use route_detail::gateway_route_page;
 use rows::{kpis, load_surfaces, resolved_only, route_rows};
@@ -130,15 +130,31 @@ fn console_only(user_ctx: &UserContext) -> AdminHtmlResult<()> {
     Err(crate::error::AdminError::Forbidden("Admin access required.".to_owned()).into())
 }
 
+// Why: Overview draws the provider cards and the dispatch table, Providers
+// only the cards; no other tab reads either, so neither is built for it.
+fn tab_models(
+    tab: GatewayTab,
+    labels: &RouteLabels,
+    routes: &[view::GatewayRouteRow],
+    grants: &std::collections::HashMap<String, i64>,
+) -> (Vec<models::ProviderCardView>, Vec<models::DispatchRow>) {
+    match tab {
+        GatewayTab::Overview => (
+            models::provider_cards(labels, routes, grants),
+            models::dispatch_rows(labels, routes, grants),
+        ),
+        GatewayTab::Providers => (models::provider_cards(labels, routes, grants), Vec::new()),
+        _ => (Vec::new(), Vec::new()),
+    }
+}
+
 pub(crate) async fn gateway_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<GatewayQuery>,
 ) -> AdminHtmlResult<Response> {
-    console_only(&user_ctx)?;
+    console_only(&shell.user)?;
 
     let (config, load_error) = match super::super::gateway_config_view(&env, &pool).await {
         Ok(config) => (config, String::new()),
@@ -166,17 +182,7 @@ pub(crate) async fn gateway_page(
     let tab = GatewayTab::parse(query.tab.as_deref());
     let routes = route_rows(&config, &surfaces, &grants, &dispatchable, &labels);
     let extra = resolved_only(&routes, &resolved, &labels);
-    let overview = matches!(tab, GatewayTab::Overview | GatewayTab::Providers);
-    let provider_cards = if overview {
-        models::provider_cards(&labels, &routes, &grants)
-    } else {
-        Vec::new()
-    };
-    let dispatch = if tab == GatewayTab::Overview {
-        models::dispatch_rows(&labels, &routes, &grants)
-    } else {
-        Vec::new()
-    };
+    let (provider_cards, dispatch) = tab_models(tab, &labels, &routes, &grants);
 
     let routes_count = routes.len();
     let providers_count = surfaces.providers.len();
@@ -212,6 +218,10 @@ pub(crate) async fn gateway_page(
         show_settings: tab == GatewayTab::Settings,
     };
     Ok(render_typed_page(
-        &engine, "gateway", &page, &user_ctx, &mkt_ctx,
+        &shell.engine,
+        "gateway",
+        &page,
+        &shell.user,
+        &shell.marketplace,
     ))
 }

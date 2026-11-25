@@ -19,6 +19,7 @@ pub(crate) fn completion_tone(score: Option<f64>) -> &'static str {
     score.map_or("muted", |s| score_tone(s.round() as i16))
 }
 
+#[cfg(feature = "agents")]
 // Why: Failed requests as a share of all requests.
 #[must_use]
 pub(crate) const fn error_rate_tone(errors: i64, total: i64) -> &'static str {
@@ -31,6 +32,7 @@ pub(crate) const fn error_rate_tone(errors: i64, total: i64) -> &'static str {
     }
 }
 
+#[cfg(feature = "agents")]
 // Why: Denied tool calls: one is already worth a look.
 #[must_use]
 pub(crate) const fn deny_tone(denied: i64) -> &'static str {
@@ -43,6 +45,7 @@ pub(crate) const fn deny_tone(denied: i64) -> &'static str {
     }
 }
 
+#[cfg(feature = "agents")]
 // Why: p95 latency in milliseconds against the gateway's 20 s target.
 #[must_use]
 pub(crate) fn latency_tone(p95_ms: Option<f64>) -> &'static str {
@@ -54,6 +57,7 @@ pub(crate) fn latency_tone(p95_ms: Option<f64>) -> &'static str {
     }
 }
 
+#[cfg(feature = "agents")]
 // Why: Cache reads as a share of all input tokens; a cold conversation is the
 // Why: expensive one.
 #[must_use]
@@ -70,6 +74,7 @@ pub(crate) const fn cache_tone(cache_tokens: i64, input_tokens: i64) -> &'static
     }
 }
 
+#[cfg(feature = "agents")]
 // Why: Safety findings: a blocked one is an error, an audited one a warning.
 #[must_use]
 pub(crate) const fn safety_tone(findings: i64, blocked: i64) -> &'static str {
@@ -82,6 +87,7 @@ pub(crate) const fn safety_tone(findings: i64, blocked: i64) -> &'static str {
     }
 }
 
+#[cfg(feature = "agents")]
 // Why: Whole-number percentage, or a dash when there is nothing to divide by.
 #[must_use]
 pub(crate) fn percent(part: i64, whole: i64) -> String {

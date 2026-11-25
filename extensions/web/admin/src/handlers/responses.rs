@@ -23,6 +23,7 @@ pub(crate) struct AuditLogEntry {
     pub created_at: String,
 }
 
+#[cfg(feature = "mcp")]
 #[derive(Serialize, Debug)]
 pub(crate) struct PluginEnvResponse {
     pub definitions: Vec<crate::handlers::plugins_env::PluginVariableDef>,
@@ -41,7 +42,9 @@ macro_rules! list_response {
     };
 }
 
+#[cfg(feature = "mcp")]
 list_response!(PluginsListResponse, plugins);
+#[cfg(feature = "agents")]
 list_response!(AgentsListResponse, agents);
 list_response!(SecretsListResponse, secrets);
 list_response!(JobsListResponse, jobs);

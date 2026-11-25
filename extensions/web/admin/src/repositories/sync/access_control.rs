@@ -23,8 +23,8 @@ use sqlx::PgPool;
 
 use super::access_control_rows::{awaiting_rows, rows};
 use super::plane::{
-    ActionCounts, Actor, ApplyOutcome, DeclarationSource, DriftKpi, EntityScope, Export,
-    PlaneDrift, SyncMode, SyncPlane,
+    ActionCounts, ApplyBy, ApplyOutcome, DeclarationSource, DriftKpi, EntityScope, Export,
+    PlaneDrift, SyncPlane,
 };
 use super::state::{Applied, AppliedFrom, record_applied, record_declared};
 use crate::error::{AdminError, AdminResult};
@@ -55,8 +55,7 @@ pub async fn declared_from(
     from: DeclarationSource<'_>,
 ) -> AdminResult<DeclaredSet> {
     let registered = registered_routes_from_services(env);
-    let marketplace_ids = marketplace_ids_from_services(env)
-        .map_err(|source| AdminError::invalid("services tree could not be composed", source))?;
+    let marketplace_ids = marketplace_ids_from_services(env);
     let loaded = match from {
         DeclarationSource::Disk => {
             let services_path = env.active_services_root();
@@ -78,11 +77,10 @@ pub async fn drift_now(pool: &PgPool, declared: &DeclaredSet) -> AdminResult<Dri
 
 #[must_use]
 pub fn applied_from(env: &AdminEnv) -> AppliedFrom {
-    // Why: discard-ok: an unreadable profile or cache records no hashes
-    let sources = super::sources::build_sources(env).ok();
+    let sources = super::sources::build_sources(env);
     AppliedFrom {
-        base_tree_hash: sources.as_ref().and_then(|s| s.base.tree_hash.clone()),
-        composed_hash: sources.and_then(|s| s.composed_hash),
+        base_tree_hash: sources.base.tree_hash,
+        composed_hash: sources.composed_hash,
     }
 }
 
@@ -149,9 +147,9 @@ impl AccessControlPlane {
         env: &AdminEnv,
         pool: &PgPool,
         declared: &DeclaredSet,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
     ) -> AdminResult<()> {
+        let ApplyBy { mode, actor } = by;
         record_applied(
             pool,
             &Applied {
@@ -232,10 +230,9 @@ impl SyncPlane for AccessControlPlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        self.apply_from(env, pool, mode, actor, DeclarationSource::Disk)
+        self.apply_from(env, pool, by, DeclarationSource::Disk)
             .await
     }
 
@@ -243,13 +240,13 @@ impl SyncPlane for AccessControlPlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
         scope: EntityScope<'_>,
     ) -> AdminResult<ApplyOutcome> {
+        let ApplyBy { mode, .. } = by;
         let declared = declared_now(env).await?;
         let outcome = apply_sync_scoped(pool, &declared, mode, scope).await?;
-        self.record(env, pool, &declared, mode, actor).await?;
+        self.record(env, pool, &declared, by).await?;
         Ok(outcome)
     }
 
@@ -257,13 +254,13 @@ impl SyncPlane for AccessControlPlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
         from: DeclarationSource<'_>,
     ) -> AdminResult<ApplyOutcome> {
+        let ApplyBy { mode, .. } = by;
         let declared = declared_from(env, from).await?;
         let outcome = apply_sync(pool, &declared, mode).await?;
-        self.record(env, pool, &declared, mode, actor).await?;
+        self.record(env, pool, &declared, by).await?;
         Ok(outcome)
     }
 

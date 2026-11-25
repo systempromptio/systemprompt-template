@@ -219,9 +219,7 @@ pub(super) async fn build_marketplaces(
     user_id: &UserId,
     roles: Vec<String>,
 ) -> crate::error::AdminResult<Vec<ProfileMarketplaceView>> {
-    let Ok(services_path) = crate::handlers::shared::get_services_path(env) else {
-        return Ok(Vec::new());
-    };
+    let services_path = crate::handlers::shared::get_services_path(env);
     let manifests =
         crate::repositories::marketplace::manifests::list_marketplace_configs(&services_path)
             .inspect_err(

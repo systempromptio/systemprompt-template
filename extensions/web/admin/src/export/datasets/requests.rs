@@ -5,9 +5,9 @@ use systemprompt_web_shared::{GroupId, ProjectId};
 
 use crate::error::AdminResult;
 use crate::export::model::{Cell, CellKind, Column, DataSet, ExportContext, Table, Window};
+use crate::export::window::time_range;
 use crate::handlers::ssr::ssr_analytics_requests::export_rows;
 use crate::repositories::analytics::requests::RequestRow;
-use crate::util::time_range::{TimeRange, TimeRangePreset};
 use systemprompt::identifiers::{SessionId, TraceId};
 
 pub(crate) struct Requests;
@@ -66,16 +66,6 @@ fn row(r: &RequestRow) -> Vec<Cell> {
         Cell::opt_text(r.trace_id.as_ref().map(TraceId::as_str)),
         Cell::opt_text(r.error_message.as_deref()),
     ]
-}
-
-pub(crate) fn time_range(ctx: &ExportContext<'_>) -> AdminResult<TimeRange> {
-    let w = ctx.window()?;
-    Ok(TimeRange {
-        from: w.from,
-        to: w.to,
-        preset: TimeRangePreset::Custom,
-        rejected_bounds: false,
-    })
 }
 
 #[async_trait]

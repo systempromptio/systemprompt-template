@@ -67,11 +67,10 @@ pub fn build_declared_from_doc(
 // `rules.yaml` is read from, so a kit's marketplace validates the moment its
 // bundle is active, without a restart. The loader's cache is keyed by root,
 // so this is a read of the composition, not a parse per request.
-pub fn marketplace_ids_from_services(env: &AdminEnv) -> Result<Vec<String>, MarketplaceError> {
-    let services = env.services();
-    Ok(services
+pub fn marketplace_ids_from_services(env: &AdminEnv) -> Vec<String> {
+    env.services()
         .marketplaces
         .keys()
         .map(|id| id.as_str().to_owned())
-        .collect())
+        .collect()
 }

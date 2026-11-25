@@ -20,7 +20,7 @@ pub(crate) async fn list_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     Query(_query): Query<UserQuery>,
 ) -> AdminResult<Response> {
-    let services_path = shared::get_services_path(&env)?;
+    let services_path = shared::get_services_path(&env);
     // Why: not a bare `?` — this reads the plugin YAML off disk, so a
     // `MarketplaceError::NotFound` means a *server-side* file is missing, not
     // that the collection the client asked for does not exist. Propagating it

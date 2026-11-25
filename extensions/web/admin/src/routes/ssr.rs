@@ -9,20 +9,30 @@ use tower_http::normalize_path::NormalizePathLayer;
 
 use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
-use super::ssr_redirects;
 use crate::env::AdminEnv;
 use crate::handlers::adfs_auth::AdfsDeps;
 use systemprompt::database::DbPool;
 
+/// What the server-rendered console draws with: its template engine, the
+/// SSO relying party, and the environment the public routes are mounted for.
+#[derive(Debug)]
+pub struct AdminSsrShell<'a> {
+    pub engine: AdminTemplateEngine,
+    pub sso_deps: AdfsDeps,
+    pub env: &'a AdminEnv,
+}
+
 pub fn admin_ssr_router(
     db: &DbPool,
     pool: Arc<PgPool>,
-    engine: AdminTemplateEngine,
-    sso_deps: AdfsDeps,
     owner: systemprompt::identifiers::UserId,
-    env: &AdminEnv,
+    shell: AdminSsrShell<'_>,
 ) -> Router {
-    let managed = Arc::new(super::managed_state::ManagedState::new(db, owner));
+    let AdminSsrShell {
+        engine,
+        sso_deps,
+        env,
+    } = shell;
     let inner = overview_routes()
         .merge(people_routes())
         .merge(ai_activity_routes())
@@ -30,10 +40,15 @@ pub fn admin_ssr_router(
         .merge(super::ssr_governance::routes())
         .merge(super::ssr_platform::routes())
         .merge(account_routes())
-        .merge(api_routes())
-        .merge(ssr_redirects::legacy_routes())
+        .merge(api_routes());
+    #[cfg(feature = "mcp")]
+    let inner = inner.layer(Extension(Arc::new(
+        super::managed_state::ManagedState::new(db, owner),
+    )));
+    #[cfg(not(feature = "mcp"))]
+    let _ = (db, owner);
+    let inner = inner
         .layer(Extension(engine.clone()))
-        .layer(Extension(managed))
         .layer(Extension(sso_deps.clone()))
         .layer(axum_middleware::from_fn_with_state(
             Arc::clone(&pool),
@@ -144,19 +159,39 @@ fn people_routes() -> Router<Arc<PgPool>> {
 // share one scope contract (`?scope=`/`?range=`), which is why they are one
 // group rather than filed under the entity they happen to list.
 fn ai_activity_routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let routes = Router::new()
         .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
         .merge(super::ssr_export::routes())
-        .route("/requests", get(handlers::ssr::analytics_requests_page))
-        .route(
-            "/requests/{request_id}",
-            get(handlers::ssr::governance_audit_detail_page),
-        )
         .route("/sessions", get(handlers::ssr::sessions_list_page))
         .route(
             "/sessions/{session_id}",
             get(handlers::ssr::session_detail_page),
         )
+        // Why: the org-wide twin of "My conversations". It reads one
+        // conversation per row where `/contexts` reads one context, and it is
+        // the page an operator looks for under AI activity when they want to
+        // see what everyone has been asking.
+        .route("/conversations", get(handlers::ssr::conversations_page));
+    #[cfg(feature = "gateway")]
+    let routes = routes.merge(request_routes());
+    #[cfg(feature = "agents")]
+    let routes = routes.merge(agent_activity_routes());
+    routes
+}
+
+#[cfg(feature = "gateway")]
+fn request_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/requests", get(handlers::ssr::analytics_requests_page))
+        .route(
+            "/requests/{request_id}",
+            get(handlers::ssr::governance_audit_detail_page),
+        )
+}
+
+#[cfg(feature = "agents")]
+fn agent_activity_routes() -> Router<Arc<PgPool>> {
+    Router::new()
         .route("/traces", get(handlers::ssr::perf_traces_page))
         .route(
             "/traces/{trace_id}",
@@ -174,11 +209,6 @@ fn ai_activity_routes() -> Router<Arc<PgPool>> {
             "/artifacts/{artifact_id}/preview",
             get(handlers::ssr::artifact_preview),
         )
-        // Why: the org-wide twin of "My conversations". It reads one
-        // conversation per row where `/contexts` reads one context, and it is
-        // the page an operator looks for under AI activity when they want to
-        // see what everyone has been asking.
-        .route("/conversations", get(handlers::ssr::conversations_page))
         .route("/contexts", get(handlers::ssr::skills_contexts_page))
         .route(
             "/contexts/{context_id}",
@@ -187,8 +217,18 @@ fn ai_activity_routes() -> Router<Arc<PgPool>> {
 }
 
 fn account_routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let routes = Router::new()
         .route("/profile", get(handlers::ssr::profile_page))
+        .route("/settings", get(handlers::ssr::settings_page))
+        .route("/setup", get(handlers::ssr::setup_page));
+    let routes = routes.merge(history_routes());
+    #[cfg(feature = "mcp")]
+    let routes = routes.merge(connector_routes());
+    routes
+}
+
+fn history_routes() -> Router<Arc<PgPool>> {
+    Router::new()
         // Why: identity-scoped, not admin-gated — the handler resolves what
         // the viewer may see (self, or everything for admins) per request.
         .route("/history", get(handlers::ssr::history_page))
@@ -199,24 +239,29 @@ fn account_routes() -> Router<Arc<PgPool>> {
             "/history/conversations/{context_id}",
             get(handlers::ssr::history_conversation_page),
         )
-        .route("/settings", get(handlers::ssr::settings_page))
+}
+
+#[cfg(feature = "mcp")]
+fn connector_routes() -> Router<Arc<PgPool>> {
+    Router::new()
         .route("/connect", get(handlers::ssr::connect_page))
         .route("/connectors", get(handlers::ssr::connectors_page))
-        .route("/setup", get(handlers::ssr::setup_page))
 }
 
 fn api_routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let routes = Router::new()
         .route("/auth/me", get(middleware::auth_me_handler))
-        .route(
-            "/api/conversations/{session_id}/raw",
-            get(handlers::ssr::conversations_raw),
-        )
         .route("/api/chain/{id}", get(handlers::ssr::chain_envelope))
-        .route("/api/history/search", get(handlers::ssr::history_search))
         .route("/api/search/resolve", get(handlers::ssr::search_resolve))
         .route(
             "/api/profile/bridge-code",
             post(handlers::ssr::issue_bridge_code),
         )
+        .route("/api/history/search", get(handlers::ssr::history_search));
+    #[cfg(feature = "agents")]
+    let routes = routes.route(
+        "/api/conversations/{session_id}/raw",
+        get(handlers::ssr::conversations_raw),
+    );
+    routes
 }

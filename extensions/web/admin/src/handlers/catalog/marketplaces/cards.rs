@@ -14,7 +14,7 @@ use super::view::{AudienceMatrixView, MarketplaceCardView, marketplace_url};
 use crate::handlers::ssr::sync_plane::HashView;
 use crate::repositories::marketplace::manifests::MarketplaceConfigSummary;
 use crate::repositories::sync::marketplace_versions_db::list_current_marketplace_versions;
-use crate::repositories::sync::provenance::{OwnedKind, Provenance, owned_by};
+use crate::repositories::sync::provenance::{OwnedKind, owned_by};
 use crate::repositories::sync::sources::build_sources;
 
 pub(super) async fn current_hashes(pool: &PgPool) -> HashMap<String, String> {
@@ -37,17 +37,12 @@ pub(super) struct CardInputs<'a> {
 }
 
 pub(super) fn card_views(env: &AdminEnv, inputs: &CardInputs<'_>) -> Vec<MarketplaceCardView> {
-    // Why: discard-ok: an unreadable profile leaves every card as base
-    let sources = build_sources(env)
-        .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: sources unreadable"))
-        .ok();
+    let sources = build_sources(env);
     inputs
         .manifests
         .iter()
         .map(|m| {
-            let provenance = sources.as_ref().map_or_else(Provenance::base, |s| {
-                owned_by(s, OwnedKind::Marketplace, m.id.as_str())
-            });
+            let provenance = owned_by(&sources, OwnedKind::Marketplace, m.id.as_str());
             let assigned_groups = inputs.grants.get(&m.id).cloned().unwrap_or_default();
             // Why: the resolved count, not the declared one. A group listed in
             // the manifest that a deny rule closes is not an audience, and the

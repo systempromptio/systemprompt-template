@@ -5,9 +5,9 @@
 use saml::{Identity, NameIdFormat};
 
 use super::AdfsDeps;
-use systemprompt_web_shared::adfs::AdfsConfig;
 use crate::repositories::users::{federated, revocation};
 use crate::repositories::{groups, projects};
+use systemprompt_web_shared::adfs::AdfsConfig;
 
 /// The subset of a verified assertion this login consumes: the subject and
 /// the attribute statement, with the `IdP`'s claim URIs left as-is.

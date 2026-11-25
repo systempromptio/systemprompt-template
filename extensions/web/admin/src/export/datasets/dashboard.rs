@@ -3,9 +3,9 @@
 
 use async_trait::async_trait;
 
-use super::requests::time_range;
 use crate::error::AdminResult;
 use crate::export::model::{Cell, CellKind, Column, DataSet, ExportContext, Table, Window};
+use crate::export::window::time_range;
 use crate::handlers::ssr::ssr_analytics_dashboard::AnalyticsDashboardQuery;
 use crate::repositories::analytics::site::models::list_model_stats;
 use crate::repositories::analytics::site::sessions::list_session_costs_paged;

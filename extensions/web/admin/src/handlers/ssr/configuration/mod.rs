@@ -10,6 +10,7 @@
 //! configured here".
 
 use crate::env::AdminEnv;
+use crate::handlers::ssr::page::Page;
 
 pub(crate) mod retention;
 mod rows;
@@ -25,13 +26,11 @@ use sqlx::PgPool;
 use self::retention::RetentionView;
 use self::view::{ConfigKpiView, ConfigRowView, ConfigurationPageData};
 use crate::error::{AdminError, AdminHtmlResult};
-use crate::handlers::ssr::ssr_sync::{DOCS_URL, EXPORT_ZIP_URL, empty_sources};
+use crate::handlers::ssr::ssr_sync::{DOCS_URL, EXPORT_ZIP_URL};
 use crate::handlers::ssr::sync_plane::HashView;
 use crate::handlers::ssr::types::{BreadcrumbView, TabLinkView};
 use crate::repositories::gateway_policies::declared::services_root;
 use crate::repositories::sync::sources::build_sources;
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
 
 pub(crate) const BASE_URL: &str = "/admin/configuration";
 
@@ -100,21 +99,21 @@ fn kpis(all: &[ConfigRowView]) -> Vec<ConfigKpiView> {
 }
 
 pub(crate) async fn configuration_page(
+    shell: Page,
     Extension(env): Extension<AdminEnv>,
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<ConfigurationQuery>,
 ) -> AdminHtmlResult<Response> {
+    let Page {
+        engine,
+        user: user_ctx,
+        marketplace: mkt_ctx,
+    } = shell;
     if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
-    let (sources, sources_unreadable) = match build_sources(&env) {
-        Ok(s) => (s, None),
-        Err(e) => (empty_sources(), Some(e.to_string())),
-    };
-    let active_root = services_root(&env)?;
+    let sources = build_sources(&env);
+    let active_root = services_root(&env);
     let baked_root = env.baked_services_root();
     let all = rows::build_rows(&env, &pool, &active_root, &baked_root, &[]).await?;
     let ai_history_days = env.services().ai.history.retention_days;
@@ -147,7 +146,7 @@ pub(crate) async fn configuration_page(
         composed_hash: sources.composed_hash.as_deref().and_then(HashView::of),
         provenance: sources.base.provenance,
         bundle_count: sources.bundles.len(),
-        sources_unreadable,
+        sources_unreadable: None,
         kpis,
         rows,
         retention,

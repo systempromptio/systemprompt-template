@@ -134,15 +134,7 @@ pub(super) struct AccessData {
 // entity, which the resolved matrix reports only as "decided by user".
 pub(super) async fn load_access(env: &AdminEnv, pool: &PgPool, user_id: &UserId) -> AccessData {
     let overview = super::access_overview::load(env, pool, user_id).await;
-    let Ok(services_path) = crate::handlers::shared::get_services_path(env) else {
-        tracing::warn!("services path unavailable; user access matrix skipped");
-        return AccessData {
-            overview,
-            rules_available: false,
-            matrix: None,
-            rules: Vec::new(),
-        };
-    };
+    let services_path = crate::handlers::shared::get_services_path(env);
     let sections = crate::handlers::access_control::build_matrix_sections(env, &services_path);
     let (matrix, rules) = tokio::join!(
         repositories::users::access_control::resolve_user_matrix(env, pool, user_id, sections),

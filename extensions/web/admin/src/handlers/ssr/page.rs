@@ -5,6 +5,7 @@ use axum::extract::FromRequestParts;
 use axum::extract::rejection::ExtensionRejection;
 use axum::http::request::Parts;
 
+use crate::env::AdminEnv;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
@@ -33,5 +34,43 @@ impl<S: Send + Sync> FromRequestParts<S> for Page {
             user,
             marketplace,
         })
+    }
+}
+
+// Why: the environment and the signed-in caller, the pair every console write
+// reads before it touches anything else.
+#[derive(Debug, Clone)]
+pub(crate) struct Caller {
+    pub(crate) env: AdminEnv,
+    pub(crate) user: UserContext,
+}
+
+impl<S: Send + Sync> FromRequestParts<S> for Caller {
+    type Rejection = ExtensionRejection;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let Extension(env) = Extension::<AdminEnv>::from_request_parts(parts, state).await?;
+        let Extension(user) = Extension::<UserContext>::from_request_parts(parts, state).await?;
+        Ok(Self { env, user })
+    }
+}
+
+// Why: a page handler that also acts on the environment — a form post that
+// renders the page it came from.
+#[cfg(feature = "agents")]
+#[derive(Debug, Clone)]
+pub(crate) struct Console {
+    pub(crate) env: AdminEnv,
+    pub(crate) page: Page,
+}
+
+#[cfg(feature = "agents")]
+impl<S: Send + Sync> FromRequestParts<S> for Console {
+    type Rejection = ExtensionRejection;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let Extension(env) = Extension::<AdminEnv>::from_request_parts(parts, state).await?;
+        let page = Page::from_request_parts(parts, state).await?;
+        Ok(Self { env, page })
     }
 }

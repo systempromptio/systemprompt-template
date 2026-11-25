@@ -5,9 +5,8 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 
 use super::query::Lens;
-use super::rows::format_bytes;
 use crate::handlers::ssr::analysis::tone::{deny_tone, error_rate_tone, latency_tone, percent};
-use crate::handlers::ssr::format::format_duration_ms;
+use crate::handlers::ssr::format::{format_bytes, format_duration_ms};
 use crate::handlers::ssr::types::{
     Plot, SparklineView, SvgLineChartView, SvgSeriesInput, chart_on_axis, sparkline_toned,
 };

@@ -40,7 +40,7 @@ pub async fn record_service_sources(
     env: &AdminEnv,
     pool: &PgPool,
 ) -> Result<SourcesRecorded, MarketplaceError> {
-    let sources = build_sources(env).map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+    let sources = build_sources(env);
     let services = env.services();
     let owned = owned_ids(&sources, &services);
     // Why: the composed root is what consumers are served, so it is what a

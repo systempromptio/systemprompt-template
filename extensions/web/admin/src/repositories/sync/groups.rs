@@ -22,7 +22,7 @@ use super::groups_db::{
 };
 use super::groups_drift::{GroupsDrift, compute_groups_drift, declared_count, declared_hash};
 use super::plane::{
-    ActionCounts, Actor, ApplyOutcome, DeclarationSource, DriftKpi, Export, PlaneDrift, SyncMode,
+    ActionCounts, ApplyBy, ApplyOutcome, DeclarationSource, DriftKpi, Export, PlaneDrift, SyncMode,
     SyncPlane,
 };
 use super::state::{Applied, record_applied, record_declared};
@@ -145,10 +145,9 @@ impl SyncPlane for GroupsPlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
     ) -> AdminResult<ApplyOutcome> {
-        self.apply_from(env, pool, mode, actor, DeclarationSource::Disk)
+        self.apply_from(env, pool, by, DeclarationSource::Disk)
             .await
     }
 
@@ -156,10 +155,10 @@ impl SyncPlane for GroupsPlane {
         &self,
         env: &AdminEnv,
         pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
         from: DeclarationSource<'_>,
     ) -> AdminResult<ApplyOutcome> {
+        let ApplyBy { mode, actor } = by;
         let doc = declared_groups_from(env, from)?;
         let before = drift_now(pool, &doc).await?;
         let outcome = match mode {
