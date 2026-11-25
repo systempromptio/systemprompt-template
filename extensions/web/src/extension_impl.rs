@@ -180,13 +180,17 @@ fn contribute_gateway(c: &mut Contributions<'_>) {
 }
 
 fn declared_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
-    #[cfg_attr(
-        not(feature = "content"),
-        expect(unused_mut, reason = "site assets join only with content")
-    )]
     let mut assets = crate::admin::assets::admin_assets(paths);
     #[cfg(feature = "content")]
     assets.extend(web_assets(paths));
+    // Why: the kernel reserves `/` exactly and answers it with
+    // `web/dist/index.html`, so a build without a public site sends visitors to
+    // the console through that page rather than a route of its own.
+    #[cfg(not(feature = "content"))]
+    assets.push(AssetDefinition::html(
+        paths.storage_files().join("console-home.html"),
+        "index.html",
+    ));
     assets
 }
 

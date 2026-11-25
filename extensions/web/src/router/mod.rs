@@ -6,10 +6,9 @@
 //! values the member provides; the route set forwards each literal prefix to
 //! its router. Every route is `public` at the mount: `/admin` and
 //! `/bridge-auth` are gated by the member's site auth, and the API routers
-//! authenticate each request themselves. With `content` there is no root
-//! route: the public site is the generator's static output, served by core.
-//! Without it the flavour serves no public site and `/` redirects to the
-//! console.
+//! authenticate each request themselves. There is no root route: `/` is the
+//! kernel's homepage, the generator's `index.html` with `content` and the
+//! console landing page (`crate::extension_impl`) without it.
 
 mod admin_ssr;
 mod api;
@@ -21,8 +20,6 @@ use axum::Router;
 use axum::body::Body;
 use axum::extract::{Request, State};
 use axum::http::Method;
-#[cfg(not(feature = "content"))]
-use axum::response::Redirect;
 use axum::response::{IntoResponse, Response};
 use systemprompt::api::ServicesRefresh;
 use systemprompt::extension::RouteGroup;
@@ -179,15 +176,5 @@ pub(crate) fn route_set() -> RouteSet {
                 .route(method, nested, forward, FORWARDED);
         }
     }
-    #[cfg(not(feature = "content"))]
-    {
-        set = set.route(Method::GET, "/", console, FORWARDED);
-    }
     set.build()
-}
-
-#[cfg(not(feature = "content"))]
-async fn console() -> Redirect {
-    std::future::ready(()).await;
-    Redirect::temporary("/admin/")
 }
