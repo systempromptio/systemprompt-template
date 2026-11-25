@@ -11,7 +11,7 @@ publish = false
 
 [dependencies]
 # Audit: uses database, identifiers, models and traits only.
-systemprompt = { workspace = true }
+systemprompt = { workspace = true, features = ["database"] }
 sqlx = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }

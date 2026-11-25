@@ -12,7 +12,7 @@ publish = false
 [dependencies]
 systemprompt-web-shared = { workspace = true }
 # Audit: uses config (profile paths), database, extension, models, template_provider.
-systemprompt = { workspace = true, features = ["database", "config"] }
+systemprompt = { workspace = true, features = ["database"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }

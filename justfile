@@ -70,7 +70,7 @@ _db-url:
 # Build (Windows) - always uses offline mode
 [windows]
 build *FLAGS:
-    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo build --workspace --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
+    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo build -p systemprompt-template --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Build (Unix) - one build in flight at a time, always of the latest source;
 # cargo's own incremental cache decides how much recompiles. Refuses when the
@@ -99,12 +99,16 @@ _build-uncoordinated *FLAGS:
     export CC="${CC:-clang}"
     export CXX="${CXX:-clang++}"
     export RUSTFLAGS="${RUSTFLAGS:--D warnings}"
-    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo build --workspace --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
+    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo build -p systemprompt-template --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
+
+# Type-check the selected flavour's root package (offline).
+check *FLAGS:
+    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo check -p systemprompt-template --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Clippy (Windows) - always uses offline mode
 [windows]
 clippy *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
-    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo clippy --workspace --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
+    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo clippy -p systemprompt-template --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
 
 # Clippy (Unix) - single-flight, same coordinator as `just build`
 [unix]
@@ -118,7 +122,7 @@ _clippy-uncoordinated *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
     set -euo pipefail
     export CC="${CC:-clang}"
     export CXX="${CXX:-clang++}"
-    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo clippy --workspace --all-targets --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
+    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo clippy -p systemprompt-template --all-targets --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
 
 # Unit tests: extensions/web/admin (main workspace) + the tests/ workspace.
 # If sqlx offline errors appear, run `just prepare` first to refresh .sqlx.
@@ -1295,6 +1299,11 @@ core-pin REF="":
 services-pin KIT REF PROFILE=".systemprompt/profiles/production/profile.yaml":
     python3 scripts/services-pin.py "{{KIT}}" "{{REF}}" "{{PROFILE}}"
 
+# Build the kit-export CLI on its own: it links the marketplace member, so the
+# flavour builds leave it out rather than unify that feature into every one.
+build-kit-export *FLAGS:
+    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo build -p systemprompt-kit-export --locked {{FLAGS}}
+
 # Export a marketplace from services/ into a kit repository tree (Anthropic
 # marketplace format + systemprompt sidecars, no access block) and prove it
 # re-imports identically. Runbook: deploy/kit/README-INTEGRATION.md.
@@ -1303,7 +1312,7 @@ kit-export MARKETPLACE DIR:
     set -euo pipefail
     BIN="$(dirname "{{CLI}}")/systemprompt-kit-export"
     if [ ! -x "$BIN" ]; then
-        echo "ERROR: $BIN not found. Run: just build" >&2
+        echo "ERROR: $BIN not found. Run: just build-kit-export" >&2
         exit 1
     fi
     exec "$BIN" "{{MARKETPLACE}}" "{{DIR}}" --services "{{justfile_directory()}}/services"

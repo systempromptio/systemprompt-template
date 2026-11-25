@@ -13,7 +13,7 @@ publish = false
 semver = "1"
 # Foundation
 systemprompt-web-shared = { workspace = true }
-systemprompt = { workspace = true, features = ["runtime", "identity", "analytics", "loader"] }
+systemprompt = { workspace = true, features = ["api", "security", "config", "loader"] }
 
 # Database
 sqlx = { workspace = true }

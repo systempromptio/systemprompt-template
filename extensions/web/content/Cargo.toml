@@ -12,7 +12,7 @@ publish = false
 [dependencies]
 systemprompt-web-shared = { workspace = true }
 # Audit: uses only identifiers, models — `core` (default) is sufficient.
-systemprompt = { workspace = true }
+systemprompt = { workspace = true, features = ["database"] }
 sqlx = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }
