@@ -1,0 +1,46 @@
+# site: the public site and content pipeline, no AI
+# Read by scripts/flavour.py (the only reader); docs/flavours/README.md
+# describes every key.
+name: site
+description: "The public site and content pipeline (pages, documentation, sitemap) with files and PDF export and the base console; no AI"
+cargo_feature: flavour-site
+extra_features: []
+binaries:
+  - systemprompt
+services:
+  - access-control
+  - config
+  - content
+  - governance
+  - scheduler
+  - skills
+  - web
+requires_ai_key: false
+site: true
+runtime: slim
+
+smoke:
+  routes_present:
+    - "/"
+    - "/sitemap.xml"
+    - "/.well-known/jwks.json"
+    - "/admin/"
+  routes_absent:
+    - "/api/v1/mcp/registry"
+    - "/api/v1/marketplace"
+    - "/api/v1/agents/registry"
+    - "/api/v1/agent-runs"
+    - "/api/v1/brain"
+  cli_groups_present:
+    - "admin"
+    - "analytics"
+    - "core"
+    - "infra"
+    - "plugins"
+    - "web"
+  cli_groups_absent:
+    - "cloud"
+  capabilities:
+    - "publish_pipeline"
+  mcp_servers: []
+  models_endpoint: false

@@ -1,0 +1,53 @@
+# mcp: hosted MCP servers and the marketplace on the gateway
+# Read by scripts/flavour.py (the only reader); docs/flavours/README.md
+# describes every key.
+name: mcp
+description: "Hosted MCP servers and the marketplace on top of the gateway, governed per user; no agents and no public site"
+cargo_feature: flavour-mcp
+extra_features: []
+binaries:
+  - systemprompt
+services:
+  - access-control
+  - ai
+  - artifacts
+  - config
+  - external_agents
+  - gateway
+  - governance
+  - hooks
+  - marketplaces
+  - mcp
+  - plugins
+  - scheduler
+  - skills
+  - web
+requires_ai_key: true
+site: false
+runtime: slim
+
+smoke:
+  routes_present:
+    - "/.well-known/jwks.json"
+    - "/admin/"
+  routes_absent:
+    - "/sitemap.xml"
+    - "/api/public/links"
+    - "/api/v1/agents/registry"
+    - "/api/v1/agent-runs"
+    - "/api/v1/brain"
+  cli_groups_present:
+    - "admin"
+    - "analytics"
+    - "core"
+    - "infra"
+    - "plugins"
+    - "web"
+    - "cloud"
+  cli_groups_absent: []
+  capabilities:
+    - "managed_inventory_refresh"
+    - "mcp_session_cleanup"
+  mcp_servers:
+    - "systemprompt"
+  models_endpoint: true

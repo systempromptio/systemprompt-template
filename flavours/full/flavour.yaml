@@ -1,0 +1,52 @@
+# full: everything the template builds
+# Read by scripts/flavour.py (the only reader); docs/flavours/README.md
+# describes every key.
+name: full
+description: "Everything: AI gateway, hosted MCP, agents, public site and the whole admin console"
+cargo_feature: flavour-full
+extra_features: []
+binaries:
+  - systemprompt
+services:
+  - access-control
+  - agents
+  - ai
+  - artifacts
+  - config
+  - content
+  - external_agents
+  - gateway
+  - governance
+  - hooks
+  - marketplaces
+  - mcp
+  - plugins
+  - scheduler
+  - skills
+  - slack
+  - web
+requires_ai_key: true
+site: true
+runtime: full
+
+smoke:
+  routes_present:
+    - "/"
+    - "/sitemap.xml"
+    - "/.well-known/jwks.json"
+    - "/admin/"
+  routes_absent:
+    - "/__flavour-smoke-absent__"
+  cli_groups_present:
+    - "admin"
+    - "analytics"
+    - "build"
+    - "cloud"
+    - "infra"
+    - "plugins"
+  cli_groups_absent: []
+  capabilities:
+    - "publish_pipeline"
+  mcp_servers:
+    - "systemprompt"
+  models_endpoint: true

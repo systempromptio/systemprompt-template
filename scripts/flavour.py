@@ -11,13 +11,11 @@
   flavour.py check                    index, directories, features and services agree
 """
 import json
+import re
 import sys
 from pathlib import Path
 
-if sys.version_info < (3, 11):
-    sys.exit("flavour.py needs Python 3.11+ (tomllib); set FLAVOUR_PYTHON to one")
-
-import tomllib
+import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 FLAVOURS = ROOT / "flavours"
@@ -45,18 +43,36 @@ RUNTIMES = ("slim", "full")
 
 
 def load(path):
-    with path.open("rb") as handle:
-        return tomllib.load(handle)
+    with path.open(encoding="utf-8") as handle:
+        return yaml.safe_load(handle) or {}
 
 
 def index():
-    return load(FLAVOURS / "index.toml")["flavours"]
+    return load(FLAVOURS / "index.yaml")["flavours"]
 
 
 def flavour(name):
     if name not in index():
         sys.exit(f"unknown flavour '{name}' (known: {', '.join(index())})")
-    return load(FLAVOURS / name / "flavour.toml")
+    return load(FLAVOURS / name / "flavour.yaml")
+
+
+def cargo_features():
+    """The keys of the root Cargo.toml [features] table.
+
+    A line scan, not a TOML parse: the table holds only `name = [...]`
+    entries, and reading it this way keeps the script on any python3 with
+    PyYAML.
+    """
+    names, inside = set(), False
+    for line in (ROOT / "Cargo.toml").read_text(encoding="utf-8").splitlines():
+        if line.startswith("["):
+            inside = line.strip() == "[features]"
+            continue
+        match = re.match(r"([A-Za-z0-9_-]+)\s*=", line) if inside else None
+        if match:
+            names.add(match.group(1))
+    return names
 
 
 def render(value):
@@ -85,21 +101,21 @@ def check():
     problems = []
     names = index()
     if len(names) != len(set(names)):
-        problems.append("flavours/index.toml lists a flavour twice")
+        problems.append("flavours/index.yaml lists a flavour twice")
     dirs = sorted(p.name for p in FLAVOURS.iterdir() if p.is_dir())
     for missing in sorted(set(names) - set(dirs)):
         problems.append(f"index names '{missing}' but flavours/{missing}/ does not exist")
     for extra in sorted(set(dirs) - set(names)):
-        problems.append(f"flavours/{extra}/ is not listed in flavours/index.toml")
-    cargo_features = load(ROOT / "Cargo.toml").get("features", {})
+        problems.append(f"flavours/{extra}/ is not listed in flavours/index.yaml")
+    features_declared = cargo_features()
     for name in [n for n in names if n in dirs]:
         base = FLAVOURS / name
-        for required in ("flavour.toml", "profile.overlay.yaml", "README.md"):
+        for required in ("flavour.yaml", "profile.overlay.yaml", "README.md"):
             if not (base / required).is_file():
                 problems.append(f"flavours/{name}/{required} is missing")
-        if not (base / "flavour.toml").is_file():
+        if not (base / "flavour.yaml").is_file():
             continue
-        data = load(base / "flavour.toml")
+        data = load(base / "flavour.yaml")
         for key, kind in REQUIRED.items():
             if not isinstance(data.get(key), kind):
                 problems.append(f"flavours/{name}: '{key}' must be a {kind.__name__}")
@@ -114,7 +130,7 @@ def check():
         if not data.get("binaries"):
             problems.append(f"flavours/{name}: binaries is empty")
         for feature in [data.get("cargo_feature"), *data.get("extra_features", [])]:
-            if feature not in cargo_features:
+            if feature not in features_declared:
                 problems.append(f"flavours/{name}: feature '{feature}' is not in Cargo.toml [features]")
         for subtree in data.get("services", []):
             if not (ROOT / "services" / subtree).is_dir():

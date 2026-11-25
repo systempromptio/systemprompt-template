@@ -24,7 +24,7 @@ chose first.
 ```bash
 just docker-build full                   # systemprompt-template:full
 FLAVOUR=full docker compose -p sp-full up
-just smoke full --no-build               # boot and assert the [smoke] expectations
+just smoke full --no-build               # boot and assert the smoke expectations
 ```
 
 The image uses the `full` runtime: the slim runtime plus `demo/` and `hey`. It
@@ -34,7 +34,7 @@ needs one provider key (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or
 ## Configuration
 
 `profile.overlay.yaml` sets nothing: `full` runs the profile `admin setup`
-writes. `flavour.toml` lists what the smoke test expects: the site, sitemap,
+writes. `flavour.yaml` lists what the smoke test expects: the site, sitemap,
 JWKS and admin routes, the `admin`, `analytics`, `build`, `cloud`, `infra`
 and `plugins` CLI groups, the `publish_pipeline` job, the `systemprompt` MCP
 server and `/v1/models`.

@@ -1,0 +1,164 @@
+# Scheduler configuration for the site flavour: replaces
+# services/scheduler/config.yaml when this flavour's services tree is staged.
+# It lists only the jobs this flavour compiles; core refuses to boot when a
+# configured job has no contributing member. services/scheduler/config.yaml
+# documents each job.
+
+scheduler:
+  enabled: true
+  jobs:
+    - name: oauth_cleanup
+      extension: core
+      owner: admin
+      schedule: "0 5 3 * * *"
+      enabled: true
+
+    - name: user_rate_limit_prune
+      extension: core
+      owner: admin
+      schedule: "0 0 * * * *"
+      enforce: true
+      enabled: true
+
+    - name: cleanup_anonymous_users
+      extension: core
+      owner: admin
+      schedule: "0 0 3 * * *"
+      enabled: true
+
+    - name: cleanup_inactive_sessions
+      extension: core
+      owner: admin
+      schedule: "0 0 * * * *"
+      enabled: true
+
+    - name: database_cleanup
+      extension: core
+      owner: admin
+      schedule: "0 0 4 * * *"
+      enabled: true
+
+    - name: no_js_cleanup
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: ghost_session_cleanup
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: file_ingestion
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: behavioral_analysis
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: malicious_ip_blacklist
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: usage_anomaly
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: usage_daily_rollup
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: scope_defaults_recompute
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: access_expiry
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: secret_migration
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: plugin_usage_retention
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: retention_daily_report
+      extension: web
+      owner: admin
+      schedule: "0 30 4 * * *"
+      enabled: true
+
+    - name: retention_export_weekly
+      extension: web
+      owner: admin
+      schedule: "0 0 2 * * 0"
+      enabled: true
+
+    - name: retention_export_monthly
+      extension: web
+      owner: admin
+      schedule: "0 30 2 1 * *"
+      enabled: true
+
+    - name: publish_pipeline
+      extension: web
+      owner: admin
+      schedule: "0 */15 * * * *"
+      enabled: true
+
+    - name: content_analytics_aggregation
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: blog_content_ingestion
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: bundle_admin_css
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: copy_extension_assets
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: llms_txt_generation
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: robots_txt_generation
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: content_prerender
+      extension: core
+      owner: admin
+      enabled: false
+
+    - name: page_prerender
+      extension: core
+      owner: admin
+      enabled: false
+
+  bootstrap_jobs:
+    - governance_bootstrap
+    - database_cleanup
+    - cleanup_inactive_sessions
+    - publish_pipeline

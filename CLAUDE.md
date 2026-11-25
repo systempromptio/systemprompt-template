@@ -61,9 +61,9 @@ compiles the patched core anyway.
 ## Quick Start
 
 ```bash
-# Flavours (flavours/index.toml, docs/flavours/README.md): every build, run and
-# test recipe targets FLAVOUR (env, default full). FLAVOUR_PYTHON names a
-# Python 3.11+ when python3 is older (scripts/flavour.py needs tomllib).
+# Flavours (flavours/index.yaml, docs/flavours/README.md): every build, run and
+# test recipe targets FLAVOUR (env, default full). scripts/flavour.py reads the
+# definitions with any python3 that has PyYAML.
 just flavours                                                             # name + description
 
 # First-time setup of a flavour: writes .systemprompt/profiles/<flavour>/, starts

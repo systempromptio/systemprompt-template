@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build one flavour's image: the Dockerfile ARGs come from its flavour.toml.
+# Build one flavour's image: the Dockerfile ARGs come from its flavour.yaml.
 #   scripts/flavour-build.sh FLAVOUR [--tag T] [--target STAGE] [--dry-run] [-- DOCKER_BUILD_ARGS...]
 # While Cargo.toml patches core to a sibling checkout (scripts/core-patch.sh
 # status = live), that checkout is passed as the `core` BuildKit context and

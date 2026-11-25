@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stage a flavour's services tree: the shared services/ subtrees its
-# flavour.toml lists, then the flavour's own flavours/<name>/services/ overrides.
+# flavour.yaml lists, then the flavour's own flavours/<name>/services/ overrides.
 #   scripts/flavour-stage-services.sh FLAVOUR DEST [--link]
 # --link (local setup) symlinks each shared subtree a flavour does not override,
 # so edits under services/ stay live; without it (Docker) everything is copied.

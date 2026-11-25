@@ -1,5 +1,10 @@
 # The flavours this template builds, in the order tooling lists and builds them.
-# Each name has a directory flavours/<name>/ holding flavour.toml,
+# Each name has a directory flavours/<name>/ holding flavour.yaml,
 # profile.overlay.yaml and README.md; scripts/flavour.py check keeps the two
 # in step with the root Cargo.toml [features].
-flavours = ["full"]
+flavours:
+  - gateway
+  - mcp
+  - agents
+  - site
+  - full

@@ -4,11 +4,10 @@ set dotenv-load
 # value into two arguments before the CLI ever parses it.
 set positional-arguments
 
-# The flavour every build, run and test recipe targets (flavours/index.toml;
+# The flavour every build, run and test recipe targets (flavours/index.yaml;
 # `just flavours` lists them). Each flavour builds into its own target dir and
 # runs its own profile, so two flavours never invalidate each other's build.
 FLAVOUR := env("FLAVOUR", "full")
-FLAVOUR_PYTHON := env("FLAVOUR_PYTHON", "python3")
 FLAVOUR_TARGET := "target/flavour-" + FLAVOUR
 CLI_RELEASE := FLAVOUR_TARGET + "/release/systemprompt"
 CLI_DEBUG := FLAVOUR_TARGET + "/debug/systemprompt"
@@ -71,7 +70,7 @@ _db-url:
 # Build (Windows) - always uses offline mode
 [windows]
 build *FLAGS:
-    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo build --workspace --no-default-features --features "$({{FLAVOUR_PYTHON}} scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
+    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo build --workspace --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Build (Unix) - one build in flight at a time, always of the latest source;
 # cargo's own incremental cache decides how much recompiles. Refuses when the
@@ -100,12 +99,12 @@ _build-uncoordinated *FLAGS:
     export CC="${CC:-clang}"
     export CXX="${CXX:-clang++}"
     export RUSTFLAGS="${RUSTFLAGS:--D warnings}"
-    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo build --workspace --locked --no-default-features --features "$({{FLAVOUR_PYTHON}} scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
+    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo build --workspace --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Clippy (Windows) - always uses offline mode
 [windows]
 clippy *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
-    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo clippy --workspace --no-default-features --features "$({{FLAVOUR_PYTHON}} scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
+    $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo clippy --workspace --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
 
 # Clippy (Unix) - single-flight, same coordinator as `just build`
 [unix]
@@ -119,7 +118,7 @@ _clippy-uncoordinated *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
     set -euo pipefail
     export CC="${CC:-clang}"
     export CXX="${CXX:-clang++}"
-    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo clippy --workspace --all-targets --locked --no-default-features --features "$({{FLAVOUR_PYTHON}} scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
+    SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo clippy --workspace --all-targets --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
 
 # Unit tests: extensions/web/admin (main workspace) + the tests/ workspace.
 # If sqlx offline errors appear, run `just prepare` first to refresh .sqlx.
@@ -224,7 +223,6 @@ lint-gates:
 _lint-gates-uncoordinated:
     #!/usr/bin/env bash
     set -uo pipefail
-    export FLAVOUR_PYTHON="{{FLAVOUR_PYTHON}}"
     gates=(
         check-discarded-results.sh
         check-fail-open.sh
@@ -815,14 +813,14 @@ tenant:
 
 # The flavours this template builds: name and what each is for
 flavours:
-    @{{FLAVOUR_PYTHON}} scripts/flavour.py table
+    @python3 scripts/flavour.py table
 
 # Local install of one flavour (Docker Postgres, build, profile, migrate,
 # bootstrap, publish for a site): just setup full --anthropic-key sk-ant-...
 # Flags: --openai-key --gemini-key --http-port --pg-port --admin-email
 # --no-build --dry-run. A bare re-run keeps the ports chosen at first setup.
 setup FLAVOUR *ARGS:
-    FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-setup.sh {{FLAVOUR}} {{ARGS}}
+    bash scripts/flavour-setup.sh {{FLAVOUR}} {{ARGS}}
 
 # List all tenants
 tenants:
@@ -921,27 +919,27 @@ web-build:
 
 # Build one flavour's image as systemprompt-template:<flavour>
 docker-build FLAVOUR=FLAVOUR *ARGS:
-    FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-build.sh {{FLAVOUR}} {{ARGS}}
+    bash scripts/flavour-build.sh {{FLAVOUR}} {{ARGS}}
 
 # Build every flavour's image, one after another (one cargo build at a time)
 docker-build-all:
     #!/usr/bin/env bash
     set -euo pipefail
-    for flavour in $({{FLAVOUR_PYTHON}} scripts/flavour.py list); do
-        FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-build.sh "$flavour"
+    for flavour in $(python3 scripts/flavour.py list); do
+        bash scripts/flavour-build.sh "$flavour"
     done
 
 # Run one flavour's image with its Postgres (docker-compose.yml, .env)
 docker-run FLAVOUR=FLAVOUR:
     FLAVOUR={{FLAVOUR}} IMAGE=systemprompt-template:{{FLAVOUR}} docker compose -p sp-{{FLAVOUR}} up
 
-# Boot one flavour's image and assert its flavour.toml [smoke] expectations
+# Boot one flavour's image and assert its flavour.yaml smoke expectations
 smoke FLAVOUR=FLAVOUR *ARGS:
-    FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-smoke.sh {{FLAVOUR}} {{ARGS}}
+    bash scripts/flavour-smoke.sh {{FLAVOUR}} {{ARGS}}
 
 # Image, deploy and developer-loop metrics: just metrics full --image --dev
 metrics FLAVOUR=FLAVOUR *ARGS:
-    FLAVOUR_PYTHON={{FLAVOUR_PYTHON}} bash scripts/flavour-metrics.sh {{FLAVOUR}} {{ARGS}}
+    bash scripts/flavour-metrics.sh {{FLAVOUR}} {{ARGS}}
 
 # ══════════════════════════════════════════════════════════════════════════════
 # AIR-GAPPED SCENARIO

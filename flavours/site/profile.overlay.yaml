@@ -1,0 +1,4 @@
+# Profile keys this flavour sets on top of what `admin setup` writes.
+# site runs the profile setup authors; its subset lives in the cargo feature
+# and the staged services tree, so it sets none.
+{}

@@ -1,0 +1,48 @@
+# gateway: the AI gateway and the base console
+# Read by scripts/flavour.py (the only reader); docs/flavours/README.md
+# describes every key.
+name: gateway
+description: "AI gateway only: provider routing, gateway policies, quotas, audit and usage analytics, with the base admin console"
+cargo_feature: flavour-gateway
+extra_features: []
+binaries:
+  - systemprompt
+services:
+  - access-control
+  - ai
+  - config
+  - external_agents
+  - gateway
+  - governance
+  - scheduler
+  - web
+requires_ai_key: true
+site: false
+runtime: slim
+
+smoke:
+  routes_present:
+    - "/.well-known/jwks.json"
+    - "/admin/"
+  routes_absent:
+    - "/sitemap.xml"
+    - "/api/public/links"
+    - "/api/v1/mcp/registry"
+    - "/api/v1/marketplace"
+    - "/api/v1/agents/registry"
+    - "/api/v1/agent-runs"
+    - "/api/v1/brain"
+  cli_groups_present:
+    - "admin"
+    - "analytics"
+    - "core"
+    - "infra"
+    - "plugins"
+    - "web"
+    - "cloud"
+  cli_groups_absent: []
+  capabilities:
+    - "quota_month_window"
+    - "governance_bootstrap"
+  mcp_servers: []
+  models_endpoint: true

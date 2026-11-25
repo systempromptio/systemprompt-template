@@ -1,0 +1,51 @@
+# agents: agents and agent runs on the gateway and MCP hosting
+# Read by scripts/flavour.py (the only reader); docs/flavours/README.md
+# describes every key.
+name: agents
+description: "Agents and agent runs on top of the gateway and MCP hosting, with notifications and organisational memory; no public site"
+cargo_feature: flavour-agents
+extra_features: []
+binaries:
+  - systemprompt
+services:
+  - access-control
+  - agents
+  - ai
+  - artifacts
+  - config
+  - external_agents
+  - gateway
+  - governance
+  - hooks
+  - marketplaces
+  - mcp
+  - plugins
+  - scheduler
+  - skills
+  - web
+requires_ai_key: true
+site: false
+runtime: slim
+
+smoke:
+  routes_present:
+    - "/.well-known/jwks.json"
+    - "/admin/"
+  routes_absent:
+    - "/sitemap.xml"
+    - "/api/public/links"
+  cli_groups_present:
+    - "admin"
+    - "analytics"
+    - "core"
+    - "infra"
+    - "plugins"
+    - "web"
+    - "cloud"
+  cli_groups_absent: []
+  capabilities:
+    - "conversation_judge"
+    - "cleanup_empty_contexts"
+  mcp_servers:
+    - "systemprompt"
+  models_endpoint: true

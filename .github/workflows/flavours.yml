@@ -1,6 +1,6 @@
 name: Flavours
 
-# Every flavour in flavours/index.toml: the flavour lint, then per flavour a
+# Every flavour in flavours/index.yaml: the flavour lint, then per flavour a
 # clean and a cached image build with deploy metrics (scripts/flavour-metrics.sh
 # --image) and the image smoke (scripts/flavour-smoke.sh). Metrics JSON and the
 # smoke results are uploaded; table.md is appended to the job summary.

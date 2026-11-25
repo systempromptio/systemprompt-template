@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# One image per flavour (flavours/<name>/flavour.toml). Build through
+# One image per flavour (flavours/<name>/flavour.yaml). Build through
 # scripts/flavour-build.sh, which reads the flavour and passes these arguments
 # (and, while Cargo.toml patches core to a sibling checkout, that checkout as
 # the `core` build context). The defaults build `full`.
@@ -71,8 +71,10 @@ RUN --mount=type=cache,id=target-${FLAVOUR},target=/target,sharing=locked \
 FROM scratch AS artifacts
 COPY --from=builder /out/bin /bin
 
-FROM python:3.12-slim-bookworm AS services
+FROM debian:bookworm-slim AS services
 ARG FLAVOUR
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-yaml \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /stage
 COPY flavours /stage/flavours
 COPY services /stage/services

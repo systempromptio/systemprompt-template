@@ -6,32 +6,46 @@ loads, and what its image and local install do at boot. Every flavour is a real
 feature subset: a capability a flavour does not name is not compiled in, so its
 routes, CLI groups, jobs and tables are absent rather than switched off.
 
-`flavours/index.toml` lists the flavours in order. Each has a directory:
+`flavours/index.yaml` lists the flavours in order. Each has a directory:
 
 | File | Holds |
 |---|---|
-| `flavours/<name>/flavour.toml` | description, `cargo_feature`, `extra_features`, `binaries`, the shared `services` subtrees, `requires_ai_key`, `site`, `runtime` (`slim` or `full`) and the `[smoke]` expectations |
+| `flavours/<name>/flavour.yaml` | description, `cargo_feature`, `extra_features`, `binaries`, the shared `services` subtrees, `requires_ai_key`, `site`, `runtime` (`slim` or `full`) and the `smoke` expectations |
 | `flavours/<name>/profile.overlay.yaml` | profile keys set on top of what `admin setup` writes |
-| `flavours/<name>/services/` | optional overrides, copied over the shared subtrees |
+| `flavours/<name>/services/` | overrides copied over the shared subtrees; every subset flavour overrides `scheduler/config.yaml` (only the jobs it compiles: core refuses to boot on a configured job no member contributes) and `config/config.yaml` (only the includes of the subtrees it ships) |
 | `flavours/<name>/README.md` | how to run it |
 
 `scripts/flavour.py` is the only reader of these files (`list`, `table`,
 `get <name> <key>`, `features <name>`, `matrix`, `check`); every script,
-recipe and workflow asks it. It needs Python 3.11 or later; set
-`FLAVOUR_PYTHON` when `python3` is older.
+recipe and workflow asks it. It runs on any `python3` with PyYAML
+(`python3-yaml`), which the setup scripts already need.
 
 ## The flavours
 
-| Flavour | For | Status |
-|---|---|---|
-| `gateway` | An AI gateway only: provider routing, policies, quotas, audit and analytics, for teams that point existing clients at a governed endpoint | planned |
-| `mcp` | Hosted MCP servers and the marketplace, governed per user, with no agents and no public site | planned |
-| `agents` | Agents and agent runs on top of the gateway and MCP hosting, with notifications and organisational memory | planned |
-| `site` | The public site and content pipeline (pages, documentation, sitemap) with files and PDF support, no AI | planned |
-| `full` | Everything above plus the whole admin console and Slack | available |
+| Flavour | Cargo feature | Facade features on top of `core,runtime,identity,analytics` | Template members |
+|---|---|---|---|
+| `gateway` | `flavour-gateway` | `ai`, `cloud`, `otel`, `bridge` | web (console `gateway`) |
+| `mcp` | `flavour-mcp` | gateway's + `mcp-servers`, `marketplace` | web (`gateway`, `mcp`), the `systemprompt` MCP toolset |
+| `agents` | `flavour-agents` | mcp's + `agents`, `agent-runs`, `notifications`, `brain` | web (`gateway`, `mcp`, `agents`), the MCP toolset |
+| `site` | `flavour-site` | `content`, `files`, `files-pdf` (no `ai`) | web (`content`: public site, publish pipeline) |
+| `full` | `flavour-full` | `reference` + `slack` | everything |
 
-A planned flavour is added when its cargo feature exists; the tooling needs no
-change for it.
+- `gateway`: an AI gateway only: provider routing, policies, quotas, audit and analytics, for teams that point existing clients at a governed endpoint.
+- `mcp`: hosted MCP servers and the marketplace, governed per user, with no agents and no public site.
+- `agents`: agents and agent runs on top of the gateway and MCP hosting, with notifications and organisational memory.
+- `site`: the public site and content pipeline (pages, documentation, sitemap) with files and PDF support, no AI.
+- `full`: everything above plus the whole admin console and Slack.
+
+Cargo features are additive, so a build needs at least one `flavour-*`
+(`src/lib.rs` refuses none) and each larger flavour includes the one below
+it: `agents` turns on `mcp`, which turns on `gateway`. `full` is the union:
+`agents` + `site` + `reference` + Slack. Naming two unrelated flavours
+builds their union. Without `content` the template serves no public site
+and `/` redirects to the console.
+
+The `systemprompt-kit-export` developer binary uses the marketplace and so
+belongs with `mcp`, `agents` and `full`; it is built on demand by
+`just kit-export` and is in no image.
 
 ## Choosing a flavour
 
@@ -60,7 +74,7 @@ just flavours                                    # what exists
 just setup full --anthropic-key <key>            # local install
 FLAVOUR=full just start                          # run it (FLAVOUR defaults to full)
 just docker-build full                           # image systemprompt-template:full
-just smoke full --no-build                       # boot it and assert [smoke]
+just smoke full --no-build                       # boot it and assert smoke
 just metrics full --image --dev                  # measure it
 ```
 
@@ -74,9 +88,9 @@ invalidate each other's build or share a database.
 1. Add the cargo feature `flavour-<name>` to the root `Cargo.toml` and make
    `cargo check --no-default-features --features flavour-<name>` and clippy
    clean.
-2. Create `flavours/<name>/` with `flavour.toml`, `profile.overlay.yaml` and
+2. Create `flavours/<name>/` with `flavour.yaml`, `profile.overlay.yaml` and
    `README.md` (copy `flavours/full/` and narrow it), and add the name to
-   `flavours/index.toml`.
+   `flavours/index.yaml`.
 3. Run `bash scripts/check-flavours.sh`, then `just docker-build <name>`,
    `just smoke <name> --no-build` and `just metrics <name>`.
 

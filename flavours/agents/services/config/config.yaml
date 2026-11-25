@@ -1,0 +1,20 @@
+# Services aggregator for the agents flavour: replaces
+# services/config/config.yaml when this flavour's services tree is staged, and
+# includes only the files of the subtrees this flavour ships. A section for a
+# capability the flavour does not compile is left out rather than switched off.
+# services/config/config.yaml documents each include.
+
+includes:
+  - ../mcp/systemprompt.yaml
+  - ../ai/config.yaml
+  - ../scheduler/config.yaml
+  - ../agents/developer_agent.yaml
+  - ../agents/associate_agent.yaml
+  - ../external_agents/claude_desktop.yaml
+  - ../external_agents/codex_cli.yaml
+
+settings:
+  agent_port_range: [9000, 9999]
+  mcp_port_range: [5000, 5999]
+  auto_start_enabled: true
+  schema_validation_mode: "strict"

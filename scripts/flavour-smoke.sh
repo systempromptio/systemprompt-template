@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Boot one flavour's image with its own Postgres and assert the [smoke]
-# expectations in flavours/<flavour>/flavour.toml.
+# Boot one flavour's image with its own Postgres and assert the smoke
+# expectations in flavours/<flavour>/flavour.yaml.
 #   scripts/flavour-smoke.sh FLAVOUR [--no-build] [--image IMAGE]
 #       [--compose FILE] [--service NAME]
 #       [--release [--version V] [--upgrade-from IMAGE]]

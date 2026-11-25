@@ -10,7 +10,7 @@
 #
 # Two rules:
 #   1. every `systemprompt-mcp-<name>` a Dockerfile OR a workflow names must be
-#      a binary some flavour ships (`binaries` in flavours/<name>/flavour.toml,
+#      a binary some flavour ships (`binaries` in flavours/<name>/flavour.yaml,
 #      read through scripts/flavour.py). Workflows count because a release
 #      smoke step that asserts a binary is in the image fails as surely as the
 #      build when the binary is gone.
@@ -27,8 +27,8 @@ cd "$(dirname "$0")/.."
 
 fail=0
 
-declared=$(for flavour in $("${FLAVOUR_PYTHON:-python3}" scripts/flavour.py list); do
-    "${FLAVOUR_PYTHON:-python3}" scripts/flavour.py get "$flavour" binaries
+declared=$(for flavour in $(python3 scripts/flavour.py list); do
+    python3 scripts/flavour.py get "$flavour" binaries
 done | sort -u)
 
 while IFS= read -r file; do
@@ -36,7 +36,7 @@ while IFS= read -r file; do
 
     for binary in $(grep -oE 'systemprompt-mcp-[a-z0-9-]+' "$file" | sort -u); do
         if ! printf '%s\n' "$declared" | grep -qx "$binary"; then
-            echo "$file: names '$binary', which no flavour ships (flavours/*/flavour.toml binaries)"
+            echo "$file: names '$binary', which no flavour ships (flavours/*/flavour.yaml binaries)"
             fail=1
         fi
     done
