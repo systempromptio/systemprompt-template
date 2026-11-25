@@ -233,5 +233,3 @@ impl Job for UsageAnomalyJob {
         Ok(Self::execute_with_pool(&pool).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&UsageAnomalyJob);

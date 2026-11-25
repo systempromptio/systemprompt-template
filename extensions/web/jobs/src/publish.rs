@@ -266,5 +266,3 @@ impl PublishPipelineJob {
             .with_duration(duration_ms))
     }
 }
-
-systemprompt::traits::submit_job!(&PublishPipelineJob);

@@ -65,5 +65,3 @@ impl Job for UsageDailyRollupJob {
         Ok(Self::execute_with_pool(&pool).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&UsageDailyRollupJob);

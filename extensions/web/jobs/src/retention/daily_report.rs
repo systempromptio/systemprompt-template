@@ -100,4 +100,3 @@ impl Job for RetentionDailyReportJob {
         Ok(Self::execute_with_pool(&db.write_pool()).await?)
     }
 }
-systemprompt::traits::submit_job!(&RetentionDailyReportJob);

@@ -1,7 +1,8 @@
 //! Background jobs for the web extension.
 //!
-//! Every job in this crate implements the core `Job` trait and is registered
-//! with the scheduler at extension boot. They split into three families:
+//! Every job in this crate implements the core `Job` trait and is contributed
+//! by type in `WebExtension::contribute` through [`contribute_jobs`]. They
+//! split into three families:
 //!
 //! - **Publish pipeline** ([`PublishPipelineJob`]) — runs at server startup and
 //!   orchestrates ACL/profile/config bootstrap, asset copy, content ingestion,
@@ -45,7 +46,7 @@ mod usage_retention;
 mod usage_rollup;
 
 pub use error::JobError;
-pub use registry::{JOB_TAG, extension_jobs};
+pub use registry::{JOB_TAG, contribute_jobs};
 
 pub use access_expiry::{AccessExpiryJob, ExpirySweep, lost_manage_role};
 pub use bundle_admin_css::BundleAdminCssJob;

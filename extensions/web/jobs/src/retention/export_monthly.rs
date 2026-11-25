@@ -174,4 +174,3 @@ impl Job for RetentionExportMonthlyJob {
         .await?)
     }
 }
-systemprompt::traits::submit_job!(&RetentionExportMonthlyJob);

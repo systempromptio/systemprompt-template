@@ -128,5 +128,3 @@ impl Job for ContentAnalyticsAggregationJob {
         Ok(Self::execute_with_pool(&pool).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&ContentAnalyticsAggregationJob);

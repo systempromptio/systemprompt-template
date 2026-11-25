@@ -263,5 +263,3 @@ impl Job for ConversationJudgeJob {
         Ok(run_with_classifier(&pool, params, manual_only, &judge).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&ConversationJudgeJob);

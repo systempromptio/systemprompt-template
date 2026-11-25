@@ -134,5 +134,3 @@ impl Job for AccessExpiryJob {
         Ok(Self::execute_with_pool(&pool).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&AccessExpiryJob);

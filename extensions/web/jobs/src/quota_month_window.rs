@@ -72,5 +72,3 @@ impl Job for QuotaMonthWindowJob {
         Ok(Self::execute_with_pool(&pool).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&QuotaMonthWindowJob);

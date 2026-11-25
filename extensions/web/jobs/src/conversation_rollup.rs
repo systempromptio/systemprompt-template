@@ -70,5 +70,3 @@ impl Job for ConversationRollupJob {
         Ok(Self::execute_with_pool(&db.write_pool(), all).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&ConversationRollupJob);

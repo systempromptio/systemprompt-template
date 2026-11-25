@@ -136,5 +136,3 @@ async fn encrypt_and_store_secret(
 
     Ok(())
 }
-
-systemprompt::traits::submit_job!(&SecretMigrationJob);

@@ -123,5 +123,3 @@ impl Job for BundleAdminCssJob {
         Ok(Self::execute_bundle(paths).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&BundleAdminCssJob);

@@ -127,5 +127,3 @@ impl Job for CopyExtensionAssetsJob {
         Ok(Self::execute_copy(paths).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&CopyExtensionAssetsJob);

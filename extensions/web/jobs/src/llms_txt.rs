@@ -6,7 +6,8 @@ use std::sync::Arc;
 use systemprompt::config::AppPaths;
 use systemprompt::database::DbPool;
 use systemprompt::generator::ContentConfigRaw;
-use systemprompt::traits::{Job, JobContext, JobResult};
+use systemprompt::traits::{Job, JobContext, JobResult, StateRequirement};
+use systemprompt_web_shared::WebSettings;
 
 use crate::error::JobError;
 
@@ -30,6 +31,14 @@ impl Job for LlmsTxtGenerationJob {
     fn schedule(&self) -> &'static str {
         "0 0 * * * *"
     }
+
+    fn requires(&self) -> Vec<StateRequirement> {
+        vec![
+            StateRequirement::of::<DbPool>(),
+            StateRequirement::of::<Arc<AppPaths>>(),
+            StateRequirement::of::<Arc<WebSettings>>(),
+        ]
+    }
     async fn execute(
         &self,
         ctx: &JobContext,
@@ -46,7 +55,8 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let db_pool = ctx.get::<DbPool>()?;
     let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
 
-    generate_llms_txt(DbPool::clone(db_pool), paths).await?;
+    let settings = ctx.get::<Arc<WebSettings>>()?;
+    generate_llms_txt(DbPool::clone(db_pool), paths, &settings.api_external_url).await?;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
@@ -55,13 +65,13 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     Ok(JobResult::success().with_duration(duration_ms))
 }
 
-systemprompt::traits::submit_job!(&LlmsTxtGenerationJob);
 
-pub(crate) async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Result<(), JobError> {
-    use systemprompt::manifest::Config;
+pub(crate) async fn generate_llms_txt(
+    db_pool: DbPool,
+    paths: &AppPaths,
+    base_url: &str,
+) -> Result<(), JobError> {
     use tokio::fs;
-
-    let global_config = Config::get()?;
 
     let config_path = paths.system().content_config();
     let yaml_content = fs::read_to_string(&config_path).await?;
@@ -69,7 +79,6 @@ pub(crate) async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Resu
     let content_config: ContentConfigRaw = serde_yaml::from_str(&yaml_content)?;
 
     let web_dir = paths.web().dist().to_path_buf();
-    let base_url = &global_config.api_external_url;
 
     let llms_content = build_llms_txt_content(db_pool, &content_config, base_url).await?;
 

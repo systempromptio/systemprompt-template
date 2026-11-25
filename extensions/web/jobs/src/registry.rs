@@ -1,58 +1,44 @@
-//! Inventory-derived job listing for the web extension.
+//! The web extension's jobs, contributed by `WebExtension::contribute`.
 //!
-//! Jobs register themselves with the global scheduler inventory via
-//! `submit_job!` next to their definition. `Extension::jobs()` must report
-//! the same set, so it is derived from that inventory here rather than from
-//! a second hand-written list that can drift. Ownership is expressed through
-//! [`JOB_TAG`]: every job in this crate tags itself with it, and only tagged
-//! jobs are reported as belonging to this extension.
+//! Each job is contributed by type, so its owner is the contributing member
+//! and a disabled web extension contributes none. [`JOB_TAG`] remains the
+//! tag every job in this crate reports, for operators filtering job listings.
 
-use std::sync::Arc;
+use systemprompt::extension::Contributions;
 
-use systemprompt::traits::{Job, JobContext, JobResult, ProviderError};
+use crate::usage_anomaly::UsageAnomalyJob;
+use crate::{
+    AccessExpiryJob, BundleAdminCssJob, ContentAnalyticsAggregationJob, ContentIngestionJob,
+    ContentPrerenderJob, ConversationJudgeJob, ConversationRollupJob, CopyExtensionAssetsJob,
+    GovernanceBootstrapJob, LlmsTxtGenerationJob, PluginUsageRetentionJob, PublishPipelineJob,
+    QuotaMonthWindowJob, RetentionDailyReportJob, RetentionExportMonthlyJob,
+    RetentionExportWeeklyJob, RobotsTxtGenerationJob, ScopeDefaultsJob, SecretMigrationJob,
+    SitemapGenerationJob, UsageDailyRollupJob,
+};
 
 pub const JOB_TAG: &str = "web-extension";
 
-pub fn extension_jobs() -> Vec<Arc<dyn Job>> {
-    let mut jobs: Vec<Arc<dyn Job>> = inventory::iter::<&'static dyn Job>()
-        .filter(|job| job.tags().contains(&JOB_TAG))
-        .map(|job| -> Arc<dyn Job> { Arc::new(StaticJob(*job)) })
-        .collect();
-    jobs.sort_by_key(|job| job.name());
-    jobs
-}
-
-// Why: the inventory yields `&'static dyn Job` but the `Extension` trait
-// wants owned `Arc<dyn Job>`; this zero-cost wrapper bridges the two.
-struct StaticJob(&'static dyn Job);
-
-#[async_trait::async_trait]
-impl Job for StaticJob {
-    fn name(&self) -> &'static str {
-        self.0.name()
-    }
-
-    fn description(&self) -> &'static str {
-        self.0.description()
-    }
-
-    fn schedule(&self) -> &'static str {
-        self.0.schedule()
-    }
-
-    fn tags(&self) -> Vec<&'static str> {
-        self.0.tags()
-    }
-
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, ProviderError> {
-        self.0.execute(ctx).await
-    }
-
-    fn enabled(&self) -> bool {
-        self.0.enabled()
-    }
-
-    fn schedulable(&self) -> bool {
-        self.0.schedulable()
-    }
+pub fn contribute_jobs(c: &mut Contributions<'_>) {
+    c.job(AccessExpiryJob)
+        .job(BundleAdminCssJob)
+        .job(ContentAnalyticsAggregationJob)
+        .job(ContentIngestionJob)
+        .job(ContentPrerenderJob)
+        .job(ConversationJudgeJob)
+        .job(ConversationRollupJob)
+        .job(CopyExtensionAssetsJob)
+        .job(GovernanceBootstrapJob)
+        .job(LlmsTxtGenerationJob)
+        .job(PluginUsageRetentionJob)
+        .job(PublishPipelineJob)
+        .job(QuotaMonthWindowJob)
+        .job(RetentionDailyReportJob)
+        .job(RetentionExportMonthlyJob)
+        .job(RetentionExportWeeklyJob)
+        .job(RobotsTxtGenerationJob)
+        .job(ScopeDefaultsJob)
+        .job(SecretMigrationJob)
+        .job(SitemapGenerationJob)
+        .job(UsageAnomalyJob)
+        .job(UsageDailyRollupJob);
 }

@@ -56,5 +56,3 @@ impl Job for ScopeDefaultsJob {
         Ok(Self::execute_with_pool(&pool).await?)
     }
 }
-
-systemprompt::traits::submit_job!(&ScopeDefaultsJob);

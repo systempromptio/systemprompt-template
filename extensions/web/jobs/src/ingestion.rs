@@ -193,5 +193,3 @@ async fn ingest_source(
         },
     }
 }
-
-systemprompt::traits::submit_job!(&ContentIngestionJob);

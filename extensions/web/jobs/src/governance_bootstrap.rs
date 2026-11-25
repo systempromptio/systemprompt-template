@@ -32,7 +32,7 @@
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use systemprompt::security::authz::{EntityKind, RegisteredEntities};
+use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
 
 use crate::error::JobError;
 use systemprompt_web_admin::repositories::config::gateway::{
@@ -150,7 +150,7 @@ pub struct GovernanceStatus {
 pub fn check_governance_config(
     services_path: &std::path::Path,
 ) -> Result<GovernanceStatus, JobError> {
-    use systemprompt::security::policy::GovernanceConfig;
+    use systemprompt::governance::policy::GovernanceConfig;
 
     let path = services_path.join("governance/config.yaml");
     let config = GovernanceConfig::load(&path)
@@ -244,9 +244,9 @@ async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, 
     }
 
     let source = format!("services:{}", gateway_path.display());
-    let repo = systemprompt::security::authz::AccessControlRepository::new(db_pool);
+    let repo = systemprompt::governance::authz::AccessControlRepository::new(db_pool);
     let report =
-        systemprompt::security::authz::reconcile_gateway_entities_exact(&repo, &id_refs, &source)
+        systemprompt::governance::authz::reconcile_gateway_entities_exact(&repo, &id_refs, &source)
             .await
             .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
 
@@ -255,5 +255,3 @@ async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, 
         pruned: report.pruned,
     })
 }
-
-systemprompt::traits::submit_job!(&GovernanceBootstrapJob);

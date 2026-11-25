@@ -5,7 +5,8 @@ use std::fmt::Write as FmtWrite;
 use std::sync::Arc;
 
 use systemprompt::config::AppPaths;
-use systemprompt::traits::{Job, JobContext, JobResult};
+use systemprompt::traits::{Job, JobContext, JobResult, StateRequirement};
+use systemprompt_web_shared::WebSettings;
 
 use crate::error::JobError;
 
@@ -29,6 +30,13 @@ impl Job for RobotsTxtGenerationJob {
     fn schedule(&self) -> &'static str {
         "0 0 * * * *"
     }
+
+    fn requires(&self) -> Vec<StateRequirement> {
+        vec![
+            StateRequirement::of::<Arc<AppPaths>>(),
+            StateRequirement::of::<Arc<WebSettings>>(),
+        ]
+    }
     async fn execute(
         &self,
         ctx: &JobContext,
@@ -43,7 +51,8 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     tracing::info!("robots.txt generation started");
 
     let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
-    generate_robots_txt(paths).await?;
+    let settings = ctx.get::<Arc<WebSettings>>()?;
+    generate_robots_txt(paths, &settings.api_external_url).await?;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
@@ -52,14 +61,10 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     Ok(JobResult::success().with_duration(duration_ms))
 }
 
-pub(crate) async fn generate_robots_txt(paths: &AppPaths) -> Result<(), JobError> {
-    use systemprompt::manifest::Config;
+pub(crate) async fn generate_robots_txt(paths: &AppPaths, base_url: &str) -> Result<(), JobError> {
     use tokio::fs;
 
-    let global_config = Config::get()?;
-
     let web_dir = paths.web().dist().to_path_buf();
-    let base_url = &global_config.api_external_url;
 
     let robots_content = build_robots_txt_content(base_url)?;
 
@@ -86,5 +91,3 @@ pub fn build_robots_txt_content(base_url: &str) -> Result<String, JobError> {
 
     Ok(content)
 }
-
-systemprompt::traits::submit_job!(&RobotsTxtGenerationJob);
