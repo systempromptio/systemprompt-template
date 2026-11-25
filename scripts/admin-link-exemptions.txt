@@ -10,8 +10,6 @@
 /admin/access-tokens
 /admin/analysis/campaigns
 /admin/analysis/evaluations
-/admin/analysis/impact
-/admin/analysis/publications
 /admin/analysis/resources
 /admin/analysis/skills
 /admin/analysis/versions

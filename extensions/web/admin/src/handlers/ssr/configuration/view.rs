@@ -48,7 +48,6 @@ pub(crate) struct ConfigurationPageData {
     pub composed_hash: Option<HashView>,
     pub provenance: &'static str,
     pub bundle_count: usize,
-    pub sources_unreadable: Option<String>,
     pub kpis: Vec<ConfigKpiView>,
     pub rows: Vec<ConfigRowView>,
     pub retention: RetentionView,

@@ -43,7 +43,7 @@ pub(super) fn leaderboard_rows(
             ),
             detail_url: format!("/admin/user?id={}", urlencoding::encode(r.user_id.as_str())),
             analytics_url: format!(
-                "/admin/analytics/users/{}",
+                "/admin/users/{}?tab=usage",
                 urlencoding::encode(r.user_id.as_str())
             ),
         })

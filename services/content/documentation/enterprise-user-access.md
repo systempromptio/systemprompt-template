@@ -30,7 +30,7 @@ The admin UI at `/admin/users` manages accounts, roles, status, sessions, and pe
 
 ## Managing users from the admin UI
 
-Open `/admin/users` as an admin (the older `/admin/access/users` path redirects there). From this one page you can:
+Open `/admin/users` as an admin. From this one page you can:
 
 - **Search and list** users by name or email, with pagination.
 - **Create** a user directly.

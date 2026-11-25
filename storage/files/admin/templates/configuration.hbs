@@ -17,9 +17,6 @@
         {{/inline}}
     {{/components/page-header}}
 
-    {{#if sources_unreadable}}
-    {{> components/notice tone="err" title="Sources could not be read" message=sources_unreadable}}
-    {{/if}}
 
     <div class="sp-kpi-grid" aria-label="Configuration totals">
         {{#each kpis}}

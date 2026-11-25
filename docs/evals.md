@@ -131,7 +131,7 @@ Implementation complete; validation pending.
 - Receipts and publication decisions are immutable. Rollback is a new reviewed
   generation referencing previously retained content, followed by its own distribution
   and installation receipt.
-- `/admin/analysis/publications` provides review, publish, distribution, receipt,
+- `/admin/analysis/versions` provides review, publish, distribution, receipt,
   withdrawal, and rollback controls without changing access policy.
 
 ## Milestone 5 — continuous version impact
@@ -143,7 +143,7 @@ Implementation complete; validation pending.
   only when the claimed generation/revision and authenticated native session match an
   immutable installation receipt. Unsupported or historical evidence stays revision
   unknown.
-- `/admin/analysis/impact` filters by revision, skill, traffic class, and time. It
+- `/admin/analysis/versions` filters by revision, skill, traffic class, and time. It
   shows invocation/request samples, failures, latency, tokens, assessed outcomes,
   quality, attribution coverage, accounting coverage, and related conversation cost.
 - Production, fixture, live-evaluation, suggestion, and judge traffic are separate.

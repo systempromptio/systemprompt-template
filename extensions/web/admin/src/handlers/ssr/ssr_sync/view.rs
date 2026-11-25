@@ -69,7 +69,6 @@ pub(crate) struct SyncPageData {
     pub composed_hash: Option<HashView>,
     pub last_reconciled_hash: Option<HashView>,
     pub base_tree_hash: Option<HashView>,
-    pub sources_unreadable: Option<String>,
     pub export_planes: Vec<ExportPlaneView>,
     pub stage_ttl_minutes: i64,
 }

@@ -146,7 +146,6 @@ pub(crate) async fn configuration_page(
         composed_hash: sources.composed_hash.as_deref().and_then(HashView::of),
         provenance: sources.base.provenance,
         bundle_count: sources.bundles.len(),
-        sources_unreadable: None,
         kpis,
         rows,
         retention,

@@ -18,9 +18,6 @@
 
     {{> components/tabs tabs=tabs nav_label="Code sync views"}}
 
-    {{#if sources_unreadable}}
-    {{> components/notice tone="err" title="Sources could not be read" message=sources_unreadable}}
-    {{/if}}
 
     {{#if show_access}}
     {{#with access_review}}

@@ -152,7 +152,6 @@ pub(crate) async fn sync_page(
             .and_then(HashView::of),
         base_tree_hash: sources.base.tree_hash.as_deref().and_then(HashView::of),
         sources,
-        sources_unreadable: None,
         export_planes,
         stage_ttl_minutes: STAGE_TTL_MINUTES,
     };

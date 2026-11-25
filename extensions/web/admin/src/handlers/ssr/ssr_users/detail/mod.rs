@@ -3,9 +3,7 @@
 //! Every tab is a link
 //! (`?tab=identity|membership|access|devices|sessions|usage`), so
 //! a view is bookmarkable and the server renders only the tab the reader asked
-//! for. Usage is the page that used to live at `/admin/analytics/users/{id}`,
-//! folded in: it was the same account seen from a different sidebar entry, and
-//! the two are now one URL.
+//! for. Usage is the account's spend and activity, beside who they are.
 
 use crate::env::AdminEnv;
 
