@@ -89,7 +89,7 @@ impl NavSectionView {
 #[derive(Debug, Clone, Serialize)]
 pub struct HomeCardView {
     href: &'static str,
-    title: String,
+    label: String,
     note: String,
 }
 
@@ -114,7 +114,7 @@ impl ConsoleDashboard {
             .map(|card| {
                 Ok(HomeCardView {
                     href: compiled("home card", &card.item)?.href,
-                    title: card.title.clone(),
+                    label: card.title.clone(),
                     note: card.note.clone(),
                 })
             })
