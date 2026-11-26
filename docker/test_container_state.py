@@ -11,6 +11,14 @@ spec = importlib.util.spec_from_file_location('state', Path(__file__).with_name(
 state = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(state)
 
+OVERLAY = tempfile.TemporaryDirectory()
+for overlay in ('profile.base.yaml', 'profile.overlay.yaml'):
+    (Path(OVERLAY.name) / overlay).write_text('{}\n')
+
+
+def configure(profile, env):
+    state.configure(profile, env, Path(OVERLAY.name))
+
 
 class ContainerStateTest(unittest.TestCase):
     def test_replacement_preserves_uploads_and_profiles(self):
@@ -40,11 +48,12 @@ class ContainerStateTest(unittest.TestCase):
             profile.write_text(yaml.safe_dump({'secrets': {'secrets_path': str(secret)},
                                              'security': {'signing_key_path': str(key)}}))
             env = {'EXTERNAL_URL': 'https://example.com', 'HOST': '::', 'PORT': '8080'}
-            state.configure(profile, env)
-            state.configure(profile, dict(env, OAUTH_AT_REST_PEPPER='b' * 32))
+            configure(profile, env)
+            configure(profile, dict(env, OAUTH_AT_REST_PEPPER='b' * 32))
             result = yaml.safe_load(profile.read_text())
             self.assertFalse(result['security']['allow_registration'])
-            self.assertEqual(result['security']['jwt_issuer'], 'https://example.com')
+            self.assertEqual(result['server']['external_url'], 'https://example.com')
+            self.assertNotIn('jwt_issuer', result['security'])
             self.assertEqual((root / 'signing_key.pem').read_text(), 'existing signing key')
             self.assertEqual(json.loads(secret.read_text())['oauth_at_rest_pepper'], 'a' * 32)
             self.assertEqual(secret.stat().st_mode & 0o777, 0o600)
@@ -56,9 +65,9 @@ class ContainerStateTest(unittest.TestCase):
             secret.write_text(json.dumps({'oauth_at_rest_pepper': 'initial', 'signing_key_pem': 'existing'}))
             profile = root / 'profile.yaml'
             profile.write_text(yaml.safe_dump({'secrets': {'secrets_path': 'secrets.json'}}))
-            state.configure(profile, {'PROFILE_CREATED': 'true', 'OAUTH_AT_REST_PEPPER': 'p' * 64})
+            configure(profile, {'PROFILE_CREATED': 'true', 'OAUTH_AT_REST_PEPPER': 'p' * 64})
             first = json.loads(secret.read_text())
-            state.configure(profile, {'PROFILE_CREATED': 'false', 'OAUTH_AT_REST_PEPPER': 'q' * 64})
+            configure(profile, {'PROFILE_CREATED': 'false', 'OAUTH_AT_REST_PEPPER': 'q' * 64})
             self.assertEqual(first, json.loads(secret.read_text()))
             self.assertEqual(first['oauth_at_rest_pepper'], 'p' * 64)
             self.assertEqual(first['signing_key_pem'], 'existing')
@@ -70,11 +79,11 @@ class ContainerStateTest(unittest.TestCase):
             secret.write_text(json.dumps({'signing_key_pem': 'existing'}))
             profile = root / 'profile.yaml'
             profile.write_text(yaml.safe_dump({'secrets': {'secrets_path': 'secrets.json'}}))
-            state.configure(profile, {})
+            configure(profile, {})
             key = json.loads(secret.read_text())['encryption_master_key']
             self.assertEqual(len(key), 64)
             int(key, 16)
-            state.configure(profile, {})
+            configure(profile, {})
             self.assertEqual(json.loads(secret.read_text())['encryption_master_key'], key)
 
     def test_existing_master_key_and_write_url(self):
@@ -85,7 +94,7 @@ class ContainerStateTest(unittest.TestCase):
                                           'encryption_master_key': 'ab' * 32}))
             profile = root / 'profile.yaml'
             profile.write_text(yaml.safe_dump({'secrets': {'secrets_path': 'secrets.json'}}))
-            state.configure(profile, {'DATABASE_URL': 'postgres://replica/db',
+            configure(profile, {'DATABASE_URL': 'postgres://replica/db',
                                       'DATABASE_WRITE_URL': 'postgres://primary/db'})
             result = json.loads(secret.read_text())
             self.assertEqual(result['encryption_master_key'], 'ab' * 32)
