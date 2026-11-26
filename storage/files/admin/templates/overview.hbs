@@ -4,11 +4,13 @@
 
     {{#> components/page-header title=title subtitle=subtitle}}
         {{#*inline "header_meta"}}
+        {{#if usage}}
         <nav class="sp-time-range__presets" role="group" aria-label="Time range">
             {{#each usage.ranges}}
             <a class="sp-time-range__btn{{#if this.is_active}} sp-time-range__btn--active{{/if}}" href="{{this.href}}"{{#if this.is_active}} aria-current="page"{{/if}}>{{this.label}}</a>
             {{/each}}
         </nav>
+        {{/if}}
         {{/inline}}
         {{#*inline "header_actions"}}
         {{#if usage}}
@@ -28,6 +30,7 @@
     </section>
     {{/if}}
 
+    {{#if usage}}
     {{#with usage}}
     <section aria-label="Headline figures">
         {{#if kpis.error}}{{> components/notice tone="err" title="Headline figures unavailable" message=kpis.error}}{{/if}}
@@ -50,9 +53,10 @@
     </div>
 
     {{/with}}
+    {{/if}}
 
     <div class="sp-p-overview__two-up">
-        {{#with usage}}{{> overview/models-board}}{{/with}}
+        {{#if usage}}{{#with usage}}{{> overview/models-board}}{{/with}}{{/if}}
 
         <section aria-label="Waiting on a person">
             {{#> components/section title="Waiting on a person" note="Held for approval, and flagged usage."}}
@@ -62,11 +66,14 @@
             <div class="sp-kpi-grid">
                 {{> components/kpi label="Pending approvals" value=approvals.count tone=approvals.tone
                     note="calls held by require_approval" href="/admin/governance/approvals"}}
+                {{#if usage}}
                 {{#with usage.anomalies}}
                 {{> components/kpi label="Open anomalies" value=count tone=tone
                     note="detected in the last 24 hours" href="/admin/analytics?tab=spend"}}
                 {{/with}}
+                {{/if}}
             </div>
+            {{#if usage}}
             {{#with usage.anomalies}}
             {{#if error}}{{> components/notice tone="err" title="Anomalies unavailable" message=error}}{{/if}}
             {{#if has_rows}}
@@ -94,6 +101,7 @@
             {{> components/empty-state heading="Nothing flagged" message="No usage anomaly has been detected in the last 24 hours."}}
             {{/if}}
             {{/with}}
+            {{/if}}
         </section>
     </div>
 

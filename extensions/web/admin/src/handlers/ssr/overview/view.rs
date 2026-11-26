@@ -125,9 +125,11 @@ pub(super) struct OverviewContext {
     pub subtitle: String,
     pub breadcrumbs: Vec<BreadcrumbView>,
     pub approvals: ApprovalsView,
-    #[cfg(feature = "gateway")]
     pub usage: UsageView,
 }
+
+#[cfg(not(feature = "gateway"))]
+pub(super) type UsageView = crate::handlers::ssr::types::Absent;
 
 // Why: the widgets the gateway member's request log supplies, nested so the
 // template draws them under one `{{#with usage}}`.
@@ -174,6 +176,7 @@ pub(super) fn overview_page(data: &OverviewData) -> OverviewContext {
         subtitle: "What is waiting on a person.".to_owned(),
         breadcrumbs: vec![BreadcrumbView::current("Overview")],
         approvals: approvals(data),
+        usage: crate::handlers::ssr::types::Absent,
     }
 }
 

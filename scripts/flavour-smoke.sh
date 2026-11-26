@@ -227,6 +227,18 @@ if [ -n "$pages$signed_absent" ]; then
             code="$(http_status -H "Cookie: $cookie" "$base$route")"
             if [ "$code" = 404 ]; then record "signed-in route absent $route" pass "$code"; else record "signed-in route absent $route" fail "$code"; fi
         done <<< "$signed_absent"
+        crawl="$(python3 -I "$FLAVOUR_ROOT/scripts/lib/console-crawl.py" "$base" "$cookie" 2> "$work/crawl.err" || true)"
+        if [ -z "$crawl" ]; then record "console nav pages" fail "$(tail -1 "$work/crawl.err")"; fi
+        while read -r kind code page; do
+            [ -n "$page" ] || continue
+            if [ "$kind" = nav ]; then
+                if [ "$code" = 200 ]; then record "console nav page $page" pass "$code"; else record "console nav page $page" fail "$code"; fi
+            elif [ "$code" -lt 500 ] 2>/dev/null; then
+                record "console link $page" pass "$code"
+            else
+                record "console link $page" fail "$code"
+            fi
+        done <<< "$crawl"
         home="$(curl -s --max-time 10 -H "Cookie: $cookie" "$base/admin" || true)"
         missing="$(flavour_py nav-titles "$flavour" | while IFS= read -r title; do
             html="$(printf '%s' "$title" | sed 's/&/\&amp;/g')"

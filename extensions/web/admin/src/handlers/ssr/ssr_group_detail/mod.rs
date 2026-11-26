@@ -130,6 +130,8 @@ async fn load_overview(
         tool_panel: super::types::ToolPanelView {
             tools: people_view::name_count_rows(&loaded.tools),
         },
+        #[cfg(not(feature = "mcp"))]
+        tool_panel: super::types::Absent,
         leaderboard: loaded
             .leaderboard
             .iter()

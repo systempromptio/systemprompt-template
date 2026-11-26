@@ -112,6 +112,13 @@ the host `EXTERNAL_URL` names, register the passkey, then sign in at
 `/admin/login`. Smoke signs in the same way with a software authenticator
 (`scripts/lib/console-login.py`) and asserts each flavour's
 `smoke.console_pages` (200) and `smoke.routes_absent_signed_in` (404).
+It then fetches every page the rendered sidebar links (200) and every
+console link those pages carry, one hop deep (below 500), with
+`scripts/lib/console-crawl.py`: a strict-mode template reading a field the
+flavour's view model does not supply answers 500 there. A view-model field
+whose member a flavour does not link stays in the struct as
+`types::Absent` (serialised `null`), and the template branches on it with
+`{{#if}}`.
 The developer login link is removed (nothing issued its codes, and an
 install member cannot mint a browser session). AD FS single sign-on still
 verifies an assertion but is refused at session minting on this core; it

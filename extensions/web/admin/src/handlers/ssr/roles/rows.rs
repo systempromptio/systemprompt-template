@@ -119,6 +119,8 @@ pub(super) fn member_views(rows: &[RoleHolderRow], query: &RolesQuery) -> Vec<Ro
                     requests_30d: row.requests_30d,
                     cost_30d_microdollars: row.cost_30d_microdollars,
                 },
+                #[cfg(not(feature = "gateway"))]
+                spend: crate::handlers::ssr::types::Absent,
                 href: format!("/admin/users/{}", urlencoding::encode(id)),
                 user_id: row.user_id.clone(),
             }

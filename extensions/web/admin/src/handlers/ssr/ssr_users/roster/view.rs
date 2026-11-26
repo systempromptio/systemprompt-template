@@ -78,6 +78,8 @@ pub(super) fn build_kpis(url: &RosterUrlState, totals: &RosterStats) -> RosterKp
         inactive: totals.inactive_30d,
         #[cfg(feature = "gateway")]
         spend: spend_kpis(&totals.spend),
+        #[cfg(not(feature = "gateway"))]
+        spend: crate::handlers::ssr::types::Absent,
         unassigned_url: format!("{prefix}filter=unassigned"),
         no_role_url: format!("{prefix}filter=no-role"),
         inactive_url: format!("{prefix}filter=inactive-30d"),
@@ -157,6 +159,8 @@ pub(super) fn build_rows(input: &RowInput<'_>) -> Vec<RosterRowView> {
                     requests: format_token_total(row.requests),
                     tokens: format_token_total(row.tokens),
                 },
+                #[cfg(not(feature = "gateway"))]
+                spend: crate::handlers::ssr::types::Absent,
                 status_label: if row.is_active { "Active" } else { "Suspended" },
                 status_tone: if row.is_active { "ok" } else { "muted" },
                 is_active: row.is_active,
