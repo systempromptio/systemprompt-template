@@ -94,9 +94,6 @@
                             <a id="sso-btn" class="sp-btn sp-btn--outline sp-u-w-full" href="/admin/auth/adfs/start{{#if redirect_encoded}}?redirect={{redirect_encoded}}{{/if}}">Sign in with single sign-on</a>
                         </div>
                         {{/if}}
-                        {{#if dev_login_enabled}}
-                        <p class="sp-login-switch">Development instance: run <code>just dev-login &lt;user&gt;</code> and open the printed link.</p>
-                        {{/if}}
                     </div>
 
                     <div id="magic-link-form" hidden>

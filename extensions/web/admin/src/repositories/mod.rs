@@ -11,7 +11,6 @@ pub mod bridge;
 pub mod config;
 pub mod dashboard;
 pub(crate) mod dashboard_read;
-pub mod dev_login;
 pub mod devices;
 pub mod external_agents;
 pub mod gateway_policies;

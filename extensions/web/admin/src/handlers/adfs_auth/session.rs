@@ -7,7 +7,6 @@ use systemprompt::identifiers::UserId;
 use systemprompt::models::auth::Permission;
 
 use super::secure_flag;
-use crate::repositories::dev_login::DevLoginUser;
 use crate::repositories::users::federated;
 
 // Why: the account a session is minted for, reduced to what the mint needs.
@@ -22,14 +21,6 @@ impl From<&federated::ResolvedFederatedUser> for SessionSubject {
     fn from(resolved: &federated::ResolvedFederatedUser) -> Self {
         Self {
             user_id: resolved.user_id.clone(),
-        }
-    }
-}
-
-impl From<DevLoginUser> for SessionSubject {
-    fn from(user: DevLoginUser) -> Self {
-        Self {
-            user_id: user.user_id,
         }
     }
 }

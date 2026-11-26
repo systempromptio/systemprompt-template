@@ -34,7 +34,6 @@ use systemprompt_web_shared::adfs::AdfsConfig;
 pub(crate) use callback::adfs_callback;
 pub use identity::AssertionClaims;
 pub use session::permissions_for_roles;
-pub(crate) use session::{SessionSubject, mint_session, session_cookie};
 pub(crate) use start::adfs_start;
 
 pub(super) const STATE_COOKIE: &str = "adfs_saml_state";

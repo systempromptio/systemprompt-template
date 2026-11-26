@@ -16,7 +16,6 @@ pub(crate) const SCHEMA_AUDIT_EVENT_NOTIFY: &str =
     include_str!("../schema/14_audit_event_notify.sql");
 pub(crate) const SCHEMA_ORGANIZATIONS: &str = include_str!("../schema/16_organizations.sql");
 pub(crate) const SCHEMA_USAGE_METRICS: &str = include_str!("../schema/17_usage_metrics.sql");
-pub(crate) const SCHEMA_DEV_LOGIN_CODES: &str = include_str!("../schema/22_dev_login_codes.sql");
 pub(crate) const SCHEMA_GROUPS_PROJECTS: &str = include_str!("../schema/23_groups_projects.sql");
 pub(crate) const SCHEMA_SCOPE_DEFAULTS: &str = include_str!("../schema/24_scope_defaults.sql");
 
@@ -41,7 +40,6 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         )),
         SchemaDefinition::sql_only(SCHEMA_ORGANIZATIONS),
         SchemaDefinition::sql_only(SCHEMA_USAGE_METRICS),
-        SchemaDefinition::sql_only(SCHEMA_DEV_LOGIN_CODES),
         SchemaDefinition::sql_only(SCHEMA_GROUPS_PROJECTS),
         SchemaDefinition::sql_only(SCHEMA_SCOPE_DEFAULTS),
         SchemaDefinition::sql_only(SCHEMA_CONNECTOR_CREDENTIALS),

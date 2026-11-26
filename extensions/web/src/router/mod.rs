@@ -108,7 +108,7 @@ impl WebRuntime {
         let mut router = Router::new()
             .merge(api::share(db))
             .nest("/api/public", api::build(db, settings));
-        if let Some(ssr) = admin_ssr::build(db, sso_deps, settings, env, dashboard) {
+        if let Some(ssr) = admin_ssr::build(db, sso_deps, settings, dashboard) {
             router = router
                 .nest_service("/admin", ssr.admin)
                 .nest_service("/bridge-auth", ssr.bridge_auth);

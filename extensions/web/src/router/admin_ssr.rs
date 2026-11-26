@@ -22,7 +22,6 @@ pub(crate) fn build(
     db: &DbHandles,
     sso_deps: admin::AdfsDeps,
     settings: &crate::WebSettings,
-    env: &systemprompt_web_admin::env::AdminEnv,
     dashboard: Arc<admin::dashboard::ConsoleDashboard>,
 ) -> Option<SsrRouters> {
     let admin_dir = settings.admin_template_dir.clone();
@@ -38,11 +37,7 @@ pub(crate) fn build(
             &db.db,
             Arc::clone(&db.read),
             db.owner.clone(),
-            admin::AdminSsrShell {
-                engine,
-                sso_deps,
-                env,
-            },
+            admin::AdminSsrShell { engine, sso_deps },
         ),
     })
 }

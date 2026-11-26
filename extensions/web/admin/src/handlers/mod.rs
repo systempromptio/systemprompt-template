@@ -11,7 +11,6 @@ pub(crate) mod bridge_whoami;
 pub(crate) mod catalog;
 #[cfg(feature = "mcp")]
 pub(crate) mod connector_reprovision;
-pub(crate) mod dev_login;
 pub(crate) mod devices;
 pub(crate) mod entity_access;
 #[cfg(feature = "gateway")]

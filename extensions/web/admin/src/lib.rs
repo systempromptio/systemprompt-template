@@ -53,9 +53,6 @@ pub use handlers::adfs_auth::{
 };
 #[cfg(feature = "mcp")]
 pub use handlers::connector_auth::router as connector_api_router;
-pub use handlers::dev_login::{
-    DEV_LOGIN_PATH, dev_login_allowed, dev_login_enabled, dev_login_url,
-};
 pub use routes::{AdminSsrShell, admin_ssr_router, bridge_auth_ssr_router};
 pub use services::{connector_oauth, identity_token};
 pub use types::{

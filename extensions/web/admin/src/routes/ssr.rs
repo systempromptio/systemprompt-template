@@ -9,30 +9,24 @@ use tower_http::normalize_path::NormalizePathLayer;
 
 use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
-use crate::env::AdminEnv;
 use crate::handlers::adfs_auth::AdfsDeps;
 use systemprompt::database::DbPool;
 
-/// What the server-rendered console draws with: its template engine, the
-/// SSO relying party, and the environment the public routes are mounted for.
+/// What the server-rendered console draws with: its template engine and the
+/// SSO relying party.
 #[derive(Debug)]
-pub struct AdminSsrShell<'a> {
+pub struct AdminSsrShell {
     pub engine: AdminTemplateEngine,
     pub sso_deps: AdfsDeps,
-    pub env: &'a AdminEnv,
 }
 
 pub fn admin_ssr_router(
     db: &DbPool,
     pool: Arc<PgPool>,
     owner: systemprompt::identifiers::UserId,
-    shell: AdminSsrShell<'_>,
+    shell: AdminSsrShell,
 ) -> Router {
-    let AdminSsrShell {
-        engine,
-        sso_deps,
-        env,
-    } = shell;
+    let AdminSsrShell { engine, sso_deps } = shell;
     let inner = overview_routes()
         .merge(people_routes())
         .merge(ai_activity_routes())
@@ -66,7 +60,7 @@ pub fn admin_ssr_router(
         ))
         .with_state(Arc::clone(&pool));
 
-    let combined = public_routes(Arc::clone(&pool), env)
+    let combined = public_routes(Arc::clone(&pool))
         .layer(Extension(engine))
         .layer(Extension(sso_deps))
         .with_state(pool)
@@ -79,30 +73,15 @@ pub fn admin_ssr_router(
     )
 }
 
-fn public_routes(pool: Arc<PgPool>, env: &AdminEnv) -> Router<Arc<PgPool>> {
-    let login = Router::new()
+fn public_routes(pool: Arc<PgPool>) -> Router<Arc<PgPool>> {
+    Router::new()
         .route("/login", get(handlers::ssr::login_page))
         .layer(axum_middleware::from_fn_with_state(
             pool,
             middleware::user_context_middleware,
-        ));
-    let routes = login
+        ))
         .route("/auth/adfs/start", get(handlers::adfs_auth::adfs_start))
-        .route("/auth/adfs/acs", post(handlers::adfs_auth::adfs_callback));
-    dev_login_routes(routes, env)
-}
-
-// Why: the developer login link is mounted, not merely refused, only on a
-// development non-cloud profile — production has no route to hit, so there is
-// nothing there to misconfigure open.
-fn dev_login_routes(router: Router<Arc<PgPool>>, env: &AdminEnv) -> Router<Arc<PgPool>> {
-    if !handlers::dev_login::dev_login_enabled(env) {
-        return router;
-    }
-    router.route(
-        "/auth/dev/login",
-        get(handlers::dev_login::dev_login_redeem),
-    )
+        .route("/auth/adfs/acs", post(handlers::adfs_auth::adfs_callback))
 }
 
 // Why: Overview is the console landing page, not a redirect — a signed-in

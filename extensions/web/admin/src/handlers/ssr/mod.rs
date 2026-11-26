@@ -3,7 +3,6 @@
 //! Each module owns one page: it builds a typed template context and renders a
 //! `.hbs` template from `storage/files/admin/templates/` at request time.
 
-use crate::env::AdminEnv;
 
 use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
@@ -149,15 +148,10 @@ struct LoginContext<'a> {
     // usable ADFS config is loaded, so the UI never advertises a door that
     // only redirects back with `?sso=unavailable`.
     sso_enabled: bool,
-    // Why: tells a developer how to get in when SSO is off locally; the same
-    // predicate that mounts the redeem route, so the hint never points at a
-    // door that is not there.
-    dev_login_enabled: bool,
 }
 
 pub(crate) async fn login_page(
     user_ctx: Option<Extension<UserContext>>,
-    Extension(env): Extension<AdminEnv>,
     Extension(engine): Extension<AdminTemplateEngine>,
     Extension(sso_deps): Extension<crate::handlers::adfs_auth::AdfsDeps>,
     Query(params): Query<LoginParams>,
@@ -178,7 +172,6 @@ pub(crate) async fn login_page(
         shell: branding_context(&engine),
         redirect_encoded,
         sso_enabled: sso_deps.config.is_usable(),
-        dev_login_enabled: crate::handlers::dev_login::dev_login_enabled(&env),
     };
     let html = engine.render("login", &ctx)?;
     Ok(Html(html).into_response())
