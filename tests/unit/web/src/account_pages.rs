@@ -177,7 +177,10 @@ fn the_profile_holds_usage_only() {
         assert!(settings.contains(needle), "settings page lost {needle}");
     }
     let body = template("profile");
-    for needle in [r#"href="/admin/connect""#, r#"href="/admin/connectors""#] {
+    for needle in [
+        r#"href="{{@root.pages.connect}}""#,
+        r#"href="{{@root.pages.connectors}}""#,
+    ] {
         assert!(body.contains(needle), "profile lost {needle}");
     }
     for stray in [
