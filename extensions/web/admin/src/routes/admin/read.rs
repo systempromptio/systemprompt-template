@@ -11,6 +11,7 @@ use crate::routes::admin_groups;
 
 pub(super) fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
     let routes = Router::new()
+        .route("/dashboard", get(handlers::dashboard_handler))
         .route("/users", get(handlers::list_users_handler))
         .route(
             "/users/{user_id}/detail",

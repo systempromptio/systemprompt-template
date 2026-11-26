@@ -8,9 +8,12 @@
 use std::collections::BTreeMap;
 
 use systemprompt::identifiers::{Email, UserId};
+use systemprompt::models::auth::UserType;
 use systemprompt_web_admin::repositories::analytics::conversations::has_full_history_view;
+use systemprompt_web_admin::repositories::users::queries::UserAccessProfile;
 use systemprompt_web_admin::types::{
-    ROLE_ADMIN, ROLE_PROJECT_MANAGER, ROLE_USER, roles_grant_console, roles_grant_manage,
+    CookieSession, NotSignedIn, ROLE_ADMIN, ROLE_PROJECT_MANAGER, ROLE_USER, roles_grant_console,
+    roles_grant_manage,
 };
 use systemprompt_web_admin::{AdfsConfig, UserContext, group_matches_pattern};
 
@@ -144,4 +147,57 @@ fn a_project_manager_sees_every_conversation() {
         &[]
     )));
     assert!(!has_full_history_view(&ctx(&[ROLE_USER], &["europe-devs"])));
+}
+
+fn session() -> CookieSession {
+    CookieSession {
+        user_id: UserId::new("u-2".to_owned()),
+        username: "u-2".to_owned(),
+        email: Email::try_new("u-2@example.test".to_owned()).expect("fixture email"),
+        session_id: None,
+    }
+}
+
+fn account(list: &[&str]) -> Option<UserAccessProfile> {
+    Some(UserAccessProfile {
+        roles: roles(list),
+        group_ids: vec!["g-1".to_owned()],
+        project_ids: Vec::new(),
+    })
+}
+
+#[test]
+fn an_anonymous_session_token_is_never_a_console_principal() {
+    assert_eq!(
+        NotSignedIn::refuse_token(UserType::Anon),
+        Err(NotSignedIn::AnonymousSession)
+    );
+    assert_eq!(NotSignedIn::refuse_token(UserType::User), Ok(()));
+    assert_eq!(NotSignedIn::refuse_token(UserType::Admin), Ok(()));
+}
+
+#[test]
+fn an_account_signs_in_only_with_a_role_from_the_closed_set() {
+    assert_eq!(
+        UserContext::signed_in(session(), account(&["anonymous"])).err(),
+        Some(NotSignedIn::NoConsoleRole)
+    );
+    assert_eq!(
+        UserContext::signed_in(session(), account(&[])).err(),
+        Some(NotSignedIn::NoConsoleRole)
+    );
+    assert_eq!(
+        UserContext::signed_in(session(), None).err(),
+        Some(NotSignedIn::NoAccount),
+        "a token whose account row is gone is not granted a default role"
+    );
+
+    let member = UserContext::signed_in(session(), account(&["user"])).expect("a member signs in");
+    assert!(!member.is_console);
+    assert_eq!(member.group_ids, vec!["g-1".to_owned()]);
+
+    let pm = UserContext::signed_in(session(), account(&[ROLE_PROJECT_MANAGER]))
+        .expect("a project manager signs in");
+    assert!(pm.is_console);
+    assert!(!pm.is_admin);
 }
