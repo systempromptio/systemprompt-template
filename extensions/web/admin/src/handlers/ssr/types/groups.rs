@@ -76,10 +76,12 @@ pub(crate) struct GroupOverviewView {
     pub models: Vec<ModelMixRowView>,
     pub daily_requests: SvgLineChartView,
     pub skills: Vec<NameCountRowView>,
-    #[cfg(feature = "mcp")]
     pub tool_panel: ToolPanelView,
     pub leaderboard: Vec<UsageLeaderRowView>,
 }
+
+#[cfg(not(feature = "mcp"))]
+pub(crate) type ToolPanelView = super::Absent;
 
 // Why: the MCP member's tool calls, nested so the template draws the panel
 // only in the builds that link that member.

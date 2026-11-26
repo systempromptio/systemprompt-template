@@ -1,5 +1,7 @@
 //! Template context types for the SSR pages.
 
+#[cfg(not(all(feature = "gateway", feature = "mcp")))]
+mod absent;
 mod breadcrumb;
 #[cfg(feature = "gateway")]
 mod charts;
@@ -24,6 +26,8 @@ pub(crate) mod table;
 mod tabs;
 mod users;
 
+#[cfg(not(all(feature = "gateway", feature = "mcp")))]
+pub(crate) use absent::Absent;
 pub(crate) use breadcrumb::*;
 #[cfg(feature = "gateway")]
 pub(crate) use charts::*;

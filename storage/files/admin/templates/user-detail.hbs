@@ -20,11 +20,13 @@
 
     <div class="sp-kpi-grid">
         {{> components/kpi label="Status" value=header.status_label tone=header.status_tone note="account state"}}
+        {{#if kpis.spend}}
         {{#with kpis.spend}}
         {{> components/kpi label="Requests" value=requests note="all time"}}
         {{> components/kpi label="Cost" value=cost note="all time"}}
         {{> components/kpi label="Tokens" value=tokens note="all time"}}
         {{/with}}
+        {{/if}}
         {{> components/kpi label="Groups" value=kpis.groups note=header.primary_group hint="Primary group decides exclusive attribution"}}
         {{> components/kpi label="Projects" value=kpis.projects note=header.primary_project hint="Primary project decides exclusive attribution"}}
     </div>
@@ -308,30 +310,6 @@
         {{#> components/section title="Recent conversations"}}
             {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{usage.conversations_url}}">All conversations</a>{{/inline}}
         {{/components/section}}
-        {{/if}}
-        {{#if usage.has_conversations}}
-        {{#> components/table caption="Recent conversations for this account"}}
-            <thead><tr>
-                <th>Conversation</th><th>Model</th>
-                <th class="sp-table__cell--num">Turns</th><th class="sp-table__cell--num">Tools</th>
-                <th class="sp-table__cell--num">Cost</th><th class="sp-table__cell--date">Last activity</th>
-            </tr></thead>
-            <tbody>
-            {{#each usage.conversations_rows}}
-            <tr>
-                <td title="{{this.context_id}}{{#if this.side_calls}} · {{this.side_calls}} side call(s){{/if}}"><a href="{{this.url}}" class="sp-u-link-strong">{{this.conversation_title}}</a>
-                    {{#if this.has_errors}}{{> components/badge tone="err" text=(concat this.errors " failed")}}{{/if}}</td>
-                <td class="sp-u-mono">{{this.model}}</td>
-                <td class="sp-table__cell--num sp-u-num">{{this.turns}}</td>
-                <td class="sp-table__cell--num sp-u-num">{{this.tool_calls}}</td>
-                <td class="sp-table__cell--num sp-u-num sp-u-mono">{{this.cost_display}}</td>
-                <td class="sp-table__cell--date" title="{{this.last_at}}">{{this.last_relative}}</td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/table}}
-        {{else}}
-        {{> components/empty-state message="No conversations recorded."}}
         {{/if}}
 
         {{> components/section title="Models"}}

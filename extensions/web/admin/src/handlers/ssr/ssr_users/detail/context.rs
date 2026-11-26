@@ -76,13 +76,15 @@ pub(crate) struct UserHeaderView {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct DetailKpiView {
-    #[cfg(feature = "gateway")]
     pub spend: DetailSpendView,
     pub sessions: i64,
     pub devices: i64,
     pub groups: usize,
     pub projects: usize,
 }
+
+#[cfg(not(feature = "gateway"))]
+pub(crate) type DetailSpendView = crate::handlers::ssr::types::Absent;
 
 #[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]

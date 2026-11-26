@@ -52,10 +52,12 @@ pub(crate) struct RoleHolderView {
     pub is_active: bool,
     pub status: &'static str,
     pub status_tone: &'static str,
-    #[cfg(feature = "gateway")]
     pub spend: RoleHolderSpendView,
     pub href: String,
 }
+
+#[cfg(not(feature = "gateway"))]
+pub(crate) type RoleHolderSpendView = crate::handlers::ssr::types::Absent;
 
 // Why: the two thirty-day figures the gateway member's request log supplies.
 #[cfg(feature = "gateway")]

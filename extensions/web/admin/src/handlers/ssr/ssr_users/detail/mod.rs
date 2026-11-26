@@ -170,6 +170,8 @@ fn kpis_view(
     DetailKpiView {
         #[cfg(feature = "gateway")]
         spend: spend_kpis(&headline.summary),
+        #[cfg(not(feature = "gateway"))]
+        spend: crate::handlers::ssr::types::Absent,
         sessions: i64::try_from(detail.sessions.len()).unwrap_or(0),
         devices: 0,
         groups,

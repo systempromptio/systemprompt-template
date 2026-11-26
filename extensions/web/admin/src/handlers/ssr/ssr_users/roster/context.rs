@@ -42,7 +42,6 @@ pub(crate) struct RosterKpiView {
     pub unassigned: i64,
     pub no_role: i64,
     pub inactive: i64,
-    #[cfg(feature = "gateway")]
     pub spend: RosterSpendKpiView,
     pub unassigned_url: String,
     pub no_role_url: String,
@@ -53,6 +52,12 @@ pub(crate) struct RosterKpiView {
     pub no_role_active: bool,
     pub inactive_active: bool,
 }
+
+#[cfg(not(feature = "gateway"))]
+pub(crate) type RosterSpendKpiView = crate::handlers::ssr::types::Absent;
+
+#[cfg(not(feature = "gateway"))]
+pub(crate) type RosterSpendRowView = crate::handlers::ssr::types::Absent;
 
 #[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
@@ -99,7 +104,6 @@ pub(crate) struct RosterRowView {
     pub last_active_title: String,
     // Why: the conversation the stamp came from, when it was a gateway turn.
     pub last_active_url: Option<String>,
-    #[cfg(feature = "gateway")]
     pub spend: RosterSpendRowView,
     pub is_active: bool,
     pub status_label: &'static str,

@@ -80,10 +80,12 @@
                 {{#each roles}}<span class="sp-badge sp-badge--{{this.tone}}{{#if this.active}} is-active{{/if}}" data-role="{{this.role}}">{{this.label}}</span>{{/each}}
                 </span>
             </td>
+            {{#if spend}}
             {{#with spend}}
             <td class="sp-table__cell--num sp-u-num">{{formatNumber requests_30d}}</td>
             <td class="sp-table__cell--num sp-u-num sp-u-mono">{{formatUsd cost_30d_microdollars}}</td>
             {{/with}}
+            {{/if}}
             <td>{{> components/badge tone=status_tone text=status}}</td>
             <td class="sp-table__cell--actions">
                 {{#if ../can_write}}
