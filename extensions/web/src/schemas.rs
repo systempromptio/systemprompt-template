@@ -36,7 +36,9 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(include_str!("../schema/52_content_side_tables.sql")),
         SchemaDefinition::sql_only(SCHEMA_AUDIT_EVENT_NOTIFY),
         #[cfg(feature = "gateway")]
-        SchemaDefinition::sql_only(include_str!("../schema/49_audit_event_notify_ai_requests.sql")),
+        SchemaDefinition::sql_only(include_str!(
+            "../schema/49_audit_event_notify_ai_requests.sql"
+        )),
         SchemaDefinition::sql_only(SCHEMA_ORGANIZATIONS),
         SchemaDefinition::sql_only(SCHEMA_USAGE_METRICS),
         SchemaDefinition::sql_only(SCHEMA_DEV_LOGIN_CODES),

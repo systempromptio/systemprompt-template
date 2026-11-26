@@ -24,6 +24,8 @@
 // different context than production.
 pub use systemprompt_web_shared::config_loader::branding_config;
 pub mod extension;
+#[cfg(feature = "content")]
+mod extension_content;
 mod extension_impl;
 mod router;
 #[doc(hidden)]

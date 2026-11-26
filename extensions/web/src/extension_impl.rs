@@ -7,8 +7,6 @@
 use std::sync::Arc;
 
 use systemprompt::config::AppPaths;
-#[cfg(feature = "content")]
-use systemprompt::content::contract::ContentSlot;
 use systemprompt::extension::artifact_ui::DynArtifactUiRenderer;
 use systemprompt::extension::prelude::*;
 use systemprompt::extension::reserved::InstallConferral;
@@ -22,33 +20,13 @@ use systemprompt_web_admin::dashboard::ConsoleDashboard;
 use systemprompt_web_admin::env::{AdminEnv, AdminEnvParts};
 #[cfg(feature = "gateway")]
 use systemprompt_web_admin::gateway_entitlement::RouteEntitlementGuard;
-#[cfg(feature = "content")]
-use systemprompt_web_shared::config_loader::branding_config;
-#[cfg(feature = "content")]
-use systemprompt_web_site::config_loader;
-#[cfg(feature = "content")]
-use systemprompt_web_site::partials::{
-    FooterPartialRenderer, HeadAssetsPartialRenderer, HeaderPartialRenderer, ScriptsPartialRenderer,
-};
-#[cfg(feature = "content")]
-use systemprompt_web_site::partials_animations::{
-    AgenticMeshAnimationPartialRenderer, ArchitectureDiagramPartialRenderer,
-    CliRemoteAnimationPartialRenderer, MemoryLoopAnimationPartialRenderer,
-    RustMeshAnimationPartialRenderer,
-};
 
 use crate::WebSettings;
+#[cfg(feature = "content")]
+use crate::assets::web_assets;
 use crate::extension::WebExtension;
 use crate::router::{DbHandles, WebRuntime, route_set};
 use crate::schemas::{migrations, schema_definitions};
-#[cfg(feature = "content")]
-use crate::{
-    DocsContentDataProvider, DocsPageDataProvider, OrgUrlExtender, ReleaseVersionExtender,
-    SkillsPagePrerenderer,
-    assets::web_assets,
-    homepage::{HomepagePageDataProvider, HomepagePrerenderer},
-    navigation::NavigationPageDataProvider,
-};
 
 // Why: a generic connector's OAuth client is read from a secret the
 // operator names in its `connector.client_id_secret`; only names under this
@@ -124,7 +102,7 @@ impl Extension for WebExtension {
         #[cfg(feature = "content")]
         {
             crate::jobs::contribute_jobs(c, declared_assets);
-            contribute_content(c);
+            crate::extension_content::contribute_content(c);
         }
         Ok(())
     }
@@ -192,115 +170,4 @@ fn declared_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
         "index.html",
     ));
     assets
-}
-
-#[cfg(feature = "content")]
-fn services(r: &Resolved<'_>) -> Result<Arc<WebSettings>, FactoryError> {
-    Ok(r.get::<Arc<WebSettings>>()?)
-}
-
-// Why: a content factory cannot decline (`ContentSlotBuilder` takes a
-// factory that returns the provider or fails), so a page whose config file is
-// missing refuses the slot rather than rendering from an invented default.
-#[cfg(feature = "content")]
-#[derive(Debug, thiserror::Error)]
-#[error("{0} is not configured in the services tree")]
-struct MissingSiteConfig(&'static str);
-
-#[cfg(feature = "content")]
-fn required<T>(config: Option<Arc<T>>, what: &'static str) -> Result<Arc<T>, FactoryError> {
-    config.ok_or_else(|| FactoryError::Failed(Box::new(MissingSiteConfig(what))))
-}
-
-#[cfg(feature = "content")]
-fn contribute_content(c: &mut Contributions<'_>) {
-    let content = c.slot::<ContentSlot>();
-    content
-        .page_data_provider(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                let settings = services(r)?;
-                let nav = required(
-                    config_loader::navigation_config(&settings.services_path),
-                    "web/navigation.yaml",
-                )?;
-                let branding = branding_config(&settings.services_path);
-                Ok(Arc::new(
-                    NavigationPageDataProvider::new(nav).with_branding(branding),
-                ))
-            },
-        )
-        .page_data_provider(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                let settings = services(r)?;
-                let homepage =
-                    config_loader::homepage_config(&settings.services_path).unwrap_or_default();
-                Ok(Arc::new(HomepagePageDataProvider::new(homepage)))
-            },
-        )
-        .page_prerenderer(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PagePrerenderer>, FactoryError> {
-                let settings = services(r)?;
-                let homepage =
-                    config_loader::homepage_config(&settings.services_path).unwrap_or_default();
-                Ok(Arc::new(HomepagePrerenderer::new(homepage)))
-            },
-        )
-        .page_prerenderer(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PagePrerenderer>, FactoryError> {
-                let settings = services(r)?;
-                let skills = required(
-                    config_loader::skills_page_config(&settings.services_path),
-                    "web/skills page config",
-                )?;
-                Ok(Arc::new(SkillsPagePrerenderer::new(skills)))
-            },
-        )
-        .page_data_provider(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                Ok(Arc::new(DocsPageDataProvider::new()))
-            },
-        )
-        .content_data_provider(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn ContentDataProvider>, FactoryError> {
-                Ok(Arc::new(DocsContentDataProvider::new()))
-            },
-        )
-        .template_data_extender(
-            |r: &Resolved<'_>| -> Result<Arc<dyn TemplateDataExtender>, FactoryError> {
-                let settings = services(r)?;
-                Ok(Arc::new(OrgUrlExtender::new(
-                    settings.api_external_url.clone(),
-                )))
-            },
-        )
-        .template_data_extender(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn TemplateDataExtender>, FactoryError> {
-                Ok(Arc::new(ReleaseVersionExtender::new()))
-            },
-        );
-    contribute_partials(content);
-}
-
-#[cfg(feature = "content")]
-macro_rules! component {
-    ($content:expr, $renderer:expr) => {
-        $content.component_renderer(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn ComponentRenderer>, FactoryError> {
-                Ok(Arc::new($renderer))
-            },
-        )
-    };
-}
-
-#[cfg(feature = "content")]
-fn contribute_partials(content: &mut systemprompt::content::contract::ContentSlotBuilder) {
-    component!(content, HeadAssetsPartialRenderer);
-    component!(content, HeaderPartialRenderer);
-    component!(content, FooterPartialRenderer);
-    component!(content, ScriptsPartialRenderer);
-    component!(content, CliRemoteAnimationPartialRenderer);
-    component!(content, RustMeshAnimationPartialRenderer);
-    component!(content, MemoryLoopAnimationPartialRenderer);
-    component!(content, AgenticMeshAnimationPartialRenderer);
-    component!(content, ArchitectureDiagramPartialRenderer);
 }
