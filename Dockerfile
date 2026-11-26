@@ -116,10 +116,10 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go install github.com/rakyll/hey@latest
 
-# The runtime base: glibc, libgcc_s, CA certificates and tzdata, no shell and
-# no package manager. The binary links libc, libm and libgcc_s only; outbound
-# TLS reads the CA bundle, and chrono-tz carries its own zone data.
-FROM gcr.io/distroless/cc-debian12 AS distroless
+# The runtime base: glibc, CA certificates and tzdata, no shell, no package
+# manager and no OpenSSL. The binary links libc, libm and libgcc_s only
+# (runtime-tools adds libgcc_s); outbound TLS reads the CA bundle.
+FROM gcr.io/distroless/base-nossl-debian12 AS distroless
 
 # What the entrypoint and the healthcheck run, taken from the same Debian
 # release as the base (docker/runtime-tools.sh lists each tool's reason).
@@ -127,8 +127,9 @@ FROM debian:bookworm-slim AS runtime-tools
 RUN apt-get update && apt-get install -y --no-install-recommends busybox jq lsof \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=distroless / /distroless
+COPY --from=builder /out/bin /flavour-bin
 COPY docker/runtime-tools.sh /runtime-tools.sh
-RUN sh /runtime-tools.sh /distroless /rootfs /apphome
+RUN sh /runtime-tools.sh /distroless /rootfs /apphome /flavour-bin
 
 FROM distroless AS runtime-slim
 ARG FLAVOUR

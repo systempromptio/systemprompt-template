@@ -3,13 +3,15 @@
 # shell and the applets below), jq (secrets.json edits), lsof (core's process
 # supervision finds the pids holding a port) and setpriv (drops from root
 # after preparing a root-owned volume), each with the shared objects the
-# base does not already carry, and the app account. HOME_ROOT receives the
+# base does not already carry, as are the flavour's binaries in BIN_DIR (the
+# base has glibc, no libgcc_s), and the app account. HOME_ROOT receives the
 # directories that account owns (/app and /home/app).
-#   docker/runtime-tools.sh BASE_ROOT OUT_ROOT HOME_ROOT
+#   docker/runtime-tools.sh BASE_ROOT OUT_ROOT HOME_ROOT BIN_DIR
 set -eu
 base="$1"
 out="$2"
 home="$3"
+bins="$4"
 mkdir -p "$out/bin" "$out/usr/bin" "$out/etc" "$home/home/app"
 
 cp /bin/busybox "$out/bin/busybox"
@@ -20,7 +22,9 @@ for applet in sh base64 basename cat chmod chown cp cut date dirname echo env \
     ln -s busybox "$out/bin/$applet"
 done
 
-for object in $(ldd /bin/busybox /usr/bin/jq /usr/bin/lsof /usr/bin/setpriv | awk '$2 == "=>" { print $3 }' | sort -u); do
+for object in $(for executable in /bin/busybox /usr/bin/jq /usr/bin/lsof /usr/bin/setpriv "$bins"/*; do
+    ldd "$executable" 2>/dev/null || true
+done | awk '$2 == "=>" { print $3 }' | sort -u); do
     name="$(basename "$object")"
     if [ -n "$(find "$base/lib" "$base/usr/lib" -name "$name" -print -quit)" ]; then continue; fi
     dir="$out/usr/lib/$(basename "$(dirname "$object")")"
