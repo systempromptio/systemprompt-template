@@ -42,7 +42,7 @@ pub async fn list_recent_unrejected_requests(
         r#"SELECT id AS "id!", user_id AS "user_id!: UserId", session_id AS "session_id: SessionId", model AS "model!"
            FROM ai_requests
            WHERE created_at >= NOW() - ($1 || ' minutes')::interval
-             AND status NOT IN ('rejected', 'denied')"#,
+             AND status <> 'rejected'"#,
         since_minutes.to_string()
     )
     .fetch_all(pool)
