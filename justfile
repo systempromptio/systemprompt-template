@@ -937,6 +937,11 @@ docker-build-all:
 docker-run FLAVOUR=FLAVOUR:
     FLAVOUR={{FLAVOUR}} IMAGE=systemprompt-template:{{FLAVOUR}} docker compose -p sp-{{FLAVOUR}} up
 
+# Check every flavour's queries against a database that flavour migrated
+# (needs Postgres; FLAVOUR_QUERIES_ADMIN_URL): just check-flavour-queries all
+check-flavour-queries FLAVOUR=FLAVOUR:
+    bash scripts/check-flavour-queries.sh {{FLAVOUR}}
+
 # Boot one flavour's image and assert its flavour.yaml smoke expectations
 smoke FLAVOUR=FLAVOUR *ARGS:
     bash scripts/flavour-smoke.sh {{FLAVOUR}} {{ARGS}}

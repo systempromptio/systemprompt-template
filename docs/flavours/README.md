@@ -83,6 +83,20 @@ schema and `full` installs the union. Every flavour's web schema installs on
 a database holding only its members' tables (checked file by file against
 each flavour's table set).
 
+The console follows the same rule at the query. A repository module, a page
+section or a keyed read that names an optional member's table is compiled
+only under the admin feature that links that member, so a base page reads its
+base and the member adds its part: the user roster and its KPIs, the user
+detail headline and usage tab, the profile's usage cards, roles, the overview
+and the governance safety tab each render without the gateway member. Pages
+that are only a member's figures are compiled out with their nav item: the
+analytics dashboard and the group pages need `gateway`, the project pages
+`mcp` (they read requests beside tool executions), the conversation surfaces
+`agents`. `scripts/check-flavour-queries.sh <flavour|all>` (`just
+check-flavour-queries`) proves it: it migrates a fresh database with each
+flavour's binary and re-checks the template's sqlx crates online against it,
+so a query naming a relation the flavour does not install fails at its line.
+
 ## Signing in to the console
 
 Every flavour signs in the same way. The console uses passkeys, and a fresh
