@@ -11,10 +11,11 @@ use std::sync::Arc;
 use rmcp::model::{ReadResourceRequestParams, ResourceContents};
 use sqlx::PgPool;
 use systemprompt::database::Database;
-use systemprompt::extension::mcp::McpToolset;
+use systemprompt::extension::mcp::{McpToolset, ResourceList, ResourceRead};
 use systemprompt::governance::policy::secrets::SecretScannerCell;
 use systemprompt::identifiers::{ArtifactId, McpServerId};
 use systemprompt::mcp::artifact_resource_uri;
+use systemprompt::mcp::services::ui_renderer::UiRendererRegistry;
 use systemprompt_mcp_agent::server::TOOLSET_ID;
 use systemprompt_mcp_agent::{CliLocation, SystempromptToolset, tools};
 
@@ -33,7 +34,22 @@ fn toolset_named(pool: &Arc<PgPool>, server: &str) -> SystempromptToolset {
         McpServerId::try_new(server).expect("valid fixture identifier"),
         CliLocation::from_profile(&template_test_common::env::fixture_profile()),
         ingest,
+        systemprompt::mcp::McpArtifactRepository::new(&db_pool),
+        Arc::new(UiRendererRegistry::with_builtins()),
     )
+}
+
+fn caller() -> systemprompt::extension::mcp::VerifiedCaller {
+    let ctx = systemprompt::models::execution::context::RequestContext::new(
+        systemprompt::identifiers::SessionId::new("server-session"),
+        systemprompt::identifiers::TraceId::new("server-trace"),
+        systemprompt::identifiers::ContextId::try_new("00000000-0000-4000-8000-0000000005e7")
+            .expect("valid fixture identifier"),
+        systemprompt::identifiers::AgentName::try_new("server-agent")
+            .expect("valid fixture agent name"),
+        systemprompt::identifiers::Actor::anonymous(systemprompt::identifiers::UserId::generate()),
+    );
+    template_test_common::hop::verified_caller(&McpServerId::new("systemprompt"), &ctx)
 }
 
 fn toolset(pool: &Arc<PgPool>) -> SystempromptToolset {
@@ -66,7 +82,11 @@ async fn the_toolset_serves_the_artifact_viewer_resource() {
 
     assert!(built.serves_resources(), "it serves resources");
     assert!(
-        !built.list_resources().resources.is_empty(),
+        !built
+            .list_resources(ResourceList { caller: &caller() })
+            .await
+            .resources
+            .is_empty(),
         "it lists the artifact-viewer resource"
     );
 
@@ -171,13 +191,14 @@ async fn the_cli_tool_requires_a_command_string() {
 }
 
 #[tokio::test]
-async fn the_viewer_uri_is_served_and_artifact_uris_are_left_to_the_host() {
+async fn the_viewer_uri_is_served_and_unknown_artifact_uris_are_refused() {
     let Some(db) = TempDb::create().await else {
         return;
     };
     let built = toolset(&db.pool);
 
-    let listed = built.list_resources();
+    let caller = caller();
+    let listed = built.list_resources(ResourceList { caller: &caller }).await;
     let viewer = listed
         .resources
         .first()
@@ -185,7 +206,11 @@ async fn the_viewer_uri_is_served_and_artifact_uris_are_left_to_the_host() {
     assert_eq!(viewer.uri, "ui://systemprompt/artifact-viewer");
 
     let read = built
-        .read_resource(&ReadResourceRequestParams::new(viewer.uri.clone()))
+        .read_resource(ResourceRead {
+            request: &ReadResourceRequestParams::new(viewer.uri.clone()),
+            caller: &caller,
+        })
+        .await
         .expect("the toolset owns its viewer URI")
         .expect("read artifact viewer resource");
     let ResourceContents::TextResourceContents {
@@ -208,15 +233,21 @@ async fn the_viewer_uri_is_served_and_artifact_uris_are_left_to_the_host() {
         artifact_resource_uri(&McpServerId::new("systemprompt"), &ArtifactId::generate());
     assert!(
         built
-            .read_resource(&ReadResourceRequestParams::new(artifact_uri))
-            .is_none(),
-        "a stored-artifact URI is answered by the host, not the toolset"
+            .read_resource(ResourceRead {
+                request: &ReadResourceRequestParams::new(artifact_uri),
+                caller: &caller,
+            })
+            .await
+            .is_some_and(|read| read.is_err()),
+        "a stored-artifact URI the caller does not own is refused by the toolset"
     );
     assert!(
         built
-            .read_resource(&ReadResourceRequestParams::new(
-                "ui://other/artifact-viewer"
-            ))
+            .read_resource(ResourceRead {
+                request: &ReadResourceRequestParams::new("ui://other/artifact-viewer"),
+                caller: &caller,
+            })
+            .await
             .is_some_and(|read| read.is_err()),
         "an unknown resource URI is refused"
     );

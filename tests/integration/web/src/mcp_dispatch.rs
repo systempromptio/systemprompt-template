@@ -14,7 +14,6 @@ use std::sync::Arc;
 use rmcp::model::CallToolRequestParams;
 use sqlx::PgPool;
 use systemprompt::database::Database;
-use systemprompt::extension::mcp::VerifiedCaller;
 use systemprompt::governance::policy::secrets::SecretScannerCell;
 use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId};
 use systemprompt::mcp::repository::ToolUsageRepository;
@@ -46,7 +45,9 @@ fn executor(db_pool: &systemprompt::database::DbPool, server_name: &str) -> McpT
         )),
         ingest(db_pool),
         Arc::new(UiRendererRegistry::with_builtins()),
-        systemprompt::identifiers::McpServerId::new(server_name),
+        template_test_common::hop::server_callers(&systemprompt::identifiers::McpServerId::new(
+            server_name,
+        )),
     )
 }
 
@@ -92,7 +93,10 @@ async fn an_unknown_systemprompt_tool_points_the_caller_at_the_cli_skill() {
             service_id: "systemprompt",
             executor: &executor,
             request: &request,
-            caller: &VerifiedCaller::__from_hop(request_context()),
+            caller: &template_test_common::hop::verified_caller(
+                &systemprompt::identifiers::McpServerId::new("systemprompt"),
+                &request_context(),
+            ),
             client: &profile,
             ingest: &ingest,
             // Why: these dispatch paths return before any handler is built, so

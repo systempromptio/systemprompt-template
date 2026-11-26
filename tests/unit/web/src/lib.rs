@@ -43,6 +43,8 @@
 #[cfg(test)]
 mod account_pages;
 #[cfg(test)]
+mod adfs_provider;
+#[cfg(test)]
 mod agents_ingestion;
 #[cfg(test)]
 mod campaign_link_full_url;
@@ -72,7 +74,6 @@ mod content_validation;
 mod content_validation_results;
 #[cfg(test)]
 mod conversation_view;
-#[cfg(test)]
 mod dev_login_pure;
 #[cfg(test)]
 mod devices_page;
@@ -206,9 +207,7 @@ mod access_explain;
 #[cfg(test)]
 mod activity_constructors;
 #[cfg(test)]
-mod adfs_session_pure;
 #[cfg(test)]
-mod adfs_state_cookie;
 #[cfg(test)]
 mod admin_css_classes;
 #[cfg(test)]

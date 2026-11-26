@@ -142,10 +142,6 @@ impl Extension for WebExtension {
                 }))
             })
             .provide_after_governance::<Arc<WebRuntime>, _>(|r: &Resolved<'_>| {
-                // Why: the routers need AdminEnv, which a child host withholds
-                // with the member cipher; asking for the cipher here withholds
-                // the runtime on the same host for the same reason.
-                r.member_cipher()?;
                 let db = DbHandles::resolve(r)?;
                 let settings = r.get::<Arc<WebSettings>>()?;
                 let env = r.get::<AdminEnv>()?;

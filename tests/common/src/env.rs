@@ -30,10 +30,12 @@ use systemprompt::models::auth::{
     DynRequestAuthenticator, JwtAudience, JwtUserContext, RequestAuthenticator,
 };
 use systemprompt::models::execution::context::{ContextExtractionError, RequestContext};
-use systemprompt::security::conferred::MemberCiphers;
+use systemprompt::security::at_rest::MasterKey;
+use systemprompt::security::conferred::{MemberCiphers, MemberShareTokens};
 use systemprompt::traits::{
-    AuthUser, ConferralIssuer, DeclaredSecrets, ExtensionSecret, MemberCipher, MemberGrant,
-    ReloadOutcome, SecretReferences, SecretStore, SecretStoreError, SecretsStatus,
+    AuthUser, ConferralIssuer, DeclaredSecrets, ExtensionSecret, GitSourceSync, GitSourceSyncError,
+    GitSourceSyncRequest, GitSourceSynced, MemberCipher, MemberGrant, ReloadOutcome,
+    SecretReferences, SecretStore, SecretStoreError, SecretsStatus, ShareTokenSigner,
 };
 use systemprompt_web_admin::authz::connector::ConnectorAttributeProvider;
 use systemprompt_web_admin::authz::group::GroupAttributeProvider;
@@ -77,17 +79,42 @@ pub fn install_services(
         base: root.to_path_buf(),
         provenance: ServicesProvenance::Bundled,
     };
-    InstallServicesView::of(state.view(), &active, profile)
+    InstallServicesView::of(state.view(), &active, profile, root.join(".bundle-cache"))
 }
 
 #[must_use]
 pub fn member_cipher() -> Arc<dyn MemberCipher> {
-    MemberCiphers::from_master_key(&MEMBER_KEY)
+    let master = MasterKey::from_store(&FixtureMasterKey).expect("the fixture store holds a key");
+    MemberCiphers::from_master_key(&master)
         .expect("the test member key is valid")
-        .issue(&MemberGrant {
-            member: web_member(),
-            token_audiences: Arc::from(Vec::new()),
-        })
+        .issue(&web_grant())
+}
+
+#[must_use]
+pub fn share_tokens() -> Arc<dyn ShareTokenSigner> {
+    MemberShareTokens::from_seed(&MEMBER_KEY)
+        .expect("the test share seed is valid")
+        .issue(&web_grant())
+}
+
+fn web_grant() -> MemberGrant {
+    MemberGrant {
+        member: web_member(),
+        token_audiences: Arc::from(Vec::new()),
+    }
+}
+
+#[derive(Debug)]
+struct RefusingGitSync;
+
+#[async_trait::async_trait]
+impl GitSourceSync for RefusingGitSync {
+    async fn sync(
+        &self,
+        _request: &GitSourceSyncRequest,
+    ) -> Result<GitSourceSynced, GitSourceSyncError> {
+        Err(GitSourceSyncError::NotGitSource)
+    }
 }
 
 fn entry(
@@ -194,6 +221,50 @@ impl SecretStore for NoSecrets {
         Err(no_store())
     }
 }
+
+#[async_trait::async_trait]
+impl SecretStore for FixtureMasterKey {
+    fn secret(&self, _name: &str) -> Option<ExtensionSecret> {
+        None
+    }
+
+    fn secret_exact(&self, _name: &str) -> Option<ExtensionSecret> {
+        None
+    }
+
+    fn key_names(&self) -> Result<Vec<String>, SecretStoreError> {
+        Ok(Vec::new())
+    }
+
+    fn manifest_signing_secret_seed(&self) -> Result<[u8; 32], SecretStoreError> {
+        Err(no_store())
+    }
+
+    fn encryption_master_key(&self) -> Result<[u8; 32], SecretStoreError> {
+        Ok(MEMBER_KEY)
+    }
+
+    fn status(&self) -> SecretsStatus {
+        SecretsStatus {
+            source: "test".to_owned(),
+            generation: 0,
+            initialised_at: chrono::Utc::now(),
+            last_reload_at: None,
+            last_error: None,
+        }
+    }
+
+    fn refresh_interval(&self) -> Option<std::time::Duration> {
+        None
+    }
+
+    async fn reload(&self) -> Result<ReloadOutcome, SecretStoreError> {
+        Err(no_store())
+    }
+}
+
+#[derive(Debug)]
+struct FixtureMasterKey;
 
 #[derive(Debug)]
 struct NoReferences;
@@ -315,7 +386,7 @@ pub struct EnvFixture {
 impl EnvFixture {
     #[must_use]
     pub fn new(pool: &Arc<PgPool>, services: ServicesConfig, services_root: &Path) -> Self {
-        Self::build(pool, services, services_root, Some(member_cipher()))
+        Self::build(pool, services, services_root, member_cipher())
     }
 
     #[must_use]
@@ -327,21 +398,11 @@ impl EnvFixture {
         )
     }
 
-    #[must_use]
-    pub fn without_cipher(pool: &Arc<PgPool>) -> Self {
-        Self::build(
-            pool,
-            ServicesConfig::default(),
-            &repo_root().join("services"),
-            None,
-        )
-    }
-
     fn build(
         pool: &Arc<PgPool>,
         services: ServicesConfig,
         services_root: &Path,
-        cipher: Option<Arc<dyn MemberCipher>>,
+        cipher: Arc<dyn MemberCipher>,
     ) -> Self {
         let profile = fixture_profile();
         let view = install_services(&profile, services, services_root);
@@ -358,7 +419,7 @@ impl EnvFixture {
             authenticator,
             subjects,
             cipher,
-            share_tokens: None,
+            share_tokens: share_tokens(),
             secrets: DeclaredSecrets::over(
                 Arc::new(NoSecrets),
                 Arc::from(grants.clone()),
@@ -367,7 +428,7 @@ impl EnvFixture {
             ),
             paths: Arc::new(paths),
             artifact_ui: None,
-            git_sync: None,
+            git_sync: Arc::new(RefusingGitSync),
         });
         Self {
             env,

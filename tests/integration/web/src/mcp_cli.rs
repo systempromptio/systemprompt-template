@@ -17,7 +17,6 @@ use std::sync::Arc;
 use rmcp::model::CallToolRequestParams;
 use sqlx::PgPool;
 use systemprompt::database::Database;
-use systemprompt::extension::mcp::VerifiedCaller;
 use systemprompt::governance::policy::secrets::SecretScannerCell;
 use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId};
 use systemprompt::mcp::repository::ToolUsageRepository;
@@ -54,7 +53,9 @@ fn executor(db_pool: &systemprompt::database::DbPool) -> McpToolExecutor {
         )),
         ingest(db_pool),
         Arc::new(UiRendererRegistry::with_builtins()),
-        systemprompt::identifiers::McpServerId::new("systemprompt"),
+        template_test_common::hop::server_callers(&systemprompt::identifiers::McpServerId::new(
+            "systemprompt",
+        )),
     )
 }
 
@@ -122,7 +123,10 @@ async fn run_tool(
             service_id: "systemprompt",
             executor: &executor,
             request: &request,
-            caller: &VerifiedCaller::__from_hop(request_context()),
+            caller: &template_test_common::hop::verified_caller(
+                &systemprompt::identifiers::McpServerId::new("systemprompt"),
+                &request_context(),
+            ),
             client: &profile,
             cli,
             ingest: &ingest,

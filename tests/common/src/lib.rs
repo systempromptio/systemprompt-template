@@ -7,6 +7,7 @@
 
 pub mod composition;
 pub mod env;
+pub mod hop;
 pub mod orphans;
 pub mod paths;
 pub mod skip;

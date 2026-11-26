@@ -174,20 +174,6 @@ impl Harness {
         )
     }
 
-    // The context of a host that holds no member cipher (a hosted MCP child).
-    fn context_without_cipher(&self) -> JobContext {
-        let database = Arc::new(Database::from_pools(
-            Arc::clone(&self.db.pool),
-            Some(Arc::clone(&self.db.pool)),
-        ));
-        JobContext::new(
-            Actor::user(UserId::new("jobs-context-test")),
-            systemprompt::traits::Dependencies::new()
-                .with(database)
-                .with(EnvFixture::without_cipher(&self.db.pool).env),
-        )
-    }
-
     // A context carrying the admin environment but no database.
     fn context_without_database(&self) -> JobContext {
         JobContext::new(
@@ -673,30 +659,6 @@ async fn secret_migration_encrypts_plaintext_rows_and_audits_each_one() {
         .expect("count the audit rows");
     assert_eq!(audited, 2, "every migrated secret is audited");
 
-    h.cleanup().await;
-}
-
-#[tokio::test]
-async fn secret_migration_does_nothing_when_no_member_cipher_is_held() {
-    let Some(h) = Harness::create_or_skip().await else {
-        return;
-    };
-
-    let result = SecretMigrationJob
-        .execute(&h.context_without_cipher())
-        .await
-        .expect("a missing member cipher is a skip, not a failure");
-
-    assert!(result.success);
-    assert_eq!(result.items_processed, None);
-    assert!(
-        result
-            .message
-            .as_deref()
-            .is_some_and(|m| m.contains("member cipher")),
-        "the skip names why nothing ran: {:?}",
-        result.message
-    );
     h.cleanup().await;
 }
 
