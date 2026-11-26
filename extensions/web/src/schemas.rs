@@ -32,6 +32,8 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(SCHEMA_ADMIN_DASHBOARD),
         SchemaDefinition::sql_only(SCHEMA_MANAGEMENT),
         SchemaDefinition::sql_only(SCHEMA_WEB_SIDE_TABLES),
+        #[cfg(feature = "content")]
+        SchemaDefinition::sql_only(include_str!("../schema/13b_content_enrichment.sql")),
         SchemaDefinition::sql_only(SCHEMA_AUDIT_EVENT_NOTIFY),
         SchemaDefinition::sql_only(SCHEMA_ORGANIZATIONS),
         SchemaDefinition::sql_only(SCHEMA_USAGE_METRICS),
@@ -41,6 +43,10 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(SCHEMA_SCOPE_DEFAULTS),
         SchemaDefinition::sql_only(SCHEMA_CONNECTOR_CREDENTIALS),
         SchemaDefinition::sql_only(include_str!("../schema/26_connector_accounts.sql")),
+        #[cfg(feature = "agents")]
+        SchemaDefinition::sql_only(include_str!("../schema/26b_conversation_contexts.sql")),
+        #[cfg(not(feature = "agents"))]
+        SchemaDefinition::sql_only(include_str!("../schema/26b_conversation_contexts_unlinked.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/27_conversation_requests.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/28_ingestion_integrity.sql")),
         #[cfg(feature = "mcp")]

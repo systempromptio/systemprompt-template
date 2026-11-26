@@ -1,12 +1,19 @@
 //! Static asset manifest for the admin dashboard.
 //!
 //! The admin crate owns the front-end it serves: per-page scripts under
-//! `storage/files/js/pages/` and the generated `admin-bundle.css`. The facade
-//! merges this with the public-site manifest in `required_assets`.
+//! `storage/files/js/pages/`, the service modules and components those pages
+//! import, the fonts stylesheet and the generated `admin-bundle.css`. The
+//! facade merges this with the public-site manifest in `required_assets`.
 
 use std::path::Path;
 
 use systemprompt::extension::{AssetDefinition, AssetPaths, AssetType};
+
+macro_rules! svc_js {
+    ($p:expr, $name:literal) => {
+        AssetDefinition::js($p.join($name), concat!("js/services/", $name))
+    };
+}
 
 macro_rules! page_js {
     ($p:expr, $name:literal) => {
@@ -20,7 +27,12 @@ pub fn admin_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
     let storage_js = paths.storage_files().join("js");
 
     let mut assets = page_js_assets(&storage_js);
+    assets.extend(shared_js_assets(&storage_js));
     assets.push(admin_bundle_css(&storage_css));
+    assets.push(AssetDefinition::css(
+        storage_css.join("core/fonts.css"),
+        "css/core/fonts.css",
+    ));
     assets.push(AssetDefinition::css(
         storage_css.join("requirements-review.css"),
         "css/requirements-review.css",
@@ -108,6 +120,119 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
         page_js!(&pages, "connect-code.js"),
         page_js!(&pages, "connectors.js"),
         page_js!(&pages, "admin-login.js"),
+    ]
+}
+
+fn shared_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
+    let p = storage_js.join("services");
+    let mut v = service_core_js(&p);
+    v.extend(service_utils_js(storage_js));
+    v.extend([
+        svc_js!(&p, "webauthn-helpers.js"),
+        svc_js!(&p, "webauthn-login-ui.js"),
+        svc_js!(&p, "webauthn-session.js"),
+        AssetDefinition::js(
+            storage_js.join("utils/storage-safe.js"),
+            "js/utils/storage-safe.js",
+        ),
+    ]);
+    v
+}
+
+fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
+    vec![
+        svc_js!(p, "api.js"),
+        svc_js!(p, "auth.js"),
+        svc_js!(p, "bootstrap.js"),
+        svc_js!(p, "confirm.js"),
+        svc_js!(p, "connector-labels.js"),
+        svc_js!(p, "dropdown.js"),
+        svc_js!(p, "events.js"),
+        svc_js!(p, "export-columns.js"),
+        svc_js!(p, "export-formats.js"),
+        svc_js!(p, "export-preview.js"),
+        svc_js!(p, "export-scope.js"),
+        svc_js!(p, "export-url.js"),
+        svc_js!(p, "export.js"),
+        svc_js!(p, "filter-ribbon.js"),
+        svc_js!(p, "header-actions.js"),
+        svc_js!(p, "header-search-list.js"),
+        svc_js!(p, "header-search.js"),
+        svc_js!(p, "nav-groups.js"),
+        svc_js!(p, "scope.js"),
+        svc_js!(p, "sidebar.js"),
+        svc_js!(p, "table-expand.js"),
+        svc_js!(p, "toast.js"),
+        svc_js!(p, "validity.js"),
+    ]
+}
+
+fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::js(
+            storage_js.join("components/sp-toast.js"),
+            "js/components/sp-toast.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-confirm-dialog.js"),
+            "js/components/sp-confirm-dialog.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-confirm-dialog-view.js"),
+            "js/components/sp-confirm-dialog-view.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-copy.js"),
+            "js/components/sp-copy.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-tabs.js"),
+            "js/components/sp-tabs.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-help.js"),
+            "js/components/sp-help.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-table-select.js"),
+            "js/components/sp-table-select.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-chart.js"),
+            "js/components/sp-chart.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-evidence-lightbox.js"),
+            "js/components/sp-evidence-lightbox.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-chart-scale.js"),
+            "js/components/sp-chart-scale.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-chart-draw.js"),
+            "js/components/sp-chart-draw.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-chart-tooltip.js"),
+            "js/components/sp-chart-tooltip.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-sync-plane.js"),
+            "js/components/sp-sync-plane.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-access-review.js"),
+            "js/components/sp-access-review.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-transcript.js"),
+            "js/components/sp-transcript.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-report-poll.js"),
+            "js/components/sp-report-poll.js",
+        ),
     ]
 }
 

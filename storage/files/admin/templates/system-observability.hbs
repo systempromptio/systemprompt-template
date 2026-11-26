@@ -2,19 +2,21 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
-    {{#> components/page-header title=title subtitle="Where this instance ships its audit trail. The profile's observability.otlp block names the collector; core streams every enabled signal to it."}}
+    {{#> components/page-header title=title subtitle="Where this instance ships its telemetry. The profile's observability.otlp block names the collector, and core streams every enabled signal to it."}}
         {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How export works</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{sync_url}}">Code ↔ Instance</a>
         {{/inline}}
         {{#*inline "header_meta"}}
-        {{#if exporter}}<span>Protocol <strong>{{exporter.protocol}}</strong></span>{{/if}}
-        <span>{{signal_count}} signal(s) enabled</span>
+        {{#if exporter}}
+        <span>Protocol <strong>{{exporter.protocol}}</strong></span>
+        {{/if}}
+        <span>Signals enabled <strong>{{signal_count}}</strong></span>
         {{/inline}}
     {{/components/page-header}}
 
     {{#unless configured}}
-    {{> components/notice tone="warn" title="No collector configured" message="The active profile declares no observability.otlp block, so no signal is exported. Add the block to the profile (endpoint, headers, signals) and restart. Metrics are not affected: they stay on the Prometheus /metrics listener."}}
+    {{> components/notice tone="warn" title="No collector configured" message="The active profile declares no observability.otlp block, so no signal is exported. Add the block to the profile (endpoint, protocol, headers, signals) and restart. Metrics are not affected: they stay on the Prometheus /metrics listener."}}
     {{/unless}}
 
     {{#if exporter}}
@@ -26,9 +28,12 @@
     </dl>
     {{/if}}
 
-    {{#> components/section title="Signals" count=signal_count note="Each signal the exporter can ship, and whether the profile enables it."}}{{/components/section}}
-    {{#> components/table caption="Signals" modifier="sp-obs-signals"}}
-        <thead><tr><th>Signal</th><th>State</th></tr></thead>
+    {{#> components/section title="Signals" count=signal_count note="Every signal core can export, and whether the profile enables it."}}{{/components/section}}
+    {{#> components/table caption="Export state per signal" modifier="sp-obs-signals"}}
+        <thead><tr>
+            <th>Signal</th>
+            <th>State</th>
+        </tr></thead>
         <tbody>
         {{#each signals}}
         <tr data-signal="{{signal}}">

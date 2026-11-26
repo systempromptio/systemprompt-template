@@ -1,0 +1,4 @@
+# mcp serves no content. Core's config loader requires this file for every
+# composition (infra/config path_validation.rs), so the flavour declares an
+# empty catalog rather than shipping the site's sources.
+content_sources: {}

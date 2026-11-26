@@ -1,0 +1,24 @@
+# Marketplace for the mcp flavour: replaces
+# services/marketplaces/enterprise-demo/config.yaml when the services tree is
+# staged. mcp compiles no agents, so the marketplace distributes none.
+marketplace:
+  id: enterprise-demo
+  name: "Enterprise Demo Marketplace"
+  description: "Reference marketplace shipping the governance demo plugin, its skills and MCP servers."
+  version: "2.0.0"
+  visibility: public
+  author:
+    name: systemprompt.io
+    email: ed@systemprompt.io
+  keywords:
+    - governance
+    - demo
+    - enterprise
+  license: proprietary
+  mcp_servers:
+    source: explicit
+    include:
+      - systemprompt
+    exclude: []
+  agents:
+    include: []

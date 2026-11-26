@@ -31,7 +31,7 @@ pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, s
     if let Some(r) = lookup_trace(pool, id).await? {
         return Ok(Some(r));
     }
-    if let Some(r) = lookup_context_in_user_contexts(pool, id).await? {
+    if let Some(r) = lookup_context_in_conversation_contexts(pool, id).await? {
         return Ok(Some(r));
     }
     if let Some(r) = lookup_context_in_ai_requests(pool, id).await? {
@@ -43,7 +43,7 @@ pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, s
     if let Some(r) = lookup_session_in_governance(pool, id).await? {
         return Ok(Some(r));
     }
-    lookup_session_in_user_contexts(pool, id).await
+    lookup_session_in_conversation_contexts(pool, id).await
 }
 
 async fn lookup_request_by_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sqlx::Error> {
@@ -103,7 +103,7 @@ async fn lookup_trace(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sql
     }))
 }
 
-async fn lookup_context_in_user_contexts(
+async fn lookup_context_in_conversation_contexts(
     pool: &PgPool,
     id: &str,
 ) -> Result<Option<ResolvedId>, sqlx::Error> {
@@ -171,7 +171,7 @@ async fn lookup_session_in_governance(
     }))
 }
 
-async fn lookup_session_in_user_contexts(
+async fn lookup_session_in_conversation_contexts(
     pool: &PgPool,
     id: &str,
 ) -> Result<Option<ResolvedId>, sqlx::Error> {

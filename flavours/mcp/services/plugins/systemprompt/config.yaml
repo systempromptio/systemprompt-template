@@ -1,0 +1,77 @@
+# Governance plugin for the mcp flavour: replaces
+# services/plugins/systemprompt/config.yaml when the services tree is staged.
+# mcp compiles no agents, so the plugin bundles none.
+#
+# Governance plugin — the one plugin that owns this instance's hooks.
+#
+# Claude Code runs plugin hooks session-globally: a PreToolUse hook with a "*"
+# matcher fires for every tool call regardless of which plugin contributed the
+# tool. Exactly one enabled plugin may therefore set `hooks.governance: true`;
+# two or more is a hard validation error, zero means no tool call is checked.
+#
+# Auto-discovered from services/plugins/<id>/config.yaml — deliberately absent
+# from services/config/config.yaml's `includes:` list.
+
+plugin:
+  id: systemprompt
+  name: "systemprompt.io"
+  description: "Governed toolset — every tool call is checked against policy before it runs, and recorded after"
+  version: "2.0.0"
+  enabled: true
+  author:
+    name: systemprompt.io
+    email: support@systemprompt.io
+  keywords:
+    - governance
+    - operations
+  license: proprietary
+  category: governance
+
+  skills:
+    source: explicit
+    include:
+      - admin_ai_usage
+      - admin_person_activity
+      - analytics_dashboards
+      - demonstrate_governance
+      - inspect_agents
+      - inspect_ai_requests
+      - inspect_conversation
+      - inspect_mcp_and_skills
+      - manage_permissions
+      - manage_services
+      - systemprompt_cli
+      - use_dangerous_secret
+      - who_am_i
+    exclude: []
+
+  agents:
+    source: explicit
+    include: []
+    exclude: []
+
+  mcp_servers:
+    source: explicit
+    include:
+      - systemprompt
+    exclude: []
+
+  content_sources:
+    source: instance
+    include: []
+    exclude: []
+
+  artifacts:
+    source: explicit
+    include:
+      - admin-ai-usage
+    exclude: []
+
+  # `governance: true` emits the built-in govern (PreToolUse) and track
+  # (PostToolUse) HTTP hooks, with their URLs generated against this
+  # deployment's real base URL. Hand-writing them in services/hooks/ is what
+  # left the previous pair pointing at a port nothing listens on.
+  hooks:
+    governance: true
+    include:
+      - example_hook
