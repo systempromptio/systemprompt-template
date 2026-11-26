@@ -12,8 +12,9 @@
 # --bench  with --image: hey p50/p99 against /api/v1/health
 # --dev    cargo check and clippy (--all-targets -D warnings), each clean (a
 #          fresh CARGO_TARGET_DIR) and incremental after touching src/lib.rs and
-#          extensions/web/admin/src/lib.rs; tests/ workspace compile and run
-#          seconds; the 15 slowest units of a clean `cargo build`. Every cargo
+#          extensions/web/admin/src/lib.rs; tests/ workspace (flavour-full)
+#          compile seconds, and run seconds with pass/fail counts when
+#          SYSTEMPROMPT_TEST_DATABASE_URL names a server; the 15 slowest units of a clean `cargo build`. Every cargo
 #          command runs alone; FLAVOUR_METRICS_JOBS sets -j. Its target dirs
 #          (target/flavour-metrics/dev-*) are removed afterwards unless --keep.
 # --table  measure nothing: rebuild table.md from the per-flavour JSON
@@ -186,14 +187,26 @@ measure_image() {
     "${compose[@]}" down -v --remove-orphans > /dev/null 2>&1 || true
 }
 
-# Why: tests/ is its own workspace and takes systemprompt from crates.io
-# unless its own [patch.crates-io] is live; while the root builds against a
-# patched core and tests/ does not, its numbers would measure a different
-# core, so the steps are reported as not available rather than as zero.
-tests_unported() {
-    if [ "$(bash scripts/core-patch.sh status)" = live ] && ! grep -qx '\[patch\.crates-io\]' tests/Cargo.toml; then
-        echo "tests/ resolves systemprompt $(sed -n 's/^systemprompt = { version = "\([^"]*\)".*/\1/p' tests/Cargo.toml | head -1) from crates.io while the root builds against the patched core; tests/ is not ported to it"
+# Why: the tests/ workspace builds the template under flavour-full whatever
+# flavour is measured, and its database tiers need a server; without one they
+# would skip and read as a fast pass, so the run is reported as not available.
+measure_tests() {
+    local dev="$1" cargo=(env SQLX_OFFLINE=true cargo)
+    echo "  tests/ workspace (flavour-full; compile, then run)"
+    timed dev.tests.compile_seconds env CARGO_TARGET_DIR="$dev/tests" "${cargo[@]}" test --no-run --locked --manifest-path tests/Cargo.toml --workspace "${jobs[@]}"
+    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ]; then
+        put_str dev.tests.status "not available"
+        put_str dev.tests.reason "SYSTEMPROMPT_TEST_DATABASE_URL is unset, so the database tiers cannot run"
+        return
     fi
+    put_str dev.tests.status measured
+    local start; start="$(now)"
+    env CARGO_TARGET_DIR="$dev/tests" SYSTEMPROMPT_REQUIRE_DB=1 "${cargo[@]}" nextest run --locked --no-fail-fast \
+        --manifest-path tests/Cargo.toml --workspace "${jobs[@]}" > "$work/tests.log" 2>&1 || true
+    put dev.tests.run_seconds "$(since "$start")"
+    local summary; summary="$(grep -a -E '^ *Summary \[' "$work/tests.log" | tail -1)"
+    put dev.tests.passed "$(sed -n 's/.* \([0-9][0-9]*\) passed.*/\1/p' <<< "$summary" | grep . || echo null)"
+    put dev.tests.failed "$(sed -n 's/.* \([0-9][0-9]*\) failed.*/\1/p' <<< "$summary" | grep . || echo 0)"
 }
 
 measure_dev() {
@@ -213,17 +226,7 @@ measure_dev() {
         touch "$deep"
         timed "dev.$tool.touch_admin_seconds" env CARGO_TARGET_DIR="$dir" "${cargo[@]}" "$tool" "${args[@]}" "${extra[@]}"
     done
-    local unported; unported="$(tests_unported)"
-    if [ -n "$unported" ]; then
-        echo "  tests/ workspace skipped: $unported"
-        put_str dev.tests.status "not available"
-        put_str dev.tests.reason "$unported"
-    else
-        echo "  tests/ workspace (compile, then run)"
-        put_str dev.tests.status measured
-        timed dev.tests.compile_seconds env CARGO_TARGET_DIR="$dev/tests" "${cargo[@]}" test --no-run --locked --manifest-path tests/Cargo.toml --workspace "${jobs[@]}"
-        timed dev.tests.run_seconds env CARGO_TARGET_DIR="$dev/tests" "${cargo[@]}" test --locked --manifest-path tests/Cargo.toml --workspace "${jobs[@]}"
-    fi
+    measure_tests "$dev"
     echo "  cargo build --timings (clean)"
     local start; start="$(now)"
     # Why: the pinned nightly's cargo takes only the HTML form of --timings;
@@ -264,10 +267,10 @@ write_table() {
     jq -s -r '
         def mb: if . == null then "–" else (. / 1048576 * 10 | round / 10 | tostring) + " MiB" end;
         def s: if . == null then "–" else (. | tostring) + " s" end;
-        def tests: if .dev.tests.status == "not available" then "not available" else (.dev.tests.compile_seconds | s) end;
-        "| flavour | binary | image | image gz | layers | crates | build clean | build cached | migrate | boot | idle RSS | check clean | check incr (admin) | clippy clean | clippy incr (admin) | tests compile | core | template | measured |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
-        (.[] | "| \(.flavour) | \(.binary_bytes | mb) | \(.image.bytes | mb) | \(.image.gzip_bytes | mb) | \(.image.layers // "–") | \(.crates // "–") | \(.build.clean_seconds | s) | \(.build.cached_seconds | s) | \(.deploy.migrate_fresh_seconds | s) | \(.deploy.boot_to_healthy_seconds | s) | \(.deploy.idle_rss_bytes | mb) | \(.dev.check.clean_seconds | s) | \(.dev.check.touch_admin_seconds | s) | \(.dev.clippy.clean_seconds | s) | \(.dev.clippy.touch_admin_seconds | s) | \(tests) | \(.stamp.core_rev // "?" | .[0:9]) | \(.stamp.template_sha // "?" | .[0:8]) | \(.stamp.measured_at // "?") |"),
+        def run: if .dev.tests.status == "not available" then "not available" elif .dev.tests.run_seconds == null then "–" else "\(.dev.tests.run_seconds) s (\(.dev.tests.passed // "?") passed, \(.dev.tests.failed // "?") failed)" end;
+        "| flavour | binary | image | image gz | layers | crates | build clean | build cached | migrate | boot | idle RSS | check clean | check incr (admin) | clippy clean | clippy incr (admin) | tests compile | tests run | core | template | measured |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        (.[] | "| \(.flavour) | \(.binary_bytes | mb) | \(.image.bytes | mb) | \(.image.gzip_bytes | mb) | \(.image.layers // "–") | \(.crates // "–") | \(.build.clean_seconds | s) | \(.build.cached_seconds | s) | \(.deploy.migrate_fresh_seconds | s) | \(.deploy.boot_to_healthy_seconds | s) | \(.deploy.idle_rss_bytes | mb) | \(.dev.check.clean_seconds | s) | \(.dev.check.touch_admin_seconds | s) | \(.dev.clippy.clean_seconds | s) | \(.dev.clippy.touch_admin_seconds | s) | \(.dev.tests.compile_seconds | s) | \(run) | \(.stamp.core_rev // "?" | .[0:9]) | \(.stamp.template_sha // "?" | .[0:8]) | \(.stamp.measured_at // "?") |"),
         "",
         (.[0].stamp | "\(.rustc // "?"), \(.host_cores // "?") cores, \(.host_ram_bytes // 0 | . / 1073741824 | round) GiB RAM; each row names the core and template it measured")
         ' "${rows[@]}" > "$out/table.md"
