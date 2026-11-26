@@ -213,8 +213,10 @@ fi
 # the admin. One member, a group and a project with that member, and (where the
 # gateway is compiled) one gateway request make the row-dependent sections
 # render. Every row goes through the CLI or the console API the flavour ships.
-# The request is refused by access control (a fresh install grants no model),
-# which still records it; a routed request would need a real provider key.
+# access-control/rules.yaml admits every catalog model (model/*), so the request
+# is routed and the provider refuses the smoke's placeholder key; the gateway
+# still records it. The pass is that recorded row: a key the gateway refused
+# itself leaves none, whatever status the provider answered.
 seed_post() {
     local code
     code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -H "Cookie: $cookie" \
@@ -222,7 +224,7 @@ seed_post() {
     case "$code" in 2??) record "seed $1" pass "$code" ;; *) record "seed $1" fail "$code" ;; esac
 }
 seed_console() {
-    local member key code
+    local member key code recorded
     cli admin users create --name smoke-member --email smoke-member@example.invalid --if-not-exists > /dev/null 2>&1 || true
     member="$(cli --json admin users show smoke-member@example.invalid 2>/dev/null | jq -rs '.[0].id // empty' || true)"
     if [ -z "$member" ]; then record "seed member" fail "admin users create/show gave no id"; return; fi
@@ -238,10 +240,11 @@ seed_console() {
             -H 'Content-Type: application/json' -H 'anthropic-version: 2023-06-01' \
             -d '{"model":"claude-sonnet-4-5","max_tokens":8,"messages":[{"role":"user","content":"smoke"}]}' \
             "$base/v1/messages" || true)"
-        if [ -n "$key" ] && [ "$code" -lt 500 ] 2>/dev/null && [ "$code" != 401 ] && [ "$code" != 404 ]; then
-            record "seed gateway request" pass "$code"
+        recorded="$(psql_app -Atc "SELECT count(*) FROM ai_requests WHERE user_id = '$member' AND api_key_id IS NOT NULL" 2>/dev/null || true)"
+        if [ -n "$key" ] && [ "${recorded:-0}" -gt 0 ] 2>/dev/null; then
+            record "seed gateway request" pass "$code, recorded"
         else
-            record "seed gateway request" fail "api key or request refused: $code"
+            record "seed gateway request" fail "no ai_requests row for the member's key (HTTP $code)"
         fi
     fi
 }
