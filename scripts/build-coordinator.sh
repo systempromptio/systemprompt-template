@@ -88,14 +88,15 @@ tree_fingerprint() {
     } | sha
 }
 
-# When [patch.crates-io] is live, the sibling core checkout is a build input
-# and must be part of the fingerprint.
+# With a local core override on, that checkout is a build input and part of
+# the fingerprint; the committed pin is covered by the manifests themselves.
 core_fingerprint() {
-    local core="$ROOT/../systemprompt-core"
-    if grep -qE '^\[patch\.crates-io\]' "$ROOT/Cargo.toml" && [ -d "$core" ]; then
-        tree_fingerprint "$core" .
+    local rel
+    rel="$(sed -n 's|^systemprompt = { path = "\(.*\)/systemprompt" }$|\1|p' "$ROOT/Cargo.toml" | head -1)"
+    if [ -n "$rel" ] && [ -d "$ROOT/$rel" ]; then
+        tree_fingerprint "$ROOT/$rel" .
     else
-        echo unpatched
+        echo pinned
     fi
 }
 

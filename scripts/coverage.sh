@@ -171,7 +171,7 @@ for b in $BINS; do OBJ_ARGS+=(--object "$b"); done
 #   extensions/**/extension.rs     — inventory registration glue, no logic
 #   */build.rs                     — build scripts
 # Keep this regex in sync between coverage.sh and `just coverage-html`.
-# systemprompt-core/ is the sibling checkout pulled in via [patch.crates-io];
+# systemprompt-core/ is a sibling checkout a local override (core-patch.sh) builds;
 # it has its own coverage CI and must not dilute this repo's denominator.
 # extensions/mcp/*/src/main.rs are `tokio::main` shells that build a server and
 # serve it over stdio — the same kind of process entry as the CLI mains beside
