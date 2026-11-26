@@ -1,0 +1,27 @@
+# Access control for the gateway flavour: replaces
+# services/access-control/rules.yaml when this flavour's services tree is
+# staged. services/access-control/rules.yaml documents the shape.
+#
+# The gateway ships no marketplace, skill, agent or MCP server, and a rule
+# naming an entity this tree does not define refuses the governance
+# bootstrap. What it does ship are model routes and models, so those rules
+# are the shared file's, unchanged.
+
+entities:
+  - entity: gateway_route/*
+    default: open
+    why: >-
+      Every model route is reachable by every signed-in role. Usage is shaped
+      by governance and quotas, not by entitlement. Route ids are generated
+      (slug + fnv1a6), so only the glob is ever written here.
+    allow:
+      role: [user, admin]
+
+  - entity: model/*
+    default: open
+    why: >-
+      A model the gateway serves without a declared route is decided on its
+      model entity; every signed-in role may call any catalog model, as with
+      the routes above. The glob is stored as written and matched per request.
+    allow:
+      role: [user, admin]

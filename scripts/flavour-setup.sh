@@ -17,7 +17,7 @@ flavour="${1:-}"
 shift
 flavour_require "$flavour"
 anthropic_key="" openai_key="" gemini_key="" http_port="" pg_port="" admin_email=""
-build=true dry_run=false
+build=true dry_run=false repoint=false
 while [ $# -gt 0 ]; do
     case "$1" in
         --anthropic-key) anthropic_key="${2:?}"; shift 2 ;;
@@ -141,12 +141,7 @@ if [ ! -f "$profile_file" ]; then
     else
         run "$bin" "${setup_args[@]}" --yes
     fi
-    if [ "$http_port" != 8080 ]; then
-        step "Re-pointing the server at port $http_port (API URLs, JWT issuer, CORS and the governance hook derive from it)"
-        url="http://localhost:$http_port"
-        run "$bin" admin config server set --port "$http_port" --external-url "$url"
-        run "$bin" admin config server cors add "http://127.0.0.1:$http_port"
-    fi
+    repoint=true
 elif [ "$has_key" = true ]; then
     echo "setup $flavour: $profile_file exists, so admin setup was skipped and the keys were NOT applied." >&2
     echo "  To re-provision: rm -rf \"$profile_dir\" && just setup $flavour <keys...>" >&2
@@ -155,6 +150,12 @@ fi
 step "Applying flavours/$flavour/profile.overlay.yaml"
 run bash "$root/scripts/flavour-overlay.sh" "$flavour" "$profile_file" "$bin" \
     "paths.services=$services_dir" "paths.bin=$(dirname "$bin")"
+
+if [ "$repoint" = true ] && [ "$http_port" != 8080 ]; then
+    step "Re-pointing the server at port $http_port (API URLs, JWT issuer, CORS and the governance hook derive from it)"
+    run "$bin" admin config server set --port "$http_port" --external-url "http://localhost:$http_port"
+    run "$bin" admin config server cors add "http://127.0.0.1:$http_port"
+fi
 
 step "Ensuring the credential-broker secret (mcp_credential_broker_secret)"
 run python3 - "$profile_dir/secrets.json" <<'PY'

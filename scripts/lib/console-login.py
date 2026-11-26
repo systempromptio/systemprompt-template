@@ -89,7 +89,7 @@ assert params.get("state") == state, params
 print("authorization code issued", file=sys.stderr)
 _, tok = req("POST", "/api/v1/core/oauth/token", {"grant_type": "authorization_code", "code": params["code"],
     "redirect_uri": origin + "/admin/login", "code_verifier": verifier, "client_id": "marketplace-admin"}, form=True)
-resp, _ = req("POST", "/api/public/auth/session", {"access_token": tok["access_token"], "expires_in": tok.get("expires_in", 3600)})
+resp, _ = req("POST", "/api/public/auth/session", {"access_token": tok["access_token"]})
 cookie = [c for c in resp.headers.get_all("Set-Cookie") if c.startswith("access_token=")][0].split(";")[0]
 print("session stored", file=sys.stderr)
 print(cookie)
