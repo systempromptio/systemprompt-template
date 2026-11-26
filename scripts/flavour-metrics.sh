@@ -55,7 +55,7 @@ timed() {
         put "$key" "$(since "$start")"
     else
         put "$key" null
-        put_str "$key.error" "$(tail -5 "$work/last.log")"
+        put_str "${key}_error" "$(tail -5 "$work/last.log")"
         echo "  $key failed (see the JSON)" >&2
     fi
 }
@@ -201,12 +201,14 @@ measure_dev() {
     fi
     echo "  cargo build --timings (clean)"
     local start; start="$(now)"
-    if env CARGO_TARGET_DIR="$dev/build" "${cargo[@]}" build "${args[@]}" --timings=json -Z unstable-options \
-        --message-format json > "$work/timings.jsonl" 2> "$work/last.log"; then
+    # Why: the pinned nightly's cargo takes only the HTML form of --timings;
+    # its report embeds the per-unit durations as a UNIT_DATA array.
+    if env CARGO_TARGET_DIR="$dev/build" "${cargo[@]}" build "${args[@]}" --timings \
+        > "$work/last.log" 2>&1; then
         put dev.build.clean_seconds "$(since "$start")"
-        put dev.build.top_units "$(jq -s -c '[.[] | select(.reason == "timing-info")
-            | {unit: "\(.package_id | split("#") | last) \(.target.name)", seconds: (.duration * 100 | round / 100)}]
-            | sort_by(-.seconds) | .[:15]' "$work/timings.jsonl")"
+        put dev.build.top_units "$(awk '/^const UNIT_DATA = \[/ { f = 1; print "["; next } f && /^\];/ { print "]"; exit } f' \
+            "$dev/build/cargo-timings/cargo-timing.html" | jq -c '[.[] | {unit: "\(.name) \(.version) \(.target | ltrimstr(" ") | if . == "" then "lib" else . end)", seconds: (.duration * 100 | round / 100)}]
+            | sort_by(-.seconds) | .[:15]')"
     else
         put dev.build.clean_seconds null
         put_str dev.build.error "$(tail -5 "$work/last.log")"
