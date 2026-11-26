@@ -22,7 +22,7 @@ use crate::repositories::overview::scopes::ScopeCostRow;
 
 use super::data::OverviewData;
 #[cfg(feature = "gateway")]
-use super::data::{Loaded, TOP_MODELS, TOP_SCOPES, UsageData};
+use super::data::{Loaded, OverviewUsageData, TOP_MODELS, TOP_SCOPES};
 #[cfg(feature = "gateway")]
 use super::view::OverviewRange;
 
@@ -114,7 +114,7 @@ pub(super) fn approvals(data: &OverviewData) -> ApprovalsView {
 }
 
 #[cfg(feature = "gateway")]
-pub(super) fn anomalies(data: &UsageData) -> AnomaliesView {
+pub(super) fn anomalies(data: &OverviewUsageData) -> AnomaliesView {
     let loaded: &Loaded<Vec<UsageAnomalyRow>> = &data.anomalies;
     let rows: Vec<OverviewAnomalyRowView> = loaded
         .as_deref()
@@ -183,7 +183,7 @@ fn worst_tone(rows: &[OverviewAnomalyRowView]) -> &'static str {
 // them. Share is of every request the window carried, so the five rows shown
 // tell the reader how much of the traffic they are looking at.
 #[cfg(feature = "gateway")]
-pub(super) fn models_board(range: OverviewRange, data: &UsageData) -> ModelsBoardView {
+pub(super) fn models_board(range: OverviewRange, data: &OverviewUsageData) -> ModelsBoardView {
     let rows = data.models.as_deref().unwrap_or(&[]);
     let total: i64 = rows.iter().map(|r| r.requests).sum();
     let preset = range.preset();

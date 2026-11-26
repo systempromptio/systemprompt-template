@@ -231,11 +231,6 @@ fn dispatch_event(
 }
 
 #[derive(Debug, Deserialize)]
-pub struct TrackQuery {
-    pub plugin_id: Option<systemprompt::identifiers::PluginId>,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct GovernQuery {
     pub plugin_id: Option<systemprompt::identifiers::PluginId>,
 }

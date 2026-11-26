@@ -18,3 +18,23 @@ pub(crate) use admin::{
 };
 pub use ssr::{AdminSsrShell, admin_ssr_router};
 pub use ssr_bridge::bridge_auth_ssr_router;
+
+#[cfg(feature = "mcp")]
+fn with_managed_state<S: Clone + Send + Sync + 'static>(
+    routes: axum::Router<S>,
+    db: &systemprompt::database::DbPool,
+    owner: systemprompt::identifiers::UserId,
+) -> axum::Router<S> {
+    routes.layer(axum::Extension(std::sync::Arc::new(
+        managed_state::ManagedState::new(db, owner),
+    )))
+}
+
+#[cfg(not(feature = "mcp"))]
+fn with_managed_state<S>(
+    routes: axum::Router<S>,
+    _db: &systemprompt::database::DbPool,
+    _owner: systemprompt::identifiers::UserId,
+) -> axum::Router<S> {
+    routes
+}

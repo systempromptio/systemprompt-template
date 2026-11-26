@@ -8,6 +8,5 @@
 
 use serde::Serialize;
 
-/// The value of a view-model field whose member is not linked into this build.
 #[derive(Debug, Clone, Copy, Serialize)]
 pub(crate) struct Absent;

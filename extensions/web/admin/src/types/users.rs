@@ -53,7 +53,7 @@ pub struct UserDetail {
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserSession {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub started_at: Option<DateTime<Utc>>,
     pub total_events: i64,
     pub tool_uses: i64,

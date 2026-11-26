@@ -11,7 +11,7 @@
 //! account resolution and the session.
 //!
 //! Module layout: [`AdfsConfig`] (the loaded YAML, from the shared crate),
-//! [`descriptors`] (the SP and `IdP` descriptors built from it), [`claims`]
+//! `descriptors` (the SP and `IdP` descriptors built from it), `claims`
 //! (what an assertion asserted).
 
 mod claims;
@@ -116,6 +116,8 @@ impl AdfsProvider {
         let subject = email
             .as_deref()
             .map_or_else(|| claims.external_sub(""), |e| claims.external_sub(e));
+        // JSON: `ExternalIdentity::raw_claims` keeps the assertion's attributes as
+        // issued — an open set the IdP defines, not a shape this crate owns.
         let raw_claims = serde_json::Value::Object(
             claims
                 .attributes

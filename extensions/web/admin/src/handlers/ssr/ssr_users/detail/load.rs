@@ -175,7 +175,7 @@ pub(super) async fn load_sessions(pool: &PgPool, user_id: &UserId) -> Vec<Signin
 }
 
 #[cfg(feature = "gateway")]
-pub(super) struct UsageData {
+pub(super) struct UserUsageData {
     pub summary: repositories::users::usage::UserGatewayUsage,
     pub models: Vec<repositories::users::usage::ModelShare>,
     #[cfg(feature = "agents")]
@@ -194,13 +194,13 @@ pub(super) struct ConversationUsage {
 // the project scoping that guards the cross-user list has nothing to add and
 // would only hide rows from an admin who asked for them by id.
 #[cfg(feature = "gateway")]
-pub(super) async fn load_usage(pool: &PgPool, user_id: &UserId) -> UsageData {
+pub(super) async fn load_usage(pool: &PgPool, user_id: &UserId) -> UserUsageData {
     let (summary, models, commits) = tokio::join!(
         repositories::users::usage::get_ai_request_summary(pool, user_id),
         repositories::users::usage::list_top_models(pool, user_id, None, 10),
         repositories::users::enrolment::list_user_commits(pool, user_id, COMMIT_LIMIT),
     );
-    UsageData {
+    UserUsageData {
         summary: summary
             .inspect_err(|e| tracing::warn!(error = %e, "user detail: usage summary failed"))
             .unwrap_or_default(),

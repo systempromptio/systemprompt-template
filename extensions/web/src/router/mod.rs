@@ -64,7 +64,6 @@ const PUBLIC_API_PREFIXES: &[&str] = &[
 
 type Rebased = MapRequest<Router, fn(Request<Body>) -> Request<Body>>;
 
-/// The routers the web member serves, built once from its provided values.
 #[derive(Clone)]
 pub(crate) struct WebRuntime {
     admin: Option<Router>,
@@ -154,7 +153,6 @@ fn rebase(mut request: Request<Body>, below: &str) -> Request<Body> {
     request
 }
 
-/// Route-set state: the runtime the member provided.
 #[derive(Debug, Clone)]
 pub(crate) struct WebState(Arc<WebRuntime>);
 

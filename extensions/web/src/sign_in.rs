@@ -18,13 +18,11 @@ use systemprompt_web_shared::config_loader::{self, ConfigError};
 
 use crate::WebSettings;
 
-/// What the services tree asks of sign-in.
 #[derive(Debug, Clone)]
 pub(crate) struct SignInSetup {
     adfs: Option<Arc<AdfsConfig>>,
 }
 
-/// Why the sign-in setup could not be read.
 #[derive(Debug, thiserror::Error)]
 #[error("the sign-in configuration does not load")]
 pub(crate) struct SignInSetupError(#[source] ConfigError);

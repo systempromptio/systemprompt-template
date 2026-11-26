@@ -14,7 +14,7 @@ use super::context::{CommitRowView, UsageTabView, UserModelRowView};
 use super::context::{LatestConversationView, UsageConversationsView};
 #[cfg(feature = "agents")]
 use super::load::ConversationUsage;
-use super::load::UsageData;
+use super::load::UserUsageData;
 use super::view::stamp;
 #[cfg(feature = "agents")]
 use crate::handlers::ssr::entity_urls::context_detail_url;
@@ -23,7 +23,7 @@ use crate::handlers::ssr::format::relative_time;
 use crate::handlers::ssr::format::{format_cost, format_token_total};
 use crate::repositories::users::enrolment::UserCommitRow;
 
-pub(super) fn usage_tab(data: UsageData, user_id: &UserId) -> UsageTabView {
+pub(super) fn usage_tab(data: UserUsageData, user_id: &UserId) -> UsageTabView {
     let encoded = urlencoding::encode(user_id.as_str()).into_owned();
     UsageTabView {
         window_label: "Gateway traffic through /v1/messages, all time.".to_owned(),

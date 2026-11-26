@@ -12,7 +12,7 @@
 //! seeded once at boot by `repositories::sync::boot`, and otherwise only
 //! compared against the database. Inbound Slack apps are the one projection
 //! that stays with the file it gates ([`slack_acl`]). The exception is
-//! [`acl_detect`], which is DB-backed but belongs to this domain: it re-runs
+//! `acl_detect`, which is DB-backed but belongs to this domain: it re-runs
 //! the configured ACL over traffic that already went through.
 
 #[cfg(feature = "gateway")]

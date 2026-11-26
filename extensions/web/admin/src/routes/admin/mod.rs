@@ -58,14 +58,7 @@ pub(crate) fn build_admin_only_routes(
         axum_middleware::from_fn_with_state(ROLES_PLATFORM, middleware::require_roles_middleware),
     );
 
-    let routes = reads.merge(writes).merge(platform);
-    #[cfg(feature = "mcp")]
-    let routes = routes.layer(axum::Extension(Arc::new(
-        super::managed_state::ManagedState::new(db, owner),
-    )));
-    #[cfg(not(feature = "mcp"))]
-    let _ = (db, owner);
-    routes
+    super::with_managed_state(reads.merge(writes).merge(platform), db, owner)
 }
 
 // Why: the access-control writes are their own table — every route here edits

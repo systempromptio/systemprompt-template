@@ -18,7 +18,7 @@ use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use super::RAW_TABLES;
-use super::archive::{ArchiveTarget, Window, archive_tables, prune_periods};
+use super::archive::{ArchiveTarget, ArchiveWindow, archive_tables, prune_periods};
 use super::ledger::archive_exists;
 use crate::jobs::error::JobError;
 
@@ -36,12 +36,12 @@ pub(crate) struct WeeklyParams {
 
 // Why: the ISO week containing `day`, as a `[monday, next monday)` window
 // and its `yyyy-Www` label.
-pub(crate) fn iso_week(day: NaiveDate) -> (Window, String) {
+pub(crate) fn iso_week(day: NaiveDate) -> (ArchiveWindow, String) {
     let monday = day - Duration::days(i64::from(day.weekday().num_days_from_monday()));
     let from = monday.and_time(NaiveTime::MIN).and_utc();
     let iso = monday.iso_week();
     (
-        Window {
+        ArchiveWindow {
             from,
             to: from + Duration::weeks(1),
         },

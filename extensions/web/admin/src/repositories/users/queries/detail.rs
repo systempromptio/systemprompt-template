@@ -1,7 +1,7 @@
 //! Everything the single-user detail page renders.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{Email, UserId};
+use systemprompt::identifiers::{Email, SessionId, UserId};
 
 use crate::activity;
 use crate::types::{EventTypeCount, ToolUsageCount, UserSession, UserSummary};
@@ -140,8 +140,7 @@ pub async fn list_user_sessions(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserSession>, sqlx::Error> {
-    sqlx::query_as!(
-        UserSession,
+    let rows = sqlx::query!(
         r#"SELECT
             session_id as "session_id!",
             started_at,
@@ -159,7 +158,21 @@ pub async fn list_user_sessions(
         user_id.as_str(),
     )
     .fetch_all(pool)
-    .await
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| UserSession {
+            session_id: SessionId::new(r.session_id),
+            started_at: r.started_at,
+            total_events: r.total_events,
+            tool_uses: r.tool_uses,
+            prompts: r.prompts,
+            errors: r.errors,
+            content_input_bytes: r.content_input_bytes,
+            content_output_bytes: r.content_output_bytes,
+            subagent_spawns: r.subagent_spawns,
+        })
+        .collect())
 }
 
 pub async fn list_user_event_type_breakdown(

@@ -35,13 +35,7 @@ pub fn admin_ssr_router(
         .merge(super::ssr_platform::routes())
         .merge(account_routes())
         .merge(api_routes());
-    #[cfg(feature = "mcp")]
-    let inner = inner.layer(Extension(Arc::new(
-        super::managed_state::ManagedState::new(db, owner),
-    )));
-    #[cfg(not(feature = "mcp"))]
-    let _ = (db, owner);
-    let inner = inner
+    let inner = super::with_managed_state(inner, db, owner)
         .layer(Extension(engine.clone()))
         .layer(axum_middleware::from_fn_with_state(
             Arc::clone(&pool),
