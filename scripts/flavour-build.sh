@@ -41,7 +41,7 @@ if [ "$(bash scripts/core-patch.sh status)" = live ]; then
     core_stage="$FLAVOUR_ROOT/target/core-context"
     mkdir -p "$core_stage"
     git -C "$core_path" ls-files -z --cached --others --exclude-standard \
-        | rsync -a --delete --from0 --files-from=- "$core_path/" "$core_stage/"
+        | rsync -a --delete --ignore-missing-args --from0 --files-from=- "$core_path/" "$core_stage/"
     args+=(--build-context "core=$core_stage" --build-arg "CORE_MOUNT=$(realpath -m "/src/$core_rel")")
     echo "core: patched to $core_path, mounted at $(realpath -m "/src/$core_rel")"
 fi
