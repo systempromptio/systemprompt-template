@@ -231,14 +231,14 @@ seed_console() {
     seed_post /groups/smoke-group/members "{\"user_id\":\"$member\"}"
     seed_post /projects '{"id":"smoke-project","name":"Smoke project"}'
     seed_post /projects/smoke-project/members "{\"user_id\":\"$member\"}"
-    if [ "$(flavour_get "$flavour" smoke.models_endpoint)" = true ]; then
+    if [ "$(flavour_get "$flavour" requires_ai_key)" = true ]; then
         key="$(cli admin users api-key issue --user "$member" --name smoke 2>/dev/null \
             | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -oE 'sp-live-[A-Za-z0-9]+\.[A-Za-z0-9]+' | head -1 || true)"
         code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -H "Authorization: Bearer $key" \
             -H 'Content-Type: application/json' -H 'anthropic-version: 2023-06-01' \
             -d '{"model":"claude-sonnet-4-5","max_tokens":8,"messages":[{"role":"user","content":"smoke"}]}' \
             "$base/v1/messages" || true)"
-        if [ -n "$key" ] && [ "$code" != 401 ] && [ "$code" != 000 ]; then
+        if [ -n "$key" ] && [ "$code" -lt 500 ] 2>/dev/null && [ "$code" != 401 ] && [ "$code" != 404 ]; then
             record "seed gateway request" pass "$code"
         else
             record "seed gateway request" fail "api key or request refused: $code"
