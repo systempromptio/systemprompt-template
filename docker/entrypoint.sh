@@ -237,11 +237,10 @@ if [ "${FLAVOUR_SITE:-true}" = true ]; then
     fi
 else
     echo "Publishing console assets for this node..."
-    for job in bundle_admin_css copy_extension_assets; do
-        if ! /app/bin/systemprompt infra jobs run "$job"; then
-            echo "WARN: $job failed; the console may render unstyled on this node until it is re-run." >&2
-        fi
-    done
+    # Why: one invocation boots the CLI kernel once for both jobs.
+    if ! /app/bin/systemprompt infra jobs run bundle_admin_css copy_extension_assets --sequential; then
+        echo "WARN: publishing console assets failed; the console may render unstyled on this node until bundle_admin_css and copy_extension_assets are re-run." >&2
+    fi
 fi
 
 echo "Starting services..."
