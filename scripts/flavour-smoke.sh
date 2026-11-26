@@ -209,6 +209,34 @@ if [ -n "$landing" ]; then
     fi
 fi
 
+pages="$(flavour_get "$flavour" smoke.console_pages 2>/dev/null || true)"
+signed_absent="$(flavour_get "$flavour" smoke.routes_absent_signed_in 2>/dev/null || true)"
+if [ -n "$pages$signed_absent" ]; then
+    link="$(cli admin users webauthn generate-setup-token --email smoke@example.invalid 2>/dev/null \
+        | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -oE 'https?://[^ ]*/auth/link-passkey\?token=[A-Za-z0-9_-]+' | head -1 || true)"
+    if [ -n "$link" ] && cookie="$(python3 -I "$FLAVOUR_ROOT/scripts/lib/console-login.py" "$base" "${link%%/auth/*}" \
+        smoke@example.invalid "${link##*token=}" 2> "$work/login.err")"; then
+        record "console sign-in" pass "passkey and PKCE as the login page runs them"
+        while IFS= read -r page; do
+            [ -n "$page" ] || continue
+            code="$(http_status -H "Cookie: $cookie" "$base$page")"
+            if [ "$code" = 200 ]; then record "console page $page" pass "$code"; else record "console page $page" fail "$code"; fi
+        done <<< "$pages"
+        while IFS= read -r route; do
+            [ -n "$route" ] || continue
+            code="$(http_status -H "Cookie: $cookie" "$base$route")"
+            if [ "$code" = 404 ]; then record "signed-in route absent $route" pass "$code"; else record "signed-in route absent $route" fail "$code"; fi
+        done <<< "$signed_absent"
+        home="$(curl -s --max-time 10 -H "Cookie: $cookie" "$base/admin" || true)"
+        missing="$(flavour_py nav-titles "$flavour" | while IFS= read -r title; do
+            html="$(printf '%s' "$title" | sed 's/&/\&amp;/g')"
+            printf '%s' "$home" | grep -qF "sp-nav-group__title\">$html<" || printf '%s; ' "$title"; done)"
+        if [ -z "$missing" ]; then record "console nav" pass "every configured section"; else record "console nav" fail "missing: $missing"; fi
+    else
+        record "console sign-in" fail "$( [ -n "$link" ] && tail -1 "$work/login.err" || echo 'no setup link from admin users webauthn generate-setup-token')"
+    fi
+fi
+
 code="$(http_status "$base/v1/models")"
 if [ "$(flavour_get "$flavour" smoke.models_endpoint)" = true ]; then
     if [ "$code" != 404 ] && [ "$code" -lt 500 ] 2>/dev/null; then record "/v1/models present" pass "$code"; else record "/v1/models present" fail "$code"; fi

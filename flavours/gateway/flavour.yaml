@@ -24,13 +24,12 @@ smoke:
   routes_present:
     - "/"
     - "/.well-known/jwks.json"
-    - "/admin/"
+    - "/admin"
   routes_absent:
     - "/sitemap.xml"
     - "/api/public/links"
     - "/api/v1/mcp/registry"
     - "/api/v1/marketplace"
-    - "/api/v1/agents/registry"
     - "/api/v1/agent-runs"
     - "/api/v1/brain"
     - "/api/public/connectors"
@@ -51,4 +50,17 @@ smoke:
     - "governance_bootstrap"
   mcp_servers: []
   models_endpoint: true
-  root_redirect: "/admin/"
+  root_redirect: "/admin"
+  console_pages:
+    - "/admin"
+    - "/admin/analytics"
+    - "/admin/requests"
+    - "/admin/conversations"
+    - "/admin/gateway"
+    - "/admin/gateway/policies"
+    - "/admin/governance/quotas"
+    - "/admin/users"
+    - "/admin/system/observability"
+    - "/admin/history"
+  routes_absent_signed_in:
+    - "/api/v1/agents/registry"

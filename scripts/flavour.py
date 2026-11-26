@@ -7,6 +7,8 @@
                                       booleans print true/false, a dotted key
                                       reads a table (smoke.routes_present)
   flavour.py features <name>          cargo_feature plus extra_features, comma-joined
+  flavour.py nav-titles <name>        the console sidebar section titles the
+                                      flavour's dashboard.yaml configures
   flavour.py matrix                   the index as a JSON array (CI matrices)
   flavour.py check                    index, directories, features and services agree
 """
@@ -41,6 +43,8 @@ SMOKE = {
 }
 OPTIONAL_SMOKE = {
     "root_redirect": str,
+    "console_pages": list,
+    "routes_absent_signed_in": list,
 }
 RUNTIMES = ("slim", "full")
 
@@ -98,6 +102,13 @@ def get(name, key):
 def features(name):
     data = flavour(name)
     return ",".join([data["cargo_feature"], *data["extra_features"]])
+
+
+def nav_titles(name):
+    path = FLAVOURS / name / "services/web/config/dashboard.yaml"
+    if not path.is_file():
+        path = ROOT / "services/web/config/dashboard.yaml"
+    return "\n".join(section["title"] for section in load(path).get("nav", []))
 
 
 def check():
@@ -165,6 +176,8 @@ def main(argv):
         print(get(argv[2], argv[3]))
     elif command == "features" and len(argv) == 3:
         print(features(argv[2]))
+    elif command == "nav-titles" and len(argv) == 3:
+        print(nav_titles(argv[2]))
     elif command == "matrix" and len(argv) == 2:
         print(json.dumps(index()))
     elif command == "check" and len(argv) == 2:
