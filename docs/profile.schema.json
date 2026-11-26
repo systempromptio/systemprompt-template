@@ -99,7 +99,10 @@
         "outbox_processed_days": 7,
         "ai_request_payload_raw_days": 7,
         "governance_decisions_days": 180,
-        "archived_users_days": 90
+        "engagement_events_days": 90,
+        "fingerprint_reputation_days": 90,
+        "archived_users_days": 90,
+        "agent_run_dirs_days": 7
       }
     },
     "services": {
@@ -131,6 +134,92 @@
       "$ref": "#/$defs/ConfigPlanesConfig",
       "default": {
         "authority": {}
+      }
+    },
+    "licence": {
+      "$ref": "#/$defs/LicenceConfig",
+      "default": {
+        "multi_tenant": false,
+        "licence_id": null,
+        "endpoint": "https://api.systemprompt.io/api/v1/licence/checkin",
+        "interval_secs": 21600
+      }
+    },
+    "notifications": {
+      "$ref": "#/$defs/NotificationsProfile",
+      "default": {
+        "retention_days": 90,
+        "max_audience": 500,
+        "unread_max_age_days": 180,
+        "failure_retention_days": 30,
+        "consumer": {
+          "batch": 64,
+          "poll_secs": 5,
+          "sweep_secs": 30,
+          "resolver_timeout_ms": 5000,
+          "channel_timeout_ms": 5000
+        }
+      }
+    },
+    "brain": {
+      "$ref": "#/$defs/BrainProfile",
+      "default": {
+        "enabled": false,
+        "recall": {
+          "budget_tokens": 800,
+          "deadline_ms": 200,
+          "source_timeout_ms": 40,
+          "scopes": [
+            "user",
+            "project",
+            "group",
+            "org"
+          ],
+          "clients": {
+            "claude-code": true,
+            "claude-desktop": true
+          },
+          "stale": "withhold"
+        },
+        "capture": {
+          "sources": [
+            "document",
+            "comment",
+            "entered"
+          ],
+          "auto_confirm": {
+            "document": "project_policy",
+            "others": "never"
+          },
+          "session": {
+            "enabled": false,
+            "max_chars": 4000
+          }
+        },
+        "extraction": {
+          "provider": null,
+          "model": null,
+          "max_output_tokens": 2048,
+          "timeout_ms": 60000,
+          "daily_token_budget": 1000000
+        },
+        "lifecycle": {
+          "review_after_days": 90,
+          "retired_retention_days": 365,
+          "recalls_retention_days": 90,
+          "results_retention_days": 30,
+          "correction_window_days": 14
+        },
+        "consumer": {
+          "batch": 32,
+          "poll_secs": 5,
+          "sweep_secs": 300,
+          "source_timeout_ms": 5000
+        },
+        "consolidation": {
+          "enabled": false,
+          "daily_token_budget": null
+        }
       }
     }
   },
@@ -174,6 +263,7 @@
       ]
     },
     "DatabaseConfig": {
+      "description": "The database section of a profile.\n\n`connection_budget` is the most Postgres connections one node may hold,\nits hosted children included; the runtime divides it between the main,\nwrite and session pools and the children's share\n(`systemprompt_database::ConnectionBudget`) and refuses to boot when the\npinned pool sizes exceed it. Omitted, every pool keeps its own ceiling.\n\nA node installs the schema at boot when `migrate_on_boot` is true and,\nwhen `schema_install_roles` is set, its `server.role` is listed there; a\nnode that does not install verifies the schema instead. Omitting\n`schema_install_roles` lets every role install, so a single-node\ndeployment keeps migrating on boot.",
       "type": "object",
       "properties": {
         "type": {
@@ -196,6 +286,23 @@
         "migrate_on_boot": {
           "type": "boolean",
           "default": true
+        },
+        "connection_budget": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "schema_install_roles": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/NodeRole"
+          }
         }
       },
       "additionalProperties": false,
@@ -204,7 +311,7 @@
       ]
     },
     "PoolConfig": {
-      "description": "Operator-tunable connection-pool sizing.\n\nOmitted fields fall back to the engine defaults (50 connections, 30s\nacquire, 300s idle, 1800s lifetime); set them to fit the pool to the\ndeployment's Postgres `max_connections` and replica count.\n`statement_cache_capacity` defaults to 100 prepared statements per\nconnection. 0 is accepted but leaks: sqlx still names every statement and\nnever closes one without a cache, so each backend grows until Postgres runs\nout of memory.\n\n`max_connections_by_role` overrides `max_connections` for the node's\n`server.role`, so one profile can size a horizontally scaled gateway pool\nsmall and the single admin node's pool larger. A Postgres primary must\nadmit `gateway_replicas × (gateway pool + 2) + admin × (admin pool + 2)`\nplus migration and operator sessions; the `+ 2` are the replica-identity\nclaim and the event listener sessions every node holds.\n`session_max_connections` sizes the separate session pool a\n`database_session_url` opens (10 by default): it holds only the claim,\nlistener, job-lock and migration sessions, so it never needs the main\npool's ceiling.\n[`crate::profile::Profile::validate`] range-checks the values at bootstrap.",
+      "description": "Operator-tunable connection-pool sizing.\n\nOmitted fields fall back to the engine defaults (50 connections, 30s\nacquire, 300s idle, 1800s lifetime); set them to fit the pool to the\ndeployment's Postgres `max_connections` and replica count.\n`statement_cache_capacity` defaults to 100 prepared statements per\nconnection. 0 is accepted but leaks: sqlx still names every statement and\nnever closes one without a cache, so each backend grows until Postgres runs\nout of memory.\n\n`max_connections_by_role` overrides `max_connections` for the node's\n`server.role`, so one profile can size a horizontally scaled gateway pool\nand `api` pools small and the worker pool larger. A Postgres primary must\nadmit `Σ replicas(role) × (pool(role) + 2)` over every role\nplus migration and operator sessions; the `+ 2` are the replica-identity\nclaim and the event listener sessions every node holds.\n`session_max_connections` sizes the separate session pool a\n`database_session_url` opens (10 by default): it holds only the claim,\nlistener, job-lock and migration sessions, so it never needs the main\npool's ceiling.\n[`crate::profile::Profile::validate`] range-checks the values at bootstrap.",
       "type": "object",
       "properties": {
         "max_connections": {
@@ -288,7 +395,15 @@
           "format": "uint32",
           "minimum": 0
         },
-        "admin": {
+        "api": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "worker": {
           "type": [
             "integer",
             "null"
@@ -307,6 +422,17 @@
       },
       "additionalProperties": false
     },
+    "NodeRole": {
+      "description": "The part of the platform a node serves.\n\n`all` is a single-node deployment: every surface, every worker, and the\nextensions' runner services, so one node runs the whole product.\n`gateway` serves only the AI gateway,\nthe bridge consumer surface and the OAuth/discovery routes they depend on,\nand runs no scheduler, MCP or agent processes, so it scales horizontally.\n`api` serves everything except the gateway, runs no scheduler and\nsupervises no MCP or agent process — it forwards that traffic to the\nworker that owns the process — so it scales horizontally.\n`worker` runs the scheduler and owns the MCP and agent processes; it\nserves the probes plus the MCP and agent routes `api` nodes forward to.\n`runner` serves only the health, readiness and metrics probes, runs no\nscheduler, MCP or agent processes, and starts the extensions' runner\nservices, so long-running work scales on its own Deployment.",
+      "type": "string",
+      "enum": [
+        "all",
+        "gateway",
+        "api",
+        "worker",
+        "runner"
+      ]
+    },
     "ServerConfig": {
       "type": "object",
       "properties": {
@@ -319,25 +445,14 @@
           "minimum": 0,
           "maximum": 65535
         },
-        "api_server_url": {
+        "external_url": {
           "type": "string"
         },
-        "api_internal_url": {
-          "type": "string"
-        },
-        "api_external_url": {
-          "type": "string"
-        },
-        "use_https": {
-          "type": "boolean",
-          "default": false
-        },
-        "cors_allowed_origins": {
+        "extra_cors_origins": {
           "type": "array",
           "items": {
             "type": "string"
-          },
-          "default": []
+          }
         },
         "content_negotiation": {
           "$ref": "#/$defs/ContentNegotiationConfig",
@@ -385,6 +500,12 @@
           "$ref": "#/$defs/NodeRole",
           "default": "all"
         },
+        "advertise_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "max_in_flight": {
           "type": [
             "integer",
@@ -392,7 +513,19 @@
           ],
           "format": "uint32",
           "minimum": 1,
-          "default": null
+          "default": 4096
+        },
+        "max_probe_in_flight": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1,
+          "default": 64
+        },
+        "max_route_body_bytes": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0,
+          "default": 16777216
         },
         "trusted_proxies": {
           "type": "array",
@@ -401,11 +534,19 @@
           },
           "default": []
         },
+        "analytics_queue": {
+          "$ref": "#/$defs/AnalyticsQueueConfig",
+          "default": {
+            "capacity": 8192,
+            "writers": 8
+          }
+        },
         "shutdown": {
           "$ref": "#/$defs/ShutdownConfig",
           "default": {
             "pre_stop_delay_secs": 0,
             "drain_grace_secs": 10,
+            "longest_stream_secs": 600,
             "child_grace_secs": 5,
             "background_grace_secs": 5,
             "forced_exit_grace_secs": 10
@@ -416,9 +557,7 @@
       "required": [
         "host",
         "port",
-        "api_server_url",
-        "api_internal_url",
-        "api_external_url"
+        "external_url"
       ]
     },
     "ContentNegotiationConfig": {
@@ -486,18 +625,27 @@
         "unsafe-url"
       ]
     },
-    "NodeRole": {
-      "description": "The part of the platform a node serves.\n\n`all` is a single-node deployment: every surface, every worker, and the\nextensions' runner services, so one node runs the whole product.\n`gateway` serves only the AI gateway,\nthe bridge consumer surface and the OAuth/discovery routes they depend on,\nand runs no scheduler, MCP or agent processes, so it scales horizontally.\n`admin` serves everything except the gateway and runs the workers.\n`runner` serves only the health, readiness and metrics probes, runs no\nscheduler, MCP or agent processes, and starts the extensions' runner\nservices, so long-running work scales on its own Deployment.",
-      "type": "string",
-      "enum": [
-        "all",
-        "gateway",
-        "admin",
-        "runner"
-      ]
+    "AnalyticsQueueConfig": {
+      "description": "`server.analytics_queue`: the request-analytics write queue. `capacity`\nbounds the writes held at once (past it a write is dropped and counted);\n`writers` bounds how many run concurrently.",
+      "type": "object",
+      "properties": {
+        "capacity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1,
+          "default": 8192
+        },
+        "writers": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1,
+          "default": 8
+        }
+      },
+      "additionalProperties": false
     },
     "ShutdownConfig": {
-      "description": "Shutdown deadlines in seconds. The defaults are the historical fixed\nwindows: no pre-stop delay, a 10 s drain, 5 s for children and background\nwork, and a 10 s forced-exit backstop.",
+      "description": "Shutdown deadlines in seconds.\n\nThe defaults: no pre-stop delay, a 10 s\ndrain extended to the 600 s longest permitted stream while a stream is\nopen, 5 s for children and background work, and a 10 s forced-exit\nbackstop.",
       "type": "object",
       "properties": {
         "pre_stop_delay_secs": {
@@ -511,6 +659,12 @@
           "format": "uint64",
           "minimum": 0,
           "default": 10
+        },
+        "longest_stream_secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 600
         },
         "child_grace_secs": {
           "type": "integer",
@@ -534,9 +688,15 @@
       "additionalProperties": false
     },
     "PathsConfig": {
-      "description": "Filesystem roots for one profile.\n\n`shipped_files` is an optional read-only directory holding the files an\nimage ships under `files/` (CSS, JS, fonts, downloads). `/files/*` reads\n`paths.storage/files` first and falls back to it, so `paths.storage` only\nhas to hold user data and nothing has to be copied onto it at boot.",
+      "description": "Filesystem roots for one profile. Relative entries resolve against\n`root`.\n\n`shipped_files` is an optional read-only directory holding the files an\nimage ships under `files/` (CSS, JS, fonts, downloads). `/files/*` reads\n`paths.storage/files` first and falls back to it, so `paths.storage` only\nhas to hold user data and nothing has to be copied onto it at boot.",
       "type": "object",
       "properties": {
+        "root": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "system": {
           "type": "string"
         },
@@ -591,9 +751,6 @@
     "SecurityConfig": {
       "type": "object",
       "properties": {
-        "jwt_issuer": {
-          "type": "string"
-        },
         "jwt_access_token_expiration": {
           "type": "integer",
           "format": "int64"
@@ -646,11 +803,16 @@
         },
         "api_keys": {
           "$ref": "#/$defs/ApiKeyPolicyConfig"
+        },
+        "ui_session": {
+          "$ref": "#/$defs/UiSessionConfig"
+        },
+        "authorize": {
+          "$ref": "#/$defs/AuthorizeConfig"
         }
       },
       "additionalProperties": false,
       "required": [
-        "jwt_issuer",
         "jwt_access_token_expiration",
         "jwt_refresh_token_expiration",
         "jwt_audiences"
@@ -667,7 +829,8 @@
             "mcp",
             "internal",
             "bridge",
-            "hook"
+            "hook",
+            "ui"
           ]
         },
         {
@@ -676,7 +839,7 @@
       ]
     },
     "TrustedIssuer": {
-      "description": "A federated identity provider trusted for the RFC 8693 token-exchange and\nEMA (Enterprise-Managed Authorization) paths.\n\n`audience` holds the value the `IdP` places in `id_token.aud`; for a\nSalesforce Connected App that is its `client_id`, **not** a URL.",
+      "description": "A federated identity provider trusted for the RFC 8693 token-exchange and\nEMA (Enterprise-Managed Authorization) paths.\n\n`audience` holds the value the `IdP` places in `id_token.aud`; for a\nSalesforce Connected App that is its `client_id`, **not** a URL. `link`\ndecides whether an identity it asserts may claim an existing account by\nverified email (off by default) and whether a new one is provisioned.",
       "type": "object",
       "properties": {
         "issuer": {
@@ -703,6 +866,9 @@
         "can_issue_id_jag": {
           "type": "boolean",
           "default": false
+        },
+        "link": {
+          "$ref": "#/$defs/LinkPolicy"
         }
       },
       "additionalProperties": false,
@@ -711,6 +877,21 @@
         "jwks_uri",
         "audience"
       ]
+    },
+    "LinkPolicy": {
+      "description": "How an issuer's external identities may reach local accounts.\n\n`link_by_email` (default `false`) lets an identity with no federated link\nclaim the ordinary account that already owns its verified email. With it\noff, a verified email that an existing account owns refuses the sign-in.\n`auto_provision` (default `true`) mints a fresh account for an identity\nthat matches nothing; with it off such an identity is refused.",
+      "type": "object",
+      "properties": {
+        "link_by_email": {
+          "type": "boolean",
+          "default": false
+        },
+        "auto_provision": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
     },
     "ApiKeyPolicyConfig": {
       "description": "Issuance policy for personal access tokens (`security.api_keys`).\n\nWith `max_lifetime_days` set, every issuance path bounds the key: an\nomitted expiry becomes the maximum and a longer one is refused. Unset\nleaves keys without a lifetime ceiling.",
@@ -727,8 +908,41 @@
       },
       "additionalProperties": false
     },
+    "UiSessionConfig": {
+      "description": "Lifetimes, in seconds, of a person's UI session (`security.ui_session`):\nthe bearer token a first-party client the operator declared `person_ui`\nholds for the person who signed in through it.\n\nOnly the authorization-code + PKCE grant for such a client mints one, and\nonly refreshing that grant's own refresh token renews it. The access token\nlives `access_ttl_secs`; its `auth_time` is the sign-in, carried unchanged\nthrough every refresh until `absolute_secs` after the grant's authorization\ncode was issued, when the session ends whatever the refreshes. A high-impact\ndocument action wants a sign-in no older than `step_up_max_age_secs` (RFC\n9470).",
+      "type": "object",
+      "properties": {
+        "access_ttl_secs": {
+          "type": "integer",
+          "format": "int64",
+          "default": 300
+        },
+        "absolute_secs": {
+          "type": "integer",
+          "format": "int64",
+          "default": 43200
+        },
+        "step_up_max_age_secs": {
+          "type": "integer",
+          "format": "int64",
+          "default": 600
+        }
+      },
+      "additionalProperties": false
+    },
+    "AuthorizeConfig": {
+      "description": "Policy of the authorization endpoint for a person already signed in to the\nbrowser (`security.authorize`).\n\n`/authorize` issues a code without any page when the person holds a browser\nsession and has already allowed the requesting operator-declared client\nthe requested scopes. A client whose `redirect_uri` is a loopback address\nor a private-use scheme cannot prove its identity (RFC 8252 §8.6): any\nprocess on the person's machine can open the same authorization URL and\nreceive the code. For such a redirect the endpoint therefore always shows\nthe one-click consent page, whatever consent is remembered.\n`silent_native_clients: true` removes that page for native redirects too;\nthe person then has no chance to notice a local process impersonating the\nclient, and PKCE alone decides who can redeem the code.",
+      "type": "object",
+      "properties": {
+        "silent_native_clients": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
     "RateLimitsConfig": {
-      "description": "Per-route-group request budgets, in requests per second.\n\nEach `*_per_second` field governs one route group:\n\n- `oauth_public` — `/api/v1/core/oauth` public endpoints,\n  `/auth/link-passkey`, and the public gateway session routes under\n  `/api/public/gateway`.\n- `oauth_auth` — the authenticated half of `/api/v1/core/oauth`, plus\n  `/api/v1/core/users`.\n- `contexts` — `/api/v1/core/contexts` and the inbound `/api/v1/webhook`\n  mount.\n- `tasks` — `/api/v1/core/tasks`.\n- `artifacts` — `/api/v1/core/artifacts`.\n- `agent_registry` — `/api/v1/agents/registry`, discovery only, kept apart\n  from `agents_per_second` so listing agents cannot spend an execution\n  budget.\n- `agents` — `/api/v1/agents` execution, and the Slack and Teams inbound\n  mounts that dispatch to an agent.\n- `mcp_registry` — `/api/v1/mcp/registry`, the MCP server catalog, discovery\n  only.\n- `mcp` — `/api/v1/mcp` tool calls, the busiest protocol route group.\n- `stream` — `/api/v1/stream`, long-lived SSE connections, so this is a\n  connection budget rather than a request one and is set high.\n- `content` — `/api/v1/content`, `/api/v1/sync`, `/api/v1/marketplace`,\n  `/api/v1/analytics` and `/track/engagement`.\n- `gateway` — inference traffic under `/v1`: `/v1/messages` and the\n  OpenAI-shaped `/v1/chat/completions`.\n- `bridge_auth` — `/v1/auth/bridge/*`, deliberately separate from\n  `gateway_per_second`: sign-in is low-volume and must stay reachable on an\n  instance whose inference traffic is saturating its own budget. Sharing one\n  bucket let a busy gateway lock every user out of authenticating.\n\n`per_second_budgets` projects those fields as a list; both validators\niterate it rather than naming the fields themselves, which had already let\nthem drift apart and let a zero in an unnamed field through.",
+      "description": "Per-route-group request budgets, in requests per second.\n\nEach `*_per_second` field governs one route group:\n\n- `oauth_public` — `/api/v1/core/oauth` public endpoints,\n  `/auth/link-passkey`, and the public gateway session routes under\n  `/api/public/gateway`.\n- `oauth_auth` — the authenticated half of `/api/v1/core/oauth`, plus\n  `/api/v1/core/users`.\n- `contexts` — `/api/v1/core/contexts` and the inbound `/api/v1/webhook`\n  mount.\n- `tasks` — `/api/v1/core/tasks`.\n- `artifacts` — `/api/v1/core/artifacts`.\n- `agent_registry` — `/api/v1/agents/registry`, discovery only, kept apart\n  from `agents_per_second` so listing agents cannot spend an execution\n  budget.\n- `agents` — `/api/v1/agents` execution, and the Slack and Teams inbound\n  mounts that dispatch to an agent.\n- `mcp_registry` — `/api/v1/mcp/registry`, the MCP server catalog, discovery\n  only.\n- `mcp` — `/api/v1/mcp` tool calls, the busiest protocol route group.\n- `stream` — `/api/v1/stream`, long-lived SSE connections, so this is a\n  connection budget rather than a request one and is set high.\n- `content` — `/api/v1/content`, `/api/v1/sync`, `/api/v1/marketplace`,\n  `/api/v1/analytics` and `/track/engagement`.\n- `brain` — `/api/v1/brain` and `/api/v1/admin/brain`, fact reads,\n  governance and the recall simulator.\n- `gateway` — inference traffic under `/v1`: `/v1/messages` and the\n  OpenAI-shaped `/v1/chat/completions`.\n- `bridge_auth` — `/v1/auth/bridge/*`, deliberately separate from\n  `gateway_per_second`: sign-in is low-volume and must stay reachable on an\n  instance whose inference traffic is saturating its own budget. Sharing one\n  bucket let a busy gateway lock every user out of authenticating.\n\n- `pre_auth_ip` — every request, keyed by resolved client address only and\n  charged before any authentication runs, so a flood of forged or expired\n  credentials is throttled before it costs a token decode or a revocation\n  lookup. It sits in front of the per-group budgets above and is sized for a\n  whole network behind one address, not for one person.\n\n`memory_capacity` bounds the callers this node tracks in its per-replica\nwindows when no replica-shared buckets are provided: the total number of\n`(user, scope)` counters it holds, divided evenly over the limiter's\nshards, each shard holding `memory_capacity / shards` rounded up. It is a\nper-node bound, not a budget: each replica counts its own callers, so the\neffective limit across N replicas is N times the published rate. Omitted,\nit is 262 144 (64 shards × 4096); it must lie in\n`1..=MAX_MEMORY_CAPACITY`.\n\n`per_second_budgets` projects those fields as a list; both validators\niterate it rather than naming the fields themselves, which had already let\nthem drift apart and let a zero in an unnamed field through.",
       "type": "object",
       "properties": {
         "disabled": {
@@ -801,6 +1015,18 @@
           "minimum": 0,
           "default": 50
         },
+        "notifications_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 50
+        },
+        "brain_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 50
+        },
         "gateway_per_second": {
           "type": "integer",
           "format": "uint64",
@@ -813,11 +1039,23 @@
           "minimum": 0,
           "default": 20
         },
+        "pre_auth_ip_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 500
+        },
         "burst_multiplier": {
           "type": "integer",
           "format": "uint64",
           "minimum": 0,
           "default": 3
+        },
+        "memory_capacity": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 262144
         }
       },
       "additionalProperties": false
@@ -903,12 +1141,56 @@
             "null"
           ]
         },
+        "provider": {
+          "$ref": "#/$defs/HostingProvider",
+          "default": "systemprompt"
+        },
         "validation": {
           "$ref": "#/$defs/CloudValidationMode",
           "default": "strict"
+        },
+        "deploy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeployConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OperatorAuthConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "image": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuntimeImageConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
+    },
+    "HostingProvider": {
+      "description": "Where a tenant runs and who operates it.\n\n`Systemprompt` is the managed cloud reached through the control plane;\nevery other provider is self-managed and never synced with it.",
+      "type": "string",
+      "enum": [
+        "systemprompt",
+        "kubernetes",
+        "gke",
+        "docker_local"
+      ]
     },
     "CloudValidationMode": {
       "type": "string",
@@ -917,6 +1199,107 @@
         "warn",
         "skip"
       ]
+    },
+    "DeployConfig": {
+      "description": "Registry and `GitOps` target for `cloud deploy` on a self-managed provider.",
+      "type": "object",
+      "properties": {
+        "registry": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "gitops": {
+          "$ref": "#/$defs/GitOpsConfig"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "registry",
+        "repository",
+        "gitops"
+      ]
+    },
+    "GitOpsConfig": {
+      "description": "The ops-repository working copy and the values-file key that carries the\ntenant's image digest.",
+      "type": "object",
+      "properties": {
+        "repo_path": {
+          "type": "string"
+        },
+        "values_file": {
+          "type": "string"
+        },
+        "image_digest_key": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "commit_message": {
+          "type": "string",
+          "default": "deploy({tenant}): {digest}"
+        },
+        "push": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "repo_path",
+        "values_file",
+        "image_digest_key",
+        "branch"
+      ]
+    },
+    "OperatorAuthConfig": {
+      "description": "The OIDC issuer operators sign in against for self-managed tenants.",
+      "type": "object",
+      "properties": {
+        "issuer": {
+          "type": "string"
+        },
+        "client_id": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "openid",
+            "email",
+            "profile"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "issuer",
+        "client_id"
+      ]
+    },
+    "RuntimeImageConfig": {
+      "description": "`cloud.image`: the base image and the extra apt packages of the runtime\nimage.",
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
     },
     "SecretsConfig": {
       "type": "object",
@@ -1168,12 +1551,30 @@
         "disabled": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/DisabledExtension"
           },
-          "default": []
+          "default": [],
+          "x-interpolation-provenance": true
+        },
+        "secrets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/SecretPattern"
+            }
+          }
         }
       },
       "additionalProperties": false
+    },
+    "DisabledExtension": {
+      "type": "string",
+      "x-interpolation-provenance": true
+    },
+    "SecretPattern": {
+      "type": "string",
+      "pattern": "^[^*]+\\*?$"
     },
     "GovernanceConfig": {
       "type": "object",
@@ -1199,8 +1600,13 @@
           "$ref": "#/$defs/QuotaConfig",
           "default": {
             "shared_subject_shards": 8,
-            "principal_subject_shards": 1
+            "principal_subject_shards": 1,
+            "admission_limit": 4096
           }
+        },
+        "unapplied_planes": {
+          "$ref": "#/$defs/UnappliedPlaneMode",
+          "default": "warn"
         }
       },
       "additionalProperties": false
@@ -1222,13 +1628,6 @@
       "properties": {
         "mode": {
           "$ref": "#/$defs/AuthzMode"
-        },
-        "url": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
         },
         "timeout_ms": {
           "type": "integer",
@@ -1272,7 +1671,7 @@
       "additionalProperties": false
     },
     "QuotaConfig": {
-      "description": "Row sharding for gateway quota windows.\n\nA window keyed by a shared subject (anything other than `user` or\n`api_key`, e.g. an organization or project) is spread over\n`shared_subject_shards` rows so concurrent admissions do not queue on one\nrow lock; per-principal windows use `principal_subject_shards`. Admission\nstill checks the summed total, but each extra shard widens the\nover-admission bound by up to one concurrent reservation. `1` keeps the\nexact single-row behaviour. Both are range-checked by\n[`crate::profile::Profile::validate`].",
+      "description": "Row sharding for gateway quota windows.\n\nA window keyed by a shared subject (anything other than `user` or\n`api_key`, e.g. an organization or project) is spread over\n`shared_subject_shards` rows so concurrent admissions do not queue on one\nrow lock; per-principal windows use `principal_subject_shards`. Admission\nstill checks the summed total, but each extra shard widens the\nover-admission bound by up to one concurrent reservation. `1` keeps the\nexact single-row behaviour. Both are range-checked by\n[`crate::profile::Profile::validate`].\n\n`admission_limit` is the most gateway requests one node holds admitted at\nonce (each holds a journal receipt until it settles). An admission past it\nis refused with 429 and recorded as failed, never dropped.",
       "type": "object",
       "properties": {
         "shared_subject_shards": {
@@ -1288,9 +1687,23 @@
           "minimum": 0,
           "maximum": 65535,
           "default": 1
+        },
+        "admission_limit": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1,
+          "default": 4096
         }
       },
       "additionalProperties": false
+    },
+    "UnappliedPlaneMode": {
+      "description": "What a node does while a config plane has never been applied.\n\nCovers `governance` and `gateway_policies` until `systemprompt admin\nconfig apply` records them: `warn` lets requests through and warns at\nboot, in `doctor`, `/readyz` and on every request; `deny` refuses every\ngoverned and gateway request.",
+      "type": "string",
+      "enum": [
+        "warn",
+        "deny"
+      ]
     },
     "JudgeProfile": {
       "type": "object",
@@ -1303,7 +1716,7 @@
       "additionalProperties": false
     },
     "RetentionConfig": {
-      "description": "Retention windows, in days, for the high-volume operational tables.\n\nEach field names the table it bounds and rows older than the window are\ndeleted, with two exceptions worth knowing:\n\n- `ai_request_messages_days` drops the stored messages and keeps the request\n  row; `None` follows `ai.history.retention_days` from the services\n  configuration instead.\n- `ai_request_payload_raw_days` sets the raw request and response bodies on\n  `ai_request_payloads` to NULL rather than deleting the row; the excerpts,\n  hashes and sizes stay.\n- `archived_users_days` is how long an archived user (status `deleted`,\n  `archived_at` set) stays restorable before `database_cleanup` purges the\n  account and its rows; an account under legal hold is never purged.",
+      "description": "Retention windows, in days, for the high-volume operational tables.\n\nEach field names the table it bounds and rows older than the window are\ndeleted, with two exceptions worth knowing:\n\n- `ai_request_messages_days` drops the stored messages and keeps the request\n  row; `None` follows `ai.history.retention_days` from the services\n  configuration instead.\n- `ai_request_payload_raw_days` sets the raw request and response bodies on\n  `ai_request_payloads` to NULL rather than deleting the row; the excerpts,\n  hashes and sizes stay.\n- `archived_users_days` is how long an archived user (status `deleted`,\n  `archived_at` set) stays restorable before `database_cleanup` purges the\n  account and its rows; an account under legal hold is never purged.\n- `fingerprint_reputation_days` deletes a fingerprint's reputation row (with\n  its last IP address and user agent) once the fingerprint has not been seen\n  for the window.\n- `agent_run_dirs_days` is how long a finished agent run keeps its run\n  directory (logs and `outputs/`) on disk; the `agent_run_dirs_cleanup` job\n  removes it and clears `agent_runs.run_dir`, the row stays.",
       "type": "object",
       "properties": {
         "logs_days": {
@@ -1351,11 +1764,29 @@
           "minimum": 0,
           "default": 180
         },
+        "engagement_events_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 90
+        },
+        "fingerprint_reputation_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 90
+        },
         "archived_users_days": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
           "default": 90
+        },
+        "agent_run_dirs_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 7
         }
       },
       "additionalProperties": false
@@ -1689,11 +2120,485 @@
       "additionalProperties": false
     },
     "PlaneAuthority": {
+      "description": "The authority a profile names for one plane under\n`config_planes.authority`; a plane the profile does not name is `db`.",
       "type": "string",
       "enum": [
         "file",
         "db"
       ]
+    },
+    "LicenceConfig": {
+      "description": "Where and how often a multi-tenant deployment reports its licence check-in.",
+      "type": "object",
+      "properties": {
+        "multi_tenant": {
+          "type": "boolean",
+          "default": false
+        },
+        "licence_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "endpoint": {
+          "type": "string",
+          "default": "https://api.systemprompt.io/api/v1/licence/checkin"
+        },
+        "interval_secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 21600
+        }
+      },
+      "additionalProperties": false
+    },
+    "NotificationsProfile": {
+      "description": "The `notifications:` profile block; every field has a default.",
+      "type": "object",
+      "properties": {
+        "retention_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 90
+        },
+        "max_audience": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 500
+        },
+        "unread_max_age_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 180
+        },
+        "failure_retention_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 30
+        },
+        "consumer": {
+          "$ref": "#/$defs/ConsumerProfile",
+          "default": {
+            "batch": 64,
+            "poll_secs": 5,
+            "sweep_secs": 30,
+            "resolver_timeout_ms": 5000,
+            "channel_timeout_ms": 5000
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ConsumerProfile": {
+      "description": "How the notifications outbox consumer drains.",
+      "type": "object",
+      "properties": {
+        "batch": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 64
+        },
+        "poll_secs": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 5
+        },
+        "sweep_secs": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 30
+        },
+        "resolver_timeout_ms": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 5000
+        },
+        "channel_timeout_ms": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 5000
+        }
+      },
+      "additionalProperties": false
+    },
+    "BrainProfile": {
+      "description": "The `brain:` profile block; every field has a default.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "recall": {
+          "$ref": "#/$defs/BrainRecallProfile",
+          "default": {
+            "budget_tokens": 800,
+            "deadline_ms": 200,
+            "source_timeout_ms": 40,
+            "scopes": [
+              "user",
+              "project",
+              "group",
+              "org"
+            ],
+            "clients": {
+              "claude-code": true,
+              "claude-desktop": true
+            },
+            "stale": "withhold"
+          }
+        },
+        "capture": {
+          "$ref": "#/$defs/BrainCaptureProfile",
+          "default": {
+            "sources": [
+              "document",
+              "comment",
+              "entered"
+            ],
+            "auto_confirm": {
+              "document": "project_policy",
+              "others": "never"
+            },
+            "session": {
+              "enabled": false,
+              "max_chars": 4000
+            }
+          }
+        },
+        "extraction": {
+          "$ref": "#/$defs/BrainExtractionProfile",
+          "default": {
+            "provider": null,
+            "model": null,
+            "max_output_tokens": 2048,
+            "timeout_ms": 60000,
+            "daily_token_budget": 1000000
+          }
+        },
+        "lifecycle": {
+          "$ref": "#/$defs/BrainLifecycleProfile",
+          "default": {
+            "review_after_days": 90,
+            "retired_retention_days": 365,
+            "recalls_retention_days": 90,
+            "results_retention_days": 30,
+            "correction_window_days": 14
+          }
+        },
+        "consumer": {
+          "$ref": "#/$defs/BrainConsumerProfile",
+          "default": {
+            "batch": 32,
+            "poll_secs": 5,
+            "sweep_secs": 300,
+            "source_timeout_ms": 5000
+          }
+        },
+        "consolidation": {
+          "$ref": "#/$defs/BrainConsolidationProfile",
+          "default": {
+            "enabled": false,
+            "daily_token_budget": null
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "BrainRecallProfile": {
+      "description": "Gateway recall settings.\n\nThe token budget and deadline, the scopes searched, the clients recall\nis on for (keyed by `x-systemprompt-client` name; an unlisted client is\noff), and what happens to stale facts.",
+      "type": "object",
+      "properties": {
+        "budget_tokens": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 800
+        },
+        "deadline_ms": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 200
+        },
+        "source_timeout_ms": {
+          "description": "Milliseconds a recall waits on one source-access check (document readability) before withholding the fact as `source`.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 40
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScopeLevel"
+          },
+          "default": [
+            "user",
+            "project",
+            "group",
+            "org"
+          ]
+        },
+        "clients": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "default": {
+            "claude-code": true,
+            "claude-desktop": true
+          }
+        },
+        "stale": {
+          "$ref": "#/$defs/StalePolicy",
+          "default": "withhold"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ScopeLevel": {
+      "description": "The level of a [`FactScope`], as profiles and recall filters name it.",
+      "type": "string",
+      "enum": [
+        "user",
+        "project",
+        "group",
+        "org"
+      ]
+    },
+    "StalePolicy": {
+      "description": "Whether stale facts are withheld or injected with a marker.",
+      "type": "string",
+      "enum": [
+        "withhold",
+        "marker"
+      ]
+    },
+    "BrainCaptureProfile": {
+      "description": "What the brain captures and how it confirms.",
+      "type": "object",
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaptureSource"
+          },
+          "default": [
+            "document",
+            "comment",
+            "entered"
+          ]
+        },
+        "auto_confirm": {
+          "$ref": "#/$defs/AutoConfirmPolicy",
+          "default": {
+            "document": "project_policy",
+            "others": "never"
+          }
+        },
+        "session": {
+          "$ref": "#/$defs/BrainSessionCaptureProfile",
+          "default": {
+            "enabled": false,
+            "max_chars": 4000
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "CaptureSource": {
+      "description": "A pathway the brain captures from.",
+      "type": "string",
+      "enum": [
+        "document",
+        "comment",
+        "session",
+        "entered"
+      ]
+    },
+    "AutoConfirmPolicy": {
+      "description": "Auto-confirmation for document-sourced facts and for every other source.",
+      "type": "object",
+      "properties": {
+        "document": {
+          "$ref": "#/$defs/AutoConfirm",
+          "default": "project_policy"
+        },
+        "others": {
+          "$ref": "#/$defs/AutoConfirm",
+          "default": "never"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AutoConfirm": {
+      "description": "When a new fact is confirmed without a person.",
+      "type": "string",
+      "enum": [
+        "never",
+        "project_policy",
+        "always"
+      ]
+    },
+    "BrainSessionCaptureProfile": {
+      "description": "The session pathway's producer, off by default: scaffolding until an\nextension registers a filter that gathers session events.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "max_chars": {
+          "description": "Longest text, in characters, the session pathway records from one turn.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0,
+          "default": 4000
+        }
+      },
+      "additionalProperties": false
+    },
+    "BrainExtractionProfile": {
+      "description": "The extraction model call: an optional pinned provider and model, its\noutput cap and timeout, and the daily token budget of the brain's\nservice principal.",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 2048
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 60000
+        },
+        "daily_token_budget": {
+          "description": "Tokens the extraction model may spend per day for the brain's service principal; the consolidation job shares it unless consolidation.daily_token_budget is set.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 1000000
+        }
+      },
+      "additionalProperties": false
+    },
+    "BrainLifecycleProfile": {
+      "description": "Review and retention windows.",
+      "type": "object",
+      "properties": {
+        "review_after_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 90
+        },
+        "retired_retention_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 365
+        },
+        "recalls_retention_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 90
+        },
+        "results_retention_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 30
+        },
+        "correction_window_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 14
+        }
+      },
+      "additionalProperties": false
+    },
+    "BrainConsumerProfile": {
+      "description": "How the brain outbox consumer drains.",
+      "type": "object",
+      "properties": {
+        "batch": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 32
+        },
+        "poll_secs": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 5
+        },
+        "sweep_secs": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 300
+        },
+        "source_timeout_ms": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 5000
+        }
+      },
+      "additionalProperties": false
+    },
+    "BrainConsolidationProfile": {
+      "description": "The daily `brain_consolidate` job, off by default: scaffolding until an\nextension registers a `FactConsolidator`.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "daily_token_budget": {
+          "description": "Tokens the consolidation job may spend per day; falls back to extraction.daily_token_budget when absent.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0,
+          "default": null
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

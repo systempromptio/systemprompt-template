@@ -86,6 +86,9 @@ Thumbs.db
 /keys/
 *.key
 *.pem
+# Why: the SAML provider tests sign assertions with a throwaway IdP key that
+# exists only for them.
+!tests/fixtures/saml/*.pem
 gsc.json
 
 # GCP Deployment Files
