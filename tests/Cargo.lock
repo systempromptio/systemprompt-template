@@ -56,6 +56,8 @@ dependencies = [
 name = "admin-db-core-tests"
 version = "0.0.0"
 dependencies = [
+ "async-trait",
+ "axum",
  "chrono",
  "serde_json",
  "serde_yaml_ng",
@@ -66,6 +68,7 @@ dependencies = [
  "tempfile",
  "template-test-common",
  "tokio",
+ "tower",
  "uuid",
 ]
 

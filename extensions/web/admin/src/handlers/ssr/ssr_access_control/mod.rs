@@ -38,7 +38,7 @@ use crate::repositories::access_control::drift::DriftReport;
 use crate::repositories::access_control::rules::{
     LedgerRuleRow, RULE_CAP, count_open_entities, list_ledger_rules,
 };
-use crate::repositories::config::gateway::{RouteLabels, get_route_labels_from_services};
+use crate::repositories::config::gateway::{RouteLabels, compiled_route_labels};
 use crate::repositories::sync::access_control::{declared_now, drift_now};
 use crate::repositories::sync::attention::access_attention;
 
@@ -102,8 +102,14 @@ struct TabBody {
 // leaves every route addressable by id, and is logged rather than 500ing
 // the audit page.
 fn route_labels(env: &AdminEnv) -> RouteLabels {
-    get_route_labels_from_services(env)
-        .inspect_err(|e| tracing::warn!(error = %e, "access-control: route labels unavailable"))
+    compiled_route_labels(env)
+        .and_then(|labels| {
+            labels
+                .inspect_err(
+                    |e| tracing::warn!(error = %e, "access-control: route labels unavailable"),
+                )
+                .ok()
+        })
         .unwrap_or_default()
 }
 

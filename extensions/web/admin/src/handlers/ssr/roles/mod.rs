@@ -29,7 +29,7 @@ use crate::handlers::access_control::build_matrix_sections;
 use crate::handlers::shared;
 use crate::handlers::ssr::list_view::PageWindow;
 use crate::handlers::ssr::types::{BreadcrumbView, TabLinkView};
-use crate::repositories::config::gateway::get_route_labels_from_services;
+use crate::repositories::config::gateway::compiled_route_labels;
 use crate::repositories::roles::{entitlements, members};
 use crate::types::Role;
 use crate::types::role::{ROLES_PLATFORM, has_any};
@@ -150,8 +150,12 @@ fn entitlement_groups(
     if !on_entitlements {
         return Vec::new();
     }
-    let labels = get_route_labels_from_services(env)
-        .inspect_err(|e| tracing::warn!(error = %e, "roles: route labels unavailable"))
+    let labels = compiled_route_labels(env)
+        .and_then(|labels| {
+            labels
+                .inspect_err(|e| tracing::warn!(error = %e, "roles: route labels unavailable"))
+                .ok()
+        })
         .unwrap_or_default();
     let sections = build_matrix_sections(env, &shared::get_services_path(env));
     entitlements_view::groups(

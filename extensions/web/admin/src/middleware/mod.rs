@@ -1,7 +1,8 @@
 //! Admin plane request middleware: session resolution and page context.
 //!
 //! `user_context_middleware` runs first and puts a [`UserContext`] on the
-//! request; [`gates`] then decides whether the request may proceed, and
+//! request only for a signed-in principal (see [`crate::types::NotSignedIn`]);
+//! [`gates`] then decides whether the request may proceed, and
 //! `marketplace_context_middleware` supplies what a page needs to render.
 //!
 //! The marketplace counts injected into every render are cached because they
@@ -30,10 +31,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
 use super::handlers::extract_user_from_cookie;
-use super::types::{
-    UserContext, roles_grant_console, roles_grant_developer, roles_grant_manage,
-    roles_grant_platform,
-};
+use super::types::UserContext;
 
 #[derive(Debug, Serialize)]
 struct AuthMeResponse {
@@ -73,28 +71,16 @@ pub(crate) async fn user_context_middleware(
         },
     };
 
-    let profile = find_access_profile(&pool, &session.user_id).await;
-    let (roles, group_ids, project_ids) = profile.map_or_else(
-        || (vec!["user".to_owned()], Vec::new(), Vec::new()),
-        |p| (p.roles, p.group_ids, p.project_ids),
-    );
-
-    let ctx = UserContext {
-        user_id: session.user_id,
-        username: session.username,
-        email: session.email,
-        is_admin: roles_grant_manage(&roles),
-        is_console: roles_grant_console(&roles),
-        is_platform_admin: roles_grant_platform(&roles),
-        is_developer: roles_grant_developer(&roles),
-        roles,
-        group_ids,
-        project_ids,
-        email_verified: false,
-        session_id: session.session_id,
-    };
-
-    request.extensions_mut().insert(ctx);
+    let account = find_access_profile(&pool, &session.user_id).await;
+    let user_id = session.user_id.clone();
+    match UserContext::signed_in(session, account) {
+        Ok(ctx) => {
+            request.extensions_mut().insert(ctx);
+        },
+        Err(refusal) => {
+            tracing::info!(user_id = %user_id, reason = %refusal, "UserContext middleware: not a signed-in principal");
+        },
+    }
     next.run(request).await
 }
 

@@ -63,7 +63,7 @@ pub use role::{
     has_any, parse_roles,
 };
 pub use user_context::{
-    UserContext, roles_grant_console, roles_grant_developer, roles_grant_manage,
+    NotSignedIn, UserContext, roles_grant_console, roles_grant_developer, roles_grant_manage,
     roles_grant_platform,
 };
 

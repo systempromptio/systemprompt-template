@@ -275,7 +275,7 @@ pub(crate) fn build_self_service_routes(write_pool: &Arc<PgPool>) -> Router {
 }
 
 pub(crate) fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
-    let routes = Router::new().route("/dashboard", get(handlers::dashboard_handler));
+    let routes = Router::new();
     #[cfg(feature = "mcp")]
     let routes = routes.merge(plugin_read_routes());
     #[cfg(feature = "agents")]

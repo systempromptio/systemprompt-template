@@ -7,8 +7,8 @@
 //! providers the composition admits (core's `traffic` and role providers, the
 //! web member's group, project, connector and organization providers), and the
 //! member cipher is issued by core's `MemberCiphers` from a fixed test key. The
-//! request authenticator refuses every request: suites that need a caller build
-//! the request context themselves.
+//! request authenticator refuses every request unless a suite supplies its own
+//! through `EnvFixture::with_authenticator`.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -385,7 +385,6 @@ fn config_view(profile: &Profile, services_root: &Path) -> ConfigView {
     }
 }
 
-/// The admin surface's environment over one database and one services tree.
 #[derive(Debug)]
 pub struct EnvFixture {
     pub env: AdminEnv,
@@ -396,7 +395,24 @@ pub struct EnvFixture {
 impl EnvFixture {
     #[must_use]
     pub fn new(pool: &Arc<PgPool>, services: ServicesConfig, services_root: &Path) -> Self {
-        Self::build(pool, services, services_root, member_cipher())
+        Self::build(
+            pool,
+            services,
+            services_root,
+            member_cipher(),
+            Arc::new(RefusingAuthenticator),
+        )
+    }
+
+    #[must_use]
+    pub fn with_authenticator(pool: &Arc<PgPool>, authenticator: DynRequestAuthenticator) -> Self {
+        Self::build(
+            pool,
+            ServicesConfig::default(),
+            &repo_root().join("services"),
+            member_cipher(),
+            authenticator,
+        )
     }
 
     #[must_use]
@@ -413,12 +429,12 @@ impl EnvFixture {
         services: ServicesConfig,
         services_root: &Path,
         cipher: Arc<dyn MemberCipher>,
+        authenticator: DynRequestAuthenticator,
     ) -> Self {
         let profile = fixture_profile();
         let view = install_services(&profile, services, services_root);
         let subjects = subject_cell(pool, &view);
         let grants = profile.extensions.secret_grants(&web_member()).to_vec();
-        let authenticator: DynRequestAuthenticator = Arc::new(RefusingAuthenticator);
         let paths =
             AppPaths::from_profile(&profile.paths, PathResolution::Lexical, Some(services_root))
                 .expect("the fixture profile's paths resolve");

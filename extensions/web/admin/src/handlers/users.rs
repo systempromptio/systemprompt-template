@@ -51,6 +51,8 @@ async fn extract_user_with_audiences(
 ) -> Result<crate::types::CookieSession, AdminError> {
     let token = extract_token_from_headers(headers)?;
     let (context, user) = crate::services::auth::verify_bearer(env, &token, audiences).await?;
+    crate::types::NotSignedIn::refuse_token(context.user_type)
+        .map_err(AdminError::unauthenticated)?;
     let email = Email::try_new(user.email).map_err(AdminError::unauthenticated)?;
     Ok(crate::types::CookieSession {
         user_id: context.user_id,

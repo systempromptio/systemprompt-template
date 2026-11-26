@@ -25,3 +25,6 @@ sqlx = { workspace = true }
 serde_json = { workspace = true }
 tempfile = { workspace = true }
 uuid = { workspace = true }
+async-trait = { workspace = true }
+axum = { workspace = true }
+tower = { workspace = true }
