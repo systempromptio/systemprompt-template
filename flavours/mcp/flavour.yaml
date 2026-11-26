@@ -75,6 +75,7 @@ smoke:
     - "/admin/configuration"
     - "/admin/system/observability"
   routes_absent_signed_in:
+    - "/api/v1/agents/registry"
     - "/admin/conversations"
     - "/admin/history"
     - "/admin/sessions"

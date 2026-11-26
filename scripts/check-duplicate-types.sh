@@ -52,7 +52,7 @@ for root in $SRC_DIRS; do
         [[ "$text" =~ ^[[:space:]]*pub(\([a-z]+([[:space:]]+[a-z:]+)?\))?[[:space:]]+(struct|enum)[[:space:]]+([A-Za-z0-9_]+) ]] || continue
         name="${BASH_REMATCH[4]}"
         # A `// lint-ok: duplicate-type` on the preceding line exempts it.
-        if [ "$line" -gt 1 ] && sed -n "$((line - 1))p" "$file" | grep -q 'lint-ok: duplicate-type'; then
+        if [ "$line" -gt 1 ] && sed -n "$((line - 1))p" "$file" | grep 'lint-ok: duplicate-type' >/dev/null; then
             continue
         fi
         SITES["$(crate_of "$file")	$name"]+=" $file:$line"

@@ -35,7 +35,7 @@ SIBLING_REPO="${SIBLING_REPO:-}"
 
 RS_FILES=()
 while IFS= read -r f; do
-    head -n 30 "$f" | grep -q '^#!\[cfg(feature' && continue
+    head -n 30 "$f" | grep '^#!\[cfg(feature' >/dev/null && continue
     RS_FILES+=("$f")
 done < <(find "$REPO_DIR" -name '*.rs' | sort)
 [ "${#RS_FILES[@]}" -gt 0 ] || { echo "check-dead-repository-code: OK (no non-feature-gated files)"; exit 0; }

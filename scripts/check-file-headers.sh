@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 
 fail=0
 while IFS= read -r file; do
-    if ! head -6 "$file" | grep -q '^//!'; then
+    if ! head -6 "$file" | grep '^//!' >/dev/null; then
         echo "MISSING DOC HEAD: $file"
         fail=1
     fi

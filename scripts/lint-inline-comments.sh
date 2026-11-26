@@ -38,7 +38,7 @@ set -uo pipefail
 EXEMPT_FILE="scripts/rustdoc-exemptions.txt"
 is_exempt() {
     [ -f "$EXEMPT_FILE" ] || return 1
-    grep -v '^[[:space:]]*#' "$EXEMPT_FILE" | grep -qxF "$1"
+    grep -v '^[[:space:]]*#' "$EXEMPT_FILE" | grep -xF "$1" >/dev/null
 }
 
 MATCHES=""

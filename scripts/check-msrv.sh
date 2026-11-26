@@ -43,7 +43,7 @@ if [ "$clippy_msrv" != "$root_msrv" ]; then
 fi
 
 toolchain="${root_msrv}.0"
-if ! rustup toolchain list | grep -q "^${toolchain}"; then
+if ! rustup toolchain list | grep "^${toolchain}" >/dev/null; then
     echo "error: toolchain $toolchain missing — run: rustup toolchain install $toolchain" >&2
     exit 1
 fi

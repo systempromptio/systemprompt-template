@@ -173,7 +173,7 @@ has_group() {
     # shellcheck disable=SC2086
     cli $parent --help 2>&1 \
         | awk '/^Commands:/{p=1;next} p&&/^[^ ]/{p=0} p&&NF{print $1}' \
-        | grep -qxF "$leaf"
+        | grep -xF "$leaf" >/dev/null
 }
 while IFS= read -r group; do
     [ -n "$group" ] || continue
@@ -187,7 +187,7 @@ done < <(flavour_get "$flavour" smoke.cli_groups_absent)
 capabilities="$( { cli plugins capabilities; cli plugins capabilities jobs; cli plugins capabilities schemas; cli plugins capabilities roles; } 2>&1 || true)"
 while IFS= read -r capability; do
     [ -n "$capability" ] || continue
-    if printf '%s' "$capabilities" | grep -qF "$capability"; then record "capability $capability" pass ""; else record "capability $capability" fail "not in plugins capabilities"; fi
+    if [[ "$capabilities" == *"$capability"* ]]; then record "capability $capability" pass ""; else record "capability $capability" fail "not in plugins capabilities"; fi
 done < <(flavour_get "$flavour" smoke.capabilities)
 
 while IFS= read -r server; do
@@ -202,7 +202,7 @@ done < <(flavour_get "$flavour" smoke.mcp_servers)
 landing="$(flavour_get "$flavour" smoke.root_redirect 2>/dev/null || true)"
 if [ -n "$landing" ]; then
     root="$(curl -s --max-time 10 -D - "$base/" || true)"
-    if printf '%s' "$root" | grep -qiE "^location: $landing\s*$|http-equiv=\"refresh\" content=\"0; url=$landing\""; then
+    if grep -qiE "^location: $landing\s*$|http-equiv=\"refresh\" content=\"0; url=$landing\"" <<< "$root"; then
         record "/ sends to $landing" pass ""
     else
         record "/ sends to $landing" fail "$(printf '%s' "$root" | head -1 | tr -d '\r')"
@@ -283,7 +283,7 @@ if [ -n "$pages$signed_absent" ]; then
         home="$(curl -s --max-time 10 -H "Cookie: $cookie" "$base/admin" || true)"
         missing="$(flavour_py nav-titles "$flavour" | while IFS= read -r title; do
             html="$(printf '%s' "$title" | sed 's/&/\&amp;/g')"
-            printf '%s' "$home" | grep -qF "sp-nav-group__title\">$html<" || printf '%s; ' "$title"; done)"
+            [[ "$home" == *"sp-nav-group__title\">$html<"* ]] || printf '%s; ' "$title"; done)"
         if [ -z "$missing" ]; then record "console nav" pass "every configured section"; else record "console nav" fail "missing: $missing"; fi
     else
         record "console sign-in" fail "$( [ -n "$link" ] && tail -1 "$work/login.err" || echo 'no setup link from admin users webauthn generate-setup-token')"

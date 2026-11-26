@@ -67,7 +67,7 @@ for f in "${files[@]}"; do
         file_violations=0
         while IFS= read -r line; do
             content="${line#*:}"
-            if echo "$content" | grep -qEi "$safe_drop"; then
+            if grep -qEi "$safe_drop" <<< "$content"; then
                 continue
             fi
             echo "$f:$line: imperative SQL in declarative schema — move to schema/migrations/NNN_<name>.sql"

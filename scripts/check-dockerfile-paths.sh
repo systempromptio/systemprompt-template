@@ -35,7 +35,7 @@ while IFS= read -r file; do
     [ -f "$file" ] || continue
 
     for binary in $(grep -oE 'systemprompt-mcp-[a-z0-9-]+' "$file" | sort -u); do
-        if ! printf '%s\n' "$declared" | grep -qx "$binary"; then
+        if ! grep -qx "$binary" <<< "$declared"; then
             echo "$file: names '$binary', which no flavour ships (flavours/*/flavour.yaml binaries)"
             fail=1
         fi

@@ -5,7 +5,7 @@ FLAVOUR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 flavour_py() { python3 "$FLAVOUR_ROOT/scripts/flavour.py" "$@"; }
 flavour_get() { flavour_py get "$1" "$2"; }
 flavour_require() {
-    flavour_py list | grep -qxF "$1" || { echo "unknown flavour '$1' (just flavours lists them)" >&2; exit 2; }
+    flavour_py list | grep -xF "$1" >/dev/null || { echo "unknown flavour '$1' (just flavours lists them)" >&2; exit 2; }
 }
 
 # Writes a compose override that runs IMAGE as SERVICE on an ephemeral

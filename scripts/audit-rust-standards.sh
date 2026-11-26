@@ -99,7 +99,7 @@ scan_files() {
         is_test_path "$f" && continue
         case "$f" in */build.rs) continue ;; esac
         window=$(sed -n "$((l-2)),$((l+1))p" "$f" 2>/dev/null || true)
-        echo "$window" | grep -qE 'Regex::new|LazyLock::new|once_cell|OnceLock::new|OnceCell::new' && continue
+        grep -qE 'Regex::new|LazyLock::new|once_cell|OnceLock::new|OnceCell::new' <<< "$window" && continue
         MAJORS+=("\`${f}:${l}\` — \`.unwrap()\`/\`.expect()\` in library code (${label})")
     done < <(rg -n --color=never \
         -g '*.rs' -g '!**/tests/**' -g '!**/target/**' \
@@ -151,7 +151,7 @@ scan_files() {
         is_test_path "$f" && continue
         case "$f" in */build.rs) continue ;; esac
         prev_line=$(sed -n "$((l-1))p" "$f" 2>/dev/null || true)
-        echo "$prev_line" | grep -qE '// Why:|// JSON:' && continue
+        grep -qE '// Why:|// JSON:' <<< "$prev_line" && continue
         MINORS+=("\`${f}:${l}\` — \`let _ = …\` without WHY justification (${label})")
     done < <(rg -n --color=never \
         -g '*.rs' -g '!**/tests/**' -g '!**/target/**' \
@@ -163,12 +163,12 @@ scan_files() {
     while IFS=: read -r f l _; do
         is_test_path "$f" || continue
         prev_line=$(sed -n "$((l-1))p" "$f" 2>/dev/null || true)
-        echo "$prev_line" | grep -qE '#\[.*test' || continue
+        grep -qE '#\[.*test' <<< "$prev_line" || continue
         body=$(awk -v start="$l" 'NR>=start {
             print
             if (NR>start && ($0 ~ /^\s*(#\[|pub |async fn |fn )/)) exit
         }' "$f" 2>/dev/null | head -n 80)
-        echo "$body" | grep -qE 'assert|expect\(|unwrap_err|panic!|should_panic' && continue
+        grep -qE 'assert|expect\(|unwrap_err|panic!|should_panic' <<< "$body" && continue
         MINORS+=("\`${f}:${l}\` — test fn with no assertion token (${label})")
     done < <(rg -n --color=never \
         -g '*.rs' -g '!**/target/**' \

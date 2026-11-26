@@ -38,7 +38,7 @@ if [ -z "$TAGS" ]; then
     [ -n "$TAGS" ] || { echo "check-release-tag: no tags locally and none readable from origin" >&2; exit 2; }
 fi
 
-has_tag() { printf '%s\n' "$TAGS" | grep -qxF "$1"; }
+has_tag() { grep -qxF "$1" <<< "$TAGS"; }
 older_than_current() {
     [ "$1" != "$CURRENT" ] && [ "$(printf '%s\n%s\n' "$1" "$CURRENT" | sort -V | head -1)" = "$1" ]
 }

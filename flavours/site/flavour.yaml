@@ -59,9 +59,10 @@ smoke:
     - "content_analytics_aggregation"
     - "markdown_content"
   mcp_servers: []
-  # The gateway member is in the kernel floor, so /v1/models is served; with
-  # no AI member it lists no model ({"data":[],"has_more":false}).
-  models_endpoint: true
+  # The site composition carries no gateway or gateway-http member (core's
+  # flavour-site line in scripts/composition-members.txt), so /v1/models is
+  # not routed.
+  models_endpoint: false
   console_pages:
     - "/admin"
     - "/admin/users"
@@ -69,6 +70,7 @@ smoke:
     - "/admin/configuration"
     - "/admin/system/observability"
   routes_absent_signed_in:
+    - "/api/v1/agents/registry"
     - "/admin/conversations"
     - "/admin/sessions"
     - "/admin/history"
