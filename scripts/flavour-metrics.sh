@@ -76,7 +76,7 @@ measure_image() {
     features="$(flavour_py features "$flavour")"
     if [ "$clean" = true ]; then
         echo "  image build (clean compile: the flavour's target cache is reset)"
-        timed build.reset bash scripts/flavour-build.sh "$flavour" --target cache-reset -- --no-cache
+        timed build.reset bash scripts/flavour-build.sh "$flavour" --target cache-reset --tag "sp-cache-reset-$flavour" -- --no-cache
         timed build.clean_seconds bash scripts/flavour-build.sh "$flavour" --tag "$image" -- --no-cache
     fi
     timed build.cached_seconds bash scripts/flavour-build.sh "$flavour" --tag "$image"
