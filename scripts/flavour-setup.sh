@@ -142,16 +142,10 @@ if [ ! -f "$profile_file" ]; then
         run "$bin" "${setup_args[@]}" --yes
     fi
     if [ "$http_port" != 8080 ]; then
-        step "Re-pointing server, governance hook, JWT issuer and CORS at port $http_port"
+        step "Re-pointing the server at port $http_port (API URLs, JWT issuer, CORS and the governance hook derive from it)"
         url="http://localhost:$http_port"
-        run "$bin" admin config server set --port "$http_port" \
-            --api-server-url "$url" --api-internal-url "$url" --api-external-url "$url"
-        run "$bin" admin config governance set --mode webhook --url "$url/api/public/govern/authz"
-        run "$bin" admin config security set --jwt-issuer "$url"
-        run "$bin" admin config server cors add "$url"
+        run "$bin" admin config server set --port "$http_port" --external-url "$url"
         run "$bin" admin config server cors add "http://127.0.0.1:$http_port"
-        run "$bin" admin config server cors remove "http://localhost:8080"
-        run "$bin" admin config server cors remove "http://127.0.0.1:8080"
     fi
 elif [ "$has_key" = true ]; then
     echo "setup $flavour: $profile_file exists, so admin setup was skipped and the keys were NOT applied." >&2
@@ -181,6 +175,8 @@ step "Running database migrations"
 run "$bin" infra db migrate
 step "Ensuring the bootstrap admin user ($admin_email)"
 run "$bin" admin bootstrap --email "$admin_email"
+step "Applying the declared config planes"
+run "$bin" admin config apply --reason "just setup $flavour"
 if [ ! -f "$root/signing_key.pem" ]; then
     step "Generating the JWT signing key"
     run "$bin" admin keys generate --output "$root/signing_key.pem"

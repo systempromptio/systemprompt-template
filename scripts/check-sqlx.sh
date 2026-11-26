@@ -11,7 +11,7 @@ pattern='sqlx::query[a-z_]*\('
 allowlist=(
     # COPY … TO STDOUT, VACUUM and pg_catalog lookups over a static table
     # registry — statements the macros cannot express, and none takes input.
-    extensions/web/jobs/src/retention/
+    extensions/web/admin/src/jobs/retention/
 )
 
 if [ ${#allowlist[@]} -gt 0 ]; then

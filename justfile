@@ -357,7 +357,12 @@ doc-check:
     @scripts/build-coordinator.sh run doc-check "" -- {{just_executable()}} _doc-check-uncoordinated
 
 _doc-check-uncoordinated:
-    SQLX_OFFLINE=true RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --locked
+    #!/usr/bin/env bash
+    set -euo pipefail
+    features="$(python3 scripts/flavour.py features "${FLAVOUR:-full}")"
+    export SQLX_OFFLINE=true RUSTDOCFLAGS="-D warnings"
+    cargo doc --workspace --exclude systemprompt-template --no-deps --locked
+    cargo doc -p systemprompt-template --no-default-features --features "$features" --no-deps --locked
 
 # Both workspaces must build on the declared minimum supported Rust version,
 # and must declare the same one. The number is read from the manifests, never

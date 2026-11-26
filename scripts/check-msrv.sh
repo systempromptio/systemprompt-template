@@ -60,7 +60,14 @@ case "$actual" in
 esac
 
 echo "MSRV $root_msrv — checking both workspaces with $actual"
-RUSTUP_TOOLCHAIN="$toolchain" SQLX_OFFLINE=true cargo check --workspace --quiet
+# Why: the root package refuses to compile without one flavour feature
+# (src/lib.rs compile_error!), so it is checked with a flavour and the other
+# members with their own defaults.
+flavour_features="$(python3 scripts/flavour.py features "${FLAVOUR:-full}")"
+RUSTUP_TOOLCHAIN="$toolchain" SQLX_OFFLINE=true \
+    cargo check --workspace --exclude systemprompt-template --quiet
+RUSTUP_TOOLCHAIN="$toolchain" SQLX_OFFLINE=true \
+    cargo check -p systemprompt-template --no-default-features --features "$flavour_features" --quiet
 if [ -n "$bridge_msrv" ]; then
     RUSTUP_TOOLCHAIN="$toolchain" SQLX_OFFLINE=true \
         cargo check --manifest-path bridge/Cargo.toml --workspace --quiet
