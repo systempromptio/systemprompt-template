@@ -110,15 +110,6 @@ impl AdfsProvider {
         })
     }
 
-    fn tracker(&self, state: Option<&SsoStateContext>) -> Result<Option<LoginTracker>, SsoError> {
-        let Some(carried) = state.and_then(|s| s.nonce.as_deref()) else {
-            return Ok(None);
-        };
-        serde_json::from_str(carried)
-            .map(Some)
-            .map_err(|e| SsoError::internal(AdfsError::Tracker(e)))
-    }
-
     fn identity(&self, identity: &saml::Identity) -> ExternalIdentity {
         let claims = AssertionClaims::from_identity(identity);
         let email = claims.login_email(&self.config);
@@ -146,6 +137,15 @@ impl AdfsProvider {
             raw_claims,
         }
     }
+}
+
+fn tracker(state: Option<&SsoStateContext>) -> Result<Option<LoginTracker>, SsoError> {
+    let Some(carried) = state.and_then(|s| s.nonce.as_deref()) else {
+        return Ok(None);
+    };
+    serde_json::from_str(carried)
+        .map(Some)
+        .map_err(|e| SsoError::internal(AdfsError::Tracker(e)))
 }
 
 fn random_url_safe() -> String {
@@ -267,7 +267,7 @@ impl SsoProvider for AdfsProvider {
             .map_err(|_e| SsoError::InvalidAssertion {
                 reason: "the SAMLResponse is not base64",
             })?;
-        let tracker = self.tracker(state.as_ref())?;
+        let tracker = tracker(state.as_ref())?;
         let identity = self
             .sp
             .consume_response(ConsumeResponse {
