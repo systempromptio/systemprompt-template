@@ -31,9 +31,18 @@ smoke:
   routes_present:
     - "/"
     - "/.well-known/jwks.json"
-    - "/admin/"
+    - "/admin"
+    - "/admin/login"
+    - "/css/admin-bundle.css"
+    - "/js/pages/admin-login.js"
+    - "/api/v1/mcp/registry"
+    - "/api/v1/agents/registry"
   routes_absent:
     - "/sitemap.xml"
+    - "/robots.txt"
+    - "/llms.txt"
+    - "/blog"
+    - "/documentation"
     - "/api/public/links"
     - "/api/public/search"
   cli_groups_present:
@@ -46,10 +55,21 @@ smoke:
     - "cloud"
     - "build"
     - "admin agents"
-  cli_groups_absent: []
+    - "admin agent-host"
+    - "admin mcp"
+    - "admin bridge"
+  cli_groups_absent:
+    - "admin issues"
   capabilities:
     - "conversation_judge"
     - "cleanup_empty_contexts"
+    - "agent_tasks"
+    - "mcp_tool_executions"
   mcp_servers:
     - "systemprompt"
   models_endpoint: true
+  root_redirect: "/admin"
+  console_pages:
+    - "/admin"
+    - "/admin/traces"
+    - "/admin/conversations"
