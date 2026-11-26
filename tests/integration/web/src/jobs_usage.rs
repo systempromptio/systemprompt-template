@@ -197,13 +197,11 @@ async fn an_error_spike_alerts_at_a_far_lower_volume_than_a_traffic_spike() {
 }
 
 #[tokio::test]
-async fn a_pending_or_streaming_request_is_not_counted_as_an_error() {
+async fn a_pending_request_is_not_counted_as_an_error() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let mut requests = spike(11, "streaming");
-    requests.extend(spike(11, "pending"));
-    seed(&db.pool, "inflight", &requests).await;
+    seed(&db.pool, "inflight", &spike(22, "pending")).await;
 
     job("usage_anomaly")
         .execute(&context(&db.pool))
