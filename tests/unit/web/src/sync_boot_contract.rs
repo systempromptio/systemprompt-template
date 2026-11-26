@@ -15,7 +15,7 @@ use systemprompt_web_admin::env::AdminEnv;
 use systemprompt_web_admin::error::AdminResult;
 use systemprompt_web_admin::repositories::sync::boot::{BOOT_ORDER, reconcile_plane};
 use systemprompt_web_admin::repositories::sync::plane::{
-    Actor, ApplyOutcome, Export, PlaneDrift, SyncMode, SyncPlane,
+    ApplyBy, ApplyOutcome, Export, PlaneDrift, SyncMode, SyncPlane,
 };
 use systemprompt_web_admin::repositories::sync::state::BOOT_ACTOR;
 use template_test_common::env::EnvFixture;
@@ -70,12 +70,11 @@ impl SyncPlane for FakePlane {
         &self,
         _env: &AdminEnv,
         _pool: &PgPool,
-        mode: SyncMode,
-        actor: Actor<'_>,
+        by: ApplyBy<'_>,
     ) -> AdminResult<ApplyOutcome> {
         self.applied.lock().expect("calls").push(Call {
-            mode,
-            actor: actor.as_str().to_owned(),
+            mode: by.mode,
+            actor: by.actor.as_str().to_owned(),
         });
         Ok(ApplyOutcome {
             inserted: self.drift.declared_count,

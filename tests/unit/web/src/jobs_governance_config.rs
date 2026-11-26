@@ -7,7 +7,7 @@
 
 use std::path::Path;
 
-use systemprompt_web_extension::jobs::internals::check_governance_config;
+use systemprompt_web_admin::jobs::internals::check_governance_config;
 use tempfile::TempDir;
 
 fn services_with(config: Option<&str>) -> TempDir {

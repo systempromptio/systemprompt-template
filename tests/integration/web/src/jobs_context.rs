@@ -14,30 +14,45 @@ use std::sync::Arc;
 
 use systemprompt::config::AppPaths;
 use systemprompt::database::Database;
-use systemprompt::extension::{AssetDefinition, AssetType};
+use systemprompt::extension::{AssetDefinition, AssetPaths, AssetType};
 use systemprompt::identifiers::{Actor, UserId};
 use systemprompt::manifest::PathResolution;
 use systemprompt::manifest::profile::PathsConfig;
 use systemprompt::traits::{Job, JobContext};
+use systemprompt_web_admin::jobs::SecretMigrationJob;
 use systemprompt_web_jobs::{
-    BundleAdminCssJob, ContentIngestionJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob,
-    PublishPipelineJob, RobotsTxtGenerationJob, SecretMigrationJob,
+    ContentIngestionJob, LlmsTxtGenerationJob, PublishPipelineJob, RobotsTxtGenerationJob,
 };
 use systemprompt_web_shared::WebSettings;
+use systemprompt_web_shared::asset_jobs::{BundleAdminCssJob, CopyExtensionAssetsJob};
 use tempfile::TempDir;
 
 use template_test_common::TempDb;
 use template_test_common::env::EnvFixture;
 
+fn declared_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
+    let mut assets = systemprompt_web_site::assets::web_assets(paths);
+    assets.extend(systemprompt_web_admin::assets::admin_assets(paths));
+    assets
+}
+
 fn assert_missing_database(error: &systemprompt::traits::ProviderError) {
     use systemprompt::traits::ProviderError;
+    use systemprompt_web_admin::jobs::JobError as AdminJobError;
     use systemprompt_web_jobs::JobError;
 
     let missing = match error {
         ProviderError::MissingDependency(missing) => missing,
-        ProviderError::Internal(source) => match source.downcast_ref::<JobError>() {
-            Some(JobError::MissingContext(missing)) => missing,
-            other => panic!("expected a typed missing dependency, got {other:?}"),
+        ProviderError::Internal(source) => {
+            if let Some(JobError::MissingContext(missing)) = source.downcast_ref::<JobError>() {
+                missing
+            } else if let Some(AdminJobError::MissingContext(missing)) =
+                source.downcast_ref::<AdminJobError>()
+            {
+                missing
+            } else {
+                panic!("expected a typed missing dependency, got {source:?}")
+            }
         },
         other => panic!("expected a typed missing dependency, got {other:?}"),
     };
@@ -48,10 +63,10 @@ fn assert_missing_database(error: &systemprompt::traits::ProviderError) {
 }
 
 // Stage count of `PublishPipelineJob`: ingestion, CSS bundle, asset copy,
-// prerender, llms.txt, robots.txt, the unconditional success the pipeline
-// records between them, and asset organisation. Asserting the total pins that
-// no stage is silently dropped.
-const PIPELINE_STAGES: u64 = 8;
+// prerender, sitemap, RSS feed, llms.txt, robots.txt, the unconditional
+// success the pipeline records between them, and asset organisation.
+// Asserting the total pins that no stage is silently dropped.
+const PIPELINE_STAGES: u64 = 10;
 
 const BASE_URL: &str = "https://example.test";
 
@@ -398,10 +413,7 @@ async fn copy_extension_assets_copies_every_registered_required_asset() {
     let Some(h) = Harness::create_or_skip().await else {
         return;
     };
-    let mut assets = systemprompt_web_site::assets::web_assets(h.paths.as_ref());
-    assets.extend(systemprompt_web_admin::assets::admin_assets(
-        h.paths.as_ref(),
-    ));
+    let assets = declared_assets(h.paths.as_ref());
     // Sources live under the temporary tree because `AppPaths` was built over
     // it; creating each one is what makes the copy loop's success arm run.
     for asset in &assets {
@@ -411,7 +423,7 @@ async fn copy_extension_assets_copies_every_registered_required_asset() {
         std::fs::write(asset.source(), b"/* fixture */").expect("write the asset source");
     }
 
-    let result = CopyExtensionAssetsJob::execute_copy(&h.paths)
+    let result = CopyExtensionAssetsJob::execute_copy(&h.paths, assets.clone())
         .await
         .expect("copy the registered assets");
 
@@ -439,7 +451,7 @@ async fn copy_extension_assets_fails_when_a_required_source_is_missing() {
         return;
     };
 
-    let error = CopyExtensionAssetsJob::execute_copy(&h.paths)
+    let error = CopyExtensionAssetsJob::execute_copy(&h.paths, declared_assets(h.paths.as_ref()))
         .await
         .expect_err("a required asset with no source file is fatal, not skipped");
 
@@ -457,7 +469,7 @@ async fn copy_extension_assets_refuses_a_context_with_no_app_paths() {
         return;
     };
 
-    let error = CopyExtensionAssetsJob
+    let error = CopyExtensionAssetsJob::new(declared_assets)
         .execute(&Harness::empty_context())
         .await
         .expect_err("without AppPaths there is nowhere to copy from or to");
@@ -484,7 +496,7 @@ async fn every_registered_job_declares_a_name_a_description_and_a_schedule() {
             job.schedule()
         );
         assert!(
-            job.tags().contains(&systemprompt_web_jobs::JOB_TAG),
+            job.tags().contains(&systemprompt_web_shared::JOB_TAG),
             "job {} is not tagged as belonging to this extension",
             job.name()
         );
@@ -586,7 +598,7 @@ async fn bundle_admin_css_fails_when_a_collected_stylesheet_cannot_be_read() {
         .expect_err("an unreadable stylesheet fails the job rather than silently shrinking it");
 
     assert!(
-        error.to_string().contains("Failed to read 1 CSS file(s)"),
+        error.to_string().contains("failed to read 1 CSS file(s)"),
         "unexpected error: {error}"
     );
     h.cleanup().await;
@@ -684,7 +696,7 @@ async fn publish_pipeline_runs_every_stage_and_reports_each_outcome() {
     };
     h.write_admin_css("01-first.css", ".first {}");
 
-    let result = PublishPipelineJob
+    let result = PublishPipelineJob::new(declared_assets)
         .execute(&h.context())
         .await
         .expect("the pipeline reports sub-job failures in its stats rather than as an error");
@@ -715,7 +727,7 @@ async fn publish_pipeline_refuses_a_context_with_no_app_paths() {
         return;
     };
 
-    let error = PublishPipelineJob
+    let error = PublishPipelineJob::new(declared_assets)
         .execute(&h.context_without_paths())
         .await
         .expect_err("the pipeline needs somewhere to write before it runs a single stage");
@@ -904,7 +916,7 @@ async fn an_optional_asset_that_cannot_be_copied_is_counted_and_not_fatal() {
         .build(),
     )];
 
-    let (copied, failed) = systemprompt_web_jobs::internals::copy_all_assets(tmp.path(), assets)
+    let (copied, failed) = systemprompt_web_shared::asset_jobs::copy_all_assets(tmp.path(), assets)
         .await
         .expect("an optional asset failure is not an error");
 
@@ -919,7 +931,7 @@ async fn a_required_asset_that_cannot_be_copied_fails_the_copy() {
         AssetDefinition::css(tmp.path().join("absent.css"), "css/absent.css"),
     )];
 
-    let error = systemprompt_web_jobs::internals::copy_all_assets(tmp.path(), assets)
+    let error = systemprompt_web_shared::asset_jobs::copy_all_assets(tmp.path(), assets)
         .await
         .expect_err("a required asset failure stops the copy");
 

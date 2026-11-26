@@ -9,7 +9,7 @@
 use std::path::{Path, PathBuf};
 use systemprompt::extension::{AssetPaths, AssetType};
 use systemprompt_web_site::assets::css::css_assets;
-use systemprompt_web_site::assets::js_services::{public_js_assets, service_js_assets};
+use systemprompt_web_site::assets::js_services::public_js_assets;
 use systemprompt_web_site::web_assets;
 
 struct FakePaths {
@@ -59,8 +59,7 @@ fn css_sources_hang_off_the_storage_css_root_and_publish_under_css() {
 #[test]
 fn javascript_sources_hang_off_the_storage_js_root_and_publish_under_js() {
     let root = Path::new("/srv/storage/files/js");
-    let mut assets = public_js_assets(root);
-    assets.extend(service_js_assets(root));
+    let assets = public_js_assets(root);
 
     for asset in &assets {
         assert_eq!(asset.asset_type(), AssetType::JavaScript);

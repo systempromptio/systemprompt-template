@@ -46,12 +46,6 @@ fn an_io_error_converts_into_the_infra_variant() {
 }
 
 #[test]
-fn a_json_error_converts_into_the_infra_variant() {
-    let json = serde_json::from_str::<serde_json::Value>("{").unwrap_err();
-    assert!(matches!(JobError::from(json), JobError::Infra(_)));
-}
-
-#[test]
 fn a_format_error_is_a_distinct_variant() {
     assert!(matches!(
         JobError::from(std::fmt::Error),

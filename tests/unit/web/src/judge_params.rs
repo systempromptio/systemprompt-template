@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use systemprompt::identifiers::{Actor, UserId};
 use systemprompt::traits::JobContext;
-use systemprompt_web_extension::jobs::internals::JudgeParams;
+use systemprompt_web_admin::jobs::internals::JudgeParams;
 
 fn context(parameters: &[(&str, &str)]) -> JobContext {
     JobContext::new(

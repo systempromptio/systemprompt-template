@@ -11,7 +11,9 @@ use systemprompt_web_admin::repositories::dashboard::queries::{
     list_hourly_activity, list_popular_skills, list_recent_mcp_errors, list_tool_success_rates,
     list_top_users,
 };
-use systemprompt_web_admin::repositories::dashboard::{get_dashboard_data, list_events};
+use systemprompt_web_admin::repositories::dashboard::{
+    DashboardWindows, get_dashboard_data, list_events,
+};
 use systemprompt_web_admin::types::EventsQuery;
 
 use crate::dashboard_sessions::insert_mcp_execution;
@@ -346,12 +348,18 @@ async fn get_dashboard_data_assembles_without_error_on_a_quiet_instance() {
         return;
     };
 
-    let data = get_dashboard_data(&db.pool, "24 hours", "1 hour", "24h", "7d")
+    let windows = DashboardWindows {
+        chart_interval: "24 hours",
+        chart_bucket: "1 hour",
+        traffic_range: "24h",
+        content_range: "7d",
+    };
+    let data = get_dashboard_data(&db.pool, windows)
         .await
         .expect("the landing page must render on an instance with no traffic");
 
-    assert_eq!(data.stats.total_logins, 0);
-    assert_eq!(data.active_users_24h, 0);
-    assert!(!data.usage_timeseries.is_empty());
+    assert_eq!(data.tools.stats.total_logins, 0);
+    assert_eq!(data.tools.active_users_24h, 0);
+    assert!(!data.tools.usage_timeseries.is_empty());
     db.cleanup().await;
 }

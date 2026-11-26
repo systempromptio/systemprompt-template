@@ -6,7 +6,7 @@
 //! deploy, so a copy that assumed the parent existed would fail every time.
 
 use systemprompt::extension::{AssetDefinition, AssetType};
-use systemprompt_web_extension::jobs::internals::{copy_all_assets, copy_asset};
+use systemprompt_web_shared::asset_jobs::{copy_all_assets, copy_asset};
 use tempfile::TempDir;
 
 #[tokio::test]

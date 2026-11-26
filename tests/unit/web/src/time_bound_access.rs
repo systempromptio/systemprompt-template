@@ -4,6 +4,7 @@
 
 use chrono::{DateTime, Utc};
 use systemprompt::governance::authz::{Access, RegisteredEntities};
+use systemprompt_web_admin::jobs::lost_manage_role;
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, DeclaredKey, DeclaredSet, build_declared_set,
 };
@@ -12,7 +13,6 @@ use systemprompt_web_admin::repositories::access_control::drift::{
 };
 use systemprompt_web_admin::repositories::access_control::export::{Owners, render_export};
 use systemprompt_web_admin::repositories::config::rules_yaml_loader::parse_rules_doc;
-use systemprompt_web_extension::jobs::lost_manage_role;
 
 fn at(rfc3339: &str) -> DateTime<Utc> {
     DateTime::parse_from_rfc3339(rfc3339)

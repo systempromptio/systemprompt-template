@@ -55,7 +55,7 @@ fn an_unknown_sort_column_falls_back_to_the_default() {
 
 #[test]
 fn every_sort_column_survives_a_round_trip() {
-    for column in RosterSort::COLUMNS {
+    for &column in RosterSort::COLUMNS {
         let asc = RosterSort::parse_sort(Some(column), Some("asc"));
         assert_eq!(asc.column, column);
         assert!(!asc.descending, "{column} asc");

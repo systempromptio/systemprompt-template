@@ -9,9 +9,9 @@
 use std::sync::Arc;
 
 use systemprompt::identifiers::{ContentId, SourceId};
+use systemprompt_web_admin::jobs::ContentAnalyticsAggregationJob;
 use systemprompt_web_admin::repositories::analytics::content_rollup::{self, UpsertMetricsParams};
 use systemprompt_web_content::repository::ContentRepository;
-use systemprompt_web_jobs::ContentAnalyticsAggregationJob;
 
 use crate::fixtures::content_params;
 use template_test_common::TempDb;

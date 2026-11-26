@@ -10,7 +10,7 @@
 
 use std::path::PathBuf;
 
-use systemprompt_web_extension::jobs::internals::{collect_css_files, concatenate_css_files};
+use systemprompt_web_shared::asset_jobs::{collect_css_files, concatenate_css_files};
 use tempfile::TempDir;
 
 fn write(dir: &TempDir, name: &str, body: &str) -> PathBuf {

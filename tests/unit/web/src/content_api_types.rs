@@ -4,7 +4,8 @@
 //! reports a `total` derived from the payload rather than supplied by the
 //! caller.
 
-use systemprompt_web_extension::api::{ErrorResponse, ListLinksResponse, OkResponse};
+use systemprompt_web_extension::api::{ErrorResponse, ListLinksResponse};
+use systemprompt_web_shared::session_cookie::OkResponse;
 
 #[test]
 fn error_response_serialises_to_a_single_error_field() {

@@ -1,12 +1,11 @@
 //! Config loading is deliberately non-fatal: a broken `services/web/` tree
 //! degrades the affected section to "absent" instead of taking the server down.
 
-use systemprompt_web_site::config_loader::{ConfigError, log_and_discard_err};
+use systemprompt_web_shared::config_loader::{ConfigError, log_and_discard_err};
 
 fn broken() -> Result<Option<String>, ConfigError> {
-    Err(ConfigError::Parse {
-        config_name: "navigation.yaml".to_owned(),
-        message: "unexpected key".to_owned(),
+    Err(ConfigError::Missing {
+        path: "services/web/config/navigation.yaml".into(),
     })
 }
 

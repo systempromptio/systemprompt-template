@@ -791,9 +791,9 @@ async fn getting_an_article_that_does_not_exist_is_a_404() {
 
 #[tokio::test]
 async fn setting_a_session_issues_an_access_cookie_and_a_refresh_cookie() {
-    let (headers, _) = systemprompt_web_content::api::auth::set_session(
-        State(systemprompt_web_content::api::auth::CookieSecure(true)),
-        axum::Json(systemprompt_web_content::api::auth::SetSessionRequest {
+    let (headers, _) = systemprompt_web_shared::session_cookie::set_session(
+        State(systemprompt_web_shared::session_cookie::CookieSecure(true)),
+        axum::Json(systemprompt_web_shared::session_cookie::SetSessionRequest {
             access_token: "access-abc".to_owned(),
             expires_in: Some(120),
             refresh_token: Some("refresh-xyz".to_owned()),
@@ -820,9 +820,9 @@ async fn setting_a_session_issues_an_access_cookie_and_a_refresh_cookie() {
 
 #[tokio::test]
 async fn a_session_with_no_refresh_token_issues_only_the_access_cookie() {
-    let (headers, body) = systemprompt_web_content::api::auth::set_session(
-        State(systemprompt_web_content::api::auth::CookieSecure(true)),
-        axum::Json(systemprompt_web_content::api::auth::SetSessionRequest {
+    let (headers, body) = systemprompt_web_shared::session_cookie::set_session(
+        State(systemprompt_web_shared::session_cookie::CookieSecure(true)),
+        axum::Json(systemprompt_web_shared::session_cookie::SetSessionRequest {
             access_token: "access-only".to_owned(),
             expires_in: None,
             refresh_token: None,
@@ -842,8 +842,8 @@ async fn a_session_with_no_refresh_token_issues_only_the_access_cookie() {
 
 #[tokio::test]
 async fn clearing_a_session_expires_both_cookies() {
-    let (headers, body) = systemprompt_web_content::api::auth::clear_session(State(
-        systemprompt_web_content::api::auth::CookieSecure(true),
+    let (headers, body) = systemprompt_web_shared::session_cookie::clear_session(State(
+        systemprompt_web_shared::session_cookie::CookieSecure(true),
     ))
     .await;
 

@@ -200,8 +200,8 @@ async fn roster_windows_and_empty_pages_keep_counts_and_ranking() {
     }
     let scope = SubjectScope::All;
     let stats = get_roster_stats(&db.pool, &scope).await.unwrap();
-    assert_eq!(stats.cost_microdollars, 5000);
-    assert_eq!(stats.prior_cost_microdollars, 5000);
+    assert_eq!(stats.spend.cost_microdollars, 5000);
+    assert_eq!(stats.spend.prior_cost_microdollars, 5000);
     let query = RosterQuery {
         filter: RosterFilter::None,
         role: None,

@@ -4,7 +4,7 @@
 //! and e2e tiers; what belongs here is the arithmetic — the part where a wrong
 //! answer is silent.
 
-use systemprompt_web_extension::jobs::internals::{Finding, evaluate};
+use systemprompt_web_admin::jobs::internals::{Finding, evaluate};
 
 #[test]
 fn anomaly_needs_both_the_multiplier_and_the_floor() {

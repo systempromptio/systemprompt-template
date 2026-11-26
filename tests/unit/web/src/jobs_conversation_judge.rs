@@ -14,15 +14,15 @@
 
 use chrono::{DateTime, TimeZone, Utc};
 use systemprompt::identifiers::{AiRequestId, GatewayConversationId};
+use systemprompt_web_admin::jobs::internals::{
+    Category, Classification, Outcome, TranscriptMeta, classification_schema, parse_classification,
+    render_transcript,
+};
 use systemprompt_web_admin::repositories::analytics::context_detail::{
     ContextMessageRow, ContextRequestRow,
 };
 use systemprompt_web_admin::test_support::{
     ConversationView, TranscriptOptions, build_conversation,
-};
-use systemprompt_web_extension::jobs::internals::{
-    Category, Classification, Outcome, TranscriptMeta, classification_schema, parse_classification,
-    render_transcript,
 };
 
 #[test]

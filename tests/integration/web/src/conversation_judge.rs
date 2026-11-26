@@ -7,8 +7,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use chrono::{DateTime, Utc};
 use systemprompt::identifiers::ContextId;
-use systemprompt_web_jobs::JobError;
-use systemprompt_web_jobs::internals::{
+use systemprompt_web_admin::jobs::JobError;
+use systemprompt_web_admin::jobs::internals::{
     Category, Classification, ConversationClassifier, JudgeParams, JudgeVerdict, Outcome,
     run_with_classifier,
 };
@@ -92,9 +92,9 @@ async fn seed_request(pool: &sqlx::PgPool, row: SeededRequest<'_>) {
     sqlx::query(
         "INSERT INTO ai_requests
              (id, request_id, user_id, context_id, provider, model, status, actor_kind, actor_id,
-              synthetic, request_kind, created_at, updated_at)
+              traffic, request_kind, created_at, updated_at)
          VALUES ($1, $1, 'judge-user', $2, 'fixture', 'fixture-model', 'completed', $3,
-                 'judge-user', $4, $5, clock_timestamp() - interval '2 hours',
+                 'judge-user', CASE WHEN $4 THEN 'evaluation' ELSE 'production' END, $5, clock_timestamp() - interval '2 hours',
                  clock_timestamp() - interval '2 hours')",
     )
     .bind(id)

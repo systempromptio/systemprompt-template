@@ -10,7 +10,7 @@ workspace = true
 
 [dependencies]
 systemprompt = { workspace = true, features = ["reference"] }
-systemprompt-template = { path = "../.." }
+systemprompt-template = { path = "../..", default-features = false, features = ["flavour-full"] }
 systemprompt-web-admin = { workspace = true }
 
 async-trait = { workspace = true }
