@@ -115,6 +115,7 @@ impl Extension for WebExtension {
             })
             .conferral(InstallConferral::ShareTokens)
             .conferral(InstallConferral::GitSourceSync)
+            .conferral(InstallConferral::BrokerCalls)
             .secret(SecretName::new("github_mcp_client_id"))
             .secret(SecretName::new("github_mcp_client_secret"))
             .secret_prefix(CONNECTOR_SECRET_PREFIX)
@@ -139,6 +140,7 @@ impl Extension for WebExtension {
                     paths: r.get::<Arc<AppPaths>>()?,
                     artifact_ui: r.optional::<DynArtifactUiRenderer>(),
                     git_sync: r.git_source_sync()?,
+                    broker_calls: r.broker_calls()?,
                 }))
             })
             .provide_after_governance::<Arc<WebRuntime>, _>(|r: &Resolved<'_>| {

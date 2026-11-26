@@ -31,8 +31,21 @@ pub fn router(pool: Arc<PgPool>) -> Router {
         )
         .route("/connectors/{provider}/start", get(consent::start))
         .route("/connectors/{provider}/callback", get(consent::callback))
+        .route("/connectors/{provider}/token", get(consent::token))
         .layer(axum::extract::DefaultBodyLimit::max(32768))
         .with_state(pool)
+}
+
+// Why: only the gateway's credential broker may read a per-user bearer; core
+// verifies the broker's call and never hands the secret to the member.
+fn require_broker(env: &AdminEnv, headers: &HeaderMap) -> AdminResult<()> {
+    env.broker_calls().verify(headers).map_err(|refused| {
+        tracing::warn!(
+            ?refused,
+            "connector bearer read refused: not the credential broker"
+        );
+        AdminError::Forbidden("Backend credential access required".into())
+    })
 }
 
 async fn live_user(

@@ -33,9 +33,10 @@ use systemprompt::models::execution::context::{ContextExtractionError, RequestCo
 use systemprompt::security::at_rest::MasterKey;
 use systemprompt::security::conferred::{MemberCiphers, MemberShareTokens};
 use systemprompt::traits::{
-    AuthUser, ConferralIssuer, DeclaredSecrets, ExtensionSecret, GitSourceSync, GitSourceSyncError,
-    GitSourceSyncRequest, GitSourceSynced, MemberCipher, MemberGrant, ReloadOutcome,
-    SecretReferences, SecretStore, SecretStoreError, SecretsStatus, ShareTokenSigner,
+    AuthUser, BrokerCallRefused, BrokerCallVerifier, ConferralIssuer, DeclaredSecrets,
+    ExtensionSecret, GitSourceSync, GitSourceSyncError, GitSourceSyncRequest, GitSourceSynced,
+    MemberCipher, MemberGrant, ReloadOutcome, SecretReferences, SecretStore, SecretStoreError,
+    SecretsStatus, ShareTokenSigner,
 };
 use systemprompt_web_admin::authz::connector::ConnectorAttributeProvider;
 use systemprompt_web_admin::authz::group::GroupAttributeProvider;
@@ -101,6 +102,15 @@ fn web_grant() -> MemberGrant {
     MemberGrant {
         member: web_member(),
         token_audiences: Arc::from(Vec::new()),
+    }
+}
+
+#[derive(Debug)]
+struct AbsentBroker;
+
+impl BrokerCallVerifier for AbsentBroker {
+    fn verify(&self, _headers: &http::HeaderMap) -> Result<(), BrokerCallRefused> {
+        Err(BrokerCallRefused::Absent)
     }
 }
 
@@ -429,6 +439,7 @@ impl EnvFixture {
             paths: Arc::new(paths),
             artifact_ui: None,
             git_sync: Arc::new(RefusingGitSync),
+            broker_calls: Arc::new(AbsentBroker),
         });
         Self {
             env,

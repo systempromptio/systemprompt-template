@@ -16,7 +16,9 @@ use systemprompt::manifest::ConfigView;
 use systemprompt::manifest::profile::ProfileView;
 use systemprompt::manifest::services::{InstallServicesView, ServicesConfig};
 use systemprompt::models::auth::DynRequestAuthenticator;
-use systemprompt::traits::{DeclaredSecrets, GitSourceSync, MemberCipher, ShareTokenSigner};
+use systemprompt::traits::{
+    BrokerCallVerifier, DeclaredSecrets, GitSourceSync, MemberCipher, ShareTokenSigner,
+};
 
 /// What the admin crate needs of the runtime, resolved once.
 #[derive(Clone)]
@@ -34,6 +36,7 @@ struct Inner {
     paths: Arc<AppPaths>,
     artifact_ui: Option<DynArtifactUiRenderer>,
     git_sync: Arc<dyn GitSourceSync>,
+    broker_calls: Arc<dyn BrokerCallVerifier>,
 }
 
 pub struct AdminEnvParts {
@@ -48,6 +51,7 @@ pub struct AdminEnvParts {
     pub paths: Arc<AppPaths>,
     pub artifact_ui: Option<DynArtifactUiRenderer>,
     pub git_sync: Arc<dyn GitSourceSync>,
+    pub broker_calls: Arc<dyn BrokerCallVerifier>,
 }
 
 impl std::fmt::Debug for AdminEnvParts {
@@ -81,6 +85,7 @@ impl AdminEnv {
             paths: parts.paths,
             artifact_ui: parts.artifact_ui,
             git_sync: parts.git_sync,
+            broker_calls: parts.broker_calls,
         }))
     }
 
@@ -157,5 +162,10 @@ impl AdminEnv {
     #[must_use]
     pub fn git_sync(&self) -> &dyn GitSourceSync {
         self.0.git_sync.as_ref()
+    }
+
+    #[must_use]
+    pub fn broker_calls(&self) -> &dyn BrokerCallVerifier {
+        self.0.broker_calls.as_ref()
     }
 }
