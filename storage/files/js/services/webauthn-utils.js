@@ -25,6 +25,13 @@ export function base64urlToArrayBuffer(base64url) {
   return bytes.buffer;
 }
 
+export function arrayBufferToBase64url(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 export function preparePublicKeyCredentialRequestOptions(options) {
   return {
     ...options,

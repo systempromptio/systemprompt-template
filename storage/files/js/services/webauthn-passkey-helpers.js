@@ -1,4 +1,6 @@
-import { generateRandomString, generateCodeChallenge } from '/js/services/webauthn-utils.js?v=3';
+import {
+  generateRandomString, generateCodeChallenge, arrayBufferToBase64url,
+} from '/js/services/webauthn-utils.js?v=3';
 
 const CLIENT_ID = 'marketplace-admin';
 const WEBAUTHN_BASE = '/api/v1/core/oauth/webauthn';
@@ -9,13 +11,13 @@ export { WEBAUTHN_BASE };
 
 export const buildAuthCredentialPayload = (credential) => ({
   id: credential.id,
-  rawId: Array.from(new Uint8Array(credential.rawId)),
+  rawId: arrayBufferToBase64url(credential.rawId),
   response: {
-    authenticatorData: Array.from(new Uint8Array(credential.response.authenticatorData)),
-    clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-    signature: Array.from(new Uint8Array(credential.response.signature)),
+    authenticatorData: arrayBufferToBase64url(credential.response.authenticatorData),
+    clientDataJSON: arrayBufferToBase64url(credential.response.clientDataJSON),
+    signature: arrayBufferToBase64url(credential.response.signature),
     userHandle: credential.response.userHandle
-      ? Array.from(new Uint8Array(credential.response.userHandle))
+      ? arrayBufferToBase64url(credential.response.userHandle)
       : null,
   },
   type: credential.type,
@@ -23,10 +25,10 @@ export const buildAuthCredentialPayload = (credential) => ({
 
 export const buildCreationCredentialPayload = (credential) => ({
   id: credential.id,
-  rawId: Array.from(new Uint8Array(credential.rawId)),
+  rawId: arrayBufferToBase64url(credential.rawId),
   response: {
-    attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
-    clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
+    attestationObject: arrayBufferToBase64url(credential.response.attestationObject),
+    clientDataJSON: arrayBufferToBase64url(credential.response.clientDataJSON),
   },
   type: credential.type,
 });

@@ -55,6 +55,22 @@ pub fn admin_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
             "js/services/webauthn-login.js",
         ),
         AssetDefinition::js(
+            storage_js.join("services/webauthn-login-ui.js"),
+            "js/services/webauthn-login-ui.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("services/webauthn-helpers.js"),
+            "js/services/webauthn-helpers.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("services/webauthn-session.js"),
+            "js/services/webauthn-session.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("utils/storage-safe.js"),
+            "js/utils/storage-safe.js",
+        ),
+        AssetDefinition::js(
             storage_js.join("services/webauthn-register.js"),
             "js/services/webauthn-register.js",
         ),
