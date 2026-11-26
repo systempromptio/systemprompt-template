@@ -25,7 +25,10 @@ pub async fn upsert_daily_rollups_for_window(
     written += rollup_hook_counters(pool, days_back).await?;
     written += rollup_sessions(pool, days_back).await?;
     written += rollup_commits(pool, days_back).await?;
-    written += rollup_gateway_requests(pool, days_back).await?;
+    #[cfg(feature = "gateway")]
+    {
+        written += rollup_gateway_requests(pool, days_back).await?;
+    }
     written += rollup_attribution(pool, days_back).await?;
     Ok(written)
 }
@@ -112,6 +115,7 @@ async fn rollup_commits(pool: &PgPool, days_back: i32) -> Result<u64, Marketplac
     .rows_affected())
 }
 
+#[cfg(feature = "gateway")]
 async fn rollup_gateway_requests(pool: &PgPool, days_back: i32) -> Result<u64, MarketplaceError> {
     Ok(sqlx::query!(
         r#"

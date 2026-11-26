@@ -63,11 +63,6 @@ scheduler:
       owner: admin
       enabled: true
 
-    - name: usage_anomaly
-      extension: web
-      owner: admin
-      enabled: true
-
     - name: usage_daily_rollup
       extension: web
       owner: admin
@@ -84,11 +79,6 @@ scheduler:
       enabled: true
 
     - name: secret_migration
-      extension: web
-      owner: admin
-      enabled: true
-
-    - name: plugin_usage_retention
       extension: web
       owner: admin
       enabled: true
@@ -156,11 +146,6 @@ scheduler:
       extension: core
       owner: admin
       enabled: false
-
-    - name: conversation_rollup
-      extension: web
-      owner: admin
-      enabled: true
 
   bootstrap_jobs:
     - governance_bootstrap

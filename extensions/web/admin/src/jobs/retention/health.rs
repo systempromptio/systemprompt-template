@@ -107,6 +107,7 @@ pub(crate) async fn run(pool: &PgPool) -> Result<HealthReport, JobError> {
     }
     tables.sort_by_key(|table| std::cmp::Reverse(table.total_bytes));
     check_outboxes(pool, &mut findings).await?;
+    #[cfg(feature = "gateway")]
     check_stuck_requests(pool, &mut findings).await?;
     check_unused_indexes(pool, &mut findings).await?;
     check_anonymous_users(pool, &mut findings).await?;
@@ -140,6 +141,7 @@ async fn check_outboxes(pool: &PgPool, findings: &mut Vec<HealthFinding>) -> Res
     Ok(())
 }
 
+#[cfg(feature = "gateway")]
 async fn check_stuck_requests(
     pool: &PgPool,
     findings: &mut Vec<HealthFinding>,
