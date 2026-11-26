@@ -19,8 +19,8 @@ pub use catalog::{
 };
 pub use config::{get_gateway_config, update_gateway_settings};
 pub use labels::{
-    ProviderLabel, RouteLabel, RouteLabels, derive_provider_label, derive_route_label,
-    get_route_labels, get_route_labels_from_services,
+    ProviderLabel, RouteLabel, RouteLabels, compiled_route_labels, derive_provider_label,
+    derive_route_label, get_route_labels, get_route_labels_from_services,
 };
 pub use matching::{
     find_matching_route, find_matching_route_index, find_route_index_by_id, glob_match,

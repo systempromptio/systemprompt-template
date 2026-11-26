@@ -152,6 +152,10 @@ pub fn get_route_labels_from_services(env: &AdminEnv) -> Result<RouteLabels, Mar
     get_route_labels(env.services_view().catalog())
 }
 
+pub fn compiled_route_labels(env: &AdminEnv) -> Option<Result<RouteLabels, MarketplaceError>> {
+    cfg!(feature = "gateway").then(|| get_route_labels_from_services(env))
+}
+
 fn first_endpoint<'c>(
     catalog: &'c ResolvedCatalog,
     provider: &str,

@@ -193,14 +193,15 @@ pub(crate) fn build_matrix_sections(
         ));
     }
 
-    match repositories::config::gateway::get_route_labels_from_services(env) {
-        Err(e) => {
+    match repositories::config::gateway::compiled_route_labels(env) {
+        None => {},
+        Some(Err(e)) => {
             // Why: skipping the section keeps the rest of the matrix rendering,
             // but a dropped gateway section is indistinguishable from a
             // deployment with no routes, so it may not go unrecorded.
             tracing::error!(error = %e, "gateway routes unavailable for the access-control matrix");
         },
-        Ok(labels) => {
+        Some(Ok(labels)) => {
             // Why: the row's name is the route's label and its description
             // the one-line "pattern → provider", so every matrix reader
             // shows a route the way the gateway page does.
