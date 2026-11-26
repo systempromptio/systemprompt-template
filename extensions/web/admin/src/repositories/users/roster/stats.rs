@@ -36,8 +36,18 @@ pub struct RosterSpend {
     pub prior_requests: i64,
 }
 
-#[cfg(feature = "gateway")]
 pub async fn get_roster_stats(
+    pool: &PgPool,
+    scope: &SubjectScope,
+) -> Result<RosterStats, sqlx::Error> {
+    #[cfg(feature = "gateway")]
+    return read_stats_with_spend(pool, scope).await;
+    #[cfg(not(feature = "gateway"))]
+    read_stats_without_spend(pool, scope).await
+}
+
+#[cfg(feature = "gateway")]
+async fn read_stats_with_spend(
     pool: &PgPool,
     scope: &SubjectScope,
 ) -> Result<RosterStats, sqlx::Error> {
@@ -109,7 +119,7 @@ pub async fn get_roster_stats(
 }
 
 #[cfg(not(feature = "gateway"))]
-pub async fn get_roster_stats(
+async fn read_stats_without_spend(
     pool: &PgPool,
     scope: &SubjectScope,
 ) -> Result<RosterStats, sqlx::Error> {

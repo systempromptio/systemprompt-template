@@ -16,7 +16,7 @@ use crate::util::time_range::{TimeRange, TimeRangePreset};
 
 use super::data::OverviewData;
 #[cfg(feature = "gateway")]
-use super::data::UsageData;
+use super::data::OverviewUsageData;
 #[cfg(feature = "gateway")]
 use super::kpis_view::{OverviewKpiStripView, kpi_strip, volume_chart};
 #[cfg(feature = "gateway")]
@@ -181,7 +181,7 @@ pub(super) fn overview_page(data: &OverviewData) -> OverviewContext {
 }
 
 #[cfg(feature = "gateway")]
-fn usage_view(range: OverviewRange, data: &UsageData) -> UsageView {
+fn usage_view(range: OverviewRange, data: &OverviewUsageData) -> UsageView {
     UsageView {
         ranges: range_links(range),
         kpis: kpi_strip(range, data),

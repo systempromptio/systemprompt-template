@@ -49,12 +49,12 @@ pub(super) type Loaded<T> = Result<T, sqlx::Error>;
 pub(super) struct OverviewData {
     pub pending_approvals: Loaded<i64>,
     #[cfg(feature = "gateway")]
-    pub usage: UsageData,
+    pub usage: OverviewUsageData,
 }
 
 // Why: the widgets the gateway member's request log supplies.
 #[cfg(feature = "gateway")]
-pub(super) struct UsageData {
+pub(super) struct OverviewUsageData {
     pub kpis: Loaded<OverviewKpis>,
     pub buckets: Loaded<Vec<i64>>,
     pub anomalies: Loaded<Vec<UsageAnomalyRow>>,
@@ -83,7 +83,7 @@ pub(super) async fn load_overview(pool: &Arc<PgPool>) -> OverviewData {
 }
 
 #[cfg(feature = "gateway")]
-async fn load_usage(pool: &Arc<PgPool>, range: OverviewRange) -> UsageData {
+async fn load_usage(pool: &Arc<PgPool>, range: OverviewRange) -> OverviewUsageData {
     let window = range.time_range();
     // Why: the overview is instance-wide, so the model board reads the same
     // unscoped window every tile above it reads.
@@ -96,7 +96,7 @@ async fn load_usage(pool: &Arc<PgPool>, range: OverviewRange) -> UsageData {
         scopes::list_top_scopes_by_cost(pool, ScopeKind::Group, window, TOP_SCOPES),
         list_model_stats(pool, window, &scope),
     );
-    UsageData {
+    OverviewUsageData {
         kpis,
         buckets,
         anomalies,

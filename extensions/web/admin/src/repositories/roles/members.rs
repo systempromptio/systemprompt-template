@@ -59,7 +59,7 @@ pub async fn list_role_holders(
     .fetch_all(pool)
     .await?;
     #[cfg(feature = "gateway")]
-    let spend = list_spend_30d(
+    let spend = get_spend_30d(
         pool,
         &rows
             .iter()
@@ -92,7 +92,7 @@ pub async fn list_role_holders(
 // Why: the gateway member's thirty-day requests and cost per holder, keyed by
 // the ids the holder read returned. A holder with no request has spent nothing.
 #[cfg(feature = "gateway")]
-async fn list_spend_30d(
+async fn get_spend_30d(
     pool: &PgPool,
     ids: &[String],
 ) -> Result<std::collections::HashMap<String, (i64, i64)>, sqlx::Error> {

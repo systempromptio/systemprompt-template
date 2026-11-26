@@ -67,7 +67,7 @@ pub async fn list_group_summaries(pool: &PgPool) -> Result<Vec<GroupSummary>, sq
     .fetch_all(pool)
     .await?;
     #[cfg(feature = "gateway")]
-    let usage = list_group_usage_30d(pool).await?;
+    let usage = get_group_usage_30d(pool).await?;
     Ok(rows
         .into_iter()
         .map(|r| GroupSummary {
@@ -84,7 +84,7 @@ pub async fn list_group_summaries(pool: &PgPool) -> Result<Vec<GroupSummary>, sq
 }
 
 #[cfg(feature = "gateway")]
-async fn list_group_usage_30d(
+async fn get_group_usage_30d(
     pool: &PgPool,
 ) -> Result<std::collections::HashMap<String, Usage30d>, sqlx::Error> {
     let rows = sqlx::query!(

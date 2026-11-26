@@ -18,7 +18,7 @@ use systemprompt::config::AppPaths;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use super::archive::{ArchiveTarget, Window, archive_tables, prune_periods};
+use super::archive::{ArchiveTarget, ArchiveWindow, archive_tables, prune_periods};
 use super::ledger::{archive_exists, record_health_report};
 use super::{ROLLUP_TABLES, all_managed, health};
 use crate::jobs::error::JobError;
@@ -37,7 +37,7 @@ pub(crate) struct MonthlyParams {
 
 // Why: the calendar month `months_back` before the one containing `day`,
 // as a window and its `yyyy-mm` label.
-pub(crate) fn month_window(day: NaiveDate, months_back: u32) -> (Window, String) {
+pub(crate) fn month_window(day: NaiveDate, months_back: u32) -> (ArchiveWindow, String) {
     let mut year = day.year();
     let mut month = day.month();
     for _ in 0..months_back {
@@ -56,7 +56,7 @@ pub(crate) fn month_window(day: NaiveDate, months_back: u32) -> (Window, String)
     }
     .unwrap_or(first + Duration::days(31));
     (
-        Window {
+        ArchiveWindow {
             from: first.and_time(NaiveTime::MIN).and_utc(),
             to: next.and_time(NaiveTime::MIN).and_utc(),
         },

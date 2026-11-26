@@ -53,7 +53,7 @@ pub async fn list_project_summaries(pool: &PgPool) -> Result<Vec<ProjectSummary>
     .fetch_all(pool)
     .await?;
     #[cfg(feature = "gateway")]
-    let usage = list_project_usage_30d(pool).await?;
+    let usage = get_project_usage_30d(pool).await?;
     Ok(rows
         .into_iter()
         .map(|r| ProjectSummary {
@@ -70,7 +70,7 @@ pub async fn list_project_summaries(pool: &PgPool) -> Result<Vec<ProjectSummary>
 // Why: the thirty-day gateway figures, keyed by project, in the builds that
 // link the gateway member.
 #[cfg(feature = "gateway")]
-async fn list_project_usage_30d(
+async fn get_project_usage_30d(
     pool: &PgPool,
 ) -> Result<std::collections::HashMap<String, crate::types::Usage30d>, sqlx::Error> {
     let rows = sqlx::query!(

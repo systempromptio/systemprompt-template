@@ -21,7 +21,7 @@ use super::ledger::{ArchiveRecord, record_archive};
 use crate::jobs::error::JobError;
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct Window {
+pub(crate) struct ArchiveWindow {
     pub from: DateTime<Utc>,
     pub to: DateTime<Utc>,
 }
@@ -50,7 +50,7 @@ pub(crate) struct ArchiveTarget<'a> {
     pub exports_root: &'a Path,
     pub tier: &'static str,
     pub period: &'a str,
-    pub window: Window,
+    pub window: ArchiveWindow,
 }
 
 // Why: the manifest is written last, so a directory with a manifest is a
@@ -132,7 +132,7 @@ async fn archive_one(
 // escapes backslashes, so a JSON string containing \" arrives as \\" and the
 // line is not valid JSON. `fetch` yields one row at a time, so memory stays
 // flat, and the text is exactly what `row_to_json` produced.
-fn select_statement(table: &ManagedTable, window: Window) -> String {
+fn select_statement(table: &ManagedTable, window: ArchiveWindow) -> String {
     format!(
         "SELECT row_to_json(t)::text FROM {name} t \
          WHERE {col} >= '{from}'::timestamptz AND {col} < '{to}'::timestamptz \

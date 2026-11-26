@@ -74,7 +74,7 @@ pub async fn list_request_tool_calls(
     .fetch_all(pool)
     .await?;
     #[cfg(feature = "mcp")]
-    let ledger = list_ledger_entries(
+    let ledger = get_ledger_entries(
         pool,
         &intents.iter().map(|i| i.id.clone()).collect::<Vec<_>>(),
     )
@@ -119,7 +119,7 @@ struct LedgerEntry {
 }
 
 #[cfg(feature = "mcp")]
-async fn list_ledger_entries(
+async fn get_ledger_entries(
     pool: &PgPool,
     intent_ids: &[String],
 ) -> Result<std::collections::HashMap<String, LedgerEntry>, sqlx::Error> {
