@@ -8,8 +8,9 @@ dashboard.yaml, as the server rendered it), fetches each, then fetches every
 same-origin /admin link those pages carry, one hop deep. Prints one line per
 page: `nav CODE PATH` for a sidebar page, `link CODE PATH` for a page one hop
 beneath it. A strict-mode template reading a field the flavour's view model
-does not supply answers 500, so this is the render check for every page a
-flavour compiles and links."""
+does not supply answers 500, and a link to a page the flavour does not compile
+answers 404; the smoke fails both, so this is the render and link check for
+every page a flavour compiles and links."""
 import html.parser, sys, urllib.error, urllib.parse, urllib.request
 
 base, cookie = sys.argv[1:3]

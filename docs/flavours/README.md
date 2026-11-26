@@ -112,13 +112,22 @@ the host `EXTERNAL_URL` names, register the passkey, then sign in at
 `/admin/login`. Smoke signs in the same way with a software authenticator
 (`scripts/lib/console-login.py`) and asserts each flavour's
 `smoke.console_pages` (200) and `smoke.routes_absent_signed_in` (404).
-It then fetches every page the rendered sidebar links (200) and every
-console link those pages carry, one hop deep (below 500), with
+Before the crawl it seeds the rows a fresh install lacks, through the CLI
+and the console API only: a second user, a group and a project holding them,
+and, where the gateway is compiled, one gateway request (refused by access
+control, since a fresh install grants no model; a routed request needs a real
+provider key). It then fetches every page the rendered sidebar links (200) and
+every console link those pages carry, one hop deep (neither 404 nor 5xx), with
 `scripts/lib/console-crawl.py`: a strict-mode template reading a field the
-flavour's view model does not supply answers 500 there. A view-model field
-whose member a flavour does not link stays in the struct as
-`types::Absent` (serialised `null`), and the template branches on it with
-`{{#if}}`.
+flavour's view model does not supply answers 500 there, and a link to a page
+the flavour does not compile answers 404. A view-model field whose member a
+flavour does not link stays in the struct as `types::Absent` (serialised
+`null`), and the template branches on it with `{{#if}}`. A link to another
+console page is drawn only when that page is compiled, read from the nav
+registry that builds the sidebar: templates branch on `pages.<nav id>`
+(`dashboard::PageLinks`, in every page shell, `null` for a page this build
+leaves out), and view models take their hrefs from `dashboard::page_href`,
+`page_url` or `link_to`, which answer `None` for the same pages.
 The developer login link is removed (nothing issued its codes, and an
 install member cannot mint a browser session). AD FS single sign-on still
 verifies an assertion but is refused at session minting on this core; it

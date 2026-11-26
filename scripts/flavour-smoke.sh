@@ -209,6 +209,43 @@ if [ -n "$landing" ]; then
     fi
 fi
 
+# Why: the crawl renders what the database holds, and a fresh install holds only
+# the admin. One member, a group and a project with that member, and (where the
+# gateway is compiled) one gateway request make the row-dependent sections
+# render. Every row goes through the CLI or the console API the flavour ships.
+# The request is refused by access control (a fresh install grants no model),
+# which still records it; a routed request would need a real provider key.
+seed_post() {
+    local code
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -H "Cookie: $cookie" \
+        -H 'Content-Type: application/json' -d "$2" "$base/api/public/admin$1" || true)"
+    case "$code" in 2??) record "seed $1" pass "$code" ;; *) record "seed $1" fail "$code" ;; esac
+}
+seed_console() {
+    local member key code
+    cli admin users create --name smoke-member --email smoke-member@example.invalid --if-not-exists > /dev/null 2>&1 || true
+    member="$(cli --json admin users show smoke-member@example.invalid 2>/dev/null | jq -rs '.[0].id // empty' || true)"
+    if [ -z "$member" ]; then record "seed member" fail "admin users create/show gave no id"; return; fi
+    record "seed member" pass "$member (role user)"
+    seed_post /groups '{"id":"smoke-group","name":"Smoke group"}'
+    seed_post /groups/smoke-group/members "{\"user_id\":\"$member\"}"
+    seed_post /projects '{"id":"smoke-project","name":"Smoke project"}'
+    seed_post /projects/smoke-project/members "{\"user_id\":\"$member\"}"
+    if [ "$(flavour_get "$flavour" smoke.models_endpoint)" = true ]; then
+        key="$(cli admin users api-key issue --user "$member" --name smoke 2>/dev/null \
+            | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -oE 'sp-live-[A-Za-z0-9]+\.[A-Za-z0-9]+' | head -1 || true)"
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -H "Authorization: Bearer $key" \
+            -H 'Content-Type: application/json' -H 'anthropic-version: 2023-06-01' \
+            -d '{"model":"claude-sonnet-4-5","max_tokens":8,"messages":[{"role":"user","content":"smoke"}]}' \
+            "$base/v1/messages" || true)"
+        if [ -n "$key" ] && [ "$code" != 401 ] && [ "$code" != 000 ]; then
+            record "seed gateway request" pass "$code"
+        else
+            record "seed gateway request" fail "api key or request refused: $code"
+        fi
+    fi
+}
+
 pages="$(flavour_get "$flavour" smoke.console_pages 2>/dev/null || true)"
 signed_absent="$(flavour_get "$flavour" smoke.routes_absent_signed_in 2>/dev/null || true)"
 if [ -n "$pages$signed_absent" ]; then
@@ -227,13 +264,14 @@ if [ -n "$pages$signed_absent" ]; then
             code="$(http_status -H "Cookie: $cookie" "$base$route")"
             if [ "$code" = 404 ]; then record "signed-in route absent $route" pass "$code"; else record "signed-in route absent $route" fail "$code"; fi
         done <<< "$signed_absent"
+        seed_console
         crawl="$(python3 -I "$FLAVOUR_ROOT/scripts/lib/console-crawl.py" "$base" "$cookie" 2> "$work/crawl.err" || true)"
         if [ -z "$crawl" ]; then record "console nav pages" fail "$(tail -1 "$work/crawl.err")"; fi
         while read -r kind code page; do
             [ -n "$page" ] || continue
             if [ "$kind" = nav ]; then
                 if [ "$code" = 200 ]; then record "console nav page $page" pass "$code"; else record "console nav page $page" fail "$code"; fi
-            elif [ "$code" -lt 500 ] 2>/dev/null; then
+            elif [ "$code" != 404 ] && [ "$code" -lt 500 ] 2>/dev/null; then
                 record "console link $page" pass "$code"
             else
                 record "console link $page" fail "$code"
