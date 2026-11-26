@@ -4,8 +4,9 @@
 //!
 //! Every load takes the services directory it reads from; nothing is cached
 //! process-wide. A load failure is logged and served as "section absent",
-//! never a crash, except the ADFS config, whose failure refuses the boot. The public-site sections are loaded by
-//! `systemprompt_web_site::config_loader` on top of [`load_config_section`].
+//! never a crash, except the ADFS config, whose failure refuses the boot. The
+//! public-site sections are loaded by `systemprompt_web_site::config_loader` on
+//! top of [`load_config_section`].
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
