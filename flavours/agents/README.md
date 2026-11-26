@@ -58,18 +58,25 @@ volume.
 
 ## First login
 
-Open `http://localhost:8080/`: it sends you to `/admin`, which redirects to
-`/admin/login`. The console signs in with a WebAuthn passkey; register one for
-`ADMIN_EMAIL` there. For the CLI inside the container:
+The console signs in with a passkey. A fresh install's bootstrap admin has
+none, so issue a one-time link for it:
 
 ```bash
-docker compose -p sp-agents exec app systemprompt admin session login
-docker compose -p sp-agents exec app systemprompt admin users list
+docker compose -p sp-agents exec app systemprompt admin users webauthn \
+  generate-setup-token --email you@example.com
 ```
 
-The token `admin session login --token-only` prints is an admin session the
-console also accepts as its `access_token` cookie; the smoke test signs in
-this way.
+Open the printed `/auth/link-passkey?token=…` link (valid for 15 minutes)
+on the host `EXTERNAL_URL` names (default `http://localhost:8080`; the
+passkey is bound to that host), register the passkey, then sign in at
+`/admin/login` with the same e-mail. `scripts/flavour-smoke.sh` signs in
+the same way, with a software authenticator (`scripts/lib/console-login.py`).
+There is no other browser sign-in: the developer login link is removed, and
+single sign-on (AD FS) verifies an assertion but cannot issue the session on
+this core (see the flavours guide).
+
+For the CLI inside the container, `admin session login` opens a CLI session
+(observed in smoke: `plugins mcp tools` lists the `systemprompt` server's tools).
 
 ## Dashboard
 

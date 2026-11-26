@@ -67,25 +67,27 @@ clean image build 568 s. Fresh migrate 5.02 s, first boot to healthy
 
 ## First login
 
-The console signs in with passkeys. The bootstrap admin has none on a fresh
-install, so link one first:
+The console signs in with a passkey. A fresh install's bootstrap admin has
+none, so issue a one-time link for it:
 
 ```bash
-docker compose -p sp-gateway exec app \
-  systemprompt admin users webauthn generate-setup-token --email you@example.com
+docker compose -p sp-gateway exec app systemprompt admin users webauthn \
+  generate-setup-token --email you@example.com
 ```
 
-Open the printed `http://localhost:8080/auth/link-passkey?token=…` link
-(valid for 15 minutes) and create the passkey. Then sign in at
-`http://localhost:8080/admin/login` with the same e-mail. `smoke` signs in
-the same way, with a software authenticator
-(`scripts/lib/console-login.py`).
+Open the printed `/auth/link-passkey?token=…` link (valid for 15 minutes)
+on the host `EXTERNAL_URL` names (default `http://localhost:8080`; the
+passkey is bound to that host), register the passkey, then sign in at
+`/admin/login` with the same e-mail. `scripts/flavour-smoke.sh` signs in
+the same way, with a software authenticator (`scripts/lib/console-login.py`).
+There is no other browser sign-in: the developer login link is removed, and
+single sign-on (AD FS) verifies an assertion but cannot issue the session on
+this core (see the flavours guide).
 
-`systemprompt admin session login` (a CLI session) fails in this flavour:
-`no admitted member provides DynContextDirectory`. CLI sessions need the
-`agents` member's context store (core
-`crates/entry/cli/src/session/contexts.rs:62-67`). Commands that need no
-session, such as `admin users`, `infra db` and `plugins capabilities`, work.
+CLI commands that open a session (`admin session login`, `plugins mcp tools`)
+fail on this core with "no admitted member provides DynContextDirectory": core
+gives every CLI session a conversation context, which only the agents member
+provides. Commands that need no session (`admin users …`, `infra db …`) work.
 
 ## Dashboard
 
@@ -97,16 +99,20 @@ The sidebar has the five sections of
 `flavours/gateway/services/web/config/dashboard.yaml`, which overrides
 `services/web/config/dashboard.yaml`:
 
-- Gateway: overview, analytics, requests, sessions, conversations.
+- Gateway: overview, analytics, requests.
 - Policy: gateway, policies, quotas, governance, approvals, secrets audit.
 - People & access: users, groups, projects, roles, access control, devices.
 - Platform: code sync, configuration, data lifecycle, observability.
-- Account: profile, my conversations, settings.
+- Account: profile, settings.
 
 `/admin` lands on the overview with the six home cards (Spend, Requests,
-Models, Policies, Quotas, Audit). Every page in that list answers 200 when
-signed in. There are no MCP, plugin, skill or agent pages, and naming an item
-this flavour does not compile refuses boot.
+Models, Policies, Quotas, Audit). There are no MCP, plugin, skill or agent
+pages, and no sessions, conversations or history pages: those read the
+conversation record, which only a build with agents installs. Naming an item
+this flavour does not compile refuses boot. The smoke expectations
+(`flavour.yaml`) list the pages a signed-in admin gets 200 from and the
+conversation pages that answer 404; on this tree they have not been run yet,
+because the image needs the core fix in Status.
 
 ## CLI groups
 
@@ -126,10 +132,10 @@ core refuses to boot on a configured job that no member contributes.
 `services/config/config.yaml` includes only the files of the subtrees it
 ships.
 
-The web extension installs the tool ledger, named contexts and the
-marketplace tables as empty planes (`extensions/web/schema/20_member_planes.sql`),
-so the conversation record, the last-seen roster and retention read the same
-shape here as in `full`.
+The web extension installs only the schema files whose tables this build
+links (`extensions/web/src/schemas.rs`): the gateway's request scopes, audit
+trigger and request-log expiry, and nothing that reads the MCP, marketplace,
+agents or content members' tables.
 
 ## Known core gaps seen here
 

@@ -35,17 +35,29 @@ The image uses the `full` runtime: the slim runtime plus `demo/` and `hey`.
 
 ## First login
 
-Open `http://localhost:8080/admin/`; it redirects to `/admin/login`, where the
-bootstrap admin (`ADMIN_EMAIL`) signs in. For the CLI inside the container:
+The console signs in with a passkey. A fresh install's bootstrap admin has
+none, so issue a one-time link for it:
 
 ```bash
-docker compose -p sp-full exec app systemprompt admin session login
-docker compose -p sp-full exec app systemprompt admin users list
+docker compose -p sp-full exec app systemprompt admin users webauthn \
+  generate-setup-token --email you@example.com
 ```
+
+Open the printed `/auth/link-passkey?token=…` link (valid for 15 minutes)
+on the host `EXTERNAL_URL` names (default `http://localhost:8080`; the
+passkey is bound to that host), register the passkey, then sign in at
+`/admin/login` with the same e-mail. `scripts/flavour-smoke.sh` signs in
+the same way, with a software authenticator (`scripts/lib/console-login.py`).
+There is no other browser sign-in: the developer login link is removed, and
+single sign-on (AD FS) verifies an assertion but cannot issue the session on
+this core (see the flavours guide).
+
+For the CLI inside the container, `admin session login` opens a CLI session
+(observed in smoke: `plugins mcp tools` lists the `systemprompt` server's tools).
 
 ## Dashboard
 
-`/admin/` lands on the overview. The sidebar and home cards come from
+`/admin` lands on the overview. The sidebar and home cards come from
 `services/web/config/dashboard.yaml` (this flavour has no override): AI
 activity, People & access, Analysis, Governance, Platform (marketplaces,
 plugins, skills, MCP servers, gateway, sync, configuration, lifecycle,

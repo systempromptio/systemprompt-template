@@ -67,6 +67,42 @@ template's own admin page groups. Shrinking the floor itself needs optional
 seams in the kernel; until then the size difference between flavours is
 bounded by it, and the metrics show by how much.
 
+## Schema per flavour
+
+The web extension's schema is a feature-gated contribution, the same rule
+core follows: a schema file whose objects read an optional member's table is
+declared in `extensions/web/src/schemas.rs` only under the web feature that
+links that member (`gateway`: request scopes, the `ai_requests` audit
+trigger and request-log expiry; `mcp`: skill version impact,
+`tool_activity`, `user_last_seen` and marketplace binding expiry; `agents`:
+`conversation_requests` and the conversation facts; `content`: the
+`markdown_content` side table). No stand-in view replaces an absent table,
+and no DDL tests what is installed. Console pages and jobs that read those
+objects are compiled with the same feature, so each flavour installs one
+schema and `full` installs the union. Every flavour's web schema installs on
+a database holding only its members' tables (checked file by file against
+each flavour's table set).
+
+## Signing in to the console
+
+Every flavour signs in the same way. The console uses passkeys, and a fresh
+install's bootstrap admin has none, so issue a one-time link:
+
+```bash
+docker compose -p sp-<flavour> exec app systemprompt admin users webauthn \
+  generate-setup-token --email you@example.com
+```
+
+Open the printed `/auth/link-passkey?token=…` link (valid for 15 minutes) on
+the host `EXTERNAL_URL` names, register the passkey, then sign in at
+`/admin/login`. Smoke signs in the same way with a software authenticator
+(`scripts/lib/console-login.py`) and asserts each flavour's
+`smoke.console_pages` (200) and `smoke.routes_absent_signed_in` (404).
+The developer login link is removed (nothing issued its codes, and an
+install member cannot mint a browser session). AD FS single sign-on still
+verifies an assertion but is refused at session minting on this core; it
+needs to be contributed through core's `SsoSlot` to work.
+
 ## Using a flavour
 
 ```bash
@@ -117,6 +153,12 @@ cores and memory.
   Cargo commands run one at a time; `FLAVOUR_METRICS_JOBS` sets `-j`.
 - `--compare <old.json>`: before/after deltas for every number, so an
   optimisation is recorded as a pair.
+- `--table`: measure nothing; rebuild `table.md` from the per-flavour JSON.
+  Each row names the core and template commit it measured.
+
+While the root builds against a patched core and `tests/` still resolves
+systemprompt from crates.io, `--dev` records the `tests/` steps as
+`"status": "not available"` with the reason, not as a time.
 
 The `Flavours` workflow builds, measures and smokes every flavour and attaches
 the JSON and table to the run. Nothing generated is committed; the release

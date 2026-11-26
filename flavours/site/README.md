@@ -78,28 +78,34 @@ boot to healthy 11.3 s, a restart 9.1 to 12.5 s, migrating a fresh database
 
 ## First login
 
-The console signs in with a passkey. The bootstrap admin has none, so mint a
-one-time link and open it in the browser:
+The console signs in with a passkey. A fresh install's bootstrap admin has
+none, so issue a one-time link for it:
 
 ```bash
 docker compose -p sp-site exec app systemprompt admin users webauthn \
   generate-setup-token --email you@example.com
 ```
 
-Open the printed `/auth/link-passkey?token=…` URL, choose Register Passkey,
-then sign in at `/admin/login` with the same email. The browser lands on
-`/admin/profile`.
+Open the printed `/auth/link-passkey?token=…` link (valid for 15 minutes)
+on the host `EXTERNAL_URL` names (default `http://localhost:8080`; the
+passkey is bound to that host), register the passkey, then sign in at
+`/admin/login` with the same e-mail. `scripts/flavour-smoke.sh` signs in
+the same way, with a software authenticator (`scripts/lib/console-login.py`).
+There is no other browser sign-in: the developer login link is removed, and
+single sign-on (AD FS) verifies an assertion but cannot issue the session on
+this core (see the flavours guide).
 
-`systemprompt admin session login` fails on this flavour ("no admitted
-member provides DynContextDirectory"): core gives a CLI session a
-conversation context, which only the agents member provides.
+CLI commands that open a session (`admin session login`, `plugins mcp tools`)
+fail on this core with "no admitted member provides DynContextDirectory": core
+gives every CLI session a conversation context, which only the agents member
+provides. Commands that need no session (`admin users …`, `infra db …`) work.
 
 ## Dashboard
 
 `/` is the published site, with `/blog`, `/documentation`, `/sitemap.xml`
 (41 URLs from the shipped content), `/robots.txt` and `/llms.txt`.
 `/admin` lands on the overview, with the home cards Content, Traffic and
-Publishing. The sidebar groups are Traffic (overview, analytics, sessions),
+Publishing. The sidebar groups are Traffic (overview, analytics),
 Governance (governance, approvals, secrets audit), People & access (users,
 groups, projects, roles, access control, devices), Platform (code sync,
 configuration, data lifecycle, observability) and Account (profile,
@@ -110,11 +116,16 @@ overrides `services/web/config/dashboard.yaml`. Naming an item whose page
 this flavour does not compile refuses boot with the console feature it
 needs.
 
-Three of those pages answer 500 on this flavour: Users, Configuration and
-Observability. Their queries read the gateway's `ai_requests`,
-`ai_gateway_policies` or MCP tables, which this flavour does not install.
-Analytics, Sessions, Governance, Groups, Projects, Roles and Access control
-render, but their AI-usage panels are empty and log the missing tables.
+Observed on the site lane's image (before this tree): Users, Configuration
+and Observability answered 500. Observability is fixed (its template now
+renders the view its handler builds, observed 200 on full, agents and mcp).
+Users and Configuration still read the gateway's `ai_requests` and
+`ai_gateway_policies`, which this flavour does not install, so they are
+expected to fail until those reads are compiled with `gateway`; the smoke
+expectations name them so the gap shows. Sessions, Conversations and
+History are not compiled here (they need agents). Analytics, Governance,
+Groups, Projects, Roles and Access control rendered, with empty AI-usage
+panels that log the missing tables.
 
 ## CLI groups
 

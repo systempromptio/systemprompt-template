@@ -40,19 +40,27 @@ a no-op of about 3 s, and `infra db doctor` is clean.
 
 ## First login
 
-Sign in with a passkey. Issue a one-time link for the bootstrap admin, open it
-in the browser and register a passkey, then sign in at `/admin/login` with
-the same e-mail:
+The console signs in with a passkey. A fresh install's bootstrap admin has
+none, so issue a one-time link for it:
 
 ```bash
 docker compose -p sp-mcp exec app systemprompt admin users webauthn \
-    generate-setup-token --email you@example.com
+  generate-setup-token --email you@example.com
 ```
 
-The link names `EXTERNAL_URL` (default `http://localhost:8080`); the passkey
-is bound to that host, so open the link and the console on it. The login page's magic-link form
-has no backend, and `admin session login` fails in this flavour (see
-Known limits).
+Open the printed `/auth/link-passkey?token=…` link (valid for 15 minutes)
+on the host `EXTERNAL_URL` names (default `http://localhost:8080`; the
+passkey is bound to that host), register the passkey, then sign in at
+`/admin/login` with the same e-mail. `scripts/flavour-smoke.sh` signs in
+the same way, with a software authenticator (`scripts/lib/console-login.py`).
+There is no other browser sign-in: the developer login link is removed, and
+single sign-on (AD FS) verifies an assertion but cannot issue the session on
+this core (see the flavours guide).
+
+CLI commands that open a session (`admin session login`, `plugins mcp tools`)
+fail on this core with "no admitted member provides DynContextDirectory": core
+gives every CLI session a conversation context, which only the agents member
+provides. Commands that need no session (`admin users …`, `infra db …`) work.
 
 ## Dashboard
 
@@ -61,15 +69,20 @@ until you are signed in and then lands on the overview. The sidebar, the home
 cards and the landing come from `flavours/mcp/services/web/config/dashboard.yaml`,
 which overrides `services/web/config/dashboard.yaml`:
 
-- Activity: overview, analytics, requests, sessions, conversations
-- MCP: MCP servers (`/admin/mcp`), plugins, skills, marketplaces, versions
+- Activity: overview, analytics, requests
+- MCP: MCP servers (`/admin/mcp`), plugins, skills, marketplaces
 - Governance: governance, approvals, secrets, gateway, gateway policies, quotas
 - People & access: users, groups, projects, roles, access control, devices
 - Platform: sync, configuration, lifecycle, observability
-- Account: profile, history, settings, connect, connectors
+- Account: profile, settings, connect, connectors
 
 Naming an item whose page this flavour does not compile refuses boot with the
-console feature it needs. No agent, conversation-judge or trace pages.
+console feature it needs. Signed in, smoke gets 200 from /admin, analytics,
+requests, mcp, plugins, skills, marketplaces, users, governance,
+configuration and system/observability, and 404 from conversations, history,
+sessions and analysis/versions: those read the conversation record, which only
+a build with agents installs, so they are not compiled here. No agent,
+conversation-judge or trace pages.
 
 ## CLI groups
 
