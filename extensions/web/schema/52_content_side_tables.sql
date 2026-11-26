@@ -1,0 +1,18 @@
+-- The web extension's columns on the content member's `markdown_content`,
+-- keyed 1:1 and cascading on delete; installed only when content is linked.
+
+CREATE TABLE IF NOT EXISTS markdown_content_enrichment (
+    content_id TEXT PRIMARY KEY REFERENCES markdown_content(id) ON DELETE CASCADE,
+    category TEXT,
+    after_reading_this JSONB NOT NULL DEFAULT '[]'::jsonb,
+    related_playbooks JSONB NOT NULL DEFAULT '[]'::jsonb,
+    related_code JSONB NOT NULL DEFAULT '[]'::jsonb,
+    related_docs JSONB NOT NULL DEFAULT '[]'::jsonb,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_mce_category ON markdown_content_enrichment(category);
+CREATE INDEX IF NOT EXISTS idx_mce_after_reading_this ON markdown_content_enrichment USING GIN (after_reading_this);
+CREATE INDEX IF NOT EXISTS idx_mce_related_playbooks ON markdown_content_enrichment USING GIN (related_playbooks);
+CREATE INDEX IF NOT EXISTS idx_mce_related_code ON markdown_content_enrichment USING GIN (related_code);
+CREATE INDEX IF NOT EXISTS idx_mce_related_docs ON markdown_content_enrichment USING GIN (related_docs);

@@ -35,6 +35,7 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(SCHEMA_AUDIT_EVENT_NOTIFY),
         SchemaDefinition::sql_only(SCHEMA_ORGANIZATIONS),
         SchemaDefinition::sql_only(SCHEMA_USAGE_METRICS),
+        SchemaDefinition::sql_only(include_str!("../schema/20_member_planes.sql")),
         SchemaDefinition::sql_only(SCHEMA_DEV_LOGIN_CODES),
         SchemaDefinition::sql_only(SCHEMA_GROUPS_PROJECTS),
         SchemaDefinition::sql_only(SCHEMA_SCOPE_DEFAULTS),
@@ -42,6 +43,7 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(include_str!("../schema/26_connector_accounts.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/27_conversation_requests.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/28_ingestion_integrity.sql")),
+        #[cfg(feature = "mcp")]
         SchemaDefinition::sql_only(include_str!("../schema/29_skill_version_impact.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/32_raw_retention.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/33_sync_state.sql")),
@@ -51,12 +53,16 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(include_str!("../schema/40_request_scopes.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/41_time_bound_access.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/42_gateway_routes.sql")),
-        // Why: 46 before 45 — conversation_facts' refresh reads the
-        // `tool_activity` view that 46 defines.
         SchemaDefinition::sql_only(include_str!("../schema/46_tool_artifacts.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/45_conversation_facts.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/47_user_last_seen.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/48_retention.sql")),
+        #[cfg(feature = "mcp")]
+        SchemaDefinition::sql_only(include_str!("../schema/50_mcp_planes.sql")),
+        #[cfg(feature = "agents")]
+        SchemaDefinition::sql_only(include_str!("../schema/51_agent_planes.sql")),
+        #[cfg(feature = "content")]
+        SchemaDefinition::sql_only(include_str!("../schema/52_content_side_tables.sql")),
     ]
 }
 

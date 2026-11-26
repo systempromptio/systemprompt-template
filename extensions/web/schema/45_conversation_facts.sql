@@ -354,7 +354,7 @@ BEGIN
         LEFT JOIN hooks h ON h.context_id = a.context_id
         LEFT JOIN skills k ON k.context_id = a.context_id
         LEFT JOIN ai_request_scopes rs ON rs.request_id = a.last_request_id
-        LEFT JOIN user_contexts c ON c.context_id = a.context_id
+        LEFT JOIN conversation_contexts c ON c.context_id = a.context_id
         LEFT JOIN plugin_session_summaries ps ON ps.session_id = a.client_session_id
         ON CONFLICT (context_id) DO UPDATE SET
             user_id = EXCLUDED.user_id, session_id = EXCLUDED.session_id,
@@ -418,14 +418,11 @@ SELECT refresh_conversation_facts(ARRAY(
             SELECT d.session_id FROM governance_decisions d
             WHERE d.created_at >= from_at AND d.created_at < to_at
             UNION ALL
-            SELECT x.trace_id FROM mcp_tool_executions x
-            WHERE x.created_at >= from_at AND x.created_at < to_at AND x.trace_id IS NOT NULL)
+            SELECT x.trace_id FROM tool_plane_touches x
+            WHERE x.touched_at >= from_at AND x.touched_at < to_at AND x.trace_id IS NOT NULL)
         UNION ALL
-        SELECT x.context_id FROM mcp_tool_executions x
-        WHERE x.created_at >= from_at AND x.created_at < to_at AND x.context_id IS NOT NULL
-        UNION ALL
-        SELECT m.context_id FROM mcp_artifacts m
-        WHERE m.created_at >= from_at AND m.created_at < to_at AND m.context_id IS NOT NULL
+        SELECT x.context_id FROM tool_plane_touches x
+        WHERE x.touched_at >= from_at AND x.touched_at < to_at AND x.context_id IS NOT NULL
         UNION ALL
         SELECT d.context_id FROM governance_decisions d
         WHERE d.created_at >= from_at AND d.created_at < to_at

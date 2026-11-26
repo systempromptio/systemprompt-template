@@ -12,8 +12,7 @@ BEGIN
     IF cutoff > clock_timestamp()-interval '90 days' THEN
         RAISE EXCEPTION 'Raw evidence retention cutoff is too recent' USING ERRCODE='23514';
     END IF;
-    DELETE FROM managed_consumer_session_bindings b WHERE bound_at<cutoff
-        AND NOT EXISTS(SELECT 1 FROM plugin_usage_events e WHERE e.user_id=b.consumer_id AND e.session_id=b.native_session_id AND e.created_at>=cutoff);
+    PERFORM expire_member_raw_evidence(cutoff);
     DELETE FROM ingestion_event_receipts WHERE accepted_at<cutoff;
     DELETE FROM plugin_usage_events WHERE created_at<cutoff;
     GET DIAGNOSTICS deleted = ROW_COUNT;
