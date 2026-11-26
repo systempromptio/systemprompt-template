@@ -1,8 +1,11 @@
 # syntax=docker/dockerfile:1.7
 # One image per flavour (flavours/<name>/flavour.yaml). Build through
-# scripts/flavour-build.sh, which reads the flavour and passes these arguments
-# (and, while Cargo.toml patches core to a sibling checkout, that checkout as
-# the `core` build context). The defaults build `full`.
+# scripts/flavour-build.sh, which reads the flavour and passes these arguments.
+# Core resolves from the git-rev pin in Cargo.toml: cargo fetches it into the
+# cached ~/.cargo/git (git and CA certificates ship in the rust image). Only
+# while a local core override is on (scripts/core-patch.sh) does the script
+# pass that checkout as the `core` build context, mounted at CORE_MOUNT. The
+# defaults build `full`.
 #   builder    the flavour's binaries: dependencies first, then sources
 #   services   the flavour's services tree (scripts/flavour-stage-services.sh)
 #   artifacts  the binaries alone: --target artifacts --output type=local,dest=out
@@ -48,12 +51,14 @@ ARG BINS
 ARG CORE_MOUNT
 COPY --from=skeleton /skeleton /src
 RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,id=cargo-git,target=/usr/local/cargo/git,sharing=locked \
     --mount=type=cache,id=target-${FLAVOUR},target=/src/target,sharing=locked \
     --mount=type=bind,from=core,target=${CORE_MOUNT} \
     cargo build --release --locked --no-default-features --features "$FEATURES" \
         $(printf -- '--bin %s ' $BINS)
 COPY . /src
 RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,id=cargo-git,target=/usr/local/cargo/git,sharing=locked \
     --mount=type=cache,id=target-${FLAVOUR},target=/src/target,sharing=locked \
     --mount=type=bind,from=core,target=${CORE_MOUNT} \
     find /src/src /src/extensions -name '*.rs' -exec touch {} + \

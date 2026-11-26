@@ -91,7 +91,7 @@ to_bytes() {
            printf "%d", v*m }'
 }
 core_rev() {
-    if [ "$(bash scripts/core-patch.sh status)" = live ]; then
+    if [ "$(bash scripts/core-patch.sh status)" = path ]; then
         local rel core; rel="$(sed -n 's|^systemprompt = { path = "\(.*\)/systemprompt" }$|\1|p' Cargo.toml | head -1)"
         core="${CORE_PATH:-$FLAVOUR_ROOT/$rel}"
         # Why: the image is built from the checkout's working tree, so a
