@@ -31,7 +31,6 @@ smoke:
     - "/"
     - "/.well-known/jwks.json"
     - "/admin"
-    - "/admin/"
     - "/admin/login"
     - "/css/admin-bundle.css"
     - "/js/pages/admin-login.js"
@@ -63,3 +62,20 @@ smoke:
     - "systemprompt"
   models_endpoint: true
   root_redirect: "/admin"
+  console_pages:
+    - "/admin"
+    - "/admin/analytics"
+    - "/admin/requests"
+    - "/admin/mcp"
+    - "/admin/plugins"
+    - "/admin/skills"
+    - "/admin/marketplaces"
+    - "/admin/users"
+    - "/admin/governance"
+    - "/admin/configuration"
+    - "/admin/system/observability"
+  routes_absent_signed_in:
+    - "/admin/conversations"
+    - "/admin/history"
+    - "/admin/sessions"
+    - "/admin/analysis/versions"

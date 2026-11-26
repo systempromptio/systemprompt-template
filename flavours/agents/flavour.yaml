@@ -73,3 +73,8 @@ smoke:
     - "/admin"
     - "/admin/traces"
     - "/admin/conversations"
+    - "/admin/sessions"
+    - "/admin/history"
+    - "/admin/users"
+    - "/admin/analysis/versions"
+    - "/admin/system/observability"

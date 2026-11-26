@@ -38,7 +38,7 @@ smoke:
     - "/robots.txt"
     - "/llms.txt"
     - "/.well-known/jwks.json"
-    - "/admin/"
+    - "/admin"
     - "/admin/login"
     - "/css/admin-bundle.css"
     - "/js/pages/admin-login.js"
@@ -68,3 +68,12 @@ smoke:
   mcp_servers:
     - "systemprompt"
   models_endpoint: true
+  console_pages:
+    - "/admin"
+    - "/admin/users"
+    - "/admin/conversations"
+    - "/admin/sessions"
+    - "/admin/history"
+    - "/admin/analysis/versions"
+    - "/admin/configuration"
+    - "/admin/system/observability"

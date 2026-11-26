@@ -28,7 +28,7 @@ smoke:
     - "/robots.txt"
     - "/llms.txt"
     - "/.well-known/jwks.json"
-    - "/admin/"
+    - "/admin"
     - "/admin/login"
     - "/css/admin-bundle.css"
     - "/js/pages/admin-login.js"
@@ -62,3 +62,14 @@ smoke:
   # The gateway member is in the kernel floor, so /v1/models is served; with
   # no AI member it lists no model ({"data":[],"has_more":false}).
   models_endpoint: true
+  console_pages:
+    - "/admin"
+    - "/admin/users"
+    - "/admin/governance"
+    - "/admin/configuration"
+    - "/admin/system/observability"
+  routes_absent_signed_in:
+    - "/admin/conversations"
+    - "/admin/sessions"
+    - "/admin/history"
+    - "/admin/requests"
