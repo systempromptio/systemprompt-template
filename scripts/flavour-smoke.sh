@@ -95,6 +95,7 @@ wait_ready() {
     for _ in $(seq 1 120); do
         if [ "$(docker inspect -f '{{.RestartCount}}' "$("${compose[@]}" ps -q "$app_service")" 2>/dev/null || echo 0)" -gt 0 ]; then
             echo "$image exited during boot" >&2
+            record health fail "exited during boot: $("${compose[@]}" logs --no-color --no-log-prefix "$app_service" 2>&1 | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -m1 -E 'Error|ERROR' | cut -c1-300)"
             return 1
         fi
         # Why: the early-bind listener answers 200 {"status":"starting"} while
@@ -106,6 +107,7 @@ wait_ready() {
         sleep 3
     done
     echo "$image did not become ready" >&2
+    record health fail "not ready within 360 s"
     return 1
 }
 cli() { "${compose[@]}" exec -T "$app_service" /app/bin/systemprompt "$@"; }

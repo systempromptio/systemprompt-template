@@ -21,6 +21,18 @@ The kernel floor (API server, CLI, runtime, users, OAuth, the gateway, files,
 documents, the scheduler and cloud) is linked by every flavour; see
 `docs/flavours/README.md`.
 
+## Status on core `future-compose` (aec7946bd)
+
+The image builds, but a fresh install does not migrate: core's `ai` and
+`analytics` schemas create views, foreign keys and triggers over tables the
+`mcp-servers` and `agents` members own (`mcp_tool_executions`,
+`mcp_artifacts`, `agent_tasks`, `task_messages`, `user_contexts`), and the
+kernel `files` schema references `markdown_content` (`content`). First boot
+stops at `infra db migrate` with `relation "mcp_tool_executions" does not
+exist`. Until core installs each of those objects only with the member that
+owns the referenced table, this flavour (like every subset flavour) cannot
+start; `just smoke gateway --no-build` reports exactly that.
+
 ## Run it locally
 
 ```bash
@@ -38,18 +50,31 @@ overrides on top), migrates and creates the bootstrap admin.
 
 ```bash
 just docker-build gateway                    # systemprompt-template:gateway
-FLAVOUR=gateway docker compose -p sp-gateway up
+ADMIN_EMAIL=you@example.com ANTHROPIC_API_KEY=<key> \
+  FLAVOUR=gateway docker compose -p sp-gateway up
 just smoke gateway --no-build                # boot and assert the smoke expectations
+just metrics gateway                         # target/flavour-metrics/gateway.json
 ```
 
-The image uses the `slim` runtime. It needs one provider key (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY`) and `ADMIN_EMAIL` on first boot.
+The image uses the `slim` runtime (no demo/, no hey). Compose reads
+`ADMIN_EMAIL` (required on first boot) and one of `ANTHROPIC_API_KEY`,
+`OPENAI_API_KEY` or `GEMINI_API_KEY` from the shell or `.env`; it publishes
+the app on `HTTP_PORT` (8080) and Postgres on `PG_PORT` (5432). First boot
+waits for Postgres, runs `admin setup` against `DATABASE_URL`, migrates and
+creates the bootstrap admin for `ADMIN_EMAIL`; later boots reuse the profile
+in the `app_profiles` volume.
+
+Measured on this core (image, 24 cores): binary 70.2 MB, image 258.5 MB
+(92.3 MB gzip, 10 layers), 616 crates in the closure, clean image build 648 s.
 
 ## Dashboard
 
+`/` serves a landing page that sends the browser to `/admin/` (the kernel
+owns `/`, so this is the `index.html` the console publishes at boot).
 `/admin/` serves the base console (overview, users, groups, roles and
 devices, governance, access control, sync, usage analytics) and the gateway
-pages (policies, routes, quotas, request and cost analytics). `/` redirects to
-the console: there is no public site. No MCP, plugin, skill or agent pages.
+pages (policies, routes, quotas, request and cost analytics). There is no public
+site. No MCP, plugin, skill or agent pages.
 
 The sidebar, the home cards and the landing page come from
 `flavours/gateway/services/web/config/dashboard.yaml`, which overrides
@@ -63,7 +88,9 @@ marketplace and MCP subcommands and `admin agents` are not compiled in.
 
 ## Configuration
 
-`profile.overlay.yaml` sets nothing. `services/scheduler/config.yaml` lists
+`profile.overlay.yaml` sets nothing. `services/content/config.yaml` (no
+sources) and `services/skills/` (empty) exist only because core's config
+loader requires both paths in every composition. `services/scheduler/config.yaml` lists
 only the jobs this flavour compiles (core refuses to boot on a configured job
 no member contributes), and `services/config/config.yaml` includes only the
 files of the subtrees it ships.
