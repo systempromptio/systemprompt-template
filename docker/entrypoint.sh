@@ -217,6 +217,13 @@ echo "Running database migrations..."
 echo "Ensuring bootstrap admin user..."
 /app/bin/systemprompt admin bootstrap
 
+# Why: a fresh database holds no config planes, and core reports the server
+# degraded (governed requests pass ungoverned) until the declared services
+# config is applied. The apply is a three-way merge that leaves conflicts for
+# /admin/sync, so running it on every boot is the deploy step, not a reset.
+echo "Applying declared configuration..."
+/app/bin/systemprompt admin config apply --reason "container boot"
+
 # web/dist is node-local and not shipped in the image. The scheduler's
 # bootstrap run of publish_pipeline takes a database-wide advisory lock, so in
 # a multi-node deployment only one node renders its site at boot and the rest
