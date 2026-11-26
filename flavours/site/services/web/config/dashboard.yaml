@@ -16,7 +16,7 @@ home:
 nav:
   - id: activity
     title: "Traffic"
-    items: [overview, analytics, sessions, conversations]
+    items: [overview, analytics, sessions]
   - id: governance
     title: "Governance"
     items: [governance, approvals, secrets]
@@ -28,4 +28,4 @@ nav:
     items: [sync, configuration, lifecycle, observability]
   - id: account
     title: "Account"
-    items: [profile, history, settings, docs]
+    items: [profile, settings, docs]

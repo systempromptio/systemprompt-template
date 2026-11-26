@@ -1,0 +1,11 @@
+# Access control for the site flavour: replaces
+# services/access-control/rules.yaml when this flavour's services tree is
+# staged. services/access-control/rules.yaml documents the shape.
+#
+# Every entity the shared file declares is a marketplace, a marketplace skill,
+# an agent, an MCP server or a gateway route; site ships none of them, and a
+# rule naming an entity this tree does not define refuses the governance
+# bootstrap. The site's pages and the console are gated by role, not by an
+# entity here.
+
+entities: []

@@ -22,13 +22,24 @@ runtime: slim
 smoke:
   routes_present:
     - "/"
+    - "/blog"
+    - "/documentation"
     - "/sitemap.xml"
+    - "/robots.txt"
+    - "/llms.txt"
     - "/.well-known/jwks.json"
     - "/admin/"
+    - "/admin/login"
+    - "/css/admin-bundle.css"
+    - "/js/pages/admin-login.js"
+    - "/js/services/webauthn-helpers.js"
+    - "/js/utils/storage-safe.js"
   routes_absent:
     - "/api/v1/mcp/registry"
     - "/api/v1/marketplace"
-    - "/api/v1/agents/registry"
+    # /api/v1/agents/* is not listed: the kernel's agent proxy answers it
+    # (401 without a token, 404 for the registry with one), so an
+    # unauthenticated probe cannot tell an absent registry from a guarded one.
     - "/api/v1/agent-runs"
     - "/api/v1/brain"
     - "/api/public/connectors"
@@ -45,5 +56,9 @@ smoke:
     - "admin agents"
   capabilities:
     - "publish_pipeline"
+    - "content_analytics_aggregation"
+    - "markdown_content"
   mcp_servers: []
-  models_endpoint: false
+  # The gateway member is in the kernel floor, so /v1/models is served; with
+  # no AI member it lists no model ({"data":[],"has_more":false}).
+  models_endpoint: true
