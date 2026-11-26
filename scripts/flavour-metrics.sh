@@ -2,6 +2,7 @@
 # Measure flavours: image, deploy and developer-loop numbers.
 #   scripts/flavour-metrics.sh FLAVOUR|all [--image] [--dev] [--bench]
 #       [--compare OLD.json] [--keep] [--no-clean] [--table]
+#   scripts/flavour-metrics.sh --compare-images OLD_IMAGE NEW_IMAGE
 # --image  stripped binary bytes, image bytes (uncompressed, gzip), layers,
 #          crates in the dependency closure, clean and cached image build
 #          seconds, migrate seconds on a fresh database, boot-to-healthy
@@ -18,9 +19,33 @@
 # --table  measure nothing: rebuild table.md from the per-flavour JSON
 # --compare OLD.json  print before/after deltas against the new (or, with no
 #          measuring mode, the existing) target/flavour-metrics/<flavour>.json
+# --compare-images  measure nothing: print the bytes, gzip bytes, layers and
+#          systemprompt binary bytes of two built images, before and after
 # Writes target/flavour-metrics/<flavour>.json and target/flavour-metrics/table.md.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
+
+image_row() {
+    local image="$1"
+    printf '%s\n%s\n%s\n%s\n' \
+        "$(docker image inspect -f '{{.Size}}' "$image")" \
+        "$(docker save "$image" | gzip -c | wc -c)" \
+        "$(docker image inspect -f '{{len .RootFS.Layers}}' "$image")" \
+        "$(docker run --rm --entrypoint stat "$image" -c %s /app/bin/systemprompt)"
+}
+
+if [ "${1:-}" = --compare-images ]; then
+    old="${2:?usage: flavour-metrics.sh --compare-images OLD_IMAGE NEW_IMAGE}"
+    new="${3:?usage: flavour-metrics.sh --compare-images OLD_IMAGE NEW_IMAGE}"
+    paste <(printf 'image.bytes\nimage.gzip_bytes\nimage.layers\nbinary_bytes\n') \
+        <(image_row "$old") <(image_row "$new") \
+        | awk -F '\t' -v old="$old" -v new="$new" '
+            BEGIN { printf "metric\t%s\t%s\tdelta\t%%\n", old, new }
+            { d = $3 - $2; printf "%s\t%s\t%s\t%s\t%.1f%%\n", $1, $2, $3, d, ($2 ? d / $2 * 100 : 0) }' \
+        | column -t -s $'\t'
+    exit 0
+fi
+
 selection="${1:?usage: flavour-metrics.sh FLAVOUR|all [--image] [--dev] [--bench] [--compare OLD.json] [--keep] [--no-clean] [--table]}"
 shift
 do_image=false do_dev=false do_bench=false keep=false compare="" clean=true table_only=false
