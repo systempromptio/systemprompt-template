@@ -1,7 +1,8 @@
 -- Audit-event NOTIFY triggers
 --
 -- Fires a `pg_notify('audit_events', <json>)` whenever a row is inserted into
--- `governance_decisions`, `ai_requests`, or `plugin_usage_events`. The Rust
+-- `governance_decisions`, `ai_requests` (49_audit_event_notify_ai_requests.sql,
+-- with the AI member) or `plugin_usage_events`. The Rust
 -- admin extension subscribes via PgListener and fans the payload out to SSE
 -- clients on `/admin/api/sse/audit`. CREATE OR REPLACE TRIGGER (PG14+) keeps
 -- the file declarative and idempotent across re-runs.
@@ -69,57 +70,6 @@ CREATE OR REPLACE TRIGGER audit_event_notify_governance_trg
     AFTER INSERT ON governance_decisions
     FOR EACH ROW
     EXECUTE FUNCTION audit_event_notify_governance();
-
-
-CREATE OR REPLACE FUNCTION audit_event_notify_ai_requests()
-RETURNS TRIGGER AS $$
-DECLARE
-    sev     TEXT;
-    payload TEXT;
-BEGIN
-    BEGIN
-        IF NEW.status NOT IN ('ok', 'success', 'completed', 'pending') THEN
-            sev := 'error';
-        ELSE
-            sev := 'info';
-        END IF;
-
-        payload := json_build_object(
-            'table',      'ai_requests',
-            'id',         NEW.id,
-            'session_id', NEW.session_id,
-            'trace_id',   NEW.trace_id,
-            'context_id', NEW.context_id,
-            'user_id',    NEW.user_id,
-            'model',      NEW.model,
-            'status',     NEW.status,
-            'severity',   sev,
-            'created_at', NEW.created_at
-        )::text;
-
-        IF length(payload) > 7800 THEN
-            RAISE WARNING 'audit_event_notify_ai_requests: payload truncated (% bytes)', length(payload);
-            payload := json_build_object(
-                'table',     'ai_requests',
-                'id',        NEW.id,
-                'truncated', true
-            )::text;
-        END IF;
-
-        PERFORM pg_notify('audit_events', payload);
-    EXCEPTION WHEN OTHERS THEN
-        RAISE WARNING 'audit_event_notify_ai_requests failed: % (id=%, session=%)',
-            SQLERRM, NEW.id, NEW.session_id;
-    END;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER audit_event_notify_ai_requests_trg
-    AFTER INSERT ON ai_requests
-    FOR EACH ROW
-    EXECUTE FUNCTION audit_event_notify_ai_requests();
-
 
 -- MCP tool execution events (plugin_usage_events). Fans tool-call activity onto
 -- the same `audit_events` channel that AI requests and governance decisions use,
