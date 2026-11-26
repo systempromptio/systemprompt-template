@@ -45,6 +45,8 @@ pub(crate) async fn artifact_preview(
         .context_id
         .clone()
         .unwrap_or_else(ContextId::generate);
+    // JSON: an A2A data part carries the artifact body as the untyped JSON the
+    // protocol defines; the renderer reads it as the agent stored it.
     let rendered = env.artifact_ui().and_then(|renderer| {
         let data = body.as_object()?.clone();
         let artifact = Artifact {

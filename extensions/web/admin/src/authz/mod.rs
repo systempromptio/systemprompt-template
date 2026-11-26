@@ -3,7 +3,7 @@
 //! Core resolves `user` and `role` and deliberately knows nothing else. Every
 //! other dimension an operator wants to write rules against is a tenant
 //! concept, declared here: a [`SubjectDimension`] describing where it sits in
-//! the precedence ladder, and a [`SubjectAttributeProvider`][p] that looks up
+//! the precedence ladder, and a [`SubjectAttributeProvider`] that looks up
 //! the values a user holds for it.
 //!
 //! We declare four: [`project`], [`group`], [`connector`] and
@@ -22,9 +22,6 @@
 //! [`contribute_subject_attributes`]; no core change, and no edit to
 //! the resolve call sites, because they all read the registry through
 //! [`subject_attributes_for`] and [`dimensions`].
-//!
-//! [p]: systemprompt::governance::authz::SubjectAttributeProvider
-
 mod account;
 pub use account::{AccountStanding, account_scope, account_standing};
 pub(crate) mod catalog;

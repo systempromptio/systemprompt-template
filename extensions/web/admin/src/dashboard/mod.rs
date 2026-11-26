@@ -1,6 +1,6 @@
 //! The console's dashboard: the landing page, the home cards and the sidebar,
 //! resolved once at boot from `services/web/config/dashboard.yaml` against
-//! the [`registry`] of nav items this build compiles.
+//! the `registry` of nav items this build compiles.
 //!
 //! The effective nav is the configured nav intersected with the compiled
 //! pages, and the intersection is never silent: a configured item whose page
