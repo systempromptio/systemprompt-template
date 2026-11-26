@@ -13,7 +13,7 @@ use systemprompt_web_jobs::internals::{
     run_with_classifier,
 };
 
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 struct StubClassifier {
     calls: AtomicUsize,

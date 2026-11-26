@@ -16,7 +16,7 @@ use crate::fixtures::{
     LEGACY_CONTEXT_ID, RequestSpec, insert_request, insert_user, new_context_id, unclaimed_email,
     unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn legacy_context_requests_count_as_requests_but_not_as_conversations() {

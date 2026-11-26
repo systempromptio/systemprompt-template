@@ -4,8 +4,8 @@
 
 use std::path::PathBuf;
 
+use systemprompt::extension::mcp::McpToolHandler;
 use systemprompt::identifiers::{AgentName, ContextId, McpExecutionId, SessionId, TraceId};
-use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::execution::context::RequestContext;
 use systemprompt_mcp_agent::CliLocation;
 use systemprompt_mcp_agent::reports::{ReportHandler, ReportInput, ReportKind};

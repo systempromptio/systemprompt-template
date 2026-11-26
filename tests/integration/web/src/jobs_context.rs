@@ -1,35 +1,33 @@
 //! The jobs whose entry point is `Job::execute(&JobContext)`.
 //!
 //! `jobs_db` covers the one job with a pool-only entry point. Everything else
-//! reads its pool and its `AppPaths` back out of a `JobContext`, and the two
-//! that write a file also read the process-wide `Config` for the deployment's
-//! external URL. All three are constructible in a test process — `AppPaths`
-//! from a `PathsConfig` pointing at a tempdir, `JobContext` from its public
-//! constructor, and `Config` through `Config::install` — so the job bodies run
-//! here against a throwaway database and a throwaway filesystem, rather than
-//! only their pure helpers.
+//! reads its pool, its `AppPaths`, the web member's `WebSettings` (the
+//! deployment's external URL) and, for the secret migration, the `AdminEnv`
+//! back out of a `JobContext`. All are constructible in a test process —
+//! `AppPaths` from a `PathsConfig` pointing at a tempdir, `WebSettings` from
+//! its fields, `AdminEnv` from the shared `EnvFixture`, and `JobContext` from
+//! its public constructor — so the job bodies run here against a throwaway
+//! database and a throwaway filesystem, rather than only their pure helpers.
 
 use std::path::Path;
 use std::sync::Arc;
 
 use systemprompt::config::AppPaths;
 use systemprompt::database::Database;
-use systemprompt::extension::{AssetDefinition, AssetType, ExtensionRegistry};
+use systemprompt::extension::{AssetDefinition, AssetType};
 use systemprompt::identifiers::{Actor, UserId};
-use systemprompt::manifest::profile::{
-    ConfigPlanesConfig, ContentNegotiationConfig, NodeRole, PathsConfig, RateLimitsConfig,
-    RetentionConfig, SecurityHeadersConfig, ShutdownConfig,
-};
-use systemprompt::manifest::{Config, PathResolution};
+use systemprompt::manifest::PathResolution;
+use systemprompt::manifest::profile::PathsConfig;
 use systemprompt::traits::{Job, JobContext};
 use systemprompt_web_jobs::{
-    BundleAdminCssJob, ContentIngestionJob, ContentPrerenderJob, CopyExtensionAssetsJob,
-    LlmsTxtGenerationJob, PublishPipelineJob, RobotsTxtGenerationJob, SecretMigrationJob,
-    SitemapGenerationJob,
+    BundleAdminCssJob, ContentIngestionJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob,
+    PublishPipelineJob, RobotsTxtGenerationJob, SecretMigrationJob,
 };
+use systemprompt_web_shared::WebSettings;
 use tempfile::TempDir;
 
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
+use template_test_common::env::EnvFixture;
 
 fn assert_missing_database(error: &systemprompt::traits::ProviderError) {
     use systemprompt::traits::ProviderError;
@@ -50,27 +48,11 @@ fn assert_missing_database(error: &systemprompt::traits::ProviderError) {
 }
 
 // Stage count of `PublishPipelineJob`: ingestion, CSS bundle, asset copy,
-// content prerender, page prerender, sitemap, llms.txt, robots.txt, feed, the
-// unconditional success the pipeline records between them, and asset
-// organisation. Asserting the total pins that no stage is silently dropped.
-const PIPELINE_STAGES: u64 = 11;
+// prerender, llms.txt, robots.txt, the unconditional success the pipeline
+// records between them, and asset organisation. Asserting the total pins that
+// no stage is silently dropped.
+const PIPELINE_STAGES: u64 = 8;
 
-// A 32-byte key, hex-encoded, so `load_master_key` accepts it. Under nextest
-// each test is its own process and sets this before spawning anything, so
-// there is no concurrent reader of the environment.
-fn set_master_key() {
-    unsafe {
-        std::env::set_var(
-            "ENCRYPTION_MASTER_KEY",
-            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-        );
-    }
-}
-
-// Every job that reads the global `Config` reads exactly one field from it,
-// and `Config` is a process-wide `OnceLock` — so all tests in this binary must
-// agree on the value, or the first installer would silently decide it for the
-// rest. Fixing it here makes the assertions below independent of test order.
 const BASE_URL: &str = "https://example.test";
 
 const DOCUMENTATION_SOURCE_ENABLED: &str = "\
@@ -95,63 +77,20 @@ content_sources:\n\
 \x20   category_id: documentation\n\
 \x20   enabled: false\n";
 
-pub(crate) fn install_config() {
-    if Config::is_initialized() {
-        return;
-    }
-    let _ = Config::install(Config {
-        instance_id: systemprompt::identifiers::InstanceId::new("jobs-context-tests"),
-        max_concurrent_streams: 16,
-        role: NodeRole::All,
-        max_in_flight: None,
-        shutdown: ShutdownConfig::default(),
+fn web_settings(root: &Path) -> Arc<WebSettings> {
+    Arc::new(WebSettings {
         sitename: "example-test".to_owned(),
-        database_type: "postgres".to_owned(),
-        database_url: "postgres://unused".to_owned(),
-        database_write_url: None,
-        database_session_url: None,
-        github_link: String::new(),
-        github_token: None,
-        system_path: "/tmp".to_owned(),
-        services_path: "/tmp".to_owned(),
-        bin_path: "/tmp".to_owned(),
-        skills_path: "/tmp".to_owned(),
-        settings_path: "/tmp".to_owned(),
-        content_config_path: "/tmp".to_owned(),
-        geoip_database_path: None,
-        web_path: "/tmp".to_owned(),
-        web_config_path: "/tmp".to_owned(),
-        web_metadata_path: "/tmp".to_owned(),
-        host: "127.0.0.1".to_owned(),
-        port: 0,
-        metrics_port: None,
-        api_server_url: BASE_URL.to_owned(),
-        api_internal_url: BASE_URL.to_owned(),
         api_external_url: BASE_URL.to_owned(),
-        jwt_issuer: "https://issuer.test".to_owned(),
-        jwt_access_token_expiration: 3_600,
-        jwt_refresh_token_expiration: 86_400,
-        jwt_audiences: vec![],
-        allowed_resource_audiences: vec![],
-        trusted_issuers: vec![],
-        id_jag_ttl_secs: 300,
-        signing_key_path: std::path::PathBuf::from("signing_key.pem"),
+        jwt_issuer: "example-test".to_owned(),
         use_https: true,
-        rate_limits: RateLimitsConfig::default(),
-        retention: RetentionConfig::default(),
-        planes: ConfigPlanesConfig::default(),
-        cors_allowed_origins: vec![],
-        trusted_proxies: vec![],
-        is_cloud: false,
-        content_negotiation: ContentNegotiationConfig::default(),
-        security_headers: SecurityHeadersConfig::default(),
-        allow_dynamic_client_registration: false,
-        allow_registration: false,
-        api_key_max_lifetime_days: None,
-        login_page_url: None,
-        system_admin_username: "admin".to_owned(),
-        system_admin_email: None,
-    });
+        system_path: root.to_path_buf(),
+        services_path: root.to_path_buf(),
+        admin_template_dir: root.join("admin"),
+    })
+}
+
+fn contributed_jobs() -> Vec<Arc<dyn Job>> {
+    template_test_common::composition::member_jobs("web")
 }
 
 // The jobs write into `paths.web().dist()` and read `paths.system()`, so the
@@ -162,6 +101,7 @@ fn app_paths(root: &Path) -> Arc<AppPaths> {
     Arc::new(
         AppPaths::from_profile(
             &PathsConfig {
+                root: None,
                 system: root.clone(),
                 services: root.clone(),
                 bin: root.clone(),
@@ -186,7 +126,6 @@ struct Harness {
 
 impl Harness {
     async fn create_or_skip() -> Option<Self> {
-        install_config();
         let db = TempDb::create().await?;
         let tmp = TempDir::new().expect("temporary tree");
         let paths = app_paths(tmp.path());
@@ -207,12 +146,14 @@ impl Harness {
             Actor::user(UserId::new("jobs-context-test")),
             systemprompt::traits::Dependencies::new()
                 .with(database)
-                .with(Arc::clone(&self.paths)),
+                .with(Arc::clone(&self.paths))
+                .with(web_settings(self.tmp.path()))
+                .with(EnvFixture::empty(&self.db.pool).env),
         )
     }
 
-    // A context whose pool and paths are the unit type: both downcasts miss,
-    // which is the shape a job sees when the scheduler was wired wrong.
+    // A context holding nothing: every lookup misses, which is the shape a job
+    // sees when the scheduler was wired wrong.
     fn empty_context() -> JobContext {
         JobContext::new(
             Actor::user(UserId::new("jobs-context-test")),
@@ -230,6 +171,14 @@ impl Harness {
         JobContext::new(
             Actor::user(UserId::new("jobs-context-test")),
             systemprompt::traits::Dependencies::new().with(database),
+        )
+    }
+
+    // A context carrying the admin environment but no database.
+    fn context_without_database(&self) -> JobContext {
+        JobContext::new(
+            Actor::user(UserId::new("jobs-context-test")),
+            systemprompt::traits::Dependencies::new().with(EnvFixture::empty(&self.db.pool).env),
         )
     }
 
@@ -445,41 +394,17 @@ async fn llms_txt_refuses_a_context_with_no_database() {
 }
 
 #[tokio::test]
-async fn sitemap_generation_refuses_a_context_with_no_database() {
-    let Some(h) = Harness::create_or_skip().await else {
-        return;
-    };
-
-    let error = SitemapGenerationJob
-        .execute(&Harness::empty_context())
-        .await
-        .expect_err("the sitemap is built from content rows");
-
-    assert_missing_database(&error);
-
-    h.cleanup().await;
-}
-
-#[tokio::test]
 async fn copy_extension_assets_copies_every_registered_required_asset() {
     let Some(h) = Harness::create_or_skip().await else {
         return;
     };
-    let _ = std::hint::black_box(systemprompt_content::ContentExtension);
-    let _ = systemprompt::extension::runtime_config::set_injected_extensions(
-        systemprompt::extension::runtime_config::InjectedExtensions {
-            extensions: vec![
-                Arc::new(systemprompt_content::ContentExtension),
-                Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
-            ],
-            ..Default::default()
-        },
-    );
-    let registry = ExtensionRegistry::discover().expect("discover extension registrations");
-    let assets = registry.all_required_assets(h.paths.as_ref());
+    let mut assets = systemprompt_web_site::assets::web_assets(h.paths.as_ref());
+    assets.extend(systemprompt_web_admin::assets::admin_assets(
+        h.paths.as_ref(),
+    ));
     // Sources live under the temporary tree because `AppPaths` was built over
     // it; creating each one is what makes the copy loop's success arm run.
-    for (_, asset) in &assets {
+    for asset in &assets {
         if let Some(parent) = asset.source().parent() {
             std::fs::create_dir_all(parent).expect("create the asset source directory");
         }
@@ -494,10 +419,10 @@ async fn copy_extension_assets_copies_every_registered_required_asset() {
     assert_eq!(
         result.items_processed,
         Some(u64::try_from(assets.len()).expect("asset count fits in u64")),
-        "every registered asset is accounted for"
+        "every declared asset is accounted for"
     );
     assert_eq!(result.items_failed, Some(0));
-    for (_, asset) in &assets {
+    for asset in &assets {
         assert!(
             h.dist().join(asset.destination()).exists(),
             "asset {} did not reach dist",
@@ -544,7 +469,7 @@ async fn copy_extension_assets_refuses_a_context_with_no_app_paths() {
 
 #[tokio::test]
 async fn every_registered_job_declares_a_name_a_description_and_a_schedule() {
-    let jobs = systemprompt_web_jobs::extension_jobs();
+    let jobs = contributed_jobs();
 
     assert!(!jobs.is_empty(), "the extension registers jobs");
     for job in &jobs {
@@ -568,7 +493,7 @@ async fn every_registered_job_declares_a_name_a_description_and_a_schedule() {
 
 #[tokio::test]
 async fn every_registered_job_reports_whether_it_is_enabled_and_schedulable() {
-    let jobs = systemprompt_web_jobs::extension_jobs();
+    let jobs = contributed_jobs();
 
     for job in &jobs {
         assert!(
@@ -678,52 +603,10 @@ async fn bundle_admin_css_refuses_a_context_with_no_app_paths() {
 }
 
 #[tokio::test]
-async fn content_prerender_refuses_a_context_with_no_database() {
-    let error = ContentPrerenderJob
-        .execute(&Harness::empty_context())
-        .await
-        .expect_err("prerendering reads content out of the database");
-
-    assert_missing_database(&error);
-}
-
-#[tokio::test]
-async fn content_prerender_refuses_a_context_with_no_app_paths() {
-    let Some(h) = Harness::create_or_skip().await else {
-        return;
-    };
-
-    let error = ContentPrerenderJob
-        .execute(&h.context_without_paths())
-        .await
-        .expect_err("prerendering has nowhere to write without AppPaths");
-
-    assert!(error.to_string().contains("AppPaths"));
-    h.cleanup().await;
-}
-
-#[tokio::test]
-async fn secret_migration_does_nothing_when_no_master_key_is_configured() {
-    let Some(h) = Harness::create_or_skip().await else {
-        return;
-    };
-
-    let result = SecretMigrationJob
-        .execute(&h.context())
-        .await
-        .expect("a missing master key is a skip, not a failure");
-
-    assert!(result.success);
-    assert_eq!(result.items_processed, Some(0));
-    h.cleanup().await;
-}
-
-#[tokio::test]
 async fn secret_migration_reports_no_work_when_every_secret_is_already_encrypted() {
     let Some(h) = Harness::create_or_skip().await else {
         return;
     };
-    set_master_key();
 
     let result = SecretMigrationJob
         .execute(&h.context())
@@ -741,7 +624,6 @@ async fn secret_migration_encrypts_plaintext_rows_and_audits_each_one() {
     let Some(h) = Harness::create_or_skip().await else {
         return;
     };
-    set_master_key();
     h.seed_plaintext_secret("secret-1", "user-a", "API_KEY", "plaintext-value")
         .await;
     h.seed_plaintext_secret("secret-2", "user-a", "OTHER_KEY", "another-value")
@@ -782,14 +664,17 @@ async fn secret_migration_encrypts_plaintext_rows_and_audits_each_one() {
 
 #[tokio::test]
 async fn secret_migration_refuses_a_context_with_no_database() {
-    set_master_key();
+    let Some(h) = Harness::create_or_skip().await else {
+        return;
+    };
 
     let error = SecretMigrationJob
-        .execute(&Harness::empty_context())
+        .execute(&h.context_without_database())
         .await
         .expect_err("the migration reads and rewrites database rows");
 
     assert_missing_database(&error);
+    h.cleanup().await;
 }
 
 #[tokio::test]
@@ -822,16 +707,6 @@ async fn publish_pipeline_runs_every_stage_and_reports_each_outcome() {
     );
 
     h.cleanup().await;
-}
-
-#[tokio::test]
-async fn publish_pipeline_refuses_a_context_with_no_database() {
-    let error = PublishPipelineJob
-        .execute(&Harness::empty_context())
-        .await
-        .expect_err("the pipeline needs a database before it runs a single stage");
-
-    assert_missing_database(&error);
 }
 
 #[tokio::test]
@@ -1050,12 +925,3 @@ async fn a_required_asset_that_cannot_be_copied_fails_the_copy() {
 
     let _ = error;
 }
-
-// `SitemapGenerationJob` and `ContentPrerenderJob` are not driven to
-// completion here. Both delegate to a core generator that loads the full
-// `WebConfig` from the *global* `Config`'s `web_config_path` — a
-// process-wide value fixed by the first test to install a config, which
-// cannot point at the per-test temporary tree the job writes into. Their
-// context lookups are asserted above, and the publish pipeline drives both
-// through their failure paths; rendering a fixture site is what the contract
-// suite does.

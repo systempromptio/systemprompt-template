@@ -43,6 +43,8 @@
 #[cfg(test)]
 mod account_pages;
 #[cfg(test)]
+mod adfs_provider;
+#[cfg(test)]
 mod agents_ingestion;
 #[cfg(test)]
 mod campaign_link_full_url;
@@ -206,9 +208,7 @@ mod access_explain;
 #[cfg(test)]
 mod activity_constructors;
 #[cfg(test)]
-mod adfs_session_pure;
 #[cfg(test)]
-mod adfs_state_cookie;
 #[cfg(test)]
 mod admin_css_classes;
 #[cfg(test)]
@@ -271,9 +271,6 @@ mod util_ranges;
 mod util_svg_pure;
 
 #[cfg(test)]
-mod vertex_rate_card_routes;
-
-
 #[cfg(test)]
 mod ingestion_identity;
 

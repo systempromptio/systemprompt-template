@@ -10,34 +10,18 @@
 //! and the provider's display name, and the generated id never leaks into
 //! a label on its own.
 
-use systemprompt::manifest::ServicesConfig;
-use systemprompt::manifest::services::{GatewayConfigSpec, GatewayState, ProviderEntry};
+use systemprompt::manifest::services::catalog::{CatalogContext, CatalogDocument};
 use systemprompt_web_admin::repositories::config::gateway::{
     derive_provider_label, derive_route_label, get_route_labels,
 };
 
-fn provider(name: &str, display: Option<&str>) -> ProviderEntry {
-    let mut entry: ProviderEntry = serde_yaml::from_str(&format!(
-        "name: {name}\nwire: anthropic\nsurface: anthropic\nendpoint: https://x.test/v1\napi_key_secret: {name}\n"
-    ))
-    .expect("provider parses");
-    entry.display_name = display.map(str::to_owned);
-    entry
-}
-
 #[test]
 fn provider_label_prefers_display_name_then_known_spelling_then_title_case() {
     assert_eq!(
-        derive_provider_label(
-            "vertex",
-            Some(&provider("vertex", Some("Google Vertex AI")))
-        ),
+        derive_provider_label("vertex", Some("Google Vertex AI")),
         "Google Vertex AI"
     );
-    assert_eq!(
-        derive_provider_label("vertex", Some(&provider("vertex", Some("  ")))),
-        "Vertex AI"
-    );
+    assert_eq!(derive_provider_label("vertex", Some("  ")), "Vertex AI");
     assert_eq!(
         derive_provider_label("openai-responses", None),
         "OpenAI (Responses)"
@@ -64,30 +48,38 @@ fn route_label_reads_the_pattern_as_a_model_family() {
 
 #[test]
 fn declared_name_wins_and_catch_all_is_labelled() {
-    let spec: GatewayConfigSpec = serde_yaml::from_str(
-        r"
-enabled: true
-routes:
-- name: Claude (Anthropic)
-  description: Every claude-* request.
-  model_pattern: claude-*
-  provider: anthropic
-default_provider: anthropic
-default_model: claude-sonnet-5
-",
+    let catalog = CatalogDocument::from_yaml_str(
+        "route-labels",
+        r#"
+credentials:
+  anthropic: { kind: platform, secret: anthropic_key }
+providers:
+  anthropic:
+    credential: anthropic
+    display_name: Anthropic
+    endpoints:
+      api: { wire: anthropic, url: "https://anthropic.example.com/v1" }
+models:
+  claude-sonnet-5: { clients: [] }
+deployments:
+  claude-sonnet-5: [anthropic/api]
+gateway:
+  enabled: false
+  routes:
+    - id: claude
+      label: Claude (Anthropic)
+      description: Every claude-* request.
+      models: "claude-*"
+      deployments: [anthropic/api]
+    - id: everything-else
+      models: "*"
+      deployments: [anthropic/api]
+"#,
     )
-    .expect("gateway spec parses");
-    let mut services = ServicesConfig::default();
-    services
-        .providers
-        .providers
-        .push(provider("anthropic", Some("Anthropic")));
-    let mut config = spec.resolve();
-    for route in &mut config.routes {
-        route.ensure_id();
-    }
-    services.gateway = Some(GatewayState::Resolved(config));
-    let labels = get_route_labels(&services).expect("labels resolve");
+    .expect("the catalog parses")
+    .resolve(&CatalogContext::default())
+    .expect("the catalog resolves");
+    let labels = get_route_labels(&catalog).expect("labels resolve");
     let claude = labels
         .routes
         .iter()
@@ -104,7 +96,7 @@ default_model: claude-sonnet-5
         .routes
         .iter()
         .find(|r| r.model_pattern == "*")
-        .expect("synthesized catch-all");
+        .expect("catch-all route");
     assert_eq!(catch_all.label, "Everything else · Anthropic");
     assert!(!catch_all.declared_name);
     assert_eq!(labels.label_of("no-such-route"), "no-such-route");

@@ -21,7 +21,7 @@ use systemprompt_web_admin::repositories::access_control::sync::{
 };
 
 use crate::fixtures::{unique, write_services_file};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 const RULES: &str = "access-control/rules.yaml";
 

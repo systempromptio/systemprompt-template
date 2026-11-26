@@ -1,11 +1,10 @@
 //! Per-call dispatch for the bundled `systemprompt` MCP server, driven
 //! directly.
 //!
-//! `call_tool` cannot be reached from a test process — it takes an rmcp
-//! `RequestContext<RoleServer>` whose `Peer` only exists once a transport is
-//! serving. `dispatch_tool` is the seam below it: it takes the already
-//! authenticated core `RequestContext`, so every branch `call_tool` can reach
-//! is reachable here, including the unknown-tool arm.
+//! `McpToolset::call` is reached by core's toolset host once a hop token has
+//! been verified. `dispatch_tool` is the seam below it: it takes the
+//! hop-verified caller directly, so every branch `call` can reach is
+//! reachable here, including the unknown-tool arm.
 //!
 //! A live pool is needed because `McpToolExecutor` records every call through
 //! a `ToolUsageRepository` and persists the artifact it returns.
@@ -15,11 +14,14 @@ use std::sync::Arc;
 use rmcp::model::CallToolRequestParams;
 use sqlx::PgPool;
 use systemprompt::database::Database;
+use systemprompt::governance::policy::secrets::SecretScannerCell;
 use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId};
 use systemprompt::mcp::repository::ToolUsageRepository;
+use systemprompt::mcp::services::ui_renderer::UiRendererRegistry;
 use systemprompt::mcp::{ArtifactIngest, McpToolExecutor};
+use systemprompt::models::mcp::ClientProfile;
 
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn db_pool(pool: &Arc<PgPool>) -> systemprompt::database::DbPool {
     Arc::new(Database::from_pools(
@@ -28,19 +30,24 @@ fn db_pool(pool: &Arc<PgPool>) -> systemprompt::database::DbPool {
     ))
 }
 
+fn ingest(db_pool: &systemprompt::database::DbPool) -> Arc<ArtifactIngest> {
+    Arc::new(ArtifactIngest::from_db(
+        db_pool,
+        SecretScannerCell::default(),
+    ))
+}
+
 fn executor(db_pool: &systemprompt::database::DbPool, server_name: &str) -> McpToolExecutor {
-    let usage = Arc::new(ToolUsageRepository::new(db_pool));
-    let ingest = Arc::new(ArtifactIngest::new(
-        systemprompt::mcp::repository::ArtifactIngestRepositories::new(db_pool),
-        None,
-    ));
     McpToolExecutor::new(
-        usage,
-        Arc::new(systemprompt::ai::repository::AiRequestRepository::new(
-            db_pool,
+        Arc::new(ToolUsageRepository::new(db_pool)),
+        Some(Arc::new(
+            systemprompt::ai::repository::AiRequestRepository::new(db_pool),
         )),
-        ingest,
-        systemprompt::identifiers::McpServerId::new(server_name),
+        ingest(db_pool),
+        Arc::new(UiRendererRegistry::with_builtins()),
+        template_test_common::hop::server_callers(&systemprompt::identifiers::McpServerId::new(
+            server_name,
+        )),
     )
 }
 
@@ -63,10 +70,10 @@ fn call(tool: &'static str, arguments: serde_json::Value) -> CallToolRequestPara
     CallToolRequestParams::new(tool).with_arguments(object)
 }
 
-fn client() -> systemprompt::mcp::ClientProfile {
-    systemprompt::mcp::ClientProfile {
+fn client() -> ClientProfile {
+    ClientProfile {
         protocol_version: Some(rmcp::model::ProtocolVersion::V_2025_06_18),
-        ..systemprompt::mcp::ClientProfile::default()
+        ..ClientProfile::default()
     }
 }
 
@@ -77,20 +84,19 @@ async fn an_unknown_systemprompt_tool_points_the_caller_at_the_cli_skill() {
     };
     let db_pool = db_pool(&db.pool);
     let executor = executor(&db_pool, "systemprompt");
-    let ingest = Arc::new(ArtifactIngest::new(
-        systemprompt::mcp::repository::ArtifactIngestRepositories::new(&db_pool),
-        None,
-    ));
+    let ingest = ingest(&db_pool);
 
     let request = call("not_a_tool", serde_json::json!({}));
     let profile = client();
     let error = systemprompt_mcp_agent::server::tool::dispatch_tool(
         &systemprompt_mcp_agent::server::tool::Dispatch {
             service_id: "systemprompt",
-            db_pool: &db_pool,
             executor: &executor,
             request: &request,
-            request_context: &request_context(),
+            caller: &template_test_common::hop::verified_caller(
+                &systemprompt::identifiers::McpServerId::new("systemprompt"),
+                &request_context(),
+            ),
             client: &profile,
             ingest: &ingest,
             // Why: these dispatch paths return before any handler is built, so

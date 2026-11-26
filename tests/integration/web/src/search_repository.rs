@@ -6,7 +6,7 @@ use systemprompt::identifiers::CategoryId;
 use systemprompt_web_content::repository::{ContentRepository, SearchRepository};
 
 use crate::fixtures::{content_params, source_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn search_by_category_returns_only_that_category() {

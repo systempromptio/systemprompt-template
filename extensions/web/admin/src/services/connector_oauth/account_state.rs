@@ -46,7 +46,7 @@ pub(super) async fn record_grant_failure(
         );
         // Why: A successful refresh followed by a failed probe still rotates the
         // grant. Persist it before returning the probe error.
-        repo::store(tx, user, provider.slug(), &seal(env.cipher()?, grant)?).await?;
+        repo::store(tx, user, provider.slug(), &seal(env.cipher(), grant)?).await?;
     }
     update_account(tx, user, account).await?;
     tracing::warn!(

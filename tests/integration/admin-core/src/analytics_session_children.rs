@@ -14,7 +14,7 @@ use crate::fixtures::{
     RequestSpec, insert_context, insert_request, insert_session, insert_user, new_context_id,
     unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn list_session_contexts_skips_requests_with_no_context() {

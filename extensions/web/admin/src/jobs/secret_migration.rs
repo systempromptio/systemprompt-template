@@ -42,10 +42,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let start = std::time::Instant::now();
 
     let env = ctx.get::<AdminEnv>()?;
-    let Ok(cipher) = env.cipher() else {
-        return Ok(JobResult::success()
-            .with_message("the member cipher is not held by this host; nothing migrated"));
-    };
+    let cipher = env.cipher();
     let db = ctx.get::<DbPool>()?;
 
     let pool = db.pool();

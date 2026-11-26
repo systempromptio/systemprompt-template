@@ -10,7 +10,7 @@ use systemprompt_web_admin::repositories::governance::approvals::{
 };
 
 use crate::fixtures::unique;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 async fn seed(
     db: &TempDb,

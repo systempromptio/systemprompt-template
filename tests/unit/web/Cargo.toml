@@ -31,3 +31,9 @@ serde_yaml = { workspace = true }
 sqlx = { workspace = true }
 zip = { workspace = true }
 async-trait = { workspace = true }
+template-test-common = { workspace = true }
+# The ADFS provider test stands up a local IdP that signs its assertion.
+saml = { version = "0.0.1-alpha.2", default-features = false, features = ["rsa-sha", "xmlenc", "metadata-emit"] }
+flate2 = "1.1"
+base64 = "0.22"
+url = "2.5"

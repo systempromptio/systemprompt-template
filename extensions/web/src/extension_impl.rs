@@ -10,6 +10,7 @@ use systemprompt::config::AppPaths;
 use systemprompt::extension::artifact_ui::DynArtifactUiRenderer;
 use systemprompt::extension::prelude::*;
 use systemprompt::extension::reserved::InstallConferral;
+use systemprompt::extension::{ResealColumn, SealedLayout};
 use systemprompt::governance::authz::SubjectSourceCell;
 use systemprompt::identifiers::SecretName;
 use systemprompt::manifest::ConfigView;
@@ -79,13 +80,32 @@ impl Extension for WebExtension {
             .site_auth(SiteAuthConfig {
                 login_path: "/admin/login",
                 protected_prefixes: &["/admin", "/bridge-auth"],
-                public_prefixes: &["/admin/login", "/admin/auth/adfs"],
+                public_prefixes: &["/admin/login"],
                 required_scope: "user",
             })
             .asset_with(declared_assets)
             .conferral(InstallConferral::MemberCipher)
+            .reseal_column(ResealColumn {
+                table: "user_encryption_keys",
+                keys: &["user_id"],
+                ciphertext: "encrypted_dek",
+                layout: SealedLayout::SplitBytea { nonce: "dek_nonce" },
+            })
+            .reseal_column(ResealColumn {
+                table: "mcp_connector_credentials",
+                keys: &["user_id", "provider"],
+                ciphertext: "ciphertext",
+                layout: SealedLayout::SplitBytea { nonce: "nonce" },
+            })
+            .reseal_column(ResealColumn {
+                table: "mcp_connector_oauth_states",
+                keys: &["state"],
+                ciphertext: "ciphertext",
+                layout: SealedLayout::SplitBytea { nonce: "nonce" },
+            })
             .conferral(InstallConferral::ShareTokens)
             .conferral(InstallConferral::GitSourceSync)
+            .conferral(InstallConferral::BrokerCalls)
             .secret(SecretName::new("github_mcp_client_id"))
             .secret(SecretName::new("github_mcp_client_secret"))
             .secret_prefix(CONNECTOR_SECRET_PREFIX)
@@ -93,6 +113,7 @@ impl Extension for WebExtension {
         contribute_values(c);
         crate::admin::authz::contribute_subject_attributes(c);
         crate::admin::jobs::contribute_jobs(c);
+        crate::sign_in::contribute(c);
         c.job(systemprompt_web_shared::asset_jobs::BundleAdminCssJob)
             .job(systemprompt_web_shared::asset_jobs::CopyExtensionAssetsJob::new(declared_assets));
         #[cfg(feature = "gateway")]
@@ -124,12 +145,13 @@ fn contribute_values(c: &mut Contributions<'_>) {
             services: r.get::<InstallServicesView>()?,
             authenticator: r.get::<DynRequestAuthenticator>()?,
             subjects: r.get::<SubjectSourceCell>()?,
-            cipher: r.member_cipher().ok(),
-            share_tokens: r.share_tokens().ok(),
+            cipher: r.member_cipher()?,
+            share_tokens: r.share_tokens()?,
             secrets: r.secrets()?,
             paths: r.get::<Arc<AppPaths>>()?,
             artifact_ui: r.optional::<DynArtifactUiRenderer>(),
-            git_sync: r.git_source_sync().ok(),
+            git_sync: r.git_source_sync()?,
+            broker_calls: r.broker_calls()?,
         }))
     })
     .provide::<Arc<ConsoleDashboard>, _>(|r: &Resolved<'_>| {
@@ -143,7 +165,14 @@ fn contribute_values(c: &mut Contributions<'_>) {
         let settings = r.get::<Arc<WebSettings>>()?;
         let env = r.get::<AdminEnv>()?;
         let dashboard = r.get::<Arc<ConsoleDashboard>>()?;
-        Ok(Arc::new(WebRuntime::build(&db, &settings, &env, dashboard)))
+        let sign_in = r.get::<Arc<crate::sign_in::SignInSetup>>()?;
+        Ok(Arc::new(WebRuntime::build(
+            &db,
+            &settings,
+            &env,
+            dashboard,
+            sign_in.options(),
+        )))
     });
 }
 

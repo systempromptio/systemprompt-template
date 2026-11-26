@@ -6,7 +6,7 @@ use systemprompt::identifiers::CampaignId;
 use systemprompt_web_content::repository::{ContentRepository, LinkRepository};
 
 use crate::fixtures::{content_params, link_params, source_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn create_link_returns_the_persisted_row() {

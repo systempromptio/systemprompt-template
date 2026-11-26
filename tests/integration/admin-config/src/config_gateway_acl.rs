@@ -1,12 +1,12 @@
 //! `repositories::config::gateway_acl` — the route-scoped wrappers over core's
 //! access-control repository.
 
-use systemprompt::identifiers::RouteId;
 use systemprompt::governance::authz::{Access, EntityKind, RuleType};
+use systemprompt::identifiers::RouteId;
 use systemprompt_web_admin::repositories::config::gateway_acl;
 
 use crate::fixtures::{count_rows, insert_acl_entity, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn route_id(prefix: &str) -> RouteId {
     RouteId::new(unique(prefix))

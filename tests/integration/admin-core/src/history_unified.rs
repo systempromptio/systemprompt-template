@@ -16,7 +16,7 @@ use crate::fixtures::{
     LEGACY_CONTEXT_ID, RequestSpec, insert_message, insert_offered_tools, insert_request,
     insert_session, insert_transcript, insert_user, new_context_id, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn both_sources_appear_for_the_same_viewer() {

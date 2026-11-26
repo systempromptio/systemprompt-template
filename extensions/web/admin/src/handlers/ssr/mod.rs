@@ -161,10 +161,17 @@ struct LoginContext<'a> {
     sso_enabled: bool,
 }
 
+/// Which sign-in providers the web member contributed to core's `SsoSlot`,
+/// so the login page offers exactly the doors core serves.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SignInOptions {
+    pub adfs: bool,
+}
+
 pub(crate) async fn login_page(
     user_ctx: Option<Extension<UserContext>>,
     Extension(engine): Extension<AdminTemplateEngine>,
-    Extension(sso_deps): Extension<crate::handlers::adfs_auth::AdfsDeps>,
+    Extension(sign_in): Extension<SignInOptions>,
     Query(params): Query<LoginParams>,
 ) -> AdminHtmlResult<Response> {
     if let Some(Extension(user_ctx)) = user_ctx {
@@ -182,7 +189,7 @@ pub(crate) async fn login_page(
     let ctx = LoginContext {
         shell: branding_context(&engine),
         redirect_encoded,
-        sso_enabled: sso_deps.config.is_usable(),
+        sso_enabled: sign_in.adfs,
     };
     let html = engine.render("login", &ctx)?;
     Ok(Html(html).into_response())

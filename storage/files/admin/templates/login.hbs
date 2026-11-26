@@ -91,7 +91,7 @@
                         </p>
                         {{#if sso_enabled}}
                         <div class="sp-form-actions">
-                            <a id="sso-btn" class="sp-btn sp-btn--outline sp-u-w-full" href="/admin/auth/adfs/start{{#if redirect_encoded}}?redirect={{redirect_encoded}}{{/if}}">Sign in with single sign-on</a>
+                            <a id="sso-btn" class="sp-btn sp-btn--outline sp-u-w-full" href="/api/v1/core/sso/adfs/start{{#if redirect_encoded}}?redirect={{redirect_encoded}}{{/if}}">Sign in with single sign-on</a>
                         </div>
                         {{/if}}
                     </div>

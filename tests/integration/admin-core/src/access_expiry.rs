@@ -16,7 +16,7 @@ use systemprompt_web_admin::repositories::scope::expiry::revoke_expired_membersh
 use systemprompt_web_shared::GroupId;
 
 use crate::fixtures::{insert_group, insert_group_member, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 async fn expire(pool: &sqlx::PgPool, group: &str, user: &str) {
     sqlx::query(

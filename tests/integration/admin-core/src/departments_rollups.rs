@@ -7,7 +7,7 @@ use crate::fixtures::{
     AclRuleSpec, insert_acl_rule, insert_department, insert_user, insert_user_full, set_department,
     unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 
 #[tokio::test]

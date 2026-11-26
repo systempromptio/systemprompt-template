@@ -13,7 +13,7 @@ use systemprompt_web_admin::repositories::groups::members::{
 };
 
 use crate::fixtures::{insert_group, insert_user, unclaimed_email, unique, unique_group};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 use systemprompt_web_shared::GroupId;
 
 async fn map_ad_group(pool: &sqlx::PgPool, ad_group: &str, group_id: &str) {

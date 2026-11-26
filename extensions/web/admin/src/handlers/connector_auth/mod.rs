@@ -2,7 +2,6 @@
 
 mod account;
 mod consent;
-mod identity;
 
 use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
@@ -33,25 +32,20 @@ pub fn router(pool: Arc<PgPool>) -> Router {
         .route("/connectors/{provider}/start", get(consent::start))
         .route("/connectors/{provider}/callback", get(consent::callback))
         .route("/connectors/{provider}/token", get(consent::token))
-        .route("/identity/{server}/token", get(identity::token))
         .layer(axum::extract::DefaultBodyLimit::max(32768))
         .with_state(pool)
 }
 
-// Why: only the gateway's credential broker may read a per-user bearer.
+// Why: only the gateway's credential broker may read a per-user bearer; core
+// verifies the broker's call and never hands the secret to the member.
 fn require_broker(env: &AdminEnv, headers: &HeaderMap) -> AdminResult<()> {
-    use sha2::{Digest, Sha256};
-    let expected = oauth::config::secret(env.secrets(), "mcp_credential_broker_secret")?;
-    let presented = headers
-        .get("x-systemprompt-credential-broker")
-        .and_then(|v| v.to_str().ok())
-        .ok_or_else(|| AdminError::Forbidden("Backend credential access required".into()))?;
-    if Sha256::digest(expected.as_bytes()) != Sha256::digest(presented.as_bytes()) {
-        return Err(AdminError::Forbidden(
-            "Backend credential access rejected".into(),
-        ));
-    }
-    Ok(())
+    env.broker_calls().verify(headers).map_err(|refused| {
+        tracing::warn!(
+            ?refused,
+            "connector bearer read refused: not the credential broker"
+        );
+        AdminError::Forbidden("Backend credential access required".into())
+    })
 }
 
 async fn live_user(
@@ -107,7 +101,7 @@ async fn store_verified(
         &mut tx,
         user,
         grant.provider.slug(),
-        &oauth::seal(env.cipher()?, grant)?,
+        &oauth::seal(env.cipher(), grant)?,
     )
     .await?;
     account::apply_verified(&mut row, grant);
@@ -135,7 +129,7 @@ async fn store_pending_verification(
         &mut tx,
         user,
         grant.provider.slug(),
-        &oauth::seal(env.cipher()?, grant)?,
+        &oauth::seal(env.cipher(), grant)?,
     )
     .await?;
     row.status = "verification_required".into();

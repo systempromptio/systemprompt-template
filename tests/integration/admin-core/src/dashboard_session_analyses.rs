@@ -17,7 +17,7 @@ use systemprompt_web_admin::types::session_analysis::{
 };
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn minimal() -> SessionAnalysis {
     SessionAnalysis {

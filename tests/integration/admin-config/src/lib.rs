@@ -45,5 +45,3 @@ mod marketplace_catalog;
 mod marketplace_filter;
 #[cfg(test)]
 mod secrets_migration;
-#[cfg(test)]
-mod tempdb;

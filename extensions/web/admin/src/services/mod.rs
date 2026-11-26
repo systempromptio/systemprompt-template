@@ -15,4 +15,3 @@ pub(crate) mod connector_accounts;
 #[cfg(feature = "mcp")]
 pub(crate) mod connector_probe;
 pub(crate) mod connector_readiness;
-pub mod identity_token;

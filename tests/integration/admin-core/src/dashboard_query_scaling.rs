@@ -2,7 +2,6 @@
 use crate::fixtures::{
     RequestSpec, insert_request, insert_user, new_context_id, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
 use chrono::{Duration, Utc};
 use systemprompt_web_admin::repositories::analytics::conversation_rows::{
     ConversationFilter, ConversationPage, ConversationPageMode, ConversationSort,
@@ -12,6 +11,7 @@ use systemprompt_web_admin::repositories::scope::SubjectScope;
 use systemprompt_web_admin::repositories::users::roster::{
     RosterFilter, RosterQuery, RosterSort, get_roster_stats, list_users_paged,
 };
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn user_pages_have_three_previews_and_stable_complete_totals() {

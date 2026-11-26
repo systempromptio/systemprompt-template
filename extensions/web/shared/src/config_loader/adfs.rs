@@ -7,7 +7,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::adfs::{ACS_PATH, AdfsConfig, METADATA_PATH};
+use crate::adfs::{ACS_PATH, AdfsConfig, ENTITY_ID_PATH};
 
 use super::{ConfigError, load_config_section, parse_section};
 
@@ -27,7 +27,7 @@ fn derive_saml_urls(config: &mut AdfsConfig, api_external_url: &str) {
         return;
     }
     if config.entity_id.is_empty() {
-        config.entity_id = format!("{base}{}", METADATA_PATH);
+        config.entity_id = format!("{base}{}", ENTITY_ID_PATH);
     }
     if config.acs_url.is_empty() {
         config.acs_url = format!("{base}{}", ACS_PATH);

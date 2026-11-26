@@ -15,7 +15,7 @@ use crate::fixtures::{
     DecisionSpec, EventSpec, RequestSpec, insert_decision, insert_event, insert_request,
     insert_session, insert_user, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn list_trace_spans_is_empty_for_a_session_with_no_activity() {

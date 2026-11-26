@@ -1,7 +1,8 @@
 //! The policy editor's form pairs → a spec core would accept, with every
 //! refusal in the operator's words.
 
-use systemprompt::gateway::{QuotaMode, SafetyHistoryMode, SafetyMode};
+use systemprompt::gateway::SafetyHistoryMode;
+use systemprompt::manifest::services::EnforcementMode;
 use systemprompt_web_admin::repositories::gateway_policies::form::parse_policy_form;
 use systemprompt_web_admin::repositories::gateway_policies::month_window::MONTH_WINDOW_SECONDS;
 
@@ -48,7 +49,7 @@ fn a_complete_form_becomes_the_spec_the_file_would_declare() {
     assert_eq!(parsed.name, "default-quotas");
     assert!(parsed.enabled);
     let spec = parsed.spec;
-    assert_eq!(spec.quota_mode, QuotaMode::Warn);
+    assert_eq!(spec.quota_mode, EnforcementMode::Warn);
     assert_eq!(
         spec.quota_windows.len(),
         2,
@@ -66,7 +67,7 @@ fn a_complete_form_becomes_the_spec_the_file_would_declare() {
         spec.quota_windows[1].max_cost_microdollars,
         Some(200_500_000)
     );
-    assert_eq!(spec.safety.mode, SafetyMode::Warn);
+    assert_eq!(spec.safety.mode, EnforcementMode::Warn);
     assert_eq!(spec.safety.scanners, vec!["heuristic", "pii_extended"]);
     assert_eq!(spec.safety.block_categories, vec!["pii_ssn"]);
     assert_eq!(

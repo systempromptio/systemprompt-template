@@ -8,7 +8,7 @@ use systemprompt_web_admin::types::groups::{CreateGroupRequest, UpdateGroupReque
 use systemprompt_web_shared::GroupId;
 
 use crate::fixtures::{insert_user, unclaimed_email, unique, unique_group};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn create(id: &GroupId) -> CreateGroupRequest {
     CreateGroupRequest {

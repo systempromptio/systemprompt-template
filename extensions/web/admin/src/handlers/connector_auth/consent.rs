@@ -66,7 +66,7 @@ pub(super) async fn start(
         &user.user_id,
         provider.slug(),
         &state,
-        &oauth::seal(env.cipher()?, &grant)?,
+        &oauth::seal(env.cipher(), &grant)?,
     )
     .await?;
     Ok(([(CACHE_CONTROL, "no-store")], Redirect::to(&url)).into_response())

@@ -8,7 +8,7 @@ use systemprompt_web_admin::repositories::bridge::{
 };
 
 use crate::fixtures::{insert_user, unique, user_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn issue_api_key_returns_a_secret_that_extends_its_prefix() {

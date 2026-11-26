@@ -10,26 +10,20 @@
 //! name prefix is derived from the running test binary, so two suites cannot
 //! collide and neither can two builds of the same suite.
 //!
-//! The schema comes from the same `install_extension_schemas` path the server
-//! runs at startup, so it cannot drift from the one the queries were compiled
-//! against. Migrations are collected from `inventory` registrations, which
-//! exist only for crates linked into the binary -- hence the `use ... as _`
-//! below, and the extension dependencies in this crate's manifest.
+//! The schema is installed the way `infra db migrate` installs it: the
+//! template's composition is admitted and its admitted members are handed to
+//! `install_admitted_schemas`, so the test database holds exactly what the
+//! binary installs.
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use sqlx::{AssertSqlSafe, PgPool};
-use systemprompt::database::{Database, DbPool, install_extension_schemas_full};
-use systemprompt::extension::ExtensionRegistry;
+use systemprompt::database::{
+    Database, DbPool, MigrationConfig, SchemaName, install_admitted_schemas,
+};
 use url::Url;
-
-use systemprompt_marketplace as _;
-use systemprompt_users as _;
-use systemprompt_web_admin as _;
-use systemprompt_web_content as _;
-use systemprompt_web_extension as _;
 
 use crate::skip::skip_or_panic;
 
@@ -172,9 +166,6 @@ async fn drop_stale_templates(conn: &mut sqlx::PgConnection, prefix: &str, keep:
 }
 
 async fn ensure_template(admin: &PgPool, base: &str, prefix: &str, template: &str) {
-    // A dependency alone does not keep an inventory section alive under link-time
-    // garbage collection. Referencing the extension value makes its submitted
-    // evaluation migrations part of every shared test-schema binary.
     let mut conn = admin.acquire().await.expect("maintenance connection");
     // The lock is session-scoped, so every statement below has to run on this
     // one connection -- a pool would hand the unlock to a different session.
@@ -195,30 +186,15 @@ async fn ensure_template(admin: &PgPool, base: &str, prefix: &str, template: &st
                 .expect("connect to the template database"),
         );
         let database = Database::from_pools(Arc::clone(&pool), Some(Arc::clone(&pool)));
-        let _ = std::hint::black_box(systemprompt_content::ContentExtension);
-        let _ = systemprompt::extension::runtime_config::set_injected_extensions(
-            systemprompt::extension::runtime_config::InjectedExtensions {
-                extensions: vec![
-                    Arc::new(systemprompt_content::ContentExtension),
-                    Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
-                ],
-                ..Default::default()
-            },
-        );
-        let registry = ExtensionRegistry::discover().expect("discover extension registrations");
-        assert!(
-            !registry.is_empty(),
-            "no extensions registered — the test binary must link the crates whose \
-             `register_extension!` supplies the migrations"
-        );
-        install_extension_schemas_full(
-            &registry,
-            database.write(),
-            &[],
-            systemprompt::database::MigrationConfig::default(),
+        let admitted = crate::composition::admitted();
+        install_admitted_schemas(
+            admitted.built(),
+            database.session(),
+            &SchemaName::public(),
+            MigrationConfig::default(),
         )
         .await
-        .expect("install extension schemas");
+        .expect("install the admitted schemas");
         // The copy refuses to run while any session holds the template open, so
         // this close is load-bearing, not tidiness.
         pool.close().await;

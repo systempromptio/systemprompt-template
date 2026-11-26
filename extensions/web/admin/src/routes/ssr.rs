@@ -9,15 +9,15 @@ use tower_http::normalize_path::NormalizePathLayer;
 
 use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
-use crate::handlers::adfs_auth::AdfsDeps;
+use crate::handlers::ssr::SignInOptions;
 use systemprompt::database::DbPool;
 
 /// What the server-rendered console draws with: its template engine and the
-/// SSO relying party.
+/// sign-in providers the login page offers.
 #[derive(Debug)]
 pub struct AdminSsrShell {
     pub engine: AdminTemplateEngine,
-    pub sso_deps: AdfsDeps,
+    pub sign_in: SignInOptions,
 }
 
 pub fn admin_ssr_router(
@@ -26,7 +26,7 @@ pub fn admin_ssr_router(
     owner: systemprompt::identifiers::UserId,
     shell: AdminSsrShell,
 ) -> Router {
-    let AdminSsrShell { engine, sso_deps } = shell;
+    let AdminSsrShell { engine, sign_in } = shell;
     let inner = overview_routes()
         .merge(people_routes())
         .merge(ai_activity_routes())
@@ -43,7 +43,6 @@ pub fn admin_ssr_router(
     let _ = (db, owner);
     let inner = inner
         .layer(Extension(engine.clone()))
-        .layer(Extension(sso_deps.clone()))
         .layer(axum_middleware::from_fn_with_state(
             Arc::clone(&pool),
             middleware::marketplace_context_middleware,
@@ -62,7 +61,7 @@ pub fn admin_ssr_router(
 
     let combined = public_routes(Arc::clone(&pool))
         .layer(Extension(engine))
-        .layer(Extension(sso_deps))
+        .layer(Extension(sign_in))
         .with_state(pool)
         .fallback_service(inner);
 
@@ -80,8 +79,6 @@ fn public_routes(pool: Arc<PgPool>) -> Router<Arc<PgPool>> {
             pool,
             middleware::user_context_middleware,
         ))
-        .route("/auth/adfs/start", get(handlers::adfs_auth::adfs_start))
-        .route("/auth/adfs/acs", post(handlers::adfs_auth::adfs_callback))
 }
 
 // Why: Overview is the console landing page, not a redirect — a signed-in

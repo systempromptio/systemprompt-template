@@ -16,7 +16,7 @@ use crate::fixtures::{
     RequestSpec, SummarySpec, insert_request, insert_session, insert_summary, insert_user,
     new_context_id, set_project, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn find_session_header_returns_none_for_an_unknown_session() {

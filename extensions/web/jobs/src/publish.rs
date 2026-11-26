@@ -3,8 +3,8 @@
 //! Order is load-bearing — bundles must exist before assets are copied, and
 //! content must be ingested before it can be prerendered. A failing sub-job is
 //! recorded and the pipeline continues, so one broken stage does not block the
-//! rest. The sitemap is generated after prerender from the content sources'
-//! `sitemap` blocks; the RSS feed is not generated.
+//! rest. The sitemap and RSS feed are generated after prerender from the
+//! content sources' `sitemap` and `rss` blocks in the published `ConfigView`.
 
 use std::sync::Arc;
 
@@ -12,8 +12,8 @@ use systemprompt::config::AppPaths;
 use systemprompt::content::ContentHooks;
 use systemprompt::database::DbPool;
 use systemprompt::generator::{
-    PrerenderEnv, PrerenderSettings, generate_sitemap, organize_dist_assets, prerender_content,
-    prerender_pages,
+    PrerenderEnv, PrerenderSettings, generate_feed, generate_sitemap, organize_dist_assets,
+    prerender_content, prerender_pages,
 };
 use systemprompt::manifest::ConfigView;
 use systemprompt::traits::{Job, JobContext, JobResult};
@@ -197,8 +197,28 @@ impl PublishPipelineJob {
         }
     }
 
+    async fn run_feed(&self, ctx: &JobContext, stats: &mut PipelineStats) {
+        let outcome = async {
+            let db_pool = ctx.get::<DbPool>()?;
+            let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
+            let config = ctx.get::<PublishConfig>()?;
+            let content_repo = systemprompt::content::ContentRepository::new(db_pool);
+            generate_feed(content_repo, &config.0, paths).await?;
+            Ok::<(), JobError>(())
+        }
+        .await;
+        match outcome {
+            Ok(()) => stats.record_success(),
+            Err(e) => {
+                tracing::error!(error = %e, "RSS feed generation failed");
+                stats.record_failure();
+            },
+        }
+    }
+
     async fn run_derived_files(&self, ctx: &JobContext, stats: &mut PipelineStats) {
         self.run_sitemap(ctx, stats).await;
+        self.run_feed(ctx, stats).await;
         self.run_llms_txt(ctx, stats).await;
         self.run_robots_txt(ctx, stats).await;
     }
@@ -229,7 +249,7 @@ impl Job for PublishPipelineJob {
     }
 
     fn description(&self) -> &'static str {
-        "Content publishing pipeline: ingestion, assets, prerender, pages, sitemap, robots.txt, llms.txt"
+        "Content publishing pipeline: ingestion, assets, prerender, pages, sitemap, RSS, robots.txt, llms.txt"
     }
 
     fn schedule(&self) -> &'static str {

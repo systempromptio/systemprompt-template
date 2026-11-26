@@ -12,9 +12,8 @@
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
-use systemprompt::loader::ConfigLoader;
-use systemprompt::manifest::services::ServicesConfig;
 use systemprompt::governance::authz::{EntityKind, RegisteredEntities};
+use systemprompt::loader::ServicesState;
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, DeclaredSet, build_declared_set,
 };
@@ -38,6 +37,8 @@ use systemprompt_web_admin::repositories::sync::groups_db::{
 };
 use systemprompt_web_admin::repositories::sync::groups_drift::{MappingRow, MemberSetRow};
 
+use template_test_common::env::fixture_profile;
+
 use crate::support::repo_root;
 
 fn services_dir() -> PathBuf {
@@ -52,14 +53,21 @@ fn read(relative: &str) -> String {
 // Why: the same load boot performs on the base tree, so a tree that does not
 // compose fails this test with the composition error — not with a rules.yaml
 // error one page later.
-fn services() -> ServicesConfig {
-    ConfigLoader::load_from_path(&services_dir().join("config/config.yaml"))
-        .unwrap_or_else(|e| panic!("services tree could not be composed: {e}"))
+fn services() -> ServicesState {
+    ServicesState::load_from_path(
+        &services_dir().join("config/config.yaml"),
+        &fixture_profile(),
+    )
+    .unwrap_or_else(|e| panic!("services tree could not be composed: {e}"))
 }
 
-fn catalog(services: &ServicesConfig) -> RegisteredEntities {
+fn catalog(state: &ServicesState) -> RegisteredEntities {
+    let services = state.config();
     RegisteredEntities::new()
-        .with_kind(EntityKind::GatewayRoute, dispatchable_route_ids(services))
+        .with_kind(
+            EntityKind::GatewayRoute,
+            dispatchable_route_ids(state.catalog()),
+        )
         .with_kind(EntityKind::Plugin, services.plugins.keys().cloned())
         .with_kind(EntityKind::Skill, services.skills.skills.keys().cloned())
         .with_kind(EntityKind::McpServer, services.mcp_servers.keys().cloned())
@@ -69,10 +77,11 @@ fn rules_doc() -> RulesDoc {
     parse_rules_doc(&read(RULES_FILE)).expect("rules.yaml parses and validates")
 }
 
-fn declared() -> (ServicesConfig, DeclaredSet) {
+fn declared() -> (ServicesState, DeclaredSet) {
     let services = services();
-    let routes = dispatchable_route_ids(&services);
+    let routes = dispatchable_route_ids(services.catalog());
     let marketplaces: Vec<String> = services
+        .config()
         .marketplaces
         .keys()
         .map(|id| id.as_str().to_owned())
@@ -93,7 +102,8 @@ fn declared() -> (ServicesConfig, DeclaredSet) {
 fn rules_yaml_projects_against_the_tree_it_ships_with() {
     let (services, set) = declared();
     assert!(set.rule_count() > 0, "the file declares rules");
-    let marketplaces: BTreeSet<&str> = services
+    let config = services.config();
+    let marketplaces: BTreeSet<&str> = config
         .marketplaces
         .keys()
         .map(systemprompt_web_shared::MarketplaceId::as_str)

@@ -14,7 +14,7 @@ use systemprompt_web_admin::types::groups::CreateGroupRequest;
 use systemprompt_web_shared::GroupId;
 
 use crate::fixtures::{insert_user, unclaimed_email, unique, unique_group};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 async fn seed_group(pool: &sqlx::PgPool, id: &GroupId) {
     insert_group(

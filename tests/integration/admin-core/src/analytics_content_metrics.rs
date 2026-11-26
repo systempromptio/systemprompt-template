@@ -11,7 +11,7 @@ use systemprompt_web_admin::repositories::analytics::content_rollup::{
 
 use crate::analytics_content_rollup::insert_content;
 use crate::fixtures::unique;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn upsert_metrics_inserts_then_overwrites_the_row_for_a_content_id() {

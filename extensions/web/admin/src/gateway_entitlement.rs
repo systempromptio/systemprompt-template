@@ -9,8 +9,10 @@
 
 use sqlx::PgPool;
 use systemprompt::extension::{GatewayDenyReason, GatewayGuardRequest, GatewayRequestGuard};
-use systemprompt::governance::authz::resolver::{ResolveInput, resolve};
-use systemprompt::governance::authz::{Decision, EntityRef, SubjectSourceCell};
+use systemprompt::governance::authz::{
+    AccessControlRepository, AuthzError, ChainSources, Decision, DecisionFacts, EntityKind,
+    ParentChainIndex, ResolveBase, SubjectSourceCell,
+};
 use systemprompt::identifiers::{RouteId, UserId};
 use systemprompt::traits::DatabaseHandle;
 
@@ -50,7 +52,7 @@ impl GatewayRequestGuard for RouteEntitlementGuard {
         let pool = database.pool();
         let user_id = UserId::new(request.user_id.to_owned());
         let route_id = RouteId::new(route_id);
-        let decision = resolve_route(pool.as_ref(), &self.subjects, &route_id, &user_id)
+        let decision = resolve_route(pool.as_ref(), &self.subjects, &route_id, request, &user_id)
             .await
             .map_err(|error| {
                 tracing::error!(%error, %user_id, %route_id, "authorization_unavailable");
@@ -74,34 +76,54 @@ impl GatewayRequestGuard for RouteEntitlementGuard {
     }
 }
 
+// Why: the access plane stores `gateway_route/*` and `model/<glob>` as written
+// and core matches them at decision time, so the route is resolved through
+// core's parent chain with the requested model and provider as facts, never
+// against the route's own rows alone.
 async fn resolve_route(
     pool: &PgPool,
     subjects: &SubjectSourceCell,
     route_id: &RouteId,
+    request: &GatewayGuardRequest<'_>,
     user_id: &UserId,
-) -> Result<Decision, sqlx::Error> {
+) -> Result<Decision, RouteDecisionError> {
     let entity = gateway_acl::find_entity(pool, route_id)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, %route_id, "route entity lookup failed"))?;
     let rules = gateway_acl::list_rules_for_route(pool, route_id)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, %route_id, "route rule lookup failed"))?;
+    let repo = AccessControlRepository::from_pool(std::sync::Arc::new(pool.clone()));
+    let index = ParentChainIndex::load(&repo, std::sync::Arc::new(ChainSources::default())).await?;
     let user_roles = load_roles(pool, user_id).await?;
     let attributes = authz::subject_attributes_for(subjects, user_id).await?;
     let dimensions = authz::dimensions(subjects)?;
 
-    let entity_ref = EntityRef::GatewayRoute(route_id.clone());
+    Ok(index.resolve(
+        EntityKind::GatewayRoute,
+        route_id.as_str(),
+        ResolveBase {
+            rules: &rules,
+            user_id,
+            user_roles: &user_roles,
+            default_included: entity.map(|e| e.default_included),
+            attributes: &attributes,
+            dimensions: &dimensions,
+            facts: DecisionFacts {
+                model: Some(request.model.as_str()),
+                provider: Some(request.provider.as_str()),
+                folder_ancestors: &[],
+            },
+        },
+    ))
+}
 
-    Ok(resolve(ResolveInput {
-        entity: &entity_ref,
-        rules: &rules,
-        user_id,
-        user_roles: &user_roles,
-        default_included: entity.map(|e| e.default_included),
-        parents: &[],
-        attributes: &attributes,
-        dimensions: &dimensions,
-    }))
+#[derive(Debug, thiserror::Error)]
+enum RouteDecisionError {
+    #[error("route grant lookup failed")]
+    Database(#[from] sqlx::Error),
+    #[error("route parent chain failed to load")]
+    ParentChain(#[from] AuthzError),
 }
 
 async fn load_roles(pool: &PgPool, user_id: &UserId) -> Result<Vec<String>, sqlx::Error> {

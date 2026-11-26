@@ -3,7 +3,7 @@
 use systemprompt_web_admin::repositories::marketplace::plugin_env::list_plugin_env_vars;
 
 use crate::fixtures::{insert_env_var, insert_secret_env_var, insert_user, unique, user_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 const MASK: &str = "••••••••";
 

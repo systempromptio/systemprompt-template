@@ -9,7 +9,7 @@ use systemprompt_web_content::repository::{
 };
 
 use crate::fixtures::{content_params, source_id};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn create_then_get_by_id_round_trips() {

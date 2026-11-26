@@ -11,7 +11,7 @@ use systemprompt_web_admin::repositories::governance::{
 };
 
 use crate::fixtures::{DecisionSpec, insert_decision, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn get_governance_counts_is_zero_on_a_fresh_database() {

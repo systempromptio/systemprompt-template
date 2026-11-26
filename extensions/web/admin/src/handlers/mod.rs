@@ -4,7 +4,6 @@
 //! webhook intake. Handlers own status mapping and call repositories for data.
 
 pub(crate) mod access_control;
-pub(crate) mod adfs_auth;
 pub(crate) mod approvals;
 pub(crate) mod bridge_whoami;
 #[cfg(feature = "mcp")]

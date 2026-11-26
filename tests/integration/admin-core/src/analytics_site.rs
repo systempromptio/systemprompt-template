@@ -20,7 +20,7 @@ use systemprompt_web_admin::util::time_range::{TimeRange, TimeRangePreset};
 use crate::fixtures::{
     RequestSpec, insert_request, insert_user, project_scope, set_project, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn window(hours_back: i64) -> TimeRange {
     let now = Utc::now();

@@ -16,7 +16,7 @@ use systemprompt_web_admin::repositories::users::roles::{list_manual_roles, set_
 use crate::fixtures::{
     insert_federated_identity, insert_user, insert_user_full, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 pub const ISSUER: &str = "https://login.adfs.test/adfs";
 

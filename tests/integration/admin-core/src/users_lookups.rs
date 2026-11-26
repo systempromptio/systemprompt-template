@@ -4,7 +4,7 @@
 use systemprompt_web_admin::repositories::users;
 
 use crate::fixtures::{insert_user, insert_user_full, set_department, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn list_users_includes_a_freshly_created_user() {

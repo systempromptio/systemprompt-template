@@ -27,7 +27,7 @@ use systemprompt::governance::policy::{
 };
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 // Why: a fixed ancestor depth silently points at the wrong directory the
 // moment a crate moves; `repo_root` climbs until the repository's own

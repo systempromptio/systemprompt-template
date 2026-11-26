@@ -17,7 +17,7 @@ use crate::fixtures::{
     RequestSpec, insert_request, insert_session, insert_user, narrow_window, unclaimed_email,
     unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn the_requests_view_carries_the_full_audit_chain() {

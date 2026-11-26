@@ -10,7 +10,7 @@ use systemprompt::identifiers::UserId;
 use systemprompt_web_admin::repositories::users::registration;
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn count_recent_setup_tokens_starts_at_zero() {

@@ -1,95 +1,55 @@
-//! Shared builders for the gateway evidence modules: a provider entry with a
-//! chosen governance posture and a gateway config wrapped around a route list.
+//! Shared builders for the gateway evidence modules: a provider block with a
+//! chosen governance posture and a catalog resolved from YAML the way the
+//! production loader resolves `services/ai`.
 //!
-//! `GatewayConfig` is deliberately not `Deserialize` — direct struct-literal
-//! construction is its sanctioned test path (see the type's docs) — so these
-//! builders are the whole fixture layer.
+//! `enabled: false` on every gateway keeps `ResolvedCatalog::build` off the
+//! deployment-pricing tier, which is billing evidence, not the
+//! residency/exposure evidence these modules are about; route governance is
+//! checked regardless of `enabled`.
 
-use std::collections::HashMap;
-
-use systemprompt::identifiers::{ModelId, ProviderId, RouteId, SecretName};
-use systemprompt::manifest::services::{
-    GatewayConfig, GatewayRoute, ModelCapabilities, ModelGovernance, ModelPricing, ProviderEntry,
-    ProviderModel, ProviderRegistry, QuotaFaultMode, SelectionStrategy,
+use systemprompt::manifest::services::catalog::{
+    CatalogContext, CatalogDocument, CatalogError, ResolvedCatalog,
 };
-use systemprompt::models::providers::ApiSurface;
-use systemprompt::wire::{ModelLimits, WireProtocol};
 
-pub(crate) fn model(id: &str) -> ProviderModel {
-    ProviderModel {
-        id: ModelId::new(id),
-        aliases: Vec::new(),
-        upstream_model: None,
-        pricing: ModelPricing::default(),
-        capabilities: ModelCapabilities::default(),
-        limits: ModelLimits::default(),
-        governance: None,
-        hidden: false,
-    }
+pub(crate) struct Provider<'a> {
+    pub name: &'a str,
+    pub wire: &'a str,
+    pub european: bool,
+    pub no_retain: bool,
 }
 
-pub(crate) fn provider(
-    name: &str,
-    wire: WireProtocol,
-    governance: ModelGovernance,
-    models: Vec<ProviderModel>,
-) -> ProviderEntry {
-    ProviderEntry {
-        name: ProviderId::new(name),
-        display_name: None,
-        description: None,
+pub(crate) const fn provider<'a>(name: &'a str, wire: &'a str) -> Provider<'a> {
+    Provider {
+        name,
         wire,
-        surface: ApiSurface::Backend,
-        endpoint: "https://api.example.com/v1".to_owned(),
-        api_key_secret: SecretName::new("test_api_key"),
-        extra_headers: HashMap::new(),
-        accepted_betas: None,
-        models,
-        governance,
+        european: false,
+        no_retain: false,
     }
 }
 
-pub(crate) fn registry(providers: Vec<ProviderEntry>) -> ProviderRegistry {
-    ProviderRegistry { providers }
-}
-
-pub(crate) fn route(id: &str, pattern: &str, provider_name: &str) -> GatewayRoute {
-    GatewayRoute {
-        id: Some(RouteId::new(id)),
-        name: None,
-        description: None,
-        model_pattern: pattern.to_owned(),
-        provider: ProviderId::new(provider_name),
-        upstream_model: None,
-        extra_headers: HashMap::new(),
-        pricing: None,
-        when: None,
-        requires: None,
-        fallbacks: Vec::new(),
-        by_scope: None,
-        strategy: SelectionStrategy::Ordered,
-        weight: None,
-        context_fallbacks: Vec::new(),
+pub(crate) fn catalog(
+    providers: &[Provider<'_>],
+    body: &str,
+) -> Result<ResolvedCatalog, CatalogError> {
+    let mut yaml = String::from("credentials:\n");
+    for p in providers {
+        yaml.push_str(&format!(
+            "  {name}: {{ kind: platform, secret: {name}_key }}\n",
+            name = p.name
+        ));
     }
-}
-
-// `enabled: false` keeps `validate()` off the route-pricing tier, which is
-// billing evidence, not the residency/exposure evidence these modules are
-// about; the governance tier runs regardless of `enabled`.
-pub(crate) fn config(routes: Vec<GatewayRoute>) -> GatewayConfig {
-    GatewayConfig {
-        enabled: false,
-        routes,
-        default_provider: None,
-        default_model: None,
-        allow_unlisted_models: false,
-        hidden_requires_route: true,
-        require_scopes: Vec::new(),
-        auth_scheme: "bearer".to_owned(),
-        inference_path_prefix: "/v1".to_owned(),
-        system_prompt_overrides: Vec::new(),
-        bridge_releases: None,
-        quota_fault_mode: QuotaFaultMode::default(),
-        automatic_prompt_caching: true,
+    yaml.push_str("providers:\n");
+    for p in providers {
+        yaml.push_str(&format!(
+            "  {name}:\n    credential: {name}\n    governance: {{ european: {eu}, no_retain: {nr} }}\n    endpoints:\n      api: {{ wire: {wire}, url: \"https://{name}.example.com/v1\" }}\n",
+            name = p.name,
+            eu = p.european,
+            nr = p.no_retain,
+            wire = p.wire,
+        ));
     }
+    yaml.push_str(body);
+    CatalogDocument::from_yaml_str("gateway-evidence", &yaml)
+        .expect("the evidence catalog parses")
+        .resolve(&CatalogContext::default())
 }

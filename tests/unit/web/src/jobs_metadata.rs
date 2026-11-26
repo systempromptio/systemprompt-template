@@ -1,13 +1,19 @@
 //! What every registered job advertises to the scheduler and to
 //! `infra jobs list`.
 //!
-//! The tag is not decorative: `crate::registry::JOB_TAG` is how the deployment
-//! selects this crate's jobs out of the shared inventory, so a job registered
-//! without it is invisible to the runner that is supposed to own it. The
+//! The tag is not decorative: `JOB_TAG` is how the deployment
+//! filters this crate's jobs in a listing, so a job contributed
+//! without it is missing from the listing that is supposed to show it. The
 //! description is what an operator reads in the CLI listing, so an empty one
 //! is a job nobody can identify.
 
-use systemprompt_web_extension::jobs::extension_jobs;
+use std::sync::Arc;
+
+use systemprompt::traits::Job;
+
+fn extension_jobs() -> Vec<Arc<dyn Job>> {
+    template_test_common::composition::member_jobs("web")
+}
 
 #[test]
 fn every_job_carries_the_crates_selection_tag() {

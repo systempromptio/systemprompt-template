@@ -17,16 +17,19 @@ use std::sync::Arc;
 use rmcp::model::CallToolRequestParams;
 use sqlx::PgPool;
 use systemprompt::database::Database;
+use systemprompt::governance::policy::secrets::SecretScannerCell;
 use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId};
 use systemprompt::mcp::repository::ToolUsageRepository;
+use systemprompt::mcp::services::ui_renderer::UiRendererRegistry;
 use systemprompt::mcp::{ArtifactIngest, McpToolExecutor};
 use systemprompt::models::artifacts::{
     CliArtifact, Column, ColumnType, TableArtifact, TextArtifact,
 };
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
-use systemprompt_mcp_agent::{CliError, CliLocation, filter_hallucinated_args};
+use systemprompt::models::mcp::ClientProfile;
+use systemprompt_mcp_agent::{CliLocation, filter_hallucinated_args};
 
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn db_pool(pool: &Arc<PgPool>) -> systemprompt::database::DbPool {
     Arc::new(Database::from_pools(
@@ -35,19 +38,24 @@ fn db_pool(pool: &Arc<PgPool>) -> systemprompt::database::DbPool {
     ))
 }
 
+fn ingest(db_pool: &systemprompt::database::DbPool) -> Arc<ArtifactIngest> {
+    Arc::new(ArtifactIngest::from_db(
+        db_pool,
+        SecretScannerCell::default(),
+    ))
+}
+
 fn executor(db_pool: &systemprompt::database::DbPool) -> McpToolExecutor {
-    let usage = Arc::new(ToolUsageRepository::new(db_pool));
-    let ingest = Arc::new(ArtifactIngest::new(
-        systemprompt::mcp::repository::ArtifactIngestRepositories::new(db_pool),
-        None,
-    ));
     McpToolExecutor::new(
-        usage,
-        Arc::new(systemprompt::ai::repository::AiRequestRepository::new(
-            db_pool,
+        Arc::new(ToolUsageRepository::new(db_pool)),
+        Some(Arc::new(
+            systemprompt::ai::repository::AiRequestRepository::new(db_pool),
         )),
-        ingest,
-        systemprompt::identifiers::McpServerId::new("systemprompt"),
+        ingest(db_pool),
+        Arc::new(UiRendererRegistry::with_builtins()),
+        template_test_common::hop::server_callers(&systemprompt::identifiers::McpServerId::new(
+            "systemprompt",
+        )),
     )
 }
 
@@ -107,19 +115,18 @@ async fn run_tool(
 ) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
     let db_pool = db_pool(&db.pool);
     let executor = executor(&db_pool);
-    let ingest = Arc::new(ArtifactIngest::new(
-        systemprompt::mcp::repository::ArtifactIngestRepositories::new(&db_pool),
-        None,
-    ));
+    let ingest = ingest(&db_pool);
     let profile = client();
     let tool_name = request.name.to_string();
     systemprompt_mcp_agent::server::tool::dispatch_tool(
         &systemprompt_mcp_agent::server::tool::Dispatch {
             service_id: "systemprompt",
-            db_pool: &db_pool,
             executor: &executor,
             request: &request,
-            request_context: &request_context(),
+            caller: &template_test_common::hop::verified_caller(
+                &systemprompt::identifiers::McpServerId::new("systemprompt"),
+                &request_context(),
+            ),
             client: &profile,
             cli,
             ingest: &ingest,
@@ -130,13 +137,12 @@ async fn run_tool(
     .await
 }
 
-fn client() -> systemprompt::mcp::ClientProfile {
-    systemprompt::mcp::ClientProfile {
+fn client() -> ClientProfile {
+    ClientProfile {
         protocol_version: Some(rmcp::model::ProtocolVersion::V_2025_06_18),
-        ..systemprompt::mcp::ClientProfile::default()
+        ..ClientProfile::default()
     }
 }
-
 
 fn body_of(result: &rmcp::model::CallToolResult) -> String {
     result
@@ -387,17 +393,20 @@ async fn the_process_runs_in_the_configured_workdir() {
     db.cleanup().await;
 }
 
-// The location comes from the profile, and no profile is bootstrapped in a test
-// process, so resolving it is the failure the server must surface rather than
-// falling back to some guessed path.
 #[test]
-fn the_location_comes_from_the_profile_and_says_so_when_there_is_none() {
-    let error =
-        CliLocation::from_profile().expect_err("no profile is bootstrapped in a test process");
+fn the_location_is_the_profiles_bin_dir_run_from_its_system_dir() {
+    let profile = template_test_common::env::fixture_profile();
+    let cli = CliLocation::from_profile(&profile);
 
-    assert!(
-        matches!(error, CliError::Profile(_)),
-        "the missing profile is named as the reason the CLI could not be located: {error:?}"
+    assert_eq!(
+        cli.bin,
+        std::path::PathBuf::from(&profile.paths.bin).join("systemprompt"),
+        "the CLI binary is the profile's bin directory's systemprompt"
+    );
+    assert_eq!(
+        cli.workdir,
+        std::path::PathBuf::from(&profile.paths.system),
+        "the CLI runs from the profile's system directory"
     );
 }
 

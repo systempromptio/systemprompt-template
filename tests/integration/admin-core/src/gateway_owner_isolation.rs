@@ -1,12 +1,12 @@
 //! Identical client-supplied conversation and tool IDs never cross owners.
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
 use std::sync::Arc;
 use std::time::Duration;
 use systemprompt::ai::repository::AiThoughtSignatureRepository;
 use systemprompt::database::{Database, DbPool};
 use systemprompt::gateway::signature_cache::ThoughtSignatureCache;
-use systemprompt::identifiers::{ContextId, GatewayConversationId};
+use systemprompt::identifiers::{ContextId, GatewayConversationId, ToolUseId};
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn identical_client_keys_are_isolated_in_memory_and_across_replicas() {
@@ -23,6 +23,7 @@ async fn identical_client_keys_are_isolated_in_memory_and_across_replicas() {
     let first = ThoughtSignatureCache::new(Duration::from_secs(60), Arc::clone(&repo));
     let second = ThoughtSignatureCache::new(Duration::from_secs(60), repo);
     let conversation = GatewayConversationId::from_prefix_hash(42);
+    let tool = ToolUseId::new("same-tool");
     let alice_context = ContextId::derived_from_gateway_conversation(&alice, &conversation);
     let bob_context = ContextId::derived_from_gateway_conversation(&bob, &conversation);
     assert_ne!(alice_context, bob_context);
@@ -32,26 +33,20 @@ async fn identical_client_keys_are_isolated_in_memory_and_across_replicas() {
     );
 
     first
-        .store(&alice, &conversation, "same-tool", "alice-signature")
+        .store(&alice, &conversation, &tool, "alice-signature")
         .await;
-    assert_eq!(first.lookup(&bob, &conversation, "same-tool").await, None);
-    assert_eq!(second.lookup(&bob, &conversation, "same-tool").await, None);
+    assert_eq!(first.lookup(&bob, &conversation, &tool).await, None);
+    assert_eq!(second.lookup(&bob, &conversation, &tool).await, None);
     second
-        .store(&bob, &conversation, "same-tool", "bob-signature")
+        .store(&bob, &conversation, &tool, "bob-signature")
         .await;
     for cache in [&first, &second] {
         assert_eq!(
-            cache
-                .lookup(&alice, &conversation, "same-tool")
-                .await
-                .as_deref(),
+            cache.lookup(&alice, &conversation, &tool).await.as_deref(),
             Some("alice-signature")
         );
         assert_eq!(
-            cache
-                .lookup(&bob, &conversation, "same-tool")
-                .await
-                .as_deref(),
+            cache.lookup(&bob, &conversation, &tool).await.as_deref(),
             Some("bob-signature")
         );
     }
@@ -64,12 +59,9 @@ async fn identical_client_keys_are_isolated_in_memory_and_across_replicas() {
         Duration::from_secs(60),
         Arc::new(AiThoughtSignatureRepository::new(&pool)),
     );
-    assert_eq!(fresh.lookup(&alice, &conversation, "same-tool").await, None);
+    assert_eq!(fresh.lookup(&alice, &conversation, &tool).await, None);
     assert_eq!(
-        fresh
-            .lookup(&bob, &conversation, "same-tool")
-            .await
-            .as_deref(),
+        fresh.lookup(&bob, &conversation, &tool).await.as_deref(),
         Some("bob-signature")
     );
 }

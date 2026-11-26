@@ -88,7 +88,7 @@ pub(crate) async fn sync_git(
         ));
     }
     let synced = env
-        .git_sync()?
+        .git_sync()
         .sync(&systemprompt::traits::GitSourceSyncRequest {
             source_id: input.source_id,
             resource_id: input.resource_id,

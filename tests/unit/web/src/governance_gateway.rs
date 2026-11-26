@@ -6,11 +6,10 @@
     reason = "test code: panics are the assertion mechanism and clones keep fixtures readable"
 )]
 
-use systemprompt::manifest::services::ProviderRegistry;
 use systemprompt_web_admin::repositories::config::gateway::{
     create_route, find_matching_route, find_matching_route_index, find_route_index_by_id,
-    get_gateway_config, glob_match, reorder_routes, retain_client_facing, slugify_pattern,
-    synthesize_route_id, update_route, validate_route,
+    get_gateway_config, glob_match, reorder_routes, slugify_pattern, synthesize_route_id,
+    update_route, validate_route,
 };
 use systemprompt_web_admin::types::GatewayRouteView;
 use systemprompt_web_shared::error::MarketplaceError;
@@ -200,50 +199,5 @@ fn updating_one_route_changes_only_that_field() -> anyhow::Result<()> {
         .collect();
     let actual: Vec<String> = after.lines().map(str::to_owned).collect();
     assert_eq!(actual, expected, "only the edited field may differ");
-    Ok(())
-}
-
-const TWO_SURFACE_CATALOG: &str = r"- name: anthropic
-  wire: anthropic
-  surface: anthropic
-  endpoint: https://api.anthropic.com/v1
-  api_key_secret: anthropic
-- name: e2e-mock
-  wire: anthropic
-  surface: backend
-  endpoint: https://mock.invalid/v1
-  api_key_secret: e2e_mock
-";
-
-#[test]
-fn a_backend_surface_provider_is_never_client_facing() -> anyhow::Result<()> {
-    let providers: ProviderRegistry = serde_yaml::from_str(TWO_SURFACE_CATALOG)?;
-    let routes = vec![
-        GatewayRouteView {
-            id: "claude".into(),
-            model_pattern: "claude-*".into(),
-            provider: "anthropic".into(),
-            ..Default::default()
-        },
-        GatewayRouteView {
-            id: "e2e-mock-route".into(),
-            model_pattern: "e2e-mock-*".into(),
-            provider: "e2e-mock".into(),
-            ..Default::default()
-        },
-        GatewayRouteView {
-            id: "unknown".into(),
-            model_pattern: "ghost-*".into(),
-            provider: "not-in-the-catalog".into(),
-            ..Default::default()
-        },
-    ];
-
-    let kept = retain_client_facing(routes, &providers);
-    assert_eq!(
-        kept.iter().map(|r| r.provider.as_str()).collect::<Vec<_>>(),
-        vec!["anthropic", "not-in-the-catalog"],
-        "only a provider that declares `surface: backend` is hidden; an unknown one passes through"
-    );
     Ok(())
 }

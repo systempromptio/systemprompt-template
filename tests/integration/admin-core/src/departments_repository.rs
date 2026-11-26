@@ -12,7 +12,7 @@ use crate::fixtures::{
     AclRuleSpec, insert_acl_rule, insert_department, insert_user, set_department, unclaimed_email,
     unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 
 fn input(name: &str) -> DepartmentInput {

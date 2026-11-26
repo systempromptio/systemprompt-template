@@ -6,9 +6,8 @@
 //! The output schema is the shared `ToolResponse<CliArtifact>` shape, so the
 //! client can render the artifact rather than a blob of stdout.
 
-use systemprompt_mcp_agent::tools::{
-    CliInput, CliOutput, SERVER_NAME, input_schema, list_tools, output_schema,
-};
+use systemprompt_mcp_agent::server::TOOLSET_ID;
+use systemprompt_mcp_agent::tools::{CliInput, CliOutput, input_schema, list_tools, output_schema};
 
 // Why: this server exposes the CLI, ONE read-only report and four typed
 // analytics tools, all over this platform's own data. It used to carry two
@@ -18,7 +17,9 @@ use systemprompt_mcp_agent::tools::{
 // unversioned payload shape.
 #[test]
 fn the_cli_the_report_and_the_typed_tools_are_the_whole_surface() {
-    let tools = list_tools();
+    let tools = list_tools(&systemprompt::identifiers::McpServerId::new(
+        systemprompt_mcp_agent::server::TOOLSET_ID,
+    ));
     assert_eq!(
         names(&tools),
         [
@@ -32,8 +33,8 @@ fn the_cli_the_report_and_the_typed_tools_are_the_whole_surface() {
             "users",
         ]
     );
-    assert_eq!(tools[0].name.as_ref(), SERVER_NAME);
-    assert_eq!(SERVER_NAME, "systemprompt");
+    assert_eq!(tools[0].name.as_ref(), TOOLSET_ID);
+    assert_eq!(TOOLSET_ID, "systemprompt");
     assert!(
         !names(&tools).iter().any(|n| n.contains("atlassian")
             || n.contains("project_catalog")
@@ -49,7 +50,9 @@ fn names(tools: &[rmcp::model::Tool]) -> Vec<String> {
 
 #[test]
 fn the_tool_carries_a_title_description_output_schema_and_ui_meta() {
-    let tools = list_tools();
+    let tools = list_tools(&systemprompt::identifiers::McpServerId::new(
+        systemprompt_mcp_agent::server::TOOLSET_ID,
+    ));
     let tool = &tools[0];
 
     assert_eq!(tool.title.as_deref(), Some("SystemPrompt CLI"));
@@ -100,7 +103,9 @@ fn command_is_the_single_required_input() {
 
 #[test]
 fn the_listed_input_schema_is_the_one_the_tool_advertises() {
-    let tools = list_tools();
+    let tools = list_tools(&systemprompt::identifiers::McpServerId::new(
+        systemprompt_mcp_agent::server::TOOLSET_ID,
+    ));
     let listed = serde_json::Value::Object((*tools[0].input_schema).clone());
 
     assert_eq!(listed, input_schema());
@@ -136,7 +141,9 @@ fn cli_output_round_trips_the_fields_the_artifact_renders() {
 // enum input shipped as a bare `oneOf` and took the CLI tool down with it.
 #[test]
 fn every_tool_input_schema_is_an_object_at_the_root() {
-    for tool in list_tools() {
+    for tool in list_tools(&systemprompt::identifiers::McpServerId::new(
+        systemprompt_mcp_agent::server::TOOLSET_ID,
+    )) {
         assert_eq!(
             tool.input_schema.get("type"),
             Some(&serde_json::json!("object")),
@@ -165,7 +172,9 @@ mod client_accepts_every_tool_schema {
     // never takes that path.
     #[test]
     fn every_input_schema_is_a_plain_object_with_properties() {
-        for tool in list_tools() {
+        for tool in list_tools(&systemprompt::identifiers::McpServerId::new(
+            systemprompt_mcp_agent::server::TOOLSET_ID,
+        )) {
             let schema = Value::Object((*tool.input_schema).clone());
             let name = tool.name.as_ref();
             for combinator in ["oneOf", "anyOf", "allOf"] {
@@ -193,7 +202,9 @@ mod client_accepts_every_tool_schema {
     // excludes the whole tool, not just the property.
     #[test]
     fn every_top_level_property_name_is_accepted() {
-        for tool in list_tools() {
+        for tool in list_tools(&systemprompt::identifiers::McpServerId::new(
+            systemprompt_mcp_agent::server::TOOLSET_ID,
+        )) {
             let schema = Value::Object((*tool.input_schema).clone());
             let name = tool.name.as_ref();
             let properties = schema
@@ -221,7 +232,9 @@ mod client_accepts_every_tool_schema {
     // discriminator enum silently becomes an untyped string.
     #[test]
     fn definitions_are_referenced_rather_than_orphaned() {
-        for tool in list_tools() {
+        for tool in list_tools(&systemprompt::identifiers::McpServerId::new(
+            systemprompt_mcp_agent::server::TOOLSET_ID,
+        )) {
             let schema = Value::Object((*tool.input_schema).clone());
             let name = tool.name.as_ref();
             let Some(defs) = schema.get("$defs").and_then(Value::as_object) else {

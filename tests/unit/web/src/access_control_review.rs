@@ -2,7 +2,8 @@
 //! "keep the database" decision that holds only for the diff it was taken on.
 
 use chrono::Utc;
-use systemprompt::governance::authz::{Access, DASHBOARD_SOURCE, RegisteredEntities};
+use systemprompt::governance::authz::{Access, RegisteredEntities};
+use systemprompt_web_admin::authz::CONSOLE_SOURCE;
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, DeclaredSet, build_declared_set,
 };
@@ -90,7 +91,7 @@ fn a_disagreeing_row_is_changed_in_code_and_a_console_extra_is_only_in_console()
         row("atlassian", "role", "admin", Access::Deny, "yaml"),
         row("atlassian", "group", "india-devs", Access::Allow, "yaml"),
         row("jira", "role", "admin", Access::Allow, "yaml"),
-        row("github", "group", "uk", Access::Allow, DASHBOARD_SOURCE),
+        row("github", "group", "uk", Access::Allow, CONSOLE_SOURCE),
     ];
     let entities = [entity("atlassian"), entity("jira"), entity("github")];
     let reviews = review_entities(&compute_drift(&declared(), &rules, &entities));
@@ -143,7 +144,7 @@ fn the_fingerprint_is_stable_and_moves_with_the_diff() {
     let a = review_entities(&compute_drift(&declared(), &[], &[]));
     let b = review_entities(&compute_drift(&declared(), &[], &[]));
     assert_eq!(find(&a, "jira").fingerprint, find(&b, "jira").fingerprint);
-    let rules = [row("jira", "group", "uk", Access::Allow, DASHBOARD_SOURCE)];
+    let rules = [row("jira", "group", "uk", Access::Allow, CONSOLE_SOURCE)];
     let c = review_entities(&compute_drift(&declared(), &rules, &[]));
     assert_ne!(find(&a, "jira").fingerprint, find(&c, "jira").fingerprint);
 }

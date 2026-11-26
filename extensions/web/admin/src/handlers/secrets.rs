@@ -52,7 +52,7 @@ pub(crate) async fn resolve_secrets_handler(
     Query(params): Query<ResolveQuery>,
 ) -> AdminResult<Response> {
     let secrets =
-        secret_service::resolve_secrets(&pool, env.cipher()?, &plugin_id, &params.token).await?;
+        secret_service::resolve_secrets(&pool, env.cipher(), &plugin_id, &params.token).await?;
     Ok(Json(SecretsListResponse { secrets }).into_response())
 }
 
@@ -85,6 +85,6 @@ pub(crate) async fn rotate_handler(
     headers: HeaderMap,
 ) -> AdminResult<Response> {
     let session = extract_user_from_cookie(&env, &headers).await?;
-    secret_service::rotate_user_keys(&pool, env.cipher()?, &session.user_id, &plugin_id).await?;
+    secret_service::rotate_user_keys(&pool, env.cipher(), &session.user_id, &plugin_id).await?;
     Ok(Json(ResultOkResponse { result: "ok" }).into_response())
 }

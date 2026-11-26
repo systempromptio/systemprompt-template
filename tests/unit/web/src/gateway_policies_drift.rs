@@ -3,7 +3,8 @@
 //! the loader's inverse and always declares the sentinel.
 
 use chrono::{NaiveDate, Utc};
-use systemprompt::gateway::{GatewayPolicyConfig, QuotaMode, SafetyMode};
+use systemprompt::gateway::GatewayPolicyConfig;
+use systemprompt::manifest::services::EnforcementMode;
 use systemprompt_web_admin::repositories::gateway_policies::declared::parse_declared_policies;
 use systemprompt_web_admin::repositories::gateway_policies::drift::compute_policy_drift;
 use systemprompt_web_admin::repositories::gateway_policies::export::render_policies_export;
@@ -72,7 +73,7 @@ fn a_console_edit_names_the_field_that_moved() {
     let declared = parse_declared_policies(DECLARED).expect("parses");
     let mut row = row_from_declared("default-quotas");
     row.spec.quota_windows[0].max_requests = Some(1_000);
-    row.spec.safety.mode = SafetyMode::Enforce;
+    row.spec.safety.mode = EnforcementMode::Enforce;
     let drift = compute_policy_drift(&declared, &[row]);
     assert_eq!(drift.changed.len(), 1);
     assert_eq!(
@@ -89,7 +90,7 @@ fn compute_policy_drift_with_every_scalar_edit_returns_fields_in_declaration_ord
     let mut row = row_from_declared("default-quotas");
     row.enabled = !row.enabled;
     row.priority += 1;
-    row.spec.quota_mode = QuotaMode::Enforce;
+    row.spec.quota_mode = EnforcementMode::Enforce;
     row.spec.safety.scanners.pop();
     row.spec.safety.block_categories.clear();
     row.spec.safety.block_response_categories.clear();
@@ -137,7 +138,7 @@ fn the_export_declares_the_sentinel_and_the_loader_accepts_it() {
     let month = &cfg.policies[0].spec.quota_windows[1];
     assert_eq!(month.window_seconds, MONTH_WINDOW_SECONDS);
     assert_eq!(month.subject, "organization");
-    assert_eq!(cfg.policies[0].spec.quota_mode, QuotaMode::Warn);
+    assert_eq!(cfg.policies[0].spec.quota_mode, EnforcementMode::Warn);
 }
 
 // Why: core's merge is a section-wise override in `(priority, name)` order;
@@ -154,7 +155,7 @@ fn the_effective_spec_lets_the_highest_priority_row_win_each_section() {
     team.spec.safety.scanners.clear();
     team.spec.safety.block_categories.clear();
     team.spec.safety.block_response_categories.clear();
-    team.spec.safety.mode = SafetyMode::Enforce;
+    team.spec.safety.mode = EnforcementMode::Enforce;
 
     let merged = effective_spec(&[base.clone(), team.clone()]);
     assert_eq!(

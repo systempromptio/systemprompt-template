@@ -1,151 +1,124 @@
-//! `SystempromptServer` constructed against a real pool.
+//! `SystempromptToolset` constructed against a real pool.
 //!
-//! Construction is what needs a database: the
-//! server builds a `ToolUsageRepository` and an `McpArtifactRepository` off the
-//! pool before it can serve anything. The advertised identity and capability
-//! set are asserted on the constructed server, and the CLI and reporting tools
-//! it exposes is pinned against `tools::list_tools`.
+//! Construction is what needs a database: the toolset takes an
+//! `ArtifactIngest` built off the pool before it can serve anything. Its id,
+//! instructions and resource surface are asserted on the constructed toolset,
+//! and the CLI and reporting tools it lists are pinned against
+//! `tools::list_tools`.
 
 use std::sync::Arc;
 
-use rmcp::ServerHandler;
+use rmcp::model::{ReadResourceRequestParams, ResourceContents};
 use sqlx::PgPool;
 use systemprompt::database::Database;
-use systemprompt::identifiers::McpServerId;
-use systemprompt::governance::authz::{DenyAllHook, SharedAuthzHook};
-use systemprompt_mcp_agent::{SystempromptServer, tools};
+use systemprompt::extension::mcp::{McpToolset, ResourceList, ResourceRead};
+use systemprompt::governance::policy::secrets::SecretScannerCell;
+use systemprompt::identifiers::{ArtifactId, McpServerId};
+use systemprompt::mcp::artifact_resource_uri;
+use systemprompt::mcp::services::ui_renderer::UiRendererRegistry;
+use systemprompt_mcp_agent::server::TOOLSET_ID;
+use systemprompt_mcp_agent::{CliLocation, SystempromptToolset, tools};
 
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
-fn hook() -> SharedAuthzHook {
-    Arc::new(DenyAllHook::null())
-}
-
-fn server(pool: &Arc<PgPool>) -> SystempromptServer {
+fn toolset_named(pool: &Arc<PgPool>, server: &str) -> SystempromptToolset {
     let db_pool = Arc::new(Database::from_pools(
         Arc::clone(pool),
         Some(Arc::clone(pool)),
     ));
-    let ingest = Arc::new(systemprompt::mcp::ArtifactIngest::new(
-        systemprompt::mcp::repository::ArtifactIngestRepositories::new(&db_pool),
-        None,
+    let ingest = Arc::new(systemprompt::mcp::ArtifactIngest::from_db(
+        &db_pool,
+        SecretScannerCell::default(),
     ));
-    SystempromptServer::new(
-        db_pool,
-        McpServerId::try_new("systemprompt").expect("valid fixture identifier"),
-        hook(),
+    SystempromptToolset::new(
+        McpServerId::try_new(server).expect("valid fixture identifier"),
+        CliLocation::from_profile(&template_test_common::env::fixture_profile()),
         ingest,
+        systemprompt::mcp::McpArtifactRepository::new(&db_pool),
+        Arc::new(UiRendererRegistry::with_builtins()),
     )
 }
 
+fn caller() -> systemprompt::extension::mcp::VerifiedCaller {
+    let ctx = systemprompt::models::execution::context::RequestContext::new(
+        systemprompt::identifiers::SessionId::new("server-session"),
+        systemprompt::identifiers::TraceId::new("server-trace"),
+        systemprompt::identifiers::ContextId::try_new("00000000-0000-4000-8000-0000000005e7")
+            .expect("valid fixture identifier"),
+        systemprompt::identifiers::AgentName::try_new("server-agent")
+            .expect("valid fixture agent name"),
+        systemprompt::identifiers::Actor::anonymous(systemprompt::identifiers::UserId::generate()),
+    );
+    template_test_common::hop::verified_caller(&McpServerId::new("systemprompt"), &ctx)
+}
+
+fn toolset(pool: &Arc<PgPool>) -> SystempromptToolset {
+    toolset_named(pool, "systemprompt")
+}
+
 #[tokio::test]
-async fn new_builds_its_repositories_from_the_pool() {
+async fn new_builds_a_toolset_that_advertises_its_instructions() {
     let Some(db) = TempDb::create().await else {
         return;
     };
 
-    let built = server(&db.pool);
+    let built = toolset(&db.pool);
 
+    assert_eq!(built.id(), TOOLSET_ID);
     assert!(
-        built.get_info().instructions.is_some(),
-        "a constructed server advertises its usage instructions"
+        !built.instructions().is_empty(),
+        "a constructed toolset advertises its usage instructions"
     );
 
     db.cleanup().await;
 }
 
 #[tokio::test]
-async fn get_info_advertises_both_tools_and_resources() {
+async fn the_toolset_serves_the_artifact_viewer_resource() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let built = server(&db.pool);
+    let built = toolset(&db.pool);
 
-    let info = built.get_info();
-
-    assert!(info.capabilities.tools.is_some(), "it serves tools");
+    assert!(built.serves_resources(), "it serves resources");
     assert!(
-        info.capabilities.resources.is_some(),
-        "it serves the artifact-viewer resource"
+        !built
+            .list_resources(ResourceList { caller: &caller() })
+            .await
+            .resources
+            .is_empty(),
+        "it lists the artifact-viewer resource"
     );
 
     db.cleanup().await;
 }
 
 #[tokio::test]
-async fn get_info_carries_the_service_id_branding_and_icons() {
+async fn a_different_server_id_keeps_the_toolset_id_and_instructions() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let built = server(&db.pool);
+    let renamed = toolset_named(&db.pool, "sp-staging");
 
-    let info = built.get_info();
-
-    assert_eq!(info.server_info.name, "SystemPrompt (systemprompt)");
-    assert_eq!(info.server_info.title.as_deref(), Some("SystemPrompt CLI"));
-    assert!(
-        info.server_info
-            .website_url
-            .as_ref()
-            .is_some_and(|u| u.starts_with("https://")),
-        "the advertised website URL is absolute"
-    );
-    let icons = info
-        .server_info
-        .icons
-        .as_ref()
-        .expect("the server advertises icons");
-    assert_eq!(icons.len(), 2, "a 32px and a 96px favicon are advertised");
-    assert!(
-        icons
-            .iter()
-            .all(|i| i.mime_type.as_deref() == Some("image/png")),
-        "both icons declare their MIME type"
-    );
-
-    db.cleanup().await;
-}
-
-#[tokio::test]
-async fn a_different_service_id_only_changes_the_server_name() {
-    let Some(db) = TempDb::create().await else {
-        return;
-    };
-    let db_pool = Arc::new(Database::from_pools(
-        Arc::clone(&db.pool),
-        Some(Arc::clone(&db.pool)),
-    ));
-    let ingest = Arc::new(systemprompt::mcp::ArtifactIngest::new(
-        systemprompt::mcp::repository::ArtifactIngestRepositories::new(&db_pool),
-        None,
-    ));
-    let renamed = SystempromptServer::new(
-        db_pool,
-        McpServerId::try_new("sp-staging").expect("valid fixture identifier"),
-        hook(),
-        ingest,
-    );
-
-    let info = renamed.get_info();
-
-    assert_eq!(info.server_info.name, "SystemPrompt (sp-staging)");
+    assert_eq!(renamed.id(), TOOLSET_ID);
     assert_eq!(
-        info.instructions,
-        server(&db.pool).get_info().instructions,
-        "the instructions do not depend on the service id"
+        renamed.instructions(),
+        toolset(&db.pool).instructions(),
+        "the instructions do not depend on the server id"
     );
 
     db.cleanup().await;
 }
 
 #[tokio::test]
-async fn the_server_exposes_the_cli_and_read_only_reporting_tools() {
+async fn the_toolset_exposes_the_cli_and_read_only_reporting_tools() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let _built = server(&db.pool);
+    let server = McpServerId::try_new("systemprompt").expect("valid fixture identifier");
+    let built = toolset(&db.pool);
 
-    let listed = tools::list_tools();
+    let listed = built.tools();
 
     // The CLI plus one read-only report and six typed analytics tools, all
     // over this platform's own data. The two Atlassian-backed tools that used
@@ -161,10 +134,19 @@ async fn the_server_exposes_the_cli_and_read_only_reporting_tools() {
             report.name
         );
     }
-    assert_eq!(listed[0].name.as_ref(), tools::SERVER_NAME);
+    assert_eq!(listed[0].name.as_ref(), "systemprompt");
     assert_eq!(listed[0].title.as_deref(), Some("SystemPrompt CLI"));
     assert_eq!(listed[1].name.as_ref(), "admin_report");
     let typed: Vec<&str> = listed[2..].iter().map(|t| t.name.as_ref()).collect();
+    let expected: Vec<String> = tools::list_tools(&server)
+        .iter()
+        .map(|t| t.name.to_string())
+        .collect();
+    let names: Vec<String> = listed.iter().map(|t| t.name.to_string()).collect();
+    assert_eq!(
+        names, expected,
+        "the toolset lists exactly tools::list_tools"
+    );
     assert_eq!(
         typed,
         [
@@ -185,7 +167,7 @@ async fn the_cli_tool_requires_a_command_string() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let _built = server(&db.pool);
+    let _built = toolset(&db.pool);
 
     let schema = tools::input_schema();
 
@@ -208,9 +190,70 @@ async fn the_cli_tool_requires_a_command_string() {
     db.cleanup().await;
 }
 
-// `list_resources`, `read_resource`, `initialize`, and `call_tool` all take an
-// rmcp `RequestContext<RoleServer>`, whose `Peer` only exists once a transport
-// is serving; there is no way to build one in a test process. Their bodies
-// delegate to core helpers (`build_artifact_viewer_resource`,
-// `read_artifact_resource`) that core covers, and `dispatch_tool` is private
-// to the crate.
+#[tokio::test]
+async fn the_viewer_uri_is_served_and_unknown_artifact_uris_are_refused() {
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let built = toolset(&db.pool);
+
+    let caller = caller();
+    let listed = built.list_resources(ResourceList { caller: &caller }).await;
+    let viewer = listed
+        .resources
+        .first()
+        .expect("artifact viewer is advertised");
+    assert_eq!(viewer.uri, "ui://systemprompt/artifact-viewer");
+
+    let read = built
+        .read_resource(ResourceRead {
+            request: &ReadResourceRequestParams::new(viewer.uri.clone()),
+            caller: &caller,
+        })
+        .await
+        .expect("the toolset owns its viewer URI")
+        .expect("read artifact viewer resource");
+    let ResourceContents::TextResourceContents {
+        uri,
+        mime_type,
+        text,
+        ..
+    } = read.contents.first().expect("viewer has one HTML resource")
+    else {
+        panic!("viewer must return text HTML")
+    };
+    assert_eq!(uri, "ui://systemprompt/artifact-viewer");
+    assert_eq!(mime_type.as_deref(), Some("text/html;profile=mcp-app"));
+    assert!(
+        !text.is_empty(),
+        "the viewer serves the admin artifact shell"
+    );
+
+    let artifact_uri =
+        artifact_resource_uri(&McpServerId::new("systemprompt"), &ArtifactId::generate());
+    assert!(
+        built
+            .read_resource(ResourceRead {
+                request: &ReadResourceRequestParams::new(artifact_uri),
+                caller: &caller,
+            })
+            .await
+            .is_some_and(|read| read.is_err()),
+        "a stored-artifact URI the caller does not own is refused by the toolset"
+    );
+    assert!(
+        built
+            .read_resource(ResourceRead {
+                request: &ReadResourceRequestParams::new("ui://other/artifact-viewer"),
+                caller: &caller,
+            })
+            .await
+            .is_some_and(|read| read.is_err()),
+        "an unknown resource URI is refused"
+    );
+
+    db.cleanup().await;
+}
+
+// `call` needs a `ToolExecution` and a hop-verified caller; its dispatch is
+// driven directly in `mcp_dispatch` and `mcp_cli`.

@@ -4,11 +4,10 @@
 
 use std::sync::Arc;
 
-use systemprompt::database::Database;
+use systemprompt::governance::authz::{AccessControlRepository, EntityKind};
 use systemprompt::identifiers::UserId;
 use systemprompt::marketplace::{MarketplaceCandidate, MarketplaceFilter};
 use systemprompt::models::bridge::manifest::ManagedMcpServer;
-use systemprompt::governance::authz::{AccessControlRepository, EntityKind};
 use systemprompt_web_admin::authz::connector::connector_rule_type;
 use systemprompt_web_admin::authz::subject_attributes_for;
 use systemprompt_web_admin::marketplace_filter::TemplateMarketplaceFilter;
@@ -16,66 +15,59 @@ use systemprompt_web_admin::repositories::users::connector_accounts as accounts;
 use systemprompt_web_admin::test_support::{Connection, NotReady, get_connections};
 
 use crate::fixtures::{insert_user_with_roles, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
+use template_test_common::env::{EnvFixture, services_config};
 
 const CRM: &str = "crm-mcp";
 const CONTROL_PLANE: &str = "systemprompt";
 
-// Why: one connector-backed external server and the session-attested control
-// plane, installed before the shared `{}` fixture can claim the process-wide
-// registry. nextest runs every test in its own process, so the order holds.
-fn install_services() {
-    if systemprompt::loader::ServicesBootstrap::is_initialized() {
-        return;
-    }
-    let directory = tempfile::tempdir().expect("services fixture");
-    let path = directory.path().join("config.yaml");
-    std::fs::write(
-        &path,
-        "mcp_servers:\n\
-         \x20 crm-mcp:\n\
-         \x20   type: external\n\
-         \x20   endpoint: https://crm.example.test/mcp\n\
-         \x20   enabled: true\n\
-         \x20   display_in_web: false\n\
-         \x20   tool_policy: allow\n\
-         \x20   oauth: {required: false, scopes: [user], audience: mcp, client_id: null}\n\
-         \x20   connector: {adapter: generic, scopes: [tools:read]}\n\
-         \x20 systemprompt:\n\
-         \x20   type: internal\n\
-         \x20   binary: systemprompt-mcp-agent\n\
-         \x20   port: 5010\n\
-         \x20   enabled: true\n\
-         \x20   display_in_web: true\n\
-         \x20   tool_policy: allow\n\
-         \x20   oauth: {required: true, scopes: [admin], audience: mcp, client_id: null}\n",
-    )
-    .expect("write services fixture");
-    systemprompt::loader::ServicesBootstrap::init_from_path(&path).expect("install services");
-    std::mem::forget(directory);
-}
+const SERVICES: &str = "mcp_servers:\n\
+     \x20 crm-mcp:\n\
+     \x20   type: external\n\
+     \x20   endpoint: https://crm.example.test/mcp\n\
+     \x20   enabled: true\n\
+     \x20   display_in_web: false\n\
+     \x20   tool_policy: allow\n\
+     \x20   oauth: {required: false, scopes: [user], audience: mcp, client_id: null}\n\
+     \x20   connector: {adapter: generic, scopes: [tools:read]}\n\
+     \x20 systemprompt:\n\
+     \x20   type: internal\n\
+     \x20   binary: systemprompt-mcp-agent\n\
+     \x20   port: 5010\n\
+     \x20   enabled: true\n\
+     \x20   display_in_web: true\n\
+     \x20   tool_policy: allow\n\
+     \x20   oauth: {required: true, scopes: [admin], audience: mcp, client_id: null}\n";
 
 struct Harness {
     db: TempDb,
+    fixture: EnvFixture,
     filter: Arc<dyn MarketplaceFilter>,
+    _root: tempfile::TempDir,
 }
 
 impl Harness {
     async fn create_or_skip() -> Option<Self> {
-        install_services();
         let db = TempDb::create().await?;
-        let database: systemprompt::database::DbPool = Arc::new(Database::from_pools(
+        let root = tempfile::tempdir().expect("services fixture");
+        let fixture = EnvFixture::new(&db.pool, services_config(SERVICES), root.path());
+        let filter: Arc<dyn MarketplaceFilter> = Arc::new(TemplateMarketplaceFilter::new(
             Arc::clone(&db.pool),
-            Some(Arc::clone(&db.pool)),
+            fixture.env.subjects().clone(),
+            fixture.env.services_view().clone(),
         ));
-        let filter = TemplateMarketplaceFilter::from_db(&database).expect("build filter");
         let repo = AccessControlRepository::from_pool(Arc::clone(&db.pool));
         for id in [CRM, CONTROL_PLANE] {
-            repo.upsert_entity(EntityKind::McpServer, id, true, "test")
+            repo.upsert_entity(EntityKind::McpServer, id, true, "console:test")
                 .await
                 .expect("upsert entity");
         }
-        Some(Self { db, filter })
+        Some(Self {
+            db,
+            fixture,
+            filter,
+            _root: root,
+        })
     }
 
     async fn user(&self, roles: &[&str]) -> UserId {
@@ -120,7 +112,7 @@ impl Harness {
     }
 
     async fn connection(&self, user: &UserId, provider: &str) -> Connection {
-        get_connections(&self.db.pool, user)
+        get_connections(&self.db.pool, &self.fixture.env.services(), user)
             .await
             .expect("connections")
             .connections
@@ -130,7 +122,7 @@ impl Harness {
     }
 
     async fn connector_band(&self, user: &UserId) -> Vec<String> {
-        subject_attributes_for(&self.db.pool, user)
+        subject_attributes_for(self.fixture.env.subjects(), user)
             .await
             .expect("subject attributes")
             .values(&connector_rule_type())

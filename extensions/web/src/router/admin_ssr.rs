@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use axum::Router;
 
-
 use super::pools::DbHandles;
 use systemprompt_web_shared::config_loader;
 
@@ -20,9 +19,9 @@ pub(crate) struct SsrRouters {
 
 pub(crate) fn build(
     db: &DbHandles,
-    sso_deps: admin::AdfsDeps,
     settings: &crate::WebSettings,
     dashboard: Arc<admin::dashboard::ConsoleDashboard>,
+    sign_in: admin::SignInOptions,
 ) -> Option<SsrRouters> {
     let admin_dir = settings.admin_template_dir.clone();
     let branding = config_loader::branding_config(&settings.services_path);
@@ -37,7 +36,7 @@ pub(crate) fn build(
             &db.db,
             Arc::clone(&db.read),
             db.owner.clone(),
-            admin::AdminSsrShell { engine, sso_deps },
+            admin::AdminSsrShell { engine, sign_in },
         ),
     })
 }

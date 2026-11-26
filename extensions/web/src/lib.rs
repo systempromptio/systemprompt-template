@@ -30,6 +30,7 @@ mod extension_impl;
 mod router;
 #[doc(hidden)]
 pub mod schemas;
+mod sign_in;
 
 pub use systemprompt_web_admin as admin;
 #[cfg(feature = "content")]

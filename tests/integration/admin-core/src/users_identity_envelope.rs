@@ -13,7 +13,7 @@ use systemprompt_web_admin::repositories::users::queries::find_identity_envelope
 use crate::fixtures::{
     insert_federated_identity, insert_user, insert_user_full, set_project, unclaimed_email, unique,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 const ISSUER: &str = "https://login.adfs.test/adfs";
 

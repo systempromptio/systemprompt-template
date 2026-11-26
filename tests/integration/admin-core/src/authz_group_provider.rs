@@ -13,7 +13,7 @@ use systemprompt_web_admin::authz::group::{GroupAttributeProvider, group_rule_ty
 use crate::fixtures::{
     insert_group, insert_group_member, insert_user, unclaimed_email, unique, unique_group,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn the_provider_resolves_a_users_groups() {

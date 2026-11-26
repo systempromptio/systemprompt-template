@@ -27,92 +27,66 @@ fn services(r: &Resolved<'_>) -> Result<Arc<WebSettings>, FactoryError> {
     Ok(r.get::<Arc<WebSettings>>()?)
 }
 
-// Why: a content factory cannot decline (`ContentSlotBuilder` takes a
-// factory that returns the provider or fails), so a page whose config file is
-// missing refuses the slot rather than rendering from an invented default.
-#[derive(Debug, thiserror::Error)]
-#[error("{0} is not configured in the services tree")]
-struct MissingSiteConfig(&'static str);
-
-fn required<T>(config: Option<Arc<T>>, what: &'static str) -> Result<Arc<T>, FactoryError> {
-    config.ok_or_else(|| FactoryError::Failed(Box::new(MissingSiteConfig(what))))
-}
+type Built<T> = Result<Option<Arc<T>>, FactoryError>;
 
 pub(crate) fn contribute_content(c: &mut Contributions<'_>) {
     let content = c.slot::<ContentSlot>();
     content
-        .page_data_provider(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                let settings = services(r)?;
-                let nav = required(
-                    config_loader::navigation_config(&settings.services_path),
-                    "web/navigation.yaml",
-                )?;
-                let branding = branding_config(&settings.services_path);
-                Ok(Arc::new(
-                    NavigationPageDataProvider::new(nav).with_branding(branding),
-                ))
-            },
-        )
-        .page_data_provider(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                let settings = services(r)?;
-                let homepage =
-                    config_loader::homepage_config(&settings.services_path).unwrap_or_default();
-                Ok(Arc::new(HomepagePageDataProvider::new(homepage)))
-            },
-        )
-        .page_prerenderer(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PagePrerenderer>, FactoryError> {
-                let settings = services(r)?;
-                let homepage =
-                    config_loader::homepage_config(&settings.services_path).unwrap_or_default();
-                Ok(Arc::new(HomepagePrerenderer::new(homepage)))
-            },
-        )
-        .page_prerenderer(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PagePrerenderer>, FactoryError> {
-                let settings = services(r)?;
-                let skills = required(
-                    config_loader::skills_page_config(&settings.services_path),
-                    "web/skills page config",
-                )?;
-                Ok(Arc::new(SkillsPagePrerenderer::new(skills)))
-            },
-        )
-        .page_data_provider(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                Ok(Arc::new(DocsPageDataProvider::new()))
-            },
-        )
-        .content_data_provider(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn ContentDataProvider>, FactoryError> {
-                Ok(Arc::new(DocsContentDataProvider::new()))
-            },
-        )
-        .template_data_extender(
-            |r: &Resolved<'_>| -> Result<Arc<dyn TemplateDataExtender>, FactoryError> {
-                let settings = services(r)?;
-                Ok(Arc::new(OrgUrlExtender::new(
-                    settings.api_external_url.clone(),
-                )))
-            },
-        )
-        .template_data_extender(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn TemplateDataExtender>, FactoryError> {
-                Ok(Arc::new(ReleaseVersionExtender::new()))
-            },
-        );
+        .page_data_provider(|r: &Resolved<'_>| -> Built<dyn PageDataProvider> {
+            let settings = services(r)?;
+            let Some(nav) = config_loader::navigation_config(&settings.services_path) else {
+                return Ok(None);
+            };
+            let branding = branding_config(&settings.services_path);
+            Ok(Some(Arc::new(
+                NavigationPageDataProvider::new(nav).with_branding(branding),
+            )))
+        })
+        .page_data_provider(|r: &Resolved<'_>| -> Built<dyn PageDataProvider> {
+            let settings = services(r)?;
+            let homepage =
+                config_loader::homepage_config(&settings.services_path).unwrap_or_default();
+            Ok(Some(Arc::new(HomepagePageDataProvider::new(homepage))))
+        })
+        .page_prerenderer(|r: &Resolved<'_>| -> Built<dyn PagePrerenderer> {
+            let settings = services(r)?;
+            let homepage =
+                config_loader::homepage_config(&settings.services_path).unwrap_or_default();
+            Ok(Some(Arc::new(HomepagePrerenderer::new(homepage))))
+        })
+        .page_prerenderer(|r: &Resolved<'_>| -> Built<dyn PagePrerenderer> {
+            let settings = services(r)?;
+            Ok(
+                config_loader::skills_page_config(&settings.services_path).map(
+                    |skills| -> Arc<dyn PagePrerenderer> {
+                        Arc::new(SkillsPagePrerenderer::new(skills))
+                    },
+                ),
+            )
+        })
+        .page_data_provider(|_r: &Resolved<'_>| -> Built<dyn PageDataProvider> {
+            Ok(Some(Arc::new(DocsPageDataProvider::new())))
+        })
+        .content_data_provider(|_r: &Resolved<'_>| -> Built<dyn ContentDataProvider> {
+            Ok(Some(Arc::new(DocsContentDataProvider::new())))
+        })
+        .template_data_extender(|r: &Resolved<'_>| -> Built<dyn TemplateDataExtender> {
+            let settings = services(r)?;
+            Ok(Some(Arc::new(OrgUrlExtender::new(
+                settings.api_external_url.clone(),
+            ))))
+        })
+        .template_data_extender(|_r: &Resolved<'_>| -> Built<dyn TemplateDataExtender> {
+            Ok(Some(Arc::new(ReleaseVersionExtender::new())))
+        });
     contribute_partials(content);
 }
 
 macro_rules! component {
     ($content:expr, $renderer:expr) => {
-        $content.component_renderer(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn ComponentRenderer>, FactoryError> {
-                Ok(Arc::new($renderer))
-            },
-        )
+        $content.component_renderer(|_r: &Resolved<'_>| -> Built<dyn ComponentRenderer> {
+            Ok(Some(Arc::new($renderer)))
+        })
     };
 }
 

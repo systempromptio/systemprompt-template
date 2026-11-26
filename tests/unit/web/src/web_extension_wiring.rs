@@ -1,14 +1,14 @@
 //! `WebExtension` is the single seam through which the five web sibling crates
-//! reach the host runtime. Everything it advertises is consumed by name: the
-//! `web` id keys its config prefix, `dependencies` decides migration order, and
-//! `required_assets` is what `just publish` copies. The provider getters are
-//! inventory-backed, so a missing `submit_*!` shows up as a provider that never
-//! runs — asserted here as id uniqueness and a non-empty registry.
+//! reach the host runtime. Everything it contributes is consumed by name: the
+//! `web` id keys its config, the cross-extension tables decide migration
+//! order, and the contributed assets are what `just publish` copies.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use systemprompt::extension::prelude::{AssetPaths, Extension};
+use systemprompt::extension::contribute::ContributionSink;
+use systemprompt::extension::prelude::AssetPaths;
+use systemprompt::extension::{Admitted, Extension};
 use systemprompt_web_extension::WebExtension;
 use systemprompt_web_site::web_assets;
 
@@ -34,31 +34,29 @@ fn fake_paths() -> FakePaths {
     }
 }
 
-#[test]
-fn the_extension_identifies_itself_as_web_at_a_stable_priority() {
-    let extension = WebExtension::new();
-    let metadata = extension.metadata();
+fn contributed() -> Admitted {
+    template_test_common::composition::admitted()
+}
 
-    assert_eq!(metadata.id, "web");
-    assert!(!metadata.name.is_empty());
-    assert!(!metadata.version.is_empty());
-    assert_eq!(extension.priority(), 100);
-    assert_eq!(extension.config_prefix(), Some(WebExtension::PREFIX));
-    assert_eq!(WebExtension::PREFIX, "web");
+fn web(admitted: &Admitted) -> &ContributionSink {
+    &template_test_common::composition::member(admitted, WebExtension::ID).sink
 }
 
 #[test]
-fn it_declares_the_extensions_whose_tables_it_reads() {
-    let extension = WebExtension::new();
+fn the_extension_identifies_itself_as_web() {
+    let metadata = WebExtension::new().metadata();
 
-    let mut dependencies = extension.dependencies();
-    dependencies.sort_unstable();
-    assert_eq!(
-        dependencies,
-        vec!["authz", "content", "managed_resources", "users"]
-    );
+    assert_eq!(metadata.id, "web");
+    assert_eq!(WebExtension::ID, "web");
+    assert!(!metadata.name.is_empty());
+    assert!(!metadata.version.is_empty());
+}
 
-    let mut shared = extension.cross_extension_tables();
+#[test]
+fn it_declares_the_tables_it_reads_from_other_extensions() {
+    let admitted = contributed();
+    let sink = web(&admitted);
+    let mut shared = sink.cross_tables().to_vec();
     shared.sort_unstable();
     assert_eq!(
         shared,
@@ -74,12 +72,13 @@ fn it_declares_the_extensions_whose_tables_it_reads() {
 }
 
 #[test]
-fn required_assets_is_the_site_manifest_plus_the_admin_manifest() {
-    let extension = WebExtension::new();
-    assert!(extension.declares_assets());
+fn contributed_assets_are_the_site_manifest_plus_the_admin_manifest() {
+    let admitted = contributed();
+    let sink = web(&admitted);
+    assert!(!sink.assets().is_empty());
 
     let paths = fake_paths();
-    let required = extension.required_assets(&paths);
+    let required: Vec<_> = sink.assets().iter().flat_map(|f| f(&paths)).collect();
     let site = web_assets(&paths);
 
     assert!(
@@ -104,9 +103,11 @@ fn required_assets_is_the_site_manifest_plus_the_admin_manifest() {
 
 #[test]
 fn the_admin_surface_is_login_gated_and_leaves_the_public_site_open() {
-    let auth = WebExtension::new()
-        .site_auth()
-        .expect("the web extension gates its admin surface");
+    let admitted = contributed();
+    let sink = web(&admitted);
+    let [auth] = sink.site_auth() else {
+        panic!("the web extension gates its admin surface exactly once");
+    };
 
     assert_eq!(auth.login_path, "/admin/login");
     assert_eq!(auth.required_scope, "user");

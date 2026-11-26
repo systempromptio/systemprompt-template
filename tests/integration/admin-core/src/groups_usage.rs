@@ -15,7 +15,7 @@ use systemprompt_web_shared::GroupId;
 use crate::fixtures::{
     RequestSpec, insert_request, insert_user, unclaimed_email, unique, unique_group,
 };
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 const WINDOW: i32 = 30;
 

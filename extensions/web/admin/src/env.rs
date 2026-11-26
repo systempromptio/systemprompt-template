@@ -16,13 +16,9 @@ use systemprompt::manifest::ConfigView;
 use systemprompt::manifest::profile::ProfileView;
 use systemprompt::manifest::services::{InstallServicesView, ServicesConfig};
 use systemprompt::models::auth::DynRequestAuthenticator;
-use systemprompt::traits::{DeclaredSecrets, GitSourceSync, MemberCipher, ShareTokenSigner};
-
-use crate::error::{AdminError, AdminResult};
-
-fn unavailable(what: &str) -> AdminError {
-    AdminError::Unavailable(format!("{what} is not held by this host"))
-}
+use systemprompt::traits::{
+    BrokerCallVerifier, DeclaredSecrets, GitSourceSync, MemberCipher, ShareTokenSigner,
+};
 
 /// What the admin crate needs of the runtime, resolved once.
 #[derive(Clone)]
@@ -34,12 +30,13 @@ struct Inner {
     services: InstallServicesView,
     authenticator: DynRequestAuthenticator,
     subjects: SubjectSourceCell,
-    cipher: Option<Arc<dyn MemberCipher>>,
-    share_tokens: Option<Arc<dyn ShareTokenSigner>>,
+    cipher: Arc<dyn MemberCipher>,
+    share_tokens: Arc<dyn ShareTokenSigner>,
     secrets: DeclaredSecrets,
     paths: Arc<AppPaths>,
     artifact_ui: Option<DynArtifactUiRenderer>,
-    git_sync: Option<Arc<dyn GitSourceSync>>,
+    git_sync: Arc<dyn GitSourceSync>,
+    broker_calls: Arc<dyn BrokerCallVerifier>,
 }
 
 pub struct AdminEnvParts {
@@ -48,12 +45,13 @@ pub struct AdminEnvParts {
     pub services: InstallServicesView,
     pub authenticator: DynRequestAuthenticator,
     pub subjects: SubjectSourceCell,
-    pub cipher: Option<Arc<dyn MemberCipher>>,
-    pub share_tokens: Option<Arc<dyn ShareTokenSigner>>,
+    pub cipher: Arc<dyn MemberCipher>,
+    pub share_tokens: Arc<dyn ShareTokenSigner>,
     pub secrets: DeclaredSecrets,
     pub paths: Arc<AppPaths>,
     pub artifact_ui: Option<DynArtifactUiRenderer>,
-    pub git_sync: Option<Arc<dyn GitSourceSync>>,
+    pub git_sync: Arc<dyn GitSourceSync>,
+    pub broker_calls: Arc<dyn BrokerCallVerifier>,
 }
 
 impl std::fmt::Debug for AdminEnvParts {
@@ -87,6 +85,7 @@ impl AdminEnv {
             paths: parts.paths,
             artifact_ui: parts.artifact_ui,
             git_sync: parts.git_sync,
+            broker_calls: parts.broker_calls,
         }))
     }
 
@@ -135,20 +134,14 @@ impl AdminEnv {
         &self.0.subjects
     }
 
-    // Why: a host that does not hold the master key (a hosted MCP child
-    // process) confers no cipher; every seal and open there is refused.
-    pub fn cipher(&self) -> AdminResult<&dyn MemberCipher> {
-        self.0
-            .cipher
-            .as_deref()
-            .ok_or_else(|| unavailable("the member cipher"))
+    #[must_use]
+    pub fn cipher(&self) -> &dyn MemberCipher {
+        self.0.cipher.as_ref()
     }
 
-    pub fn share_tokens(&self) -> AdminResult<&dyn ShareTokenSigner> {
-        self.0
-            .share_tokens
-            .as_deref()
-            .ok_or_else(|| unavailable("the share-token signer"))
+    #[must_use]
+    pub fn share_tokens(&self) -> &dyn ShareTokenSigner {
+        self.0.share_tokens.as_ref()
     }
 
     #[must_use]
@@ -166,10 +159,13 @@ impl AdminEnv {
         self.0.artifact_ui.as_ref()
     }
 
-    pub fn git_sync(&self) -> AdminResult<&dyn GitSourceSync> {
-        self.0
-            .git_sync
-            .as_deref()
-            .ok_or_else(|| unavailable("the Git source sync"))
+    #[must_use]
+    pub fn git_sync(&self) -> &dyn GitSourceSync {
+        self.0.git_sync.as_ref()
+    }
+
+    #[must_use]
+    pub fn broker_calls(&self) -> &dyn BrokerCallVerifier {
+        self.0.broker_calls.as_ref()
     }
 }

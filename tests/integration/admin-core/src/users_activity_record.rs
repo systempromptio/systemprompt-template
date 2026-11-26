@@ -20,7 +20,7 @@ use systemprompt_web_admin::activity::{
 };
 
 use crate::fixtures::{insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 struct Event<'a> {
     user_id: &'a UserId,

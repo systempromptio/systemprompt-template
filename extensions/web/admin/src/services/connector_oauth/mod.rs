@@ -91,7 +91,7 @@ pub fn open(
     user: &UserId,
     provider: &Provider,
 ) -> AdminResult<Grant> {
-    let bytes = secret_crypto::open_bytes(env.cipher()?, &row.ciphertext)?;
+    let bytes = secret_crypto::open_bytes(env.cipher(), &row.ciphertext)?;
     let grant: Grant = serde_json::from_slice(&bytes).map_err(AdminError::internal)?;
     // Why: Bind the encrypted payload as well as the database key to its principal.
     if grant.user != user.as_str() || grant.provider.slug() != provider.slug() {
@@ -214,13 +214,7 @@ async fn resolve_token(
         return Err(error);
     }
     if refresh || probe {
-        repo::store(
-            &mut tx,
-            user,
-            provider.slug(),
-            &seal(env.cipher()?, &grant)?,
-        )
-        .await?;
+        repo::store(&mut tx, user, provider.slug(), &seal(env.cipher(), &grant)?).await?;
     }
     if probe {
         apply_verification(&mut locked.account, &grant);

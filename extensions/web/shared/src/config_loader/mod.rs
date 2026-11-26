@@ -4,7 +4,7 @@
 //!
 //! Every load takes the services directory it reads from; nothing is cached
 //! process-wide. A load failure is logged and served as "section absent",
-//! never a crash. The public-site sections are loaded by
+//! never a crash, except the ADFS config, whose failure refuses the boot. The public-site sections are loaded by
 //! `systemprompt_web_site::config_loader` on top of [`load_config_section`].
 
 use std::path::{Path, PathBuf};
@@ -57,12 +57,14 @@ pub fn branding_config(services: &Path) -> Option<BrandingConfig> {
     log_and_discard_err(load_branding_config(services), "Branding config error")
 }
 
-#[must_use]
-pub fn adfs_config(services: &Path, api_external_url: &str) -> Option<Arc<AdfsConfig>> {
-    log_and_discard_err(
-        adfs::load_adfs_config(services, api_external_url),
-        "ADFS config error",
-    )
+// Why: an `adfs.yaml` that is present but unreadable is a broken sign-in
+// configuration, so the error reaches the caller and refuses the boot rather
+// than leaving the instance without SSO.
+pub fn adfs_config(
+    services: &Path,
+    api_external_url: &str,
+) -> Result<Option<Arc<AdfsConfig>>, ConfigError> {
+    adfs::load_adfs_config(services, api_external_url)
 }
 
 pub fn dashboard_config(services: &Path) -> Result<DashboardConfig, ConfigError> {

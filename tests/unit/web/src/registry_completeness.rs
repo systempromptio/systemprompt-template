@@ -1,11 +1,15 @@
-//! Inventory registries must advertise every implementation the crates
-//! define; a `submit_*!` forgotten next to a new job or renderer shows up
-//! here as a count mismatch (the drift that once hid `SecretMigrationJob`).
+//! The jobs crate must contribute every job it defines; a `.job(..)` forgotten
+//! next to a new job shows up here as a set mismatch (the drift that once hid
+//! `SecretMigrationJob`).
 
 use std::collections::BTreeSet;
+use std::sync::Arc;
 
-use systemprompt_web_extension::jobs::extension_jobs;
-use systemprompt_web_extension::shared::registry;
+use systemprompt::traits::Job;
+
+fn extension_jobs() -> Vec<Arc<dyn Job>> {
+    template_test_common::composition::member_jobs("web")
+}
 
 #[test]
 fn all_jobs_registered() {
@@ -15,7 +19,6 @@ fn all_jobs_registered() {
         "blog_content_ingestion",
         "bundle_admin_css",
         "content_analytics_aggregation",
-        "content_prerender",
         "conversation_judge",
         "conversation_rollup",
         "copy_extension_assets",
@@ -30,18 +33,9 @@ fn all_jobs_registered() {
         "robots_txt_generation",
         "scope_defaults_recompute",
         "secret_migration",
-        "sitemap_generation",
         "usage_anomaly",
         "usage_daily_rollup",
     ]
     .into();
     assert_eq!(names, expected);
-}
-
-#[test]
-fn stateless_provider_registries_are_complete() {
-    assert_eq!(registry::component_renderers().len(), 9);
-    assert_eq!(registry::page_data_providers().len(), 1);
-    assert_eq!(registry::content_data_providers().len(), 1);
-    assert_eq!(registry::template_data_extenders().len(), 2);
 }

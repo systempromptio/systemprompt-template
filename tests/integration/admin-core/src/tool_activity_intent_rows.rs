@@ -16,7 +16,7 @@ use systemprompt_web_admin::repositories::analysis::tools::{
 };
 
 use crate::fixtures::{RequestSpec, insert_request, insert_user, unclaimed_email, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn page() -> ToolActivityPage {
     ToolActivityPage {

@@ -13,7 +13,8 @@
 //! These tests exist so that putting any category back into a live block list
 //! is a deliberate, review-visible act rather than a one-word edit.
 
-use systemprompt::gateway::{GatewayPolicyConfig, QuotaMode, SafetyHistoryMode, SafetyMode};
+use systemprompt::gateway::{GatewayPolicyConfig, SafetyHistoryMode};
+use systemprompt::manifest::services::EnforcementMode;
 
 use crate::support::repo_root;
 
@@ -47,7 +48,7 @@ fn the_deployed_file_parses_and_validates() {
 // Emptying them to unblock traffic would have thrown that measurement away.
 #[test]
 fn the_scanners_are_in_warn_mode_and_block_nothing() {
-    assert_eq!(default_quotas().spec.safety.mode, SafetyMode::Warn);
+    assert_eq!(default_quotas().spec.safety.mode, EnforcementMode::Warn);
 }
 
 // Why: the quota windows are the third plane and the one most likely to be
@@ -55,7 +56,7 @@ fn the_scanners_are_in_warn_mode_and_block_nothing() {
 // answering 429 under a "warn mode" that only covered the other two.
 #[test]
 fn the_quota_windows_are_in_warn_mode_and_answer_no_429() {
-    assert_eq!(default_quotas().spec.quota_mode, QuotaMode::Warn);
+    assert_eq!(default_quotas().spec.quota_mode, EnforcementMode::Warn);
 }
 
 // Why: all three planes must flip together or "no governance is enforcing" is

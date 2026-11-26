@@ -6,7 +6,7 @@ use systemprompt_web_admin::repositories::config::acl_detect::{
 };
 
 use crate::fixtures::{RequestSeed, at, insert_request, insert_user, unique};
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn decision_json() -> serde_json::Value {
     serde_json::json!([{ "rule": "gateway_route", "access": "deny" }])

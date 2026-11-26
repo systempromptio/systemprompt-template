@@ -15,7 +15,7 @@ use systemprompt_web_shared::models::IngestionOptions;
 use tempfile::TempDir;
 
 use crate::fixtures::source_id;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 fn category() -> CategoryId {
     CategoryId::new("guides".to_string())

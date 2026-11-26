@@ -13,7 +13,7 @@ use systemprompt_web_admin::repositories::dashboard::traffic::{
 };
 
 use crate::fixtures::unique;
-use crate::tempdb::TempDb;
+use template_test_common::TempDb;
 
 pub struct SessionSpec<'a> {
     pub country: &'a str,
