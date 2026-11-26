@@ -30,6 +30,7 @@ smoke:
   routes_present:
     - "/"
     - "/.well-known/jwks.json"
+    - "/admin"
     - "/admin/"
     - "/admin/login"
     - "/css/admin-bundle.css"
@@ -61,4 +62,4 @@ smoke:
   mcp_servers:
     - "systemprompt"
   models_endpoint: true
-  root_redirect: "/admin/"
+  root_redirect: "/admin"
