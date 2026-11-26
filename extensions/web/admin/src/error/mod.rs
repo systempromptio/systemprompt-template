@@ -7,6 +7,7 @@
 mod html;
 #[cfg(feature = "mcp")]
 mod managed;
+#[cfg(feature = "mcp")]
 mod orchestration;
 
 pub use html::{AdminHtmlError, AdminHtmlResult};

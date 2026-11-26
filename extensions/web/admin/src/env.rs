@@ -16,9 +16,9 @@ use systemprompt::manifest::ConfigView;
 use systemprompt::manifest::profile::ProfileView;
 use systemprompt::manifest::services::{InstallServicesView, ServicesConfig};
 use systemprompt::models::auth::DynRequestAuthenticator;
-use systemprompt::traits::{
-    BrokerCallVerifier, DeclaredSecrets, GitSourceSync, MemberCipher, ShareTokenSigner,
-};
+#[cfg(feature = "mcp")]
+use systemprompt::traits::GitSourceSync;
+use systemprompt::traits::{BrokerCallVerifier, DeclaredSecrets, MemberCipher, ShareTokenSigner};
 
 /// What the admin crate needs of the runtime, resolved once.
 #[derive(Clone)]
@@ -35,6 +35,7 @@ struct Inner {
     secrets: DeclaredSecrets,
     paths: Arc<AppPaths>,
     artifact_ui: Option<DynArtifactUiRenderer>,
+    #[cfg(feature = "mcp")]
     git_sync: Arc<dyn GitSourceSync>,
     broker_calls: Arc<dyn BrokerCallVerifier>,
 }
@@ -50,6 +51,7 @@ pub struct AdminEnvParts {
     pub secrets: DeclaredSecrets,
     pub paths: Arc<AppPaths>,
     pub artifact_ui: Option<DynArtifactUiRenderer>,
+    #[cfg(feature = "mcp")]
     pub git_sync: Arc<dyn GitSourceSync>,
     pub broker_calls: Arc<dyn BrokerCallVerifier>,
 }
@@ -84,6 +86,7 @@ impl AdminEnv {
             secrets: parts.secrets,
             paths: parts.paths,
             artifact_ui: parts.artifact_ui,
+            #[cfg(feature = "mcp")]
             git_sync: parts.git_sync,
             broker_calls: parts.broker_calls,
         }))
@@ -159,6 +162,7 @@ impl AdminEnv {
         self.0.artifact_ui.as_ref()
     }
 
+    #[cfg(feature = "mcp")]
     #[must_use]
     pub fn git_sync(&self) -> &dyn GitSourceSync {
         self.0.git_sync.as_ref()

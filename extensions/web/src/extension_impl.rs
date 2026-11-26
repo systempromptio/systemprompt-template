@@ -104,7 +104,6 @@ impl Extension for WebExtension {
                 layout: SealedLayout::SplitBytea { nonce: "nonce" },
             })
             .conferral(InstallConferral::ShareTokens)
-            .conferral(InstallConferral::GitSourceSync)
             .conferral(InstallConferral::BrokerCalls)
             .secret(SecretName::new("github_mcp_client_id"))
             .secret(SecretName::new("github_mcp_client_secret"))
@@ -119,7 +118,10 @@ impl Extension for WebExtension {
         #[cfg(feature = "gateway")]
         contribute_gateway(c);
         #[cfg(feature = "mcp")]
-        systemprompt_web_admin::marketplace_filter::contribute_marketplace_filter(c);
+        {
+            c.conferral(InstallConferral::GitSourceSync);
+            systemprompt_web_admin::marketplace_filter::contribute_marketplace_filter(c);
+        }
         #[cfg(feature = "content")]
         {
             crate::jobs::contribute_jobs(c, declared_assets);
@@ -150,6 +152,7 @@ fn contribute_values(c: &mut Contributions<'_>) {
             secrets: r.secrets()?,
             paths: r.get::<Arc<AppPaths>>()?,
             artifact_ui: r.optional::<DynArtifactUiRenderer>(),
+            #[cfg(feature = "mcp")]
             git_sync: r.git_source_sync()?,
             broker_calls: r.broker_calls()?,
         }))
