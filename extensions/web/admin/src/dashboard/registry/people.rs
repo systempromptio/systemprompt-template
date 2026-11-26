@@ -150,8 +150,8 @@ pub(super) const ITEMS: &[NavItemDef] = &[
         console: true,
         external: false,
         attention: false,
-        needs: Some("mcp"),
-        compiled: cfg!(feature = "mcp"),
+        needs: Some("agents"),
+        compiled: cfg!(feature = "agents"),
         icon: r#"<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2v8a3 3 0 0 0 3 3h5M4 5h5a3 3 0 0 0-3-3"/><circle cx="4" cy="2" r="1"/><circle cx="12" cy="2" r="1"/><circle cx="12" cy="13" r="1"/></svg>"#,
     },
 ];

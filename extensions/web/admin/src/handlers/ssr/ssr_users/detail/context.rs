@@ -8,6 +8,7 @@ use serde::Serialize;
 use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 use crate::handlers::ssr::list_view::Pagination;
+#[cfg(feature = "agents")]
 use crate::handlers::ssr::ssr_history::HistoryRowView;
 use crate::handlers::ssr::types::{BreadcrumbView, MembershipChoiceView, RoleChoiceView};
 
@@ -36,6 +37,7 @@ pub(crate) struct UserDetailContext {
     pub export: Option<crate::export::ExportView>,
 
     pub identity: Option<IdentityTabView>,
+    #[cfg(feature = "agents")]
     pub conversations: Option<UserConversationsTabView>,
     pub membership: Option<MembershipTabView>,
     pub access: Option<AccessTabView>,
@@ -200,6 +202,7 @@ pub(crate) struct UserSessionRowView {
 // Why: the same rows the conversation listings render, scoped to one account.
 // Reusing `HistoryRowView` keeps a conversation looking identical wherever it
 // is listed, rather than drifting into a third shape.
+#[cfg(feature = "agents")]
 #[derive(Debug, Serialize)]
 pub(crate) struct UserConversationsTabView {
     pub rows: Vec<HistoryRowView>,

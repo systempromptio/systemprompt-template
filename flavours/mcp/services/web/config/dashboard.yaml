@@ -7,9 +7,9 @@ home:
   - item: mcp_servers
     title: "Servers"
     note: "The MCP servers this instance hosts."
-  - item: sessions
-    title: "Tool calls"
-    note: "Sessions and the tool calls inside them."
+  - item: marketplaces
+    title: "Marketplaces"
+    note: "Where the plugins and skills are published from."
   - item: governance
     title: "Denied calls"
     note: "Tool calls the policy chain refused."
@@ -25,10 +25,10 @@ home:
 nav:
   - id: activity
     title: "Activity"
-    items: [overview, analytics, requests, sessions, conversations]
+    items: [overview, analytics, requests]
   - id: platform
     title: "MCP"
-    items: [mcp_servers, plugins, skills, marketplaces, analysis_versions]
+    items: [mcp_servers, plugins, skills, marketplaces]
   - id: governance
     title: "Governance"
     items: [governance, approvals, secrets, gateway, gateway_policies, quotas]
@@ -40,4 +40,4 @@ nav:
     items: [sync, configuration, lifecycle, observability]
   - id: account
     title: "Account"
-    items: [profile, history, settings, connect, connectors]
+    items: [profile, settings, connect, connectors]

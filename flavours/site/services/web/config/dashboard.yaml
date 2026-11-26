@@ -16,7 +16,7 @@ home:
 nav:
   - id: activity
     title: "Traffic"
-    items: [overview, analytics, sessions]
+    items: [overview, analytics]
   - id: governance
     title: "Governance"
     items: [governance, approvals, secrets]

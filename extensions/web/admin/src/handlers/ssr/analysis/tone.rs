@@ -4,6 +4,7 @@
 
 // Why: The judge's completion score, 0–100.
 #[must_use]
+#[cfg(feature = "agents")]
 pub(crate) const fn score_tone(score: i16) -> &'static str {
     if score >= 80 {
         "ok"
@@ -15,6 +16,7 @@ pub(crate) const fn score_tone(score: i16) -> &'static str {
 }
 
 #[must_use]
+#[cfg(feature = "agents")]
 pub(crate) fn completion_tone(score: Option<f64>) -> &'static str {
     score.map_or("muted", |s| score_tone(s.round() as i16))
 }
@@ -99,6 +101,7 @@ pub(crate) fn percent(part: i64, whole: i64) -> String {
 }
 
 #[must_use]
+#[cfg(feature = "agents")]
 pub(crate) fn score_display(score: Option<f64>) -> String {
     score.map_or_else(|| "—".to_owned(), |s| format!("{s:.0}"))
 }

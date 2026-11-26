@@ -10,6 +10,7 @@ use super::model::DataSet;
 pub(crate) const ALL: &[&dyn DataSet] = &[
     #[cfg(feature = "gateway")]
     &datasets::requests::Requests,
+    #[cfg(feature = "agents")]
     &datasets::sessions::Sessions,
     #[cfg(feature = "agents")]
     &datasets::traces::Traces,
@@ -28,7 +29,9 @@ pub(crate) const ALL: &[&dyn DataSet] = &[
     &datasets::people::Users,
     &datasets::people::Groups,
     &datasets::projects::Projects,
+    #[cfg(feature = "agents")]
     &datasets::history::History,
+    #[cfg(feature = "agents")]
     &datasets::history::OrgHistory,
     &datasets::dashboard::ModelStats,
     &datasets::dashboard::SkillStats,
@@ -52,13 +55,13 @@ pub(crate) const ALL: &[&dyn DataSet] = &[
     &datasets::analysis_skill_runs::SkillRuns,
     #[cfg(feature = "agents")]
     &datasets::analysis_skill_runs::KitReleaseImpact,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     &datasets::versions::Marketplaces,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     &datasets::versions::Versions,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     &datasets::plugin_eval::PluginEval,
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     &datasets::plugin_eval::PluginEvalTools,
     &datasets::governance::Decisions,
     &datasets::governance::Findings,

@@ -161,17 +161,7 @@ fn people_routes() -> Router<Arc<PgPool>> {
 fn ai_activity_routes() -> Router<Arc<PgPool>> {
     let routes = Router::new()
         .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
-        .merge(super::ssr_export::routes())
-        .route("/sessions", get(handlers::ssr::sessions_list_page))
-        .route(
-            "/sessions/{session_id}",
-            get(handlers::ssr::session_detail_page),
-        )
-        // Why: the org-wide twin of "My conversations". It reads one
-        // conversation per row where `/contexts` reads one context, and it is
-        // the page an operator looks for under AI activity when they want to
-        // see what everyone has been asking.
-        .route("/conversations", get(handlers::ssr::conversations_page));
+        .merge(super::ssr_export::routes());
     #[cfg(feature = "gateway")]
     let routes = routes.merge(request_routes());
     #[cfg(feature = "agents")]
@@ -192,6 +182,16 @@ fn request_routes() -> Router<Arc<PgPool>> {
 #[cfg(feature = "agents")]
 fn agent_activity_routes() -> Router<Arc<PgPool>> {
     Router::new()
+        .route("/sessions", get(handlers::ssr::sessions_list_page))
+        .route(
+            "/sessions/{session_id}",
+            get(handlers::ssr::session_detail_page),
+        )
+        // Why: the org-wide twin of "My conversations". It reads one
+        // conversation per row where `/contexts` reads one context, and it is
+        // the page an operator looks for under AI activity when they want to
+        // see what everyone has been asking.
+        .route("/conversations", get(handlers::ssr::conversations_page))
         .route("/traces", get(handlers::ssr::perf_traces_page))
         .route(
             "/traces/{trace_id}",
@@ -221,12 +221,14 @@ fn account_routes() -> Router<Arc<PgPool>> {
         .route("/profile", get(handlers::ssr::profile_page))
         .route("/settings", get(handlers::ssr::settings_page))
         .route("/setup", get(handlers::ssr::setup_page));
+    #[cfg(feature = "agents")]
     let routes = routes.merge(history_routes());
     #[cfg(feature = "mcp")]
     let routes = routes.merge(connector_routes());
     routes
 }
 
+#[cfg(feature = "agents")]
 fn history_routes() -> Router<Arc<PgPool>> {
     Router::new()
         // Why: identity-scoped, not admin-gated — the handler resolves what
@@ -256,12 +258,13 @@ fn api_routes() -> Router<Arc<PgPool>> {
         .route(
             "/api/profile/bridge-code",
             post(handlers::ssr::issue_bridge_code),
-        )
-        .route("/api/history/search", get(handlers::ssr::history_search));
+        );
     #[cfg(feature = "agents")]
-    let routes = routes.route(
-        "/api/conversations/{session_id}/raw",
-        get(handlers::ssr::conversations_raw),
-    );
+    let routes = routes
+        .route("/api/history/search", get(handlers::ssr::history_search))
+        .route(
+            "/api/conversations/{session_id}/raw",
+            get(handlers::ssr::conversations_raw),
+        );
     routes
 }

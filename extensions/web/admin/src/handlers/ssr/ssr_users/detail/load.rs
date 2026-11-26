@@ -10,10 +10,12 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::repositories;
+use crate::repositories::analytics::conversation_rows::{ConversationRow, ConversationTotals};
+#[cfg(feature = "agents")]
 use crate::repositories::analytics::conversation_rows::{
-    ConversationFilter, ConversationRow, ConversationTotals, find_latest_conversation,
-    get_conversation_totals,
+    ConversationFilter, find_latest_conversation, get_conversation_totals,
 };
+#[cfg(feature = "agents")]
 use crate::repositories::analytics::conversations::{
     HistoryFilter, HistoryItem, list_history_items,
 };
@@ -28,9 +30,11 @@ pub(super) const COMMIT_LIMIT: i64 = 20;
 pub(super) const SESSION_PAGE_SIZE: i64 = 50;
 
 // Why: how many conversations one page of the Conversations tab carries.
+#[cfg(feature = "agents")]
 pub(super) const CONVERSATION_PAGE_SIZE: i64 = 25;
 
 // Why: one page of this account's conversations, plus the unpaged total.
+#[cfg(feature = "agents")]
 pub(super) struct UserConversationsData {
     pub items: Vec<HistoryItem>,
     pub total: i64,
@@ -39,6 +43,7 @@ pub(super) struct UserConversationsData {
 // Why: the same query the two conversation listings run, with the scope pinned
 // to this one account — so a conversation reads the same here as it does under
 // AI activity, and a fix to the listing reaches all three surfaces at once.
+#[cfg(feature = "agents")]
 pub(super) async fn load_conversations(
     pool: &PgPool,
     user_id: &UserId,
@@ -178,18 +183,10 @@ pub(super) struct UsageData {
 // the project scoping that guards the cross-user list has nothing to add and
 // would only hide rows from an admin who asked for them by id.
 pub(super) async fn load_usage(pool: &PgPool, user_id: &UserId) -> UsageData {
-    let filter = ConversationFilter {
-        user_id: Some(user_id.clone()),
-        include_side_calls: true,
-        since: None,
-        until: None,
-        ..ConversationFilter::default()
-    };
-    let (summary, models, latest, totals, commits) = tokio::join!(
+    let (summary, models, (latest, totals), commits) = tokio::join!(
         repositories::users::usage::get_ai_request_summary(pool, user_id),
         repositories::users::usage::list_top_models(pool, user_id, None, 10),
-        find_latest_conversation(pool, user_id),
-        get_conversation_totals(pool, &filter),
+        load_conversation_usage(pool, user_id),
         repositories::users::enrolment::list_user_commits(pool, user_id, COMMIT_LIMIT),
     );
     UsageData {
@@ -197,14 +194,44 @@ pub(super) async fn load_usage(pool: &PgPool, user_id: &UserId) -> UsageData {
             .inspect_err(|e| tracing::warn!(error = %e, "user detail: usage summary failed"))
             .unwrap_or_default(),
         models: warn_empty(models, "top models"),
-        latest: latest
-            .inspect_err(|e| tracing::warn!(error = %e, "user detail: latest conversation failed"))
-            .unwrap_or_default(),
-        totals: totals
-            .inspect_err(|e| tracing::warn!(error = %e, "user detail: conversation totals failed"))
-            .unwrap_or_default(),
+        latest,
+        totals,
         commits: warn_empty(commits, "commits"),
     }
+}
+
+#[cfg(feature = "agents")]
+async fn load_conversation_usage(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> (Option<ConversationRow>, ConversationTotals) {
+    let filter = ConversationFilter {
+        user_id: Some(user_id.clone()),
+        include_side_calls: true,
+        since: None,
+        until: None,
+        ..ConversationFilter::default()
+    };
+    let (latest, totals) = tokio::join!(
+        find_latest_conversation(pool, user_id),
+        get_conversation_totals(pool, &filter),
+    );
+    (
+        latest
+            .inspect_err(|e| tracing::warn!(error = %e, "user detail: latest conversation failed"))
+            .unwrap_or_default(),
+        totals
+            .inspect_err(|e| tracing::warn!(error = %e, "user detail: conversation totals failed"))
+            .unwrap_or_default(),
+    )
+}
+
+#[cfg(not(feature = "agents"))]
+async fn load_conversation_usage(
+    _pool: &PgPool,
+    _user_id: &UserId,
+) -> (Option<ConversationRow>, ConversationTotals) {
+    (None, ConversationTotals::default())
 }
 
 fn warn_empty<T>(res: Result<Vec<T>, sqlx::Error>, what: &'static str) -> Vec<T> {

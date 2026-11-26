@@ -29,8 +29,8 @@ pub(super) const ITEMS: &[NavItemDef] = &[
         console: false,
         external: false,
         attention: false,
-        needs: None,
-        compiled: true,
+        needs: Some("agents"),
+        compiled: cfg!(feature = "agents"),
         icon: r#"<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 3.5h11v8h-6l-2.5 2v-2h-2.5z" stroke-linejoin="round"/><path d="M5 6.5h6M5 9h4" stroke-linecap="round"/></svg>"#,
     },
     NavItemDef {

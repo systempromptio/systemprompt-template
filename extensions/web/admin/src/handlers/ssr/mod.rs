@@ -16,6 +16,7 @@ use axum::response::{Html, IntoResponse, Redirect, Response};
 pub(crate) mod analysis_urls;
 mod approvals;
 mod context;
+#[cfg(feature = "agents")]
 pub(crate) mod conversation_header;
 mod devices;
 pub(crate) mod entity_kind;
@@ -55,6 +56,7 @@ mod ssr_governance_audit_detail;
 mod ssr_group_detail;
 mod ssr_groups;
 pub(crate) mod ssr_helpers;
+#[cfg(feature = "agents")]
 pub(crate) mod ssr_history;
 #[cfg(feature = "agents")]
 mod ssr_perf_trace_detail;
@@ -63,7 +65,9 @@ pub(crate) mod ssr_perf_traces;
 mod ssr_profile;
 mod ssr_projects;
 mod ssr_search_resolve;
+#[cfg(feature = "agents")]
 mod ssr_session_detail;
+#[cfg(feature = "agents")]
 pub(crate) mod ssr_sessions_list;
 mod ssr_settings;
 mod ssr_setup;
@@ -107,6 +111,7 @@ pub(crate) use ssr_governance_audit_detail::governance_audit_detail_page;
 pub(crate) use ssr_group_detail::group_detail_page;
 pub(crate) use ssr_groups::groups_page;
 pub(crate) use ssr_helpers::{branding_context, render_typed_page};
+#[cfg(feature = "agents")]
 pub(crate) use ssr_history::{
     conversations_page, history_conversation_page, history_page, history_search,
 };
@@ -117,7 +122,9 @@ pub(crate) use ssr_perf_traces::perf_traces_page;
 pub(crate) use ssr_profile::{issue_bridge_code, profile_page};
 pub(crate) use ssr_projects::{project_detail_page, project_report_page, projects_page};
 pub(crate) use ssr_search_resolve::search_resolve;
+#[cfg(feature = "agents")]
 pub(crate) use ssr_session_detail::session_detail_page;
+#[cfg(feature = "agents")]
 pub(crate) use ssr_sessions_list::sessions_list_page;
 pub(crate) use ssr_settings::settings_page;
 pub(crate) use ssr_setup::setup_page;

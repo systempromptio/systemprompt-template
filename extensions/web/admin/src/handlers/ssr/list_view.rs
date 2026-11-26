@@ -157,12 +157,14 @@ pub(crate) struct TimeRangeContext {
     pub(crate) rejected: bool,
 }
 
+#[cfg(feature = "agents")]
 #[derive(Debug, Serialize)]
 pub(crate) struct Preserved {
     pub(crate) name: &'static str,
     pub(crate) value: String,
 }
 
+#[cfg(feature = "agents")]
 #[derive(Debug, Serialize)]
 pub(crate) struct AnnotatedOption {
     pub(crate) id: String,
@@ -171,6 +173,7 @@ pub(crate) struct AnnotatedOption {
     pub(crate) selected: bool,
 }
 
+#[cfg(any(feature = "gateway", feature = "agents"))]
 #[derive(Debug, Serialize)]
 pub(crate) struct Chip {
     pub(crate) group_label: &'static str,
@@ -204,6 +207,7 @@ pub(crate) fn paginate(window: PageWindow, page_url: impl Fn(i64) -> String) -> 
 
 // Why: the common case — a prefix already ending in `?` or `&`, with the page
 // number last.
+#[cfg(feature = "agents")]
 pub(crate) fn paginate_prefixed(window: PageWindow, prefix: &str) -> Pagination {
     paginate(window, |page| format!("{prefix}page={page}"))
 }

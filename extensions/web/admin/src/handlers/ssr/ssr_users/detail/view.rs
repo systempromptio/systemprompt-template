@@ -7,16 +7,21 @@ use systemprompt_web_shared::{GroupId, ProjectId};
 pub(super) use super::access_view::access_tab;
 
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
+#[cfg(feature = "agents")]
 use crate::handlers::ssr::ssr_history::{HistoryRowView, HistoryView, row_view};
 use crate::repositories::scope::defaults::ScopeDefaults;
 use crate::repositories::users::enrolment::UserDeviceRow;
 use crate::repositories::users::sessions::SigninSessionRow;
 
+#[cfg(feature = "agents")]
+use super::context::UserConversationsTabView;
 use super::context::{
     DeviceRowView, DevicesTabView, IdentityTabView, MembershipTabView, ScopeDefaultOptionView,
-    UserConversationsTabView, UserSessionRowView, UserSessionsTabView,
+    UserSessionRowView, UserSessionsTabView,
 };
-use super::load::{IdentityData, MembershipData, UserConversationsData};
+#[cfg(feature = "agents")]
+use super::load::UserConversationsData;
+use super::load::{IdentityData, MembershipData};
 use crate::types::UserContext;
 
 pub(super) use super::usage::usage_tab;
@@ -29,8 +34,11 @@ const SLACK_ISSUER: &str = "https://slack.com";
 pub(super) fn export(user_id: &UserId, viewer: &UserContext) -> Option<crate::export::ExportView> {
     viewer.is_console.then(|| {
         let query = crate::export::view::query_string(&[("user_id", Some(user_id.as_str()))]);
-        crate::export::ExportView::new(&["requests", "sessions", "conversations"], &query)
-            .with_transcripts(crate::export::view::TranscriptSource::Sessions)
+        let view =
+            crate::export::ExportView::new(&["requests", "sessions", "conversations"], &query);
+        #[cfg(feature = "agents")]
+        let view = view.with_transcripts(crate::export::view::TranscriptSource::Sessions);
+        view
     })
 }
 
@@ -207,6 +215,7 @@ fn session_row(row: &SigninSessionRow) -> UserSessionRowView {
     }
 }
 
+#[cfg(feature = "agents")]
 pub(super) fn conversations_tab(
     data: &UserConversationsData,
     user_id: &UserId,

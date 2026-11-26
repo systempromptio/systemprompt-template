@@ -195,11 +195,13 @@ fn project_query(project_id: &ProjectId) -> String {
 // Why: the project's own traffic, keyed by `project` the way every scoped
 // dataset reads it, with every conversation's full record beside the tables.
 pub(super) fn export_view(project_id: &ProjectId) -> crate::export::ExportView {
-    crate::export::ExportView::new(
+    let view = crate::export::ExportView::new(
         &["requests", "sessions", "analysis-conversations"],
         &project_query(project_id),
-    )
-    .with_transcripts(crate::export::view::TranscriptSource::Sessions)
+    );
+    #[cfg(feature = "agents")]
+    let view = view.with_transcripts(crate::export::view::TranscriptSource::Sessions);
+    view
 }
 
 // Why: the report is a rolling window but the customer hand-off is a calendar

@@ -31,6 +31,7 @@ pub(crate) fn local_time(t: chrono::DateTime<chrono::Utc>) -> String {
 
 // Why: How long a first-to-last window lasted, or an em dash when either end is
 // missing — a hook session can arrive with no timestamp at all.
+#[cfg(feature = "agents")]
 pub(crate) fn format_span(
     start: Option<chrono::DateTime<chrono::Utc>>,
     end: Option<chrono::DateTime<chrono::Utc>>,

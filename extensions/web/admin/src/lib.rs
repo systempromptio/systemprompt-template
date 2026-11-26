@@ -88,7 +88,7 @@ pub mod test_support {
     pub use crate::handlers::hooks_track::session_summary::GeneratedSessionSummary;
     #[cfg(feature = "mcp")]
     pub use crate::handlers::resolve_principal;
-    #[cfg(feature = "mcp")]
+    #[cfg(feature = "agents")]
     pub use crate::handlers::ssr::analysis::marketplace_versions::diff::{
         Change, ManifestDiff, SkillChange, diff as manifest_diff,
     };
@@ -101,6 +101,7 @@ pub mod test_support {
     pub use crate::handlers::ssr::ssr_connectors_cards::{
         ConnectorCardView, card as connector_card,
     };
+    #[cfg(feature = "agents")]
     pub use crate::handlers::ssr::ssr_history::command_name as history_command_name;
     pub use crate::handlers::ssr::transcript_view::{
         ConversationView, EmptyReason, ParsedAssistant, SideCallRowView, SideCallsView, StepView,

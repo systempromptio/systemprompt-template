@@ -36,8 +36,9 @@ use super::BASE_URL;
 // Why: Conversations sits second, directly after Identity. What this person
 // has actually been asking the models is the question an operator opens an
 // account for.
-const TABS: [(&str, &str); 7] = [
+const TABS: &[(&str, &str)] = &[
     ("identity", "Identity"),
+    #[cfg(feature = "agents")]
     ("conversations", "Conversations"),
     ("membership", "Membership"),
     ("access", "Access & connections"),
@@ -121,6 +122,7 @@ pub(crate) async fn user_detail_page(
         is_self: user_ctx.user_id.as_str() == user_id.as_str(),
         export: view::export(&user_id, &user_ctx),
         identity: None,
+        #[cfg(feature = "agents")]
         conversations: None,
         membership: None,
         access: None,
@@ -137,6 +139,7 @@ pub(crate) async fn user_detail_page(
             detail: &detail,
             tab,
             page,
+            #[cfg(feature = "agents")]
             viewer: &user_ctx,
         },
         data,
@@ -160,6 +163,7 @@ struct TabRead<'a> {
     detail: &'a crate::types::UserDetail,
     tab: &'static str,
     page: i64,
+    #[cfg(feature = "agents")]
     viewer: &'a UserContext,
 }
 
@@ -174,9 +178,11 @@ async fn fill_tab(
         detail,
         tab,
         page,
+        #[cfg(feature = "agents")]
         viewer,
     } = read;
     match tab {
+        #[cfg(feature = "agents")]
         "conversations" => {
             data.conversations = Some(view::conversations_tab(
                 &load::load_conversations(pool, user_id, page).await,
@@ -228,14 +234,14 @@ async fn fill_tab(
 }
 
 fn resolve_tab(raw: Option<&str>) -> &'static str {
-    TABS.into_iter()
+    TABS.iter().copied()
         .find(|(slug, _)| Some(*slug) == raw)
         .map_or("identity", |(slug, _)| slug)
 }
 
 fn tab_links(user_id: &UserId, active: &'static str) -> Vec<DetailTabView> {
     let encoded = urlencoding::encode(user_id.as_str());
-    TABS.into_iter()
+    TABS.iter().copied()
         .map(|(slug, label)| DetailTabView {
             slug,
             label,

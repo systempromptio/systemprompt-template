@@ -10,6 +10,7 @@
 //! call, decision, finding and hook event, as JSON, Markdown or JSON Lines.
 
 pub(crate) mod datasets;
+#[cfg(feature = "agents")]
 pub(crate) mod document;
 pub(crate) mod format;
 pub(crate) mod handler;

@@ -25,7 +25,7 @@ home:
 nav:
   - id: activity
     title: "Gateway"
-    items: [overview, analytics, requests, sessions, conversations]
+    items: [overview, analytics, requests]
   - id: governance
     title: "Policy"
     items: [gateway, gateway_policies, quotas, governance, approvals, secrets]
@@ -37,4 +37,4 @@ nav:
     items: [sync, configuration, lifecycle, observability]
   - id: account
     title: "Account"
-    items: [profile, history, settings]
+    items: [profile, settings]

@@ -33,14 +33,6 @@ fn catalog_analysis_routes() -> Router<Arc<PgPool>> {
             post(handlers::ssr::analysis::inventory_actions::bind),
         )
         .route(
-            "/analysis/versions",
-            get(handlers::ssr::analysis::marketplace_versions::landing_page),
-        )
-        .route(
-            "/analysis/versions/{marketplace_id}",
-            get(handlers::ssr::analysis::marketplace_versions::detail_page),
-        )
-        .route(
             "/analysis/revisions/{id}",
             get(handlers::ssr::analysis::revisions::revision_page),
         )
@@ -57,6 +49,14 @@ fn catalog_analysis_routes() -> Router<Arc<PgPool>> {
 #[cfg(feature = "agents")]
 fn conversation_analysis_routes() -> Router<Arc<PgPool>> {
     Router::new()
+        .route(
+            "/analysis/versions",
+            get(handlers::ssr::analysis::marketplace_versions::landing_page),
+        )
+        .route(
+            "/analysis/versions/{marketplace_id}",
+            get(handlers::ssr::analysis::marketplace_versions::detail_page),
+        )
         .route(
             "/analysis/skills",
             get(handlers::ssr::analysis::skills::page),

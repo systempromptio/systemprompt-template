@@ -1,9 +1,12 @@
 //! What a page hands its template so the export button and dialog can render.
 
 use serde::Serialize;
+#[cfg(feature = "agents")]
 use systemprompt::identifiers::ContextId;
 
+#[cfg(feature = "agents")]
 use super::document::DocumentExportView;
+#[cfg(feature = "agents")]
 pub(crate) use super::document::selection::TranscriptSource;
 use super::format::Format;
 use super::model::{Column, Window};
@@ -60,15 +63,18 @@ pub(crate) struct ExportView {
     formats: Vec<ExportFormatView>,
     // Why: a conversation page offers its whole record beside its tables, as
     // the first choice in the same dialog rather than a second set of buttons.
+    #[cfg(feature = "agents")]
     #[serde(skip_serializing_if = "Option::is_none")]
     document: Option<DocumentExportView>,
     // Why: a list of conversations offers the full record of every row it
     // selects — one JSON object per conversation — as one more Data choice.
+    #[cfg(feature = "agents")]
     #[serde(skip_serializing_if = "Option::is_none")]
     transcripts: Option<TranscriptsView>,
     filters: Vec<ExportFilterView>,
 }
 
+#[cfg(feature = "agents")]
 #[derive(Debug, Serialize)]
 pub(crate) struct TranscriptsView {
     source: &'static str,
@@ -188,13 +194,16 @@ impl ExportView {
                     label: f.label(),
                 })
                 .collect(),
+            #[cfg(feature = "agents")]
             document: None,
+            #[cfg(feature = "agents")]
             transcripts: None,
         }
     }
 
     // Why: the full record of every conversation the page's filters (or the
     // ticked rows) select, read through `source`'s own query type and window.
+    #[cfg(feature = "agents")]
     #[must_use]
     pub(crate) fn with_transcripts(mut self, source: TranscriptSource) -> Self {
         if self.datasets.is_empty() {
@@ -223,6 +232,7 @@ impl ExportView {
     // Why: one conversation's Export dialog, the same on the Analysis page,
     // the AI activity page and the owner's history — the whole record first,
     // then (for a console reader) the ledger table of its turns.
+    #[cfg(feature = "agents")]
     pub(crate) fn conversation(context_id: &ContextId, with_ledger: bool) -> Self {
         let query = format!("context_id={}", urlencoding::encode(context_id.as_str()));
         let ids: &[&str] = if with_ledger {

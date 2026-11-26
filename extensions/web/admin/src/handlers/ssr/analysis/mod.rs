@@ -17,7 +17,7 @@ pub(crate) mod inventory_actions;
 pub(crate) mod judge_mode;
 #[cfg(feature = "mcp")]
 pub(crate) mod lifecycle;
-#[cfg(feature = "mcp")]
+#[cfg(feature = "agents")]
 pub(crate) mod marketplace_versions;
 #[cfg(feature = "agents")]
 pub(crate) mod reports;
