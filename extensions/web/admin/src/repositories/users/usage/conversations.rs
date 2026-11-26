@@ -120,7 +120,7 @@ async fn list_recent_conversations(
           FROM conversation_metrics_for(ARRAY(
               SELECT DISTINCT context_id::text FROM ai_requests WHERE user_id = $1
           )) r
-          LEFT JOIN conversation_contexts uc ON uc.context_id = r.context_id
+          LEFT JOIN user_contexts uc ON uc.context_id = r.context_id
           WHERE r.user_id = $1
             AND r.turn_count > 0
             AND r.last_at >= NOW() - make_interval(days => $2)

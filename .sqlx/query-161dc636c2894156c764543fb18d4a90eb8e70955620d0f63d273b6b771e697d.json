@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT context_id AS \"context_id!\" FROM conversation_contexts\n           WHERE context_id = $1 LIMIT 1",
+  "query": "SELECT context_id AS \"context_id!\" FROM user_contexts\n           WHERE context_id = $1 LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       false
     ]
   },
-  "hash": "03342ed8ab0f5deea26288f686c0ebf452e4e6949e91077af8984171c50340f4"
+  "hash": "161dc636c2894156c764543fb18d4a90eb8e70955620d0f63d273b6b771e697d"
 }

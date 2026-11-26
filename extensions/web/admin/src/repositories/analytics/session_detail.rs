@@ -179,7 +179,7 @@ pub async fn list_session_contexts(
             COALESCE(SUM(r.cost_microdollars), 0)::bigint AS "cost_microdollars!",
             COUNT(*) FILTER (WHERE r.status = 'failed')::bigint AS "error_count!"
         FROM ai_requests r
-        LEFT JOIN conversation_contexts c ON c.context_id = r.context_id
+        LEFT JOIN user_contexts c ON c.context_id = r.context_id
         LEFT JOIN conversation_metrics_for(ARRAY(
             SELECT DISTINCT context_id::text FROM ai_requests
             WHERE session_id = $1 OR client_session_id = $1

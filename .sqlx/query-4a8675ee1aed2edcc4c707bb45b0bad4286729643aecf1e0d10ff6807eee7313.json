@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT expire_marketplace_raw_evidence($1) AS \"deleted!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "deleted!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4a8675ee1aed2edcc4c707bb45b0bad4286729643aecf1e0d10ff6807eee7313"
+}

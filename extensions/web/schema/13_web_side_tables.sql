@@ -1,9 +1,10 @@
 -- Web-owned side tables.
 --
 -- These hold web-specific columns that previously lived on core-owned tables
--- (`users`; `markdown_content` has its own in 52_content_side_tables.sql).
--- Each row is keyed 1:1 to its core parent and cascades on delete, so the web extension owns its own columns outright
--- instead of ALTERing a table another extension created.
+-- (`users`). Each row is keyed 1:1 to its core parent and cascades on delete,
+-- so the web extension owns its own columns outright instead of ALTERing a
+-- table another extension created. The `markdown_content` side table is
+-- 52_content_side_tables.sql, installed only with the content member.
 
 CREATE TABLE IF NOT EXISTS user_profile_ext (
     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,

@@ -7,8 +7,8 @@
 -- (table, chart, presentation_card, report, …) an MCP server declared as
 -- data; or a retained structured body with a preview. Everything else — a
 -- shell command, a search, a listing, an untyped result, any other builtin
--- harness tool (Skill, Task, Bash, Grep …) — is a plain tool call. `artifact_kind` is that rule in one place and `tool_activity`
--- (20_member_planes.sql, 50_mcp_planes.sql) applies it to every ledger row, so the Tools page, the Artifacts page, the
+-- harness tool (Skill, Task, Bash, Grep …) — is a plain tool call. `artifact_kind` is that rule in one place and `tool_activity` applies
+-- it to every ledger row, so the Tools page, the Artifacts page, the
 -- conversation record (45_) and the skills figures all count the same way.
 --
 -- `analysis_reports` holds the on-demand global AI reports: one row per
@@ -50,6 +50,32 @@ BEGIN
 EXCEPTION WHEN others THEN
     RETURN left(input, 160);
 END $$;
+
+-- Every tool call with the artifact rule applied. The execution's own
+-- context and trace ids are exposed beside the ledger's coalesced ones
+-- because the conversation record joins hook-sourced executions through the
+-- harness session (`trace_id`), which the ledger overwrites with the
+-- request's trace when an intent row exists.
+DROP VIEW IF EXISTS tool_activity;
+CREATE VIEW tool_activity AS
+SELECT l.ai_tool_call_id, l.intent_id, l.request_id, l.mcp_execution_id, l.artifact_id,
+       l.user_id, l.session_id, l.context_id, l.trace_id, l.client_kind,
+       l.tool_name, l.server_name, l.intended_at, l.executed_at, l.completed_at,
+       l.execution_time_ms, l.execution_status, l.error_message, l.source, l.correlation,
+       l.artifact_type, l.artifact_title, l.is_structured, l.has_ui_resource, l.is_error,
+       l.payload_bytes, l.secret_redactions, l.state, l.occurred_at,
+       x.context_id AS execution_context_id,
+       x.trace_id AS execution_trace_id,
+       COALESCE(a.payload_sha256, x.payload_sha256) AS payload_sha256,
+       artifact_kind(l.tool_name, l.artifact_type, l.has_ui_resource, l.is_structured,
+                     COALESCE(a.payload_sha256, x.payload_sha256), x.input, b.is_builtin) AS artifact_kind,
+       tool_input_summary(x.input) AS input_summary,
+       b.is_builtin
+FROM tool_call_ledger l
+LEFT JOIN mcp_tool_executions x ON x.mcp_execution_id = l.mcp_execution_id
+LEFT JOIN mcp_artifacts a ON a.artifact_id = l.artifact_id
+CROSS JOIN LATERAL (SELECT (l.server_name IS NOT NULL AND l.server_name = l.source
+                            AND COALESCE(l.tool_name, '') NOT LIKE 'mcp\_\_%') AS is_builtin) b;
 
 CREATE TABLE IF NOT EXISTS analysis_reports (
     id TEXT PRIMARY KEY,

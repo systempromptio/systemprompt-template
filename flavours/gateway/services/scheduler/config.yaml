@@ -88,6 +88,11 @@ scheduler:
       owner: admin
       enabled: true
 
+    - name: plugin_usage_retention
+      extension: web
+      owner: admin
+      enabled: true
+
     - name: retention_daily_report
       extension: web
       owner: admin

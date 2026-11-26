@@ -8,7 +8,7 @@ WITH candidate_ids AS (
       AND ($5::timestamptz IS NULL OR ar.created_at >= $5)
     GROUP BY ar.context_id
     UNION
-    SELECT c.context_id FROM conversation_contexts c
+    SELECT c.context_id FROM user_contexts c
     WHERE $5::timestamptz IS NOT NULL AND c.updated_at >= $5
       AND c.context_id <> '00000000-0000-0000-0000-4c4547414359'
       AND EXISTS (SELECT 1 FROM ai_requests ar WHERE ar.context_id = c.context_id

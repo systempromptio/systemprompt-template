@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT kind AS \"kind!\", id AS \"id!\"\n           FROM (\n               SELECT 'request' AS kind, id, created_at FROM ai_requests WHERE id LIKE $1\n               UNION ALL\n               SELECT 'request', id, created_at FROM ai_requests WHERE request_id LIKE $1\n               UNION ALL\n               SELECT 'trace', trace_id, MAX(created_at) FROM ai_requests\n               WHERE trace_id LIKE $1 GROUP BY trace_id\n               UNION ALL\n               SELECT 'trace', trace_id, MAX(created_at) FROM governance_decisions\n               WHERE trace_id LIKE $1 GROUP BY trace_id\n               UNION ALL\n               SELECT 'session', session_id, MAX(created_at) FROM ai_requests\n               WHERE session_id LIKE $1 GROUP BY session_id\n               UNION ALL\n               SELECT 'session', session_id, MAX(created_at) FROM governance_decisions\n               WHERE session_id LIKE $1 GROUP BY session_id\n               UNION ALL\n               SELECT 'session', session_id, MAX(created_at) FROM user_contexts\n               WHERE session_id LIKE $1 GROUP BY session_id\n               UNION ALL\n               SELECT 'context', context_id, MAX(created_at) FROM ai_requests\n               WHERE context_id LIKE $1 GROUP BY context_id\n               UNION ALL\n               SELECT 'context', context_id, MAX(created_at) FROM user_contexts\n               WHERE context_id LIKE $1 GROUP BY context_id\n           ) t\n           WHERE id IS NOT NULL\n           ORDER BY created_at DESC\n           LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "kind!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "078e8a2686158a2884a30beeef22393728912e4f210295f0014cbb6aefb5c6d8"
+}

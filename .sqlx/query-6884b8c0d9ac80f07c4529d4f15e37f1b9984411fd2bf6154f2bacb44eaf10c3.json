@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT session_id AS \"session_id!\" FROM conversation_contexts\n           WHERE session_id = $1 LIMIT 1",
+  "query": "SELECT session_id AS \"session_id!\" FROM user_contexts\n           WHERE session_id = $1 LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       true
     ]
   },
-  "hash": "fd2d36be3d8c4dc6c100051fa61578bfa012dad02a3cd881e327937b0e273916"
+  "hash": "6884b8c0d9ac80f07c4529d4f15e37f1b9984411fd2bf6154f2bacb44eaf10c3"
 }

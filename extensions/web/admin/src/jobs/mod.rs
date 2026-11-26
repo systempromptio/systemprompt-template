@@ -24,7 +24,6 @@ mod scope_defaults;
 mod secret_migration;
 #[cfg(feature = "gateway")]
 mod usage_anomaly;
-#[cfg(feature = "mcp")]
 mod usage_retention;
 mod usage_rollup;
 
@@ -45,7 +44,6 @@ pub use quota_month_window::QuotaMonthWindowJob;
 pub use retention::{RetentionDailyReportJob, RetentionExportMonthlyJob, RetentionExportWeeklyJob};
 pub use scope_defaults::ScopeDefaultsJob;
 pub use secret_migration::SecretMigrationJob;
-#[cfg(feature = "mcp")]
 pub use usage_retention::PluginUsageRetentionJob;
 pub use usage_rollup::UsageDailyRollupJob;
 
@@ -59,12 +57,11 @@ pub fn contribute_jobs(c: &mut Contributions<'_>) {
     c.job(ContentAnalyticsAggregationJob);
     #[cfg(feature = "gateway")]
     c.job(QuotaMonthWindowJob).job(UsageAnomalyJob);
-    #[cfg(feature = "mcp")]
-    c.job(PluginUsageRetentionJob);
     #[cfg(feature = "agents")]
     c.job(ConversationRollupJob);
     c.job(AccessExpiryJob)
         .job(GovernanceBootstrapJob)
+        .job(PluginUsageRetentionJob)
         .job(RetentionDailyReportJob)
         .job(RetentionExportMonthlyJob)
         .job(RetentionExportWeeklyJob)
