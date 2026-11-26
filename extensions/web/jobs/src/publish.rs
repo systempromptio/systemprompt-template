@@ -278,7 +278,6 @@ impl PublishPipelineJob {
         self.run_asset_copy(paths, &mut stats).await;
         self.run_prerender(ctx, &mut stats).await;
         self.run_derived_files(ctx, &mut stats).await;
-        stats.record_success();
         self.run_asset_organization(paths, &mut stats).await;
 
         let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);

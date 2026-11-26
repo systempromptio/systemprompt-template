@@ -70,7 +70,7 @@ pub async fn list_rules_for_entity(
 // delete of what is absent rather than a wipe and re-insert. A row the file
 // already declared and the console left alone keeps its `yaml` source and its
 // justification, so it does not turn into drift; only rows the console changed
-// or added are stamped `dashboard`.
+// or added are stamped with the console source.
 pub async fn set_entity_rules(
     pool: &PgPool,
     entity_type: EntityKind,
