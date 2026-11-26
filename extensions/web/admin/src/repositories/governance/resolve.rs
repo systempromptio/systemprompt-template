@@ -108,7 +108,7 @@ async fn lookup_context_in_user_contexts(
     id: &str,
 ) -> Result<Option<ResolvedId>, sqlx::Error> {
     let row = sqlx::query!(
-        r#"SELECT context_id AS "context_id!" FROM user_contexts
+        r#"SELECT context_id AS "context_id!" FROM conversation_contexts
            WHERE context_id = $1 LIMIT 1"#,
         id,
     )
@@ -176,7 +176,7 @@ async fn lookup_session_in_user_contexts(
     id: &str,
 ) -> Result<Option<ResolvedId>, sqlx::Error> {
     let row = sqlx::query!(
-        r#"SELECT session_id AS "session_id!" FROM user_contexts
+        r#"SELECT session_id AS "session_id!" FROM conversation_contexts
            WHERE session_id = $1 LIMIT 1"#,
         id,
     )

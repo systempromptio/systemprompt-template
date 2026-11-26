@@ -57,9 +57,11 @@ SELECT NULL::text AS user_id, NULL::text AS context_id, NULL::text AS trace_id,
        NULL::timestamptz AS touched_at, NULL::timestamptz AS seen_at
 WHERE false;
 
--- A gateway context's name and last change, as the agent member records them.
+-- A conversation context as the agent member records it: its owner, the
+-- session it was opened in, its name and when it was created and changed.
 CREATE OR REPLACE VIEW conversation_contexts AS
-SELECT NULL::text AS context_id, NULL::text AS name, NULL::timestamptz AS updated_at
+SELECT NULL::text AS context_id, NULL::text AS user_id, NULL::text AS session_id,
+       NULL::text AS name, NULL::timestamptz AS created_at, NULL::timestamptz AS updated_at
 WHERE false;
 
 -- The member-owned rows raw-evidence expiry removes (32_raw_retention.sql).

@@ -82,7 +82,7 @@ WITH classified AS MATERIALIZED (
                 NULL::text             AS transcript_id
             FROM gw g
             JOIN gw_latest l ON l.context_id = g.context_id
-            LEFT JOIN user_contexts uc ON uc.context_id = g.context_id
+            LEFT JOIN conversation_contexts uc ON uc.context_id = g.context_id
             LEFT JOIN plugin_session_summaries pss ON pss.session_id = g.client_session_id
             WHERE ($7::bool OR g.turns > 0)
               AND ($6::text IS NULL
