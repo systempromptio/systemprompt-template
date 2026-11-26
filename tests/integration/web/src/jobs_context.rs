@@ -48,10 +48,9 @@ fn assert_missing_database(error: &systemprompt::traits::ProviderError) {
 }
 
 // Stage count of `PublishPipelineJob`: ingestion, CSS bundle, asset copy,
-// prerender, llms.txt, robots.txt, the unconditional success the pipeline
-// records between them, and asset organisation. Asserting the total pins that
-// no stage is silently dropped.
-const PIPELINE_STAGES: u64 = 8;
+// prerender, sitemap, RSS feed, llms.txt, robots.txt and asset organisation.
+// Asserting the total pins that no stage is silently dropped or invented.
+const PIPELINE_STAGES: u64 = 9;
 
 const BASE_URL: &str = "https://example.test";
 
