@@ -32,9 +32,16 @@ runtime: full
 smoke:
   routes_present:
     - "/"
+    - "/blog"
+    - "/documentation"
     - "/sitemap.xml"
+    - "/robots.txt"
+    - "/llms.txt"
     - "/.well-known/jwks.json"
     - "/admin/"
+    - "/admin/login"
+    - "/css/admin-bundle.css"
+    - "/js/pages/admin-login.js"
   routes_absent:
     - "/__flavour-smoke-absent__"
   cli_groups_present:
@@ -47,9 +54,17 @@ smoke:
     - "core"
     - "web"
     - "admin agents"
+    - "admin mcp"
+    - "admin agent-host"
+    - "admin bridge"
+    - "admin issues"
   cli_groups_absent: []
   capabilities:
     - "publish_pipeline"
+    - "content_analytics_aggregation"
+    - "markdown_content"
+    - "agent_tasks"
+    - "mcp_tool_executions"
   mcp_servers:
     - "systemprompt"
   models_endpoint: true
