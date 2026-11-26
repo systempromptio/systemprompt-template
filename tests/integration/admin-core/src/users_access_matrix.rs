@@ -36,7 +36,7 @@ pub fn one_skill(entity_id: &str) -> Vec<SectionInput> {
 async fn set_default_included(pool: &PgPool, entity_type: &str, entity_id: &str, included: bool) {
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
-         VALUES ($1, $2, $3, 'fixture')
+         VALUES ($1, $2, $3, 'code:fixture')
          ON CONFLICT (entity_type, entity_id) DO UPDATE
             SET default_included = EXCLUDED.default_included",
     )

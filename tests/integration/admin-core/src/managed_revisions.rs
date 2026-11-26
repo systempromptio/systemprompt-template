@@ -543,10 +543,17 @@ async fn reviewed_publications_are_idempotent_fenced_and_generation_pinned() {
         limitations: String::new(),
         cohort: None,
     };
-    assert!(matches!(
-        repo.review_and_publish(&owner, &owner, &stale).await,
-        Err(ManagedError::Conflict { .. })
-    ));
+    let refused = repo.review_and_publish(&owner, &owner, &stale).await;
+    assert!(
+        matches!(
+            refused,
+            Err(ManagedError::GenerationMismatch {
+                expected: 1,
+                found: 2
+            })
+        ),
+        "{refused:?}"
+    );
     let withdrawal = repo
         .review_and_publish(
             &owner,

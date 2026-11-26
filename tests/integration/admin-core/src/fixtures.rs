@@ -435,7 +435,7 @@ pub async fn insert_acl_rule(pool: &PgPool, spec: &AclRuleSpec<'_>) {
     } = *spec;
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
-         VALUES ($1, $2, false, 'fixture')
+         VALUES ($1, $2, false, 'code:fixture')
          ON CONFLICT (entity_type, entity_id) DO NOTHING",
     )
     .bind(entity_type)
@@ -446,8 +446,8 @@ pub async fn insert_acl_rule(pool: &PgPool, spec: &AclRuleSpec<'_>) {
 
     sqlx::query(
         "INSERT INTO access_control_rules
-             (id, entity_type, entity_id, rule_type, rule_value, access)
-         VALUES ($1, $2, $3, $4, $5, $6)",
+             (id, entity_type, entity_id, rule_type, rule_value, access, source)
+         VALUES ($1, $2, $3, $4, $5, $6, 'code:fixture')",
     )
     .bind(unique("rule"))
     .bind(entity_type)

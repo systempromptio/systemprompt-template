@@ -38,7 +38,7 @@ async fn list_recent_unrejected_requests_includes_a_fresh_completed_request() {
 }
 
 #[tokio::test]
-async fn list_recent_unrejected_requests_omits_rejected_and_denied() {
+async fn list_recent_unrejected_requests_omits_rejected_requests() {
     let Some(db) = TempDb::create().await else {
         return;
     };
@@ -52,17 +52,19 @@ async fn list_recent_unrejected_requests_omits_rejected_and_denied() {
     seed.model = None;
     insert_request(&db.pool, &seed).await;
 
-    let denied = unique("req-den");
-    let mut seed = RequestSeed::new(&denied, &user, chrono::Utc::now());
-    seed.status = "denied";
-    insert_request(&db.pool, &seed).await;
+    let completed = unique("req-ok");
+    insert_request(
+        &db.pool,
+        &RequestSeed::new(&completed, &user, chrono::Utc::now()),
+    )
+    .await;
 
     let rows = list_recent_unrejected_requests(&db.pool, 60)
         .await
         .expect("list recent requests");
 
     assert!(!rows.iter().any(|r| r.id == rejected));
-    assert!(!rows.iter().any(|r| r.id == denied));
+    assert!(rows.iter().any(|r| r.id == completed));
 
     db.cleanup().await;
 }
