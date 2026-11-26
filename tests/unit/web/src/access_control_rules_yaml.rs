@@ -108,7 +108,7 @@ fn a_literal_gateway_route_id_is_rejected() {
 }
 
 #[test]
-fn why_is_required_and_globs_are_for_generated_kinds_only() {
+fn why_is_required_and_only_glob_kinds_take_a_glob() {
     let missing = parse_rules_doc(
         "entities:\n  - entity: mcp_server/x\n    why: ' '\n    allow:\n      role: [user]\n",
     )
@@ -120,7 +120,12 @@ fn why_is_required_and_globs_are_for_generated_kinds_only() {
     )
     .expect_err("rejected")
     .to_string();
-    assert!(glob.contains("only gateway_route and hook"), "{glob}");
+    assert!(
+        glob.contains("only gateway_route, hook and model"),
+        "{glob}"
+    );
+    parse_rules_doc("entities:\n  - entity: model/*\n    why: x\n    allow:\n      role: [user]\n")
+        .expect("a model glob is admitted");
 }
 
 #[test]

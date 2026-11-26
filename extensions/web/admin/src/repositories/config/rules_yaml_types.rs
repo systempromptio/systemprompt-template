@@ -22,6 +22,7 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use systemprompt::governance::authz::rules_file::GLOB_KINDS;
 use systemprompt::governance::authz::{Access, EntityKind};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -258,15 +259,17 @@ impl EntityDecl {
 
 fn check_glob_shape(entity: &EntityRef) -> Result<(), String> {
     let kind = entity.kind.as_str();
-    match (entity.is_glob(), GLOB_ONLY_KINDS.contains(&entity.kind)) {
-        (true, false) => Err(format!(
-            "{entity}: only gateway_route and hook take a glob; write the id"
-        )),
-        (false, true) => Err(format!(
-            "{entity}: {kind} ids are generated, never written — use {kind}/*"
-        )),
-        (true, true) | (false, false) => Ok(()),
+    if entity.is_glob() && !GLOB_KINDS.contains(&entity.kind) {
+        return Err(format!(
+            "{entity}: only gateway_route, hook and model take a glob; write the id"
+        ));
     }
+    if !entity.is_glob() && GLOB_ONLY_KINDS.contains(&entity.kind) {
+        return Err(format!(
+            "{entity}: {kind} ids are generated, never written — use {kind}/*"
+        ));
+    }
+    Ok(())
 }
 
 fn subject_problem(spec: &BandSpec) -> Option<&'static str> {
