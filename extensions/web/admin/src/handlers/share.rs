@@ -76,7 +76,7 @@ pub(crate) async fn issue_share_token_handler(
     let version = repositories::users::find_share_token_version(&pool, &target_user_id)
         .await?
         .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
-    let token = sign(env.share_tokens()?, &target_user_id, version)?;
+    let token = sign(env.share_tokens(), &target_user_id, version)?;
     let url = format!("/share/manifest/{token}");
     Ok(Json(ShareTokenResponse { token, url }).into_response())
 }
@@ -106,7 +106,7 @@ pub(crate) async fn public_manifest_handler(
     Extension(env): Extension<AdminEnv>,
     Path(token): Path<String>,
 ) -> AdminResult<Response> {
-    let Some((user_id, version)) = verify(env.share_tokens()?, &token) else {
+    let Some((user_id, version)) = verify(env.share_tokens(), &token) else {
         return Err(AdminError::Unauthorized(
             "Invalid or revoked token".to_owned(),
         ));

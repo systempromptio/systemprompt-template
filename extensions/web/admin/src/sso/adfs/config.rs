@@ -55,11 +55,18 @@ pub(super) const fn default_clock_skew_seconds() -> u64 {
     120
 }
 
-// Why: The two SAML endpoints this instance serves. The loader appends them to
-// the profile's external URL when the YAML names neither, so the registered
-// relying-party trust and the values we send AD FS are derived from one fact.
-pub const METADATA_PATH: &str = "/saml/metadata";
-pub const ACS_PATH: &str = "/admin/auth/adfs/acs";
+// Why: core serves every contributed provider under its SSO base, so the
+// assertion consumer service is core's callback for the `adfs` provider. The
+// loader appends these to the profile's external URL when the YAML names
+// neither, so the registered relying-party trust and the values sent to AD FS
+// are derived from one fact.
+pub const METADATA_PATH: &str = "/api/v1/core/sso/adfs/metadata";
+// Why: the relying-party identifier the trust is registered under. It is an
+// identifier, not a served URL, so it keeps the value it had before the
+// endpoints moved under core's SSO base.
+pub const ENTITY_ID_PATH: &str = "/saml/metadata";
+pub const ACS_PATH: &str = "/api/v1/core/sso/adfs/callback";
+pub const START_PATH: &str = "/api/v1/core/sso/adfs/start";
 
 /// ADFS SSO connection config (SAML 2.0 relying party).
 ///

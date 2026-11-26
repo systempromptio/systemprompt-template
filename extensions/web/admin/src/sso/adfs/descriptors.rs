@@ -1,23 +1,13 @@
 //! The SAML roles built from [`AdfsConfig`]: our service-provider descriptor
 //! and the `IdP` descriptor parsed from the pinned federation metadata.
-//!
-//! Metadata parsing is cached per config so the 70 KB AD FS document is
-//! parsed once per process, not once per sign-in.
-
-use std::collections::HashMap;
-use std::sync::{Arc, LazyLock};
 
 use saml::{
     DigestAlgorithm, IdpDescriptor, NameIdFormat, PeerCryptoPolicy, ServiceProvider,
     ServiceProviderConfig, SignatureAlgorithm, SpWantSigned, SsoResponseEndpoint,
 };
-use tokio::sync::RwLock;
 
 use super::AdfsError;
 use super::config::AdfsConfig;
-
-static IDP_CACHE: LazyLock<RwLock<HashMap<String, Arc<IdpDescriptor>>>> =
-    LazyLock::new(|| RwLock::new(HashMap::new()));
 
 pub(super) fn service_provider(cfg: &AdfsConfig) -> Result<ServiceProvider, AdfsError> {
     ServiceProvider::new(ServiceProviderConfig {
@@ -43,18 +33,7 @@ pub(super) fn service_provider(cfg: &AdfsConfig) -> Result<ServiceProvider, Adfs
     .map_err(|e| AdfsError::ServiceProvider(e.to_string()))
 }
 
-// Why: keyed on the metadata text itself, so a re-vendored metadata file is
-// a new cache entry rather than a stale descriptor.
-pub(super) async fn idp_descriptor(cfg: &AdfsConfig) -> Result<Arc<IdpDescriptor>, AdfsError> {
-    if let Some(idp) = IDP_CACHE.read().await.get(&cfg.idp_metadata_xml) {
-        return Ok(Arc::clone(idp));
-    }
-    let parsed = IdpDescriptor::from_metadata_xml(cfg.idp_metadata_xml.as_bytes())
-        .map_err(|e| AdfsError::Metadata(e.to_string()))?;
-    let idp = Arc::new(parsed);
-    IDP_CACHE
-        .write()
-        .await
-        .insert(cfg.idp_metadata_xml.clone(), Arc::clone(&idp));
-    Ok(idp)
+pub(super) fn idp_descriptor(cfg: &AdfsConfig) -> Result<IdpDescriptor, AdfsError> {
+    IdpDescriptor::from_metadata_xml(cfg.idp_metadata_xml.as_bytes())
+        .map_err(|e| AdfsError::Metadata(e.to_string()))
 }

@@ -6,10 +6,10 @@
 //! `content_hash` — the same file walk, the same digest — so the number on
 //! the page equals the one on the base bundle published at this release.
 //! Each `bundle:<name>` is a source the profile pins, read from the install
-//! services view as its name, transport and credential-free location. The
-//! bundle cache state (active digest, version, content hash, fetch time,
-//! what a bundle owns) and the active root's provenance are not readable by
-//! an install member, so the panel shows the pins without them. Nothing here
+//! services view as its name, transport and credential-free location, with
+//! the cache state core's loader records for it (active digest, version,
+//! content hash) and the skills its cached manifest owns. The composed hash
+//! and the active root's provenance come from the same view. Nothing here
 //! fetches.
 
 use crate::env::AdminEnv;
@@ -17,6 +17,10 @@ use crate::env::AdminEnv;
 use std::path::Path;
 
 use serde::Serialize;
+use systemprompt::loader::bundle::{
+    BaseTreeHashMemo, BundleProvenance, BundleSources, owning_bundle_hashes, sources_provenance,
+};
+use systemprompt::manifest::services::root::ServicesProvenance;
 use systemprompt::manifest::services::{ServicesSourceView, SourceTransport};
 
 use super::source_badges::{BadgeInputs, SourceBadge, source_badges};
@@ -74,23 +78,35 @@ pub struct SourcesView {
 
 pub fn build_sources(env: &AdminEnv) -> AdminResult<SourcesView> {
     let declaring_access = marketplaces_declaring_access(env);
-    let bundles = env
-        .services_view()
+    let view = env.services_view();
+    let cached = BundleSources::of(view);
+    let recorded = sources_provenance(&cached, Some(view.active_root()), &BaseTreeHashMemo::new());
+    let owners = owning_bundle_hashes(&cached);
+    let bundles = view
         .sources()
         .iter()
-        .map(|source| bundle_view(source, &declaring_access))
+        .map(|source| {
+            let state = recorded.bundles.iter().find(|b| b.name == source.name);
+            bundle_view(source, state, &owners, &declaring_access)
+        })
         .collect();
     let baked = env.baked_services_root();
+    let (provenance, provenance_error) = match &view.active_root().provenance {
+        ServicesProvenance::Bundled => ("bundled", None),
+        ServicesProvenance::Fetched { .. } => ("fetched", None),
+        ServicesProvenance::LastGood { error, .. } => ("last-good", Some(error.clone())),
+        ServicesProvenance::BundledFallback { error } => ("bundled-fallback", Some(error.clone())),
+    };
     Ok(SourcesView {
         base: BaseSourceView {
             version: env!("CARGO_PKG_VERSION"),
             tree_hash: base_tree_hash(Path::new(&baked)),
             tree_path: baked.display().to_string(),
-            provenance: "unreported",
-            provenance_error: None,
+            provenance,
+            provenance_error,
         },
         bundles,
-        composed_hash: None,
+        composed_hash: recorded.composed_hash,
         last_reconciled_hash: None,
         restart_pending: false,
         on_fetch_failure: String::new(),
@@ -98,7 +114,12 @@ pub fn build_sources(env: &AdminEnv) -> AdminResult<SourcesView> {
     })
 }
 
-fn bundle_view(source: &ServicesSourceView, declaring_access: &[String]) -> BundleSourceView {
+fn bundle_view(
+    source: &ServicesSourceView,
+    state: Option<&BundleProvenance>,
+    owners: &std::collections::BTreeMap<String, systemprompt::identifiers::ContentHash>,
+    declaring_access: &[String],
+) -> BundleSourceView {
     let transport = match source.transport {
         SourceTransport::Https => "https",
         SourceTransport::Oci => "oci",
@@ -108,11 +129,24 @@ fn bundle_view(source: &ServicesSourceView, declaring_access: &[String]) -> Bund
         .split_once("@sha256:")
         .map(|(_, d)| format!("sha256:{d}"));
     let following_tag = transport == "oci" && pinned_digest.is_none();
-    let owns = OwnsView::default();
+    let active_digest = state.and_then(|s| s.active_digest.clone());
+    let content_hash = state.and_then(|s| s.content_hash.clone());
+    let skills: Vec<String> = content_hash.as_ref().map_or_else(Vec::new, |hash| {
+        owners
+            .iter()
+            .filter(|(_, owner)| *owner == hash)
+            .map(|(skill, _)| skill.clone())
+            .collect()
+    });
+    let owns = OwnsView {
+        summary: format!("{} skills", skills.len()),
+        skills,
+        ..OwnsView::default()
+    };
     let badges = source_badges(&BadgeInputs {
         name: &source.name,
         pinned_digest: pinned_digest.as_deref(),
-        active_digest: None,
+        active_digest: active_digest.as_deref(),
         following_tag,
         restart_pending: false,
         kit_access: owns
@@ -129,9 +163,9 @@ fn bundle_view(source: &ServicesSourceView, declaring_access: &[String]) -> Bund
         reference,
         pinned_digest,
         following_tag,
-        active_digest: None,
-        version: None,
-        content_hash: None,
+        active_digest,
+        version: state.and_then(|s| s.version.clone()),
+        content_hash: content_hash.map(|h| h.as_str().to_owned()),
         fetched_at: None,
         owns,
         badges,

@@ -11,6 +11,7 @@ use systemprompt::content::contract::ContentSlot;
 use systemprompt::extension::artifact_ui::DynArtifactUiRenderer;
 use systemprompt::extension::prelude::*;
 use systemprompt::extension::reserved::InstallConferral;
+use systemprompt::extension::{ResealColumn, SealedLayout};
 use systemprompt::governance::authz::SubjectSourceCell;
 use systemprompt::identifiers::SecretName;
 use systemprompt::manifest::ConfigView;
@@ -85,7 +86,7 @@ impl Extension for WebExtension {
             .site_auth(SiteAuthConfig {
                 login_path: "/admin/login",
                 protected_prefixes: &["/admin", "/bridge-auth"],
-                public_prefixes: &["/admin/login", "/admin/auth/adfs"],
+                public_prefixes: &["/admin/login"],
                 required_scope: "user",
             })
             .asset_with(|paths: &dyn AssetPaths| {
@@ -94,6 +95,24 @@ impl Extension for WebExtension {
                 assets
             })
             .conferral(InstallConferral::MemberCipher)
+            .reseal_column(ResealColumn {
+                table: "user_encryption_keys",
+                keys: &["user_id"],
+                ciphertext: "encrypted_dek",
+                layout: SealedLayout::SplitBytea { nonce: "dek_nonce" },
+            })
+            .reseal_column(ResealColumn {
+                table: "mcp_connector_credentials",
+                keys: &["user_id", "provider"],
+                ciphertext: "ciphertext",
+                layout: SealedLayout::SplitBytea { nonce: "nonce" },
+            })
+            .reseal_column(ResealColumn {
+                table: "mcp_connector_oauth_states",
+                keys: &["state"],
+                ciphertext: "ciphertext",
+                layout: SealedLayout::SplitBytea { nonce: "nonce" },
+            })
             .conferral(InstallConferral::ShareTokens)
             .conferral(InstallConferral::GitSourceSync)
             .secret(SecretName::new("github_mcp_client_id"))
@@ -114,19 +133,29 @@ impl Extension for WebExtension {
                     services: r.get::<InstallServicesView>()?,
                     authenticator: r.get::<DynRequestAuthenticator>()?,
                     subjects: r.get::<SubjectSourceCell>()?,
-                    cipher: r.member_cipher().ok(),
-                    share_tokens: r.share_tokens().ok(),
+                    cipher: r.member_cipher()?,
+                    share_tokens: r.share_tokens()?,
                     secrets: r.secrets()?,
                     paths: r.get::<Arc<AppPaths>>()?,
                     artifact_ui: r.optional::<DynArtifactUiRenderer>(),
-                    git_sync: r.git_source_sync().ok(),
+                    git_sync: r.git_source_sync()?,
                 }))
             })
             .provide_after_governance::<Arc<WebRuntime>, _>(|r: &Resolved<'_>| {
+                // Why: the routers need AdminEnv, which a child host withholds
+                // with the member cipher; asking for the cipher here withholds
+                // the runtime on the same host for the same reason.
+                r.member_cipher()?;
                 let db = DbHandles::resolve(r)?;
                 let settings = r.get::<Arc<WebSettings>>()?;
                 let env = r.get::<AdminEnv>()?;
-                Ok(Arc::new(WebRuntime::build(&db, &settings, &env)))
+                let sign_in = r.get::<Arc<crate::sign_in::SignInSetup>>()?;
+                Ok(Arc::new(WebRuntime::build(
+                    &db,
+                    &settings,
+                    &env,
+                    sign_in.options(),
+                )))
             })
             .gateway_guard(|r: &Resolved<'_>| {
                 let guard: Arc<dyn GatewayRequestGuard> =
@@ -138,6 +167,10 @@ impl Extension for WebExtension {
         systemprompt_web_admin::marketplace_filter::contribute_marketplace_filter(c);
         crate::admin::authz::contribute_subject_attributes(c);
         crate::jobs::contribute_jobs(c);
+        crate::sign_in::contribute(c);
+        c.command(systemprompt::extension::cli::CommandDecl::group::<
+            crate::dev_login_command::DevLoginCommands,
+        >());
         contribute_content(c);
         Ok(())
     }
@@ -147,92 +180,66 @@ fn services(r: &Resolved<'_>) -> Result<Arc<WebSettings>, FactoryError> {
     Ok(r.get::<Arc<WebSettings>>()?)
 }
 
-// Why: a content factory cannot decline (`ContentSlotBuilder` takes a
-// factory that returns the provider or fails), so a page whose config file is
-// missing refuses the slot rather than rendering from an invented default.
-#[derive(Debug, thiserror::Error)]
-#[error("{0} is not configured in the services tree")]
-struct MissingSiteConfig(&'static str);
-
-fn required<T>(config: Option<Arc<T>>, what: &'static str) -> Result<Arc<T>, FactoryError> {
-    config.ok_or_else(|| FactoryError::Failed(Box::new(MissingSiteConfig(what))))
-}
+type Built<T> = Result<Option<Arc<T>>, FactoryError>;
 
 fn contribute_content(c: &mut Contributions<'_>) {
     let content = c.slot::<ContentSlot>();
     content
-        .page_data_provider(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                let settings = services(r)?;
-                let nav = required(
-                    config_loader::navigation_config(&settings.services_path),
-                    "web/navigation.yaml",
-                )?;
-                let branding = config_loader::branding_config(&settings.services_path);
-                Ok(Arc::new(
-                    NavigationPageDataProvider::new(nav).with_branding(branding),
-                ))
-            },
-        )
-        .page_data_provider(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                let settings = services(r)?;
-                let homepage =
-                    config_loader::homepage_config(&settings.services_path).unwrap_or_default();
-                Ok(Arc::new(HomepagePageDataProvider::new(homepage)))
-            },
-        )
-        .page_prerenderer(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PagePrerenderer>, FactoryError> {
-                let settings = services(r)?;
-                let homepage =
-                    config_loader::homepage_config(&settings.services_path).unwrap_or_default();
-                Ok(Arc::new(HomepagePrerenderer::new(homepage)))
-            },
-        )
-        .page_prerenderer(
-            |r: &Resolved<'_>| -> Result<Arc<dyn PagePrerenderer>, FactoryError> {
-                let settings = services(r)?;
-                let skills = required(
-                    config_loader::skills_page_config(&settings.services_path),
-                    "web/skills page config",
-                )?;
-                Ok(Arc::new(SkillsPagePrerenderer::new(skills)))
-            },
-        )
-        .page_data_provider(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn PageDataProvider>, FactoryError> {
-                Ok(Arc::new(DocsPageDataProvider::new()))
-            },
-        )
-        .content_data_provider(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn ContentDataProvider>, FactoryError> {
-                Ok(Arc::new(DocsContentDataProvider::new()))
-            },
-        )
-        .template_data_extender(
-            |r: &Resolved<'_>| -> Result<Arc<dyn TemplateDataExtender>, FactoryError> {
-                let settings = services(r)?;
-                Ok(Arc::new(OrgUrlExtender::new(
-                    settings.api_external_url.clone(),
-                )))
-            },
-        )
-        .template_data_extender(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn TemplateDataExtender>, FactoryError> {
-                Ok(Arc::new(ReleaseVersionExtender::new()))
-            },
-        );
+        .page_data_provider(|r: &Resolved<'_>| -> Built<dyn PageDataProvider> {
+            let settings = services(r)?;
+            let Some(nav) = config_loader::navigation_config(&settings.services_path) else {
+                return Ok(None);
+            };
+            let branding = config_loader::branding_config(&settings.services_path);
+            Ok(Some(Arc::new(
+                NavigationPageDataProvider::new(nav).with_branding(branding),
+            )))
+        })
+        .page_data_provider(|r: &Resolved<'_>| -> Built<dyn PageDataProvider> {
+            let settings = services(r)?;
+            let homepage =
+                config_loader::homepage_config(&settings.services_path).unwrap_or_default();
+            Ok(Some(Arc::new(HomepagePageDataProvider::new(homepage))))
+        })
+        .page_prerenderer(|r: &Resolved<'_>| -> Built<dyn PagePrerenderer> {
+            let settings = services(r)?;
+            let homepage =
+                config_loader::homepage_config(&settings.services_path).unwrap_or_default();
+            Ok(Some(Arc::new(HomepagePrerenderer::new(homepage))))
+        })
+        .page_prerenderer(|r: &Resolved<'_>| -> Built<dyn PagePrerenderer> {
+            let settings = services(r)?;
+            Ok(
+                config_loader::skills_page_config(&settings.services_path).map(
+                    |skills| -> Arc<dyn PagePrerenderer> {
+                        Arc::new(SkillsPagePrerenderer::new(skills))
+                    },
+                ),
+            )
+        })
+        .page_data_provider(|_r: &Resolved<'_>| -> Built<dyn PageDataProvider> {
+            Ok(Some(Arc::new(DocsPageDataProvider::new())))
+        })
+        .content_data_provider(|_r: &Resolved<'_>| -> Built<dyn ContentDataProvider> {
+            Ok(Some(Arc::new(DocsContentDataProvider::new())))
+        })
+        .template_data_extender(|r: &Resolved<'_>| -> Built<dyn TemplateDataExtender> {
+            let settings = services(r)?;
+            Ok(Some(Arc::new(OrgUrlExtender::new(
+                settings.api_external_url.clone(),
+            ))))
+        })
+        .template_data_extender(|_r: &Resolved<'_>| -> Built<dyn TemplateDataExtender> {
+            Ok(Some(Arc::new(ReleaseVersionExtender::new())))
+        });
     contribute_partials(content);
 }
 
 macro_rules! component {
     ($content:expr, $renderer:expr) => {
-        $content.component_renderer(
-            |_r: &Resolved<'_>| -> Result<Arc<dyn ComponentRenderer>, FactoryError> {
-                Ok(Arc::new($renderer))
-            },
-        )
+        $content.component_renderer(|_r: &Resolved<'_>| -> Built<dyn ComponentRenderer> {
+            Ok(Some(Arc::new($renderer)))
+        })
     };
 }
 

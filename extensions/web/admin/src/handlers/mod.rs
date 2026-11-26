@@ -4,12 +4,10 @@
 //! webhook intake. Handlers own status mapping and call repositories for data.
 
 pub(crate) mod access_control;
-pub(crate) mod adfs_auth;
 pub(crate) mod approvals;
 pub(crate) mod bridge_whoami;
 pub(crate) mod catalog;
 pub(crate) mod connector_reprovision;
-pub(crate) mod dev_login;
 pub(crate) mod devices;
 pub(crate) mod entity_access;
 pub(crate) mod gateway;

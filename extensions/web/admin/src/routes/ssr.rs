@@ -10,17 +10,15 @@ use tower_http::normalize_path::NormalizePathLayer;
 use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
 use super::ssr_redirects;
-use crate::env::AdminEnv;
-use crate::handlers::adfs_auth::AdfsDeps;
+use crate::handlers::ssr::SignInOptions;
 use systemprompt::database::DbPool;
 
 pub fn admin_ssr_router(
     db: &DbPool,
     pool: Arc<PgPool>,
     engine: AdminTemplateEngine,
-    sso_deps: AdfsDeps,
+    sign_in: SignInOptions,
     owner: systemprompt::identifiers::UserId,
-    env: &AdminEnv,
 ) -> Router {
     let managed = Arc::new(super::managed_state::ManagedState::new(db, owner));
     let inner = overview_routes()
@@ -34,7 +32,6 @@ pub fn admin_ssr_router(
         .merge(ssr_redirects::legacy_routes())
         .layer(Extension(engine.clone()))
         .layer(Extension(managed))
-        .layer(Extension(sso_deps.clone()))
         .layer(axum_middleware::from_fn_with_state(
             Arc::clone(&pool),
             middleware::marketplace_context_middleware,
@@ -51,9 +48,9 @@ pub fn admin_ssr_router(
         ))
         .with_state(Arc::clone(&pool));
 
-    let combined = public_routes(Arc::clone(&pool), env)
+    let combined = public_routes(Arc::clone(&pool))
         .layer(Extension(engine))
-        .layer(Extension(sso_deps))
+        .layer(Extension(sign_in))
         .with_state(pool)
         .fallback_service(inner);
 
@@ -64,30 +61,13 @@ pub fn admin_ssr_router(
     )
 }
 
-fn public_routes(pool: Arc<PgPool>, env: &AdminEnv) -> Router<Arc<PgPool>> {
-    let login = Router::new()
+fn public_routes(pool: Arc<PgPool>) -> Router<Arc<PgPool>> {
+    Router::new()
         .route("/login", get(handlers::ssr::login_page))
         .layer(axum_middleware::from_fn_with_state(
             pool,
             middleware::user_context_middleware,
-        ));
-    let routes = login
-        .route("/auth/adfs/start", get(handlers::adfs_auth::adfs_start))
-        .route("/auth/adfs/acs", post(handlers::adfs_auth::adfs_callback));
-    dev_login_routes(routes, env)
-}
-
-// Why: the developer login link is mounted, not merely refused, only on a
-// development non-cloud profile — production has no route to hit, so there is
-// nothing there to misconfigure open.
-fn dev_login_routes(router: Router<Arc<PgPool>>, env: &AdminEnv) -> Router<Arc<PgPool>> {
-    if !handlers::dev_login::dev_login_enabled(env) {
-        return router;
-    }
-    router.route(
-        "/auth/dev/login",
-        get(handlers::dev_login::dev_login_redeem),
-    )
+        ))
 }
 
 // Why: Overview is the console landing page, not a redirect — a signed-in

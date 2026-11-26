@@ -13,16 +13,16 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use rmcp::ErrorData as McpError;
-use rmcp::model::{
-    CallToolResult, Icon, ListResourcesResult, ReadResourceRequestParams, ReadResourceResult, Tool,
-};
+use rmcp::model::{CallToolResult, Icon, ListResourcesResult, ReadResourceResult, Tool};
+use systemprompt::database::DbPool;
 use systemprompt::extension::mcp::capabilities::WEBSITE_URL;
-use systemprompt::extension::mcp::{McpToolset, ToolsetCall};
+use systemprompt::extension::mcp::{McpToolset, ResourceList, ResourceRead, ToolsetCall};
 use systemprompt::identifiers::McpServerId;
 use systemprompt::mcp::host::ToolsetBuildResult;
+use systemprompt::mcp::services::ui_renderer::UiRendererRegistry;
 use systemprompt::mcp::{
-    ArtifactIngest, ArtifactViewerConfig, build_artifact_viewer_resource,
-    parse_artifact_resource_uri, read_artifact_viewer_resource,
+    ArtifactIngest, ArtifactViewerConfig, McpArtifactRepository, build_artifact_viewer_resource,
+    parse_artifact_resource_uri, read_artifact_resource, read_artifact_viewer_resource,
 };
 use systemprompt::system::HostContext;
 
@@ -45,16 +45,26 @@ pub struct SystempromptToolset {
     server: McpServerId,
     cli: CliLocation,
     ingest: Arc<ArtifactIngest>,
+    artifacts: McpArtifactRepository,
+    renderers: Arc<UiRendererRegistry>,
     shell: String,
 }
 
 impl SystempromptToolset {
     #[must_use]
-    pub fn new(server: McpServerId, cli: CliLocation, ingest: Arc<ArtifactIngest>) -> Self {
+    pub fn new(
+        server: McpServerId,
+        cli: CliLocation,
+        ingest: Arc<ArtifactIngest>,
+        artifacts: McpArtifactRepository,
+        renderers: Arc<UiRendererRegistry>,
+    ) -> Self {
         Self {
             server,
             cli,
             ingest,
+            artifacts,
+            renderers,
             shell: crate::reports::admin_artifact_shell(),
         }
     }
@@ -78,10 +88,17 @@ impl SystempromptToolset {
 
 pub fn build(host: &HostContext, server: &McpServerId) -> ToolsetBuildResult {
     let ingest = host.state().get::<Arc<ArtifactIngest>>().map(Arc::clone)?;
+    let db = host.state().get::<DbPool>()?;
+    let renderers = host
+        .state()
+        .get::<Arc<UiRendererRegistry>>()
+        .map(Arc::clone)?;
     Ok(Some(Box::new(SystempromptToolset::new(
         server.clone(),
         CliLocation::from_profile(host.profile()),
         ingest,
+        McpArtifactRepository::new(db),
+        renderers,
     ))))
 }
 
@@ -129,19 +146,28 @@ impl McpToolset for SystempromptToolset {
         true
     }
 
-    fn list_resources(&self) -> ListResourcesResult {
+    async fn list_resources(&self, _list: ResourceList<'_>) -> ListResourcesResult {
         build_artifact_viewer_resource(&self.viewer())
     }
 
-    fn read_resource(
+    async fn read_resource(
         &self,
-        request: &ReadResourceRequestParams,
+        read: ResourceRead<'_>,
     ) -> Option<Result<ReadResourceResult, McpError>> {
-        if parse_artifact_resource_uri(&request.uri).is_some() {
-            return None;
+        if parse_artifact_resource_uri(&read.request.uri).is_some() {
+            return Some(
+                read_artifact_resource(
+                    read.request,
+                    &self.server,
+                    &self.artifacts,
+                    &self.renderers,
+                    read.caller.context().user_id(),
+                )
+                .await,
+            );
         }
         Some(read_artifact_viewer_resource(
-            request,
+            read.request,
             &self.server,
             &self.shell,
         ))

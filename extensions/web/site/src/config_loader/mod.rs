@@ -116,14 +116,35 @@ pub fn skills_page_config(services: &Path) -> Option<Arc<SkillsPageConfig>> {
 }
 
 #[must_use]
+// Why: an `adfs.yaml` that is present but unreadable is a broken sign-in
+// configuration, so the error reaches the caller and refuses the boot rather
+// than leaving the instance without SSO.
 pub fn adfs_config(
     services: &Path,
     api_external_url: &str,
-) -> Option<Arc<systemprompt_web_admin::AdfsConfig>> {
-    log_and_discard_err(
-        load_adfs_config(services, api_external_url),
-        "ADFS config error",
-    )
+) -> Result<Option<Arc<systemprompt_web_admin::AdfsConfig>>, ConfigError> {
+    load_adfs_config(services, api_external_url)
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DevLoginConfig {
+    #[serde(default)]
+    enabled: bool,
+}
+
+/// Whether `services/web/config/dev-login.yaml` asks for the development
+/// login link.
+pub fn dev_login_requested(services: &Path) -> Result<bool, ConfigError> {
+    let filename = "dev-login.yaml";
+    let Some(value) = load_config_section(services, filename)? else {
+        return Ok(false);
+    };
+    let config: DevLoginConfig = serde_yaml::from_value(value).map_err(|e| ConfigError::Parse {
+        config_name: filename.to_owned(),
+        message: e.to_string(),
+    })?;
+    Ok(config.enabled)
 }
 
 #[doc(hidden)]

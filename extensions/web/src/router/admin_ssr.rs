@@ -20,9 +20,8 @@ pub(crate) struct SsrRouters {
 
 pub(crate) fn build(
     db: &DbHandles,
-    sso_deps: admin::AdfsDeps,
     settings: &crate::WebSettings,
-    env: &systemprompt_web_admin::env::AdminEnv,
+    sign_in: systemprompt_web_admin::SignInOptions,
 ) -> Option<SsrRouters> {
     let admin_dir = settings.admin_template_dir.clone();
     let branding = config_loader::branding_config(&settings.services_path);
@@ -36,9 +35,8 @@ pub(crate) fn build(
             &db.db,
             Arc::clone(&db.read),
             engine,
-            sso_deps,
+            sign_in,
             db.owner.clone(),
-            env,
         ),
     })
 }

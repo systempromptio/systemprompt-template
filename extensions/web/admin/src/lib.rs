@@ -34,6 +34,7 @@ pub mod numeric;
 pub mod repositories;
 mod routes;
 pub(crate) mod services;
+pub mod sso;
 pub mod templates;
 pub mod types;
 pub mod util;
@@ -44,17 +45,16 @@ use axum::routing::{get, post};
 use axum::{Extension, Router, middleware as axum_middleware};
 use sqlx::PgPool;
 
-pub use handlers::adfs_auth::{
-    ADFS_ACS_PATH, ADFS_METADATA_PATH, AdfsConfig, AdfsDeps, AdfsError, AssertionClaims, FlowState,
-    clear_state_cookie, group_matches_pattern, permissions_for_roles, read_state_cookie,
-    state_cookie,
-};
 pub use handlers::connector_auth::router as connector_api_router;
-pub use handlers::dev_login::{
-    DEV_LOGIN_PATH, dev_login_allowed, dev_login_enabled, dev_login_url,
-};
+pub use handlers::ssr::SignInOptions;
 pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
-pub use services::{connector_oauth, identity_token};
+pub use services::connector_oauth;
+pub use sso::adfs::{
+    ACS_PATH as ADFS_ACS_PATH, AdfsConfig, AdfsError, AdfsProvider, AssertionClaims,
+    ENTITY_ID_PATH as ADFS_ENTITY_ID_PATH, METADATA_PATH as ADFS_METADATA_PATH,
+    group_matches_pattern,
+};
+pub use sso::dev::{DEV_LOGIN_PATH, DevLoginProvider, dev_login_allowed, dev_login_url};
 pub use types::{
     CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent,
     roles_grant_console,

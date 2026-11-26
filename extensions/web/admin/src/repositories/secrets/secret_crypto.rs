@@ -82,13 +82,12 @@ pub fn seal_bytes(
     plaintext: &[u8],
 ) -> Result<Vec<u8>, SecretCryptoError> {
     cipher
-        .seal(&hex::encode(plaintext))
+        .seal(plaintext)
         .map(String::into_bytes)
         .map_err(SecretCryptoError::Wrap)
 }
 
 pub fn open_bytes(cipher: &dyn MemberCipher, sealed: &[u8]) -> Result<Vec<u8>, SecretCryptoError> {
     let sealed = std::str::from_utf8(sealed).map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
-    let hex_plain = cipher.open(sealed).map_err(SecretCryptoError::Wrap)?;
-    hex::decode(hex_plain).map_err(|_| SecretCryptoError::InvalidKeyMaterial)
+    cipher.open(sealed).map_err(SecretCryptoError::Wrap)
 }

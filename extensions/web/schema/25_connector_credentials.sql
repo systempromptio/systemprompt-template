@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS mcp_connector_credentials (
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     provider TEXT NOT NULL CHECK (provider ~ '^[A-Za-z0-9_-]{1,128}$'),
     ciphertext BYTEA NOT NULL,
-    nonce BYTEA NOT NULL CHECK (octet_length(nonce) = 12),
+    nonce BYTEA NOT NULL CHECK (octet_length(nonce) IN (0, 12)),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (user_id, provider)
 );
@@ -13,6 +13,6 @@ CREATE TABLE IF NOT EXISTS mcp_connector_oauth_states (
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     provider TEXT NOT NULL CHECK (provider ~ '^[A-Za-z0-9_-]{1,128}$'),
     ciphertext BYTEA NOT NULL,
-    nonce BYTEA NOT NULL CHECK (octet_length(nonce) = 12),
+    nonce BYTEA NOT NULL CHECK (octet_length(nonce) IN (0, 12)),
     expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '10 minutes'
 );

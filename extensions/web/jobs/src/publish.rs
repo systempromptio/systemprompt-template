@@ -3,8 +3,8 @@
 //! Order is load-bearing — bundles must exist before assets are copied, and
 //! content must be ingested before it can be prerendered. A failing sub-job is
 //! recorded and the pipeline continues, so one broken stage does not block the
-//! rest. The sitemap and RSS feed are not generated: core's generators read
-//! the full runtime configuration, which no job context holds.
+//! rest. The sitemap and RSS feed are generated from the web member's
+//! `ConfigView`, read through `AdminEnv`.
 
 use std::sync::Arc;
 
@@ -12,7 +12,8 @@ use systemprompt::config::AppPaths;
 use systemprompt::content::ContentHooks;
 use systemprompt::database::DbPool;
 use systemprompt::generator::{
-    PrerenderEnv, PrerenderSettings, organize_dist_assets, prerender_content, prerender_pages,
+    PrerenderEnv, PrerenderSettings, generate_feed, generate_sitemap, organize_dist_assets,
+    prerender_content, prerender_pages,
 };
 use systemprompt::traits::{Job, JobContext, JobResult};
 
@@ -21,6 +22,7 @@ use super::{
     RobotsTxtGenerationJob,
 };
 use crate::error::JobError;
+use systemprompt_web_admin::env::AdminEnv;
 
 #[doc(hidden)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -162,7 +164,55 @@ impl PublishPipelineJob {
         }
     }
 
+    async fn run_sitemap(&self, ctx: &JobContext, stats: &mut PipelineStats) {
+        let outcome = async {
+            let db_pool = ctx.get::<DbPool>()?;
+            let paths = ctx.get::<Arc<AppPaths>>()?;
+            let env = ctx.get::<AdminEnv>()?;
+            let content_repo = systemprompt::content::ContentRepository::new(db_pool);
+            generate_sitemap(content_repo, env.config(), paths)
+                .await
+                .map_err(|e| JobError::other(e.to_string()))
+        }
+        .await;
+        match outcome {
+            Ok(()) => {
+                tracing::debug!("Sitemap generation completed");
+                stats.record_success();
+            },
+            Err(e) => {
+                tracing::error!(error = %e, "Sitemap generation failed");
+                stats.record_failure();
+            },
+        }
+    }
+
+    async fn run_feed(&self, ctx: &JobContext, stats: &mut PipelineStats) {
+        let outcome = async {
+            let db_pool = ctx.get::<DbPool>()?;
+            let paths = ctx.get::<Arc<AppPaths>>()?;
+            let env = ctx.get::<AdminEnv>()?;
+            let content_repo = systemprompt::content::ContentRepository::new(db_pool);
+            generate_feed(content_repo, env.config(), paths)
+                .await
+                .map_err(|e| JobError::other(e.to_string()))
+        }
+        .await;
+        match outcome {
+            Ok(()) => {
+                tracing::debug!("RSS feed generation completed");
+                stats.record_success();
+            },
+            Err(e) => {
+                tracing::error!(error = %e, "RSS feed generation failed");
+                stats.record_failure();
+            },
+        }
+    }
+
     async fn run_derived_files(&self, ctx: &JobContext, stats: &mut PipelineStats) {
+        self.run_sitemap(ctx, stats).await;
+        self.run_feed(ctx, stats).await;
         self.run_llms_txt(ctx, stats).await;
         self.run_robots_txt(ctx, stats).await;
     }
@@ -193,7 +243,7 @@ impl Job for PublishPipelineJob {
     }
 
     fn description(&self) -> &'static str {
-        "Content publishing pipeline: ingestion, assets, prerender, pages, robots.txt, llms.txt"
+        "Content publishing pipeline: ingestion, assets, prerender, pages, sitemap, RSS, robots.txt, llms.txt"
     }
 
     fn schedule(&self) -> &'static str {

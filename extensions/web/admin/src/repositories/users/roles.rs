@@ -226,3 +226,30 @@ pub async fn list_users_with_expired_manual_roles(
     .fetch_all(pool)
     .await
 }
+
+/// The effective roles after a sign-in, and whether it took a write-tier
+/// role away.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DirectoryProjection {
+    pub roles: Vec<String>,
+    pub lost_manage: bool,
+}
+
+// Why: the JWT bakes permissions in at issue time, so a write-tier role the
+// directory has taken away still rides in every token minted before this
+// sign-in; the caller tears those down when `lost_manage` is set.
+pub async fn project_directory_roles(
+    pool: &PgPool,
+    user_id: &UserId,
+    directory_roles: &[String],
+) -> Result<DirectoryProjection, sqlx::Error> {
+    let mut before = list_directory_roles(pool, user_id).await?;
+    before.extend(list_manual_roles(pool, user_id).await?);
+    let roles = recompute_roles(pool, user_id, Some(directory_roles)).await?;
+    let manage =
+        |held: &[String]| crate::types::role::has_any(held, crate::types::role::ROLES_MANAGE);
+    Ok(DirectoryProjection {
+        lost_manage: manage(&before) && !manage(&roles),
+        roles,
+    })
+}

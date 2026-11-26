@@ -8,11 +8,11 @@ use crate::repositories::users::{
 };
 use crate::services::connector_accounts as service;
 use crate::services::connector_oauth::{self as oauth, Consent, Provider};
+use axum::Extension;
 use axum::extract::{Path, Query, State};
 use axum::http::HeaderMap;
 use axum::http::header::CACHE_CONTROL;
 use axum::response::{IntoResponse, Redirect, Response};
-use axum::{Extension, Json};
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
@@ -66,7 +66,7 @@ pub(super) async fn start(
         &user.user_id,
         provider.slug(),
         &state,
-        &oauth::seal(env.cipher()?, &grant)?,
+        &oauth::seal(env.cipher(), &grant)?,
     )
     .await?;
     Ok(([(CACHE_CONTROL, "no-store")], Redirect::to(&url)).into_response())
@@ -131,26 +131,6 @@ async fn complete(
     Ok((
         [(CACHE_CONTROL, "no-store")],
         Redirect::to(&format!("/admin/connectors#connector-{}", provider.slug())),
-    )
-        .into_response())
-}
-
-pub(super) async fn token(
-    Extension(env): Extension<AdminEnv>,
-    State(pool): State<Arc<PgPool>>,
-    Path(provider): Path<Provider>,
-    headers: HeaderMap,
-) -> AdminResult<Response> {
-    super::require_broker(&env, &headers)?;
-    let user = live_user(&env, &pool, &headers, false).await?;
-    service::require_entitlement(&pool, &env.services(), &user.user_id, provider.clone()).await?;
-    let access_token =
-        oauth::verified_token(&env, &pool, &user.user_id, provider.clone(), false).await?;
-    // Why: The descriptor uses an empty scheme: the trusted adapter supplies the
-    // complete header so personal Atlassian tokens can use Basic authentication.
-    Ok((
-        [(CACHE_CONTROL, "no-store")],
-        Json(serde_json::json!({"access_token": access_token})),
     )
         .into_response())
 }

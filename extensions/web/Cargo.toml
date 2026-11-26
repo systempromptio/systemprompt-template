@@ -18,6 +18,7 @@ ignored = ["systemprompt-extension"]
 workspace = true
 
 [dependencies]
+clap = { workspace = true }
 thiserror = { workspace = true }
 # Core facade - provides all systemprompt types via unified API.
 # Audit: uses ai, database, extension, loader, models, traits — requires `full`

@@ -20,11 +20,13 @@
 // with; the HTTP contract suite would otherwise render every page against a
 // different context than production.
 pub use systemprompt_web_site::config_loader::{self, branding_config};
+mod dev_login_command;
 pub mod extension;
 mod extension_impl;
 mod router;
 #[doc(hidden)]
 pub mod schemas;
+mod sign_in;
 
 pub use systemprompt_web_admin as admin;
 pub use systemprompt_web_content::{api, repository, services};

@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use systemprompt::database::DbPool;
+use systemprompt::extension::artifact_ui::RenderOn;
 use systemprompt::extension::mcp::{
     AccessRecorderSlot, McpAccessEvent, McpAccessOutcome, McpAccessRecorder,
     SharedMcpAccessRecorder,
@@ -34,6 +35,7 @@ impl Extension for SystempromptMcpExtension {
     fn contribute(&self, c: &mut Contributions<'_>) -> Result<(), ContributionError> {
         c.slot::<ToolsetSlot>().toolset(TOOLSET_ID, build);
         c.slot::<UiSlot>().renderer(
+            RenderOn::ApiAndMcpServers,
             |_r: &Resolved<'_>| -> Result<Arc<dyn UiRenderer>, FactoryError> {
                 Ok(Arc::new(AdminRenderer))
             },

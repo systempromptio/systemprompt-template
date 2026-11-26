@@ -2,10 +2,10 @@
 //! that shares its name, so retained snapshots and coverage can attach to it,
 //! and the on-demand record of the services tree's marketplace versions.
 //!
-//! The inventory refresh and the publication of every configured skill are
-//! core's `inventory_refresh` job: its refresher reads the bundle sources
-//! and the active services root, which an install member does not hold, so a
-//! binding or a sync here takes effect on that job's next run.
+//! Both actions re-scan the inventory at once through
+//! `InventoryService::refresh` over the member's `InstallServicesView`;
+//! publication of every configured skill stays core's `inventory_refresh`
+//! job.
 
 use crate::env::AdminEnv;
 
@@ -20,6 +20,7 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{InventoryEntryId, ManagedResourceId};
+use systemprompt::marketplace::inventory::InventoryService;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -43,12 +44,14 @@ pub(crate) async fn bind(
         .repository
         .bind_inventory_resource(&state.owner, &user.user_id, &entry, &form.resource_id)
         .await?;
+    refresh(&env, &state).await?;
     Ok(Redirect::to(SKILLS_PAGE))
 }
 
 pub(crate) async fn sync_inventory(
     Extension(env): Extension<AdminEnv>,
     Extension(user): Extension<UserContext>,
+    Extension(state): Extension<Arc<ManagedState>>,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
 ) -> AdminHtmlResult<Redirect> {
@@ -61,7 +64,16 @@ pub(crate) async fn sync_inventory(
     crate::repositories::sync::sources_db::record_service_sources(&env, &pool)
         .await
         .map_err(AdminError::internal)?;
+    refresh(&env, &state).await?;
     Ok(Redirect::to(SKILLS_PAGE))
+}
+
+async fn refresh(env: &AdminEnv, state: &ManagedState) -> Result<(), AdminError> {
+    InventoryService::new(state.repository.clone())
+        .refresh(&state.owner, env.services_view())
+        .await
+        .map_err(AdminError::internal)?;
+    Ok(())
 }
 
 const SKILLS_PAGE: &str = crate::handlers::ssr::analysis_urls::ANALYSIS_SKILLS_URL;

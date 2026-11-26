@@ -3,7 +3,6 @@
 //! Each module owns one page: it builds a typed template context and renders a
 //! `.hbs` template from `storage/files/admin/templates/` at request time.
 
-use crate::env::AdminEnv;
 
 use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
@@ -127,11 +126,18 @@ struct LoginContext<'a> {
     dev_login_enabled: bool,
 }
 
+/// Which sign-in providers the web member contributed to core's `SsoSlot`,
+/// so the login page offers exactly the doors core serves.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SignInOptions {
+    pub adfs: bool,
+    pub dev: bool,
+}
+
 pub(crate) async fn login_page(
     user_ctx: Option<Extension<UserContext>>,
-    Extension(env): Extension<AdminEnv>,
     Extension(engine): Extension<AdminTemplateEngine>,
-    Extension(sso_deps): Extension<crate::handlers::adfs_auth::AdfsDeps>,
+    Extension(sign_in): Extension<SignInOptions>,
     Query(params): Query<LoginParams>,
 ) -> AdminHtmlResult<Response> {
     if let Some(Extension(user_ctx)) = user_ctx {
@@ -149,8 +155,8 @@ pub(crate) async fn login_page(
     let ctx = LoginContext {
         shell: branding_context(&engine),
         redirect_encoded,
-        sso_enabled: sso_deps.config.is_usable(),
-        dev_login_enabled: crate::handlers::dev_login::dev_login_enabled(&env),
+        sso_enabled: sign_in.adfs,
+        dev_login_enabled: sign_in.dev,
     };
     let html = engine.render("login", &ctx)?;
     Ok(Html(html).into_response())

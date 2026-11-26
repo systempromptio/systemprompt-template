@@ -25,7 +25,7 @@ fn derive_saml_urls(config: &mut systemprompt_web_admin::AdfsConfig, api_externa
         return;
     }
     if config.entity_id.is_empty() {
-        config.entity_id = format!("{base}{}", systemprompt_web_admin::ADFS_METADATA_PATH);
+        config.entity_id = format!("{base}{}", systemprompt_web_admin::ADFS_ENTITY_ID_PATH);
     }
     if config.acs_url.is_empty() {
         config.acs_url = format!("{base}{}", systemprompt_web_admin::ADFS_ACS_PATH);
