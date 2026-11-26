@@ -1,7 +1,7 @@
 //! Context-detail repository — drives `/admin/contexts/{id}`.
 //!
 //! A context is the persisted state of an AI conversation: metadata in
-//! `user_contexts`, plus every prompt + tool call carried by `ai_requests`
+//! `conversation_contexts`, plus every prompt + tool call carried by `ai_requests`
 //! linked to that `context_id`.
 //!
 //! Message and tool-call bodies are fetched by request id, never by context.
@@ -129,7 +129,7 @@ pub async fn find_context_header(
             WHERE context_id = $1
             GROUP BY context_id
         ) r
-        FULL OUTER JOIN user_contexts c
+        FULL OUTER JOIN conversation_contexts c
           ON c.context_id = r.context_id
         LEFT JOIN plugin_session_summaries s ON s.session_id = r.client_session_id
         LEFT JOIN users u ON u.id = COALESCE(c.user_id, r.user_id)

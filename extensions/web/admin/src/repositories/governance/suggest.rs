@@ -42,13 +42,13 @@ pub async fn list_id_matches(
                SELECT 'session', session_id, MAX(created_at) FROM governance_decisions
                WHERE session_id LIKE $1 GROUP BY session_id
                UNION ALL
-               SELECT 'session', session_id, MAX(created_at) FROM user_contexts
+               SELECT 'session', session_id, MAX(created_at) FROM conversation_contexts
                WHERE session_id LIKE $1 GROUP BY session_id
                UNION ALL
                SELECT 'context', context_id, MAX(created_at) FROM ai_requests
                WHERE context_id LIKE $1 GROUP BY context_id
                UNION ALL
-               SELECT 'context', context_id, MAX(created_at) FROM user_contexts
+               SELECT 'context', context_id, MAX(created_at) FROM conversation_contexts
                WHERE context_id LIKE $1 GROUP BY context_id
            ) t
            WHERE id IS NOT NULL
