@@ -744,7 +744,7 @@ server-status:
 
 # Stop this clone's services (clean shutdown; avoids orphaned MCP children)
 stop:
-    {{CLI}} infra services stop --all
+    {{CLI}} infra services stop --all --profile {{FLAVOUR}}
 
 # Start server with release binary
 start-release:
