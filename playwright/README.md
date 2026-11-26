@@ -7,8 +7,20 @@ Everything here runs against an **already-running** stack. It never boots a serv
 this clone's server is shared between agents, so global setup pings `/health` and
 fails fast instead of starting one.
 
+The stack is the full flavour, booted the way the E2E job in
+`.github/workflows/gates.yml` boots it:
+
 ```bash
-just start                    # once, in another shell
+just setup full --anthropic-key sk-ant-... --no-build   # profile, database, admin, assets
+SYSTEMPROMPT_PROFILE=.systemprompt/profiles/full/profile.yaml \
+  target/flavour-full/debug/systemprompt admin config apply --reason "e2e boot"
+FLAVOUR=full just start       # in another shell
+```
+
+`admin config apply` is not optional: until the declared config planes are
+written, `/health` reports `degraded`, and the job waits for `healthy`.
+
+```bash
 just e2e-install              # once per clone
 just e2e-seed --reset         # rebuild the dataset from scratch
 just e2e                      # the whole suite
@@ -17,9 +29,11 @@ just e2e-gate                 # the same, refusing loudly when no stack is up
 ```
 
 `GATEWAY_URL` overrides the base URL, `E2E_DATABASE_URL` the database the seed
-writes to, and `E2E_SIGNING_KEY` the key tokens are minted with. Without them the
-harness reads the `local` profile, which is the right default for a lone
-developer and for CI.
+writes to, `E2E_SIGNING_KEY` the key tokens are minted with, and `E2E_CLI` /
+`E2E_PROFILE` the binary and profile the passkey spec asks for a setup link.
+Without them the harness reads the `FLAVOUR` profile (default `full`) and its
+`target/flavour-<flavour>/debug/systemprompt`, which is the right default for a
+lone developer and for CI.
 
 It is the wrong default when several agents share this checkout. The server on
 the shared clone's own port belongs to whoever started it, and seeding or
@@ -53,6 +67,14 @@ variables above are the entire coupling.
 Roles live in `users.roles`; the minted JWT's own role claim is ignored by the
 server, so the seed is what decides what every authorization assertion sees.
 This instance knows two roles.
+
+The two signed-in principals get minted tokens, not a sign-in, so every page
+spec starts from a known session in milliseconds. The console's one real door,
+passkey sign-in, is driven end to end once, in `tests/pages/login.spec.ts`:
+Chromium's virtual authenticator (`tests/support/passkey.ts`) links a passkey
+through the setup link `admin users webauthn generate-setup-token` issues and
+signs in on `/admin/login` — the browser form of
+`scripts/lib/console-login.py`.
 
 | principal | id | roles | reaches |
 |---|---|---|---|
