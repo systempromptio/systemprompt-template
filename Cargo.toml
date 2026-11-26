@@ -63,7 +63,7 @@ tracing = "0.1"
 async-trait = "0.1"
 
 # Database
-sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki", "macros", "sqlite", "postgres", "migrate", "chrono", "rust_decimal", "json"] }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "tls-rustls-ring-webpki", "macros", "postgres", "migrate", "chrono", "rust_decimal", "json"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -90,7 +90,6 @@ url = "2.5"
 urlencoding = "2.1"
 # RS256 signing of the per-user identity token for external MCP servers,
 # with core's authority key — so the version must be core's.
-jsonwebtoken = { version = "11", features = ["rust_crypto"] }
 saml = { version = "0.0.1-alpha.2", default-features = false, features = ["rsa-sha", "xmlenc"] }
 
 # Security

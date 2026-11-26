@@ -45,17 +45,10 @@ dependencies = [
  "serde_yaml_ng",
  "sqlx",
  "systemprompt",
- "systemprompt-content",
- "systemprompt-marketplace",
- "systemprompt-security",
- "systemprompt-users",
  "systemprompt-web-admin",
- "systemprompt-web-content",
- "systemprompt-web-extension",
  "tempfile",
  "template-test-common",
  "tokio",
- "url",
  "uuid",
 ]
 
@@ -68,18 +61,11 @@ dependencies = [
  "serde_yaml_ng",
  "sqlx",
  "systemprompt",
- "systemprompt-content",
- "systemprompt-marketplace",
- "systemprompt-security",
- "systemprompt-users",
  "systemprompt-web-admin",
- "systemprompt-web-content",
- "systemprompt-web-extension",
  "systemprompt-web-shared",
  "tempfile",
  "template-test-common",
  "tokio",
- "url",
  "uuid",
 ]
 
@@ -2212,9 +2198,9 @@ dependencies = [
 
 [[package]]
 name = "form_urlencoded"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
+checksum = "afa489199eaffb1211795df1c6236ce1ad0d41a6fa45250add73e3b02420f06e"
 dependencies = [
  "percent-encoding",
 ]
@@ -3497,7 +3483,6 @@ version = "0.37.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1f111c8c41e7c61a49cd34e44c7619462967221a6443b0ec299e0ac30cfb9b1"
 dependencies = [
- "cc",
  "pkg-config",
  "vcpkg",
 ]
@@ -8481,7 +8466,6 @@ dependencies = [
  "futures-util",
  "handlebars",
  "hex",
- "jsonwebtoken",
  "rand 0.9.5",
  "reqwest",
  "saml",
@@ -8529,7 +8513,6 @@ name = "systemprompt-web-extension"
 version = "0.70.0"
 dependencies = [
  "axum",
- "clap",
  "systemprompt",
  "systemprompt-extension",
  "systemprompt-web-admin",
@@ -9264,9 +9247,9 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "url"
-version = "2.5.8"
+version = "2.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed"
+checksum = "f00cd2407bb42c0ef17be88d4cf020f5cceffd121665bac9b8b9493a369b3b1a"
 dependencies = [
  "form_urlencoded",
  "idna",
@@ -9456,13 +9439,9 @@ dependencies = [
  "serde_json",
  "sqlx",
  "systemprompt",
- "systemprompt-content",
- "systemprompt-marketplace",
  "systemprompt-mcp-agent",
- "systemprompt-users",
  "systemprompt-web-admin",
  "systemprompt-web-content",
- "systemprompt-web-extension",
  "systemprompt-web-jobs",
  "systemprompt-web-shared",
  "systemprompt-web-site",
@@ -9470,7 +9449,6 @@ dependencies = [
  "template-test-common",
  "tokio",
  "tower",
- "url",
  "uuid",
 ]
 
@@ -9507,13 +9485,11 @@ dependencies = [
  "handlebars",
  "reqwest",
  "saml",
- "serde",
  "serde_json",
  "serde_yaml_ng",
  "sqlx",
  "systemprompt",
  "systemprompt-kit-export",
- "systemprompt-security",
  "systemprompt-web-admin",
  "systemprompt-web-extension",
  "systemprompt-web-shared",

@@ -11,19 +11,12 @@ workspace = true
 [dependencies]
 serde_yaml = { workspace = true }
 template-test-common = { workspace = true }
-systemprompt-users = { workspace = true }
-systemprompt-content = { workspace = true }
-systemprompt-marketplace = { workspace = true }
 systemprompt = { workspace = true, features = ["reference"] }
 systemprompt-web-admin = { workspace = true }
-systemprompt-web-content = { workspace = true }
-systemprompt-web-extension = { workspace = true }
-systemprompt-security = { workspace = true }
 
 chrono = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true }
-url = { workspace = true }
 uuid = { workspace = true }

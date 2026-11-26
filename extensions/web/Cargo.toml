@@ -32,7 +32,6 @@ content = [
 workspace = true
 
 [dependencies]
-clap = { workspace = true }
 thiserror = { workspace = true }
 # Audit: the member surface (extension router, api, users), governance
 # (security) and config; each capability feature above adds its own.

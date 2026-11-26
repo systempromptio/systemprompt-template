@@ -11,11 +11,9 @@ workspace = true
 [dependencies]
 toml = { workspace = true }
 reqwest = { workspace = true }
-serde = { workspace = true }
 anyhow = { workspace = true }
 tower = { workspace = true }
 axum = { workspace = true }
-systemprompt-security = { workspace = true }
 systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-extension = { workspace = true }
