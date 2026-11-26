@@ -52,7 +52,7 @@
             <td class="sp-table__cell--primary"><a class="sp-table__link" href="{{detail_url}}" title="{{description}}">{{id}}</a></td>
             <td title="{{server_type}} · {{auth_label}}">{{> components/badge tone=status_tone text=status_label}}</td>
             <td class="sp-table__cell--num sp-u-num" title="{{sessions_open}} open, {{last_heartbeat_display}} last beat">{{sessions_open}}</td>
-            <td class="sp-table__cell--num sp-u-num">{{proxy_identities}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{bound_sessions}}</td>
             <td class="sp-table__cell--num sp-u-num" title="{{delta_display}} against the previous 24 hours">{{formatNumber calls}}</td>
             <td class="sp-table__cell--num sp-u-num" title="{{errors}} of {{calls}} · p95 {{p95_display}} · {{distinct_users}} callers"><span class="sp-p-mcp__rate sp-p-mcp__rate--{{error_tone}}">{{error_rate_display}}</span></td>
             <td class="sp-table__cell--date">{{last_call_display}}</td>

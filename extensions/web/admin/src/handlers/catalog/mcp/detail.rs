@@ -150,11 +150,6 @@ pub(super) fn session_rows(rows: Vec<McpSessionRow>) -> Vec<McpSessionRowView> {
                 started_display: local_time(r.created_at),
                 last_activity_display: local_time(r.last_activity_at),
                 expires_display: local_time(r.expires_at),
-                identity_label: if r.has_proxy_identity {
-                    r.proxy_user_type.unwrap_or_else(|| "proxy".to_owned())
-                } else {
-                    "\u{2014}".to_owned()
-                },
                 user_url: if caller.is_empty() {
                     String::new()
                 } else {

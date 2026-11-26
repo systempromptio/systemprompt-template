@@ -31,7 +31,7 @@ pub async fn list_request_buckets(
                         ) AS bucket,
                         COUNT(*)::BIGINT AS requests
                  FROM ai_requests r
-                 WHERE NOT r.synthetic
+                 WHERE r.traffic = 'production'
                    AND r.created_at >= $1
                    AND r.created_at < $2
                  GROUP BY 1

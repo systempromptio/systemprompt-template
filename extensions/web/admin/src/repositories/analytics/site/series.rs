@@ -70,7 +70,7 @@ pub async fn list_daily_usage_series(
                 COUNT(DISTINCT r.user_id)::BIGINT AS active_users
             FROM ai_requests r
             WHERE r.created_at >= $1 AND r.created_at < $2
-              AND NOT r.synthetic
+              AND r.traffic = 'production'
               AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
               AND ($4::TEXT IS NULL OR r.user_id = $4)
             GROUP BY 1

@@ -86,7 +86,7 @@ pub async fn list_top_users_by_requests(
         FROM ai_requests r
         LEFT JOIN users u ON u.id = r.user_id
         WHERE r.created_at >= $1 AND r.created_at < $2
-          AND NOT r.synthetic
+          AND r.traffic = 'production'
           AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
           AND ($4::TEXT IS NULL OR r.user_id = $4)
         GROUP BY r.user_id, u.display_name, u.full_name, u.name, u.email

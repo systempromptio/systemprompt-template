@@ -55,7 +55,7 @@ pub async fn get_customer_month_summary(
             COUNT(*) FILTER (WHERE r.status NOT IN ('success', 'completed'))::BIGINT
                 AS "error_count!"
         FROM ai_requests r
-        WHERE NOT r.synthetic
+        WHERE r.traffic = 'production'
           AND r.created_at >= $1 AND r.created_at < $2
           AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
         "#,
@@ -116,7 +116,7 @@ pub async fn list_customer_month_users(
             COUNT(DISTINCT r.model)::BIGINT AS "distinct_models!"
         FROM ai_requests r
         JOIN users u ON u.id = r.user_id
-        WHERE NOT r.synthetic
+        WHERE r.traffic = 'production'
           AND r.created_at >= $1 AND r.created_at < $2
           AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
         GROUP BY u.id, u.email, u.display_name, u.name
@@ -178,7 +178,7 @@ pub async fn list_customer_month_projects(
             SELECT DISTINCT project_id FROM project_members
             WHERE user_id = r.user_id
         ) pm ON true
-        WHERE NOT r.synthetic
+        WHERE r.traffic = 'production'
           AND r.created_at >= $1 AND r.created_at < $2
           AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
         GROUP BY 1
@@ -236,7 +236,7 @@ pub async fn list_customer_month_models(
             COALESCE(SUM(r.reasoning_tokens), 0)::BIGINT AS "reasoning_tokens!",
             COALESCE(SUM(r.tokens_used), 0)::BIGINT AS "total_tokens!"
         FROM ai_requests r
-        WHERE NOT r.synthetic
+        WHERE r.traffic = 'production'
           AND r.created_at >= $1 AND r.created_at < $2
           AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
         GROUP BY 1, 2

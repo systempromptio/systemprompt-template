@@ -30,7 +30,7 @@ pub async fn list_model_distribution(
             COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS "cost!"
         FROM ai_requests r
         WHERE r.created_at >= $1 AND r.created_at < $2
-          AND NOT r.synthetic
+          AND r.traffic = 'production'
           AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
           AND ($4::TEXT IS NULL OR r.user_id = $4)
         GROUP BY COALESCE(r.model, 'unrouted')

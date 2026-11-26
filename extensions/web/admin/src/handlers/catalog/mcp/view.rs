@@ -35,7 +35,7 @@ pub(super) struct McpServerRow {
     pub sessions_open: i64,
     pub alive: bool,
     pub last_heartbeat_display: String,
-    pub proxy_identities: i64,
+    pub bound_sessions: i64,
     pub calls: i64,
     pub errors: i64,
     pub error_rate_display: String,
@@ -122,7 +122,6 @@ pub(super) struct McpSessionRowView {
     pub started_display: String,
     pub last_activity_display: String,
     pub expires_display: String,
-    pub identity_label: String,
 }
 
 // Why: One access-control rule pointing at this server.

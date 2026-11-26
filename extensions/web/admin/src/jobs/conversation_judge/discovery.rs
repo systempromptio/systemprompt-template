@@ -39,7 +39,7 @@ impl ConversationJudgeRepository {
                 FROM ai_requests ar
                 WHERE ar.context_id <> $1
                   AND ar.actor_kind <> 'job'
-                  AND NOT ar.synthetic
+                  AND ar.traffic = 'production'
                   AND ar.created_at >= now() - make_interval(days => $2::int)
                 GROUP BY ar.context_id
             ), quiet AS (
