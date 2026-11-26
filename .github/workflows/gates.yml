@@ -1,6 +1,6 @@
 name: Gates
 
-# The whole gate, on every push to `next`, every ordinary PR and on demand —
+# The whole gate, on every push to `next` and `future`, every ordinary PR and on demand —
 # `just verify` locally runs the same static, lint and test tiers. Frozen
 # promotion PRs (promote/<version>/<main>/<candidate>, opened by
 # `just release`) do not repeat the matrix: they verify the exact next-push
@@ -18,9 +18,9 @@ on:
         type: string
         required: false
   pull_request:
-    branches: [main, next]
+    branches: [main, next, future]
   push:
-    branches: [next]
+    branches: [next, future]
 
 concurrency:
   group: gates-${{ inputs.ref || github.ref }}

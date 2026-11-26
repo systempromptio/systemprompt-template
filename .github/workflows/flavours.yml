@@ -5,12 +5,9 @@ name: Flavours
 # against a database that flavour migrated), a clean and a cached image build
 # with deploy metrics (scripts/flavour-metrics.sh --image) and the image smoke
 # (scripts/flavour-smoke.sh). Metrics JSON and the
-# smoke results are uploaded; table.md is appended to the job summary.
-#
-# A runner has no sibling core checkout. While Cargo.toml carries the
-# unreleased-core override table (scripts/core-patch.sh), core cannot be
-# resolved here, so only the lint runs and the plan job says why; once the
-# manifest pins core by git rev the table is gone and the matrix runs.
+# smoke results are uploaded; table.md is appended to the job summary. Core
+# resolves from the git-rev pin in Cargo.toml (scripts/core-pin.sh), so no
+# core checkout is needed.
 
 on:
   push:
@@ -32,24 +29,16 @@ jobs:
     timeout-minutes: 5
     outputs:
       flavours: ${{ steps.plan.outputs.flavours }}
-      buildable: ${{ steps.plan.outputs.buildable }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: bash scripts/check-flavours.sh
+      - run: bash scripts/core-pin.sh --check
       - id: plan
-        run: |
-          echo "flavours=$(python3 scripts/flavour.py matrix)" >> "$GITHUB_OUTPUT"
-          if grep -qE '^\[(workspace\.metadata\.unreleased-core-patch|patch\.crates-io)\]' Cargo.toml; then
-            echo "buildable=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Cargo.toml overrides core with a sibling checkout; flavour images build once core is pinned by git rev."
-          else
-            echo "buildable=true" >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "flavours=$(python3 scripts/flavour.py matrix)" >> "$GITHUB_OUTPUT"
 
   queries:
     name: Queries ${{ matrix.flavour }}
     needs: plan
-    if: needs.plan.outputs.buildable == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
@@ -84,7 +73,6 @@ jobs:
   flavour:
     name: ${{ matrix.flavour }}
     needs: plan
-    if: needs.plan.outputs.buildable == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
