@@ -157,7 +157,7 @@ pub(crate) async fn login_page(
 ) -> AdminHtmlResult<Response> {
     if let Some(Extension(user_ctx)) = user_ctx {
         let target = if user_ctx.is_console {
-            "/admin/"
+            "/admin"
         } else {
             "/admin/profile"
         };
