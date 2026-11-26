@@ -26,6 +26,7 @@ pub mod error;
 pub mod event_hub;
 pub(crate) mod export;
 pub mod gateway_entitlement;
+#[cfg(feature = "gateway")]
 pub mod gateway_safety;
 pub(crate) mod handlers;
 pub mod jobs;
