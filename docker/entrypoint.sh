@@ -183,6 +183,16 @@ if [ -n "${SYSTEMPROMPT_PROFILE_DIR:-}" ]; then
         echo "  (openssl rand -hex 32) to the shared secrets and redeploy." >&2
         exit 1
     fi
+    # Why: core refuses to boot a composition whose web member serves the
+    # connector token route (the broker-calls conferral) while the secrets
+    # carry no mcp_credential_broker_secret, and a per-replica value would
+    # let one replica's broker calls fail verification on another.
+    if [ -z "$(jq -r '.mcp_credential_broker_secret // empty' "$SECRETS_FILE")" ]; then
+        echo "ERROR: $SECRETS_FILE has no mcp_credential_broker_secret." >&2
+        echo "  Add 64 hex characters (openssl rand -hex 32) to the shared secrets" >&2
+        echo "  and redeploy; every replica must carry the same value." >&2
+        exit 1
+    fi
     # Multi-node deployments share one signing key through the
     # `signing_key_pem` secret; a single-node supplied profile may instead
     # point `security.signing_key_path` at a key file it ships.
@@ -282,6 +292,14 @@ configure_profile() {
     if [ -n "${DATABASE_WRITE_URL:-}" ]; then secrets_set database_write_url "$DATABASE_WRITE_URL"; fi
 }
 
+# The credential-broker secret is minted once into the persisted secrets and
+# kept on every later boot, as admin setup does for encryption_master_key.
+ensure_broker_secret() {
+    if [ -z "$(jq -r '.mcp_credential_broker_secret // empty' "$SECRETS_FILE")" ]; then
+        secrets_set mcp_credential_broker_secret "$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')"
+    fi
+}
+
 # Platform-generated identity inputs (one-click templates) apply to the profile
 # this boot created; a redeploy keeps the identity it already has.
 apply_platform_identity() {
@@ -304,6 +322,7 @@ apply_platform_identity() {
 if [ -z "${SYSTEMPROMPT_PROFILE_DIR:-}" ]; then
     if [ "$profile_created" = true ]; then apply_platform_identity; fi
     configure_profile
+    ensure_broker_secret
 fi
 
 if [ "$postgres_ready" = false ]; then wait_for_postgres; fi

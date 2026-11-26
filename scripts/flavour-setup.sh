@@ -162,6 +162,20 @@ step "Applying flavours/$flavour/profile.overlay.yaml"
 run bash "$root/scripts/flavour-overlay.sh" "$flavour" "$profile_file" "$bin" \
     "paths.services=$services_dir" "paths.bin=$(dirname "$bin")"
 
+step "Ensuring the credential-broker secret (mcp_credential_broker_secret)"
+run python3 - "$profile_dir/secrets.json" <<'PY'
+import json, os, secrets, sys
+path = sys.argv[1]
+with open(path) as f:
+    doc = json.load(f)
+if not doc.get("mcp_credential_broker_secret"):
+    doc["mcp_credential_broker_secret"] = secrets.token_hex(32)
+    with open(path, "w") as f:
+        json.dump(doc, f, indent=2)
+        f.write("\n")
+    os.chmod(path, 0o600)
+PY
+
 mkdir -p "$root/web/dist"
 step "Running database migrations"
 run "$bin" infra db migrate
