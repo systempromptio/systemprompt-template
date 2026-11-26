@@ -216,6 +216,28 @@ else
     if [ "$code" = 404 ]; then record "/v1/models absent" pass "$code"; else record "/v1/models absent" fail "$code"; fi
 fi
 
+# Console pages, signed in as the bootstrap admin with a CLI-issued session
+# token in the browser session cookie: each page answers 200 and draws every
+# nav group of the flavour's effective dashboard config.
+console_pages="$(flavour_get "$flavour" smoke.console_pages 2>/dev/null || true)"
+if [ -n "$console_pages" ]; then
+    dashboard="$FLAVOUR_ROOT/flavours/$flavour/services/web/config/dashboard.yaml"
+    [ -f "$dashboard" ] || dashboard="$FLAVOUR_ROOT/services/web/config/dashboard.yaml"
+    nav_groups="$(python3 -c 'import sys, yaml; print("\n".join(g["id"] for g in yaml.safe_load(open(sys.argv[1]))["nav"]))' "$dashboard")"
+    token="$(cli admin session login --token-only 2>/dev/null | tail -1 | tr -d '\r')"
+    while IFS= read -r page; do
+        [ -n "$page" ] || continue
+        body="$(curl -s --max-time 10 -H "Cookie: access_token=$token" -w '\n%{http_code}' "$base$page" || true)"
+        code="$(printf '%s' "$body" | tail -1)"
+        missing="$(printf '%s\n' "$nav_groups" | while IFS= read -r group; do printf '%s' "$body" | grep -qF "data-nav-group=\"$group\"" || printf '%s ' "$group"; done)"
+        if [ "$code" = 200 ] && [ -z "$missing" ]; then
+            record "console $page" pass "$code, $(printf '%s\n' "$nav_groups" | wc -l | tr -d ' ') nav groups"
+        else
+            record "console $page" fail "$code${missing:+, nav groups missing: $missing}"
+        fi
+    done <<< "$console_pages"
+fi
+
 if [ "$release" = true ]; then
     actual="$(cli --version)"
     if [ -z "$version" ] || [[ "$actual" =~ (^|[[:space:]])$version($|[[:space:]]) ]]; then

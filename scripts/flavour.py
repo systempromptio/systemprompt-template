@@ -41,6 +41,7 @@ SMOKE = {
 }
 OPTIONAL_SMOKE = {
     "root_redirect": str,
+    "console_pages": list,
 }
 RUNTIMES = ("slim", "full")
 
