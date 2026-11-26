@@ -169,25 +169,58 @@ pub async fn list_users_paged(
     } else {
         0
     };
-    Ok((
-        rows.into_iter()
-            .map(|row| RosterRow {
-                user_id: row.user_id,
-                display_name: row.display_name,
-                email: row.email,
-                roles: row.roles,
-                group_ids: row.group_ids,
-                project_ids: row.project_ids,
-                is_active: row.is_active,
-                created_at: row.created_at,
-                last_active: row.last_active,
-                last_active_source: row.last_active_source,
-                last_context_id: row.last_context_id,
-                requests: row.requests,
-                tokens: row.tokens,
-                cost_microdollars: row.cost_microdollars,
-            })
-            .collect(),
-        total,
-    ))
+    let roster: Vec<RosterRow> = rows
+        .into_iter()
+        .map(|row| RosterRow {
+            user_id: row.user_id,
+            display_name: row.display_name,
+            email: row.email,
+            roles: row.roles,
+            group_ids: row.group_ids,
+            project_ids: row.project_ids,
+            is_active: row.is_active,
+            created_at: row.created_at,
+            last_active: row.last_active,
+            last_active_source: row.last_active_source,
+            last_context_id: None,
+            requests: row.requests,
+            tokens: row.tokens,
+            cost_microdollars: row.cost_microdollars,
+        })
+        .collect();
+    #[cfg(feature = "agents")]
+    let roster = with_last_contexts(pool, roster).await?;
+    Ok((roster, total))
+}
+
+// Why: the conversation of each row's latest turn lives in the agents
+// member's conversation record, so a build without agents leaves it unset.
+#[cfg(feature = "agents")]
+async fn with_last_contexts(
+    pool: &PgPool,
+    mut roster: Vec<RosterRow>,
+) -> Result<Vec<RosterRow>, sqlx::Error> {
+    let ids: Vec<String> = roster
+        .iter()
+        .map(|r| r.user_id.as_str().to_owned())
+        .collect();
+    let rows = sqlx::query!(
+        r#"SELECT DISTINCT ON (cr.user_id) cr.user_id AS "user_id!", cr.context_id AS "context_id!"
+           FROM conversation_requests cr
+           WHERE cr.user_id = ANY($1) AND cr.effective_kind = 'turn'
+           ORDER BY cr.user_id, cr.created_at DESC, cr.id DESC"#,
+        &ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    let latest: std::collections::HashMap<String, String> = rows
+        .into_iter()
+        .map(|r| (r.user_id, r.context_id))
+        .collect();
+    for row in &mut roster {
+        row.last_context_id = latest
+            .get(row.user_id.as_str())
+            .and_then(|c| ContextId::try_new(c.as_str()).ok());
+    }
+    Ok(roster)
 }

@@ -10,11 +10,11 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::repositories;
-use crate::repositories::analytics::conversation_rows::{ConversationRow, ConversationTotals};
 #[cfg(feature = "agents")]
 use crate::repositories::analytics::conversation_rows::{
     ConversationFilter, find_latest_conversation, get_conversation_totals,
 };
+use crate::repositories::analytics::conversation_rows::{ConversationRow, ConversationTotals};
 #[cfg(feature = "agents")]
 use crate::repositories::analytics::conversations::{
     HistoryFilter, HistoryItem, list_history_items,
@@ -227,11 +227,11 @@ async fn load_conversation_usage(
 }
 
 #[cfg(not(feature = "agents"))]
-async fn load_conversation_usage(
+fn load_conversation_usage(
     _pool: &PgPool,
     _user_id: &UserId,
-) -> (Option<ConversationRow>, ConversationTotals) {
-    (None, ConversationTotals::default())
+) -> std::future::Ready<(Option<ConversationRow>, ConversationTotals)> {
+    std::future::ready((None, ConversationTotals::default()))
 }
 
 fn warn_empty<T>(res: Result<Vec<T>, sqlx::Error>, what: &'static str) -> Vec<T> {

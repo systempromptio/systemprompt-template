@@ -11,6 +11,7 @@ mod access_connections;
 mod access_overview;
 mod access_view;
 mod context;
+mod fill;
 mod load;
 mod usage;
 mod view;
@@ -109,15 +110,7 @@ pub(crate) async fn user_detail_page(
         tabs: tab_links(&user_id, tab),
         tab,
         header: header_view(&detail, &group_ids, &project_ids, defaults.as_ref()),
-        kpis: DetailKpiView {
-            requests_display: crate::handlers::ssr::format::format_token_total(summary.requests),
-            cost_display: crate::handlers::ssr::format::format_cost(summary.cost_microdollars),
-            tokens_display: crate::handlers::ssr::format::format_token_total(summary.tokens),
-            sessions: i64::try_from(detail.sessions.len()).unwrap_or(0),
-            devices: 0,
-            groups: group_ids.len(),
-            projects: project_ids.len(),
-        },
+        kpis: kpis_view(&summary, &detail, group_ids.len(), project_ids.len()),
         can_write: user_ctx.is_admin,
         is_self: user_ctx.user_id.as_str() == user_id.as_str(),
         export: view::export(&user_id, &user_ctx),
@@ -131,9 +124,9 @@ pub(crate) async fn user_detail_page(
         usage: None,
     };
 
-    let data = Box::pin(fill_tab(
+    let data = Box::pin(fill::fill_tab(
         &env,
-        TabRead {
+        fill::TabRead {
             pool: &pool,
             user_id: &user_id,
             detail: &detail,
@@ -155,93 +148,34 @@ pub(crate) async fn user_detail_page(
     ))
 }
 
-// Why: only the active tab is loaded. Rendering all seven would make opening a
-// person's Identity tab pay for their whole request history.
-struct TabRead<'a> {
-    pool: &'a PgPool,
-    user_id: &'a UserId,
-    detail: &'a crate::types::UserDetail,
-    tab: &'static str,
-    page: i64,
-    #[cfg(feature = "agents")]
-    viewer: &'a UserContext,
-}
-
-async fn fill_tab(
-    env: &AdminEnv,
-    read: TabRead<'_>,
-    mut data: UserDetailContext,
-) -> UserDetailContext {
-    let TabRead {
-        pool,
-        user_id,
-        detail,
-        tab,
-        page,
-        #[cfg(feature = "agents")]
-        viewer,
-    } = read;
-    match tab {
-        #[cfg(feature = "agents")]
-        "conversations" => {
-            data.conversations = Some(view::conversations_tab(
-                &load::load_conversations(pool, user_id, page).await,
-                user_id,
-                viewer,
-                page,
-                load::CONVERSATION_PAGE_SIZE,
-            ));
-        },
-        "membership" => {
-            data.membership = Some(view::membership_tab(
-                load::load_membership(pool, user_id).await,
-            ));
-        },
-        "access" => {
-            data.access = Some(view::access_tab(
-                load::load_access(env, pool, user_id).await,
-                user_id,
-            ));
-        },
-        "devices" => {
-            let rows = load::load_devices(pool, user_id).await;
-            let tab_view = view::devices_tab(rows);
-            data.kpis.devices = i64::try_from(tab_view.count).unwrap_or(0);
-            data.devices = Some(tab_view);
-        },
-        "sessions" => {
-            let rows = load::load_sessions(pool, user_id).await;
-            data.sessions = Some(view::sessions_tab(
-                &rows,
-                user_id,
-                page,
-                load::SESSION_PAGE_SIZE,
-            ));
-        },
-        "usage" => {
-            data.usage = Some(view::usage_tab(
-                load::load_usage(pool, user_id).await,
-                user_id,
-            ));
-        },
-        _ => {
-            let identity = load::load_identity(pool, user_id, &detail.roles).await;
-            let choices = super::scope_data::role_choices(&identity.roles);
-            data.identity = Some(view::identity_tab(detail, &identity, choices));
-        },
+fn kpis_view(
+    summary: &repositories::users::usage::UserGatewayUsage,
+    detail: &crate::types::UserDetail,
+    groups: usize,
+    projects: usize,
+) -> DetailKpiView {
+    DetailKpiView {
+        requests_display: crate::handlers::ssr::format::format_token_total(summary.requests),
+        cost_display: crate::handlers::ssr::format::format_cost(summary.cost_microdollars),
+        tokens_display: crate::handlers::ssr::format::format_token_total(summary.tokens),
+        sessions: i64::try_from(detail.sessions.len()).unwrap_or(0),
+        devices: 0,
+        groups,
+        projects,
     }
-    data
 }
 
 fn resolve_tab(raw: Option<&str>) -> &'static str {
-    TABS.iter().copied()
+    TABS.iter()
+        .copied()
         .find(|(slug, _)| Some(*slug) == raw)
         .map_or("identity", |(slug, _)| slug)
 }
 
 fn tab_links(user_id: &UserId, active: &'static str) -> Vec<DetailTabView> {
     let encoded = urlencoding::encode(user_id.as_str());
-    TABS.iter().copied()
+    TABS.iter()
+        .copied()
         .map(|(slug, label)| DetailTabView {
             slug,
             label,

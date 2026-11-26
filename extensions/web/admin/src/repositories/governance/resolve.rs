@@ -22,30 +22,42 @@ pub struct ResolvedId {
 }
 
 pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sqlx::Error> {
-    if let Some(r) = lookup_request_by_id(pool, id).await? {
-        return Ok(Some(r));
-    }
-    if let Some(r) = lookup_request_by_governance_id(pool, id).await? {
-        return Ok(Some(r));
+    #[cfg(feature = "gateway")]
+    {
+        if let Some(r) = lookup_request_by_id(pool, id).await? {
+            return Ok(Some(r));
+        }
+        if let Some(r) = lookup_request_by_governance_id(pool, id).await? {
+            return Ok(Some(r));
+        }
     }
     if let Some(r) = lookup_trace(pool, id).await? {
         return Ok(Some(r));
     }
+    #[cfg(feature = "agents")]
     if let Some(r) = lookup_context_in_user_contexts(pool, id).await? {
         return Ok(Some(r));
     }
-    if let Some(r) = lookup_context_in_ai_requests(pool, id).await? {
-        return Ok(Some(r));
-    }
-    if let Some(r) = lookup_session_in_ai_requests(pool, id).await? {
-        return Ok(Some(r));
+    #[cfg(feature = "gateway")]
+    {
+        if let Some(r) = lookup_context_in_ai_requests(pool, id).await? {
+            return Ok(Some(r));
+        }
+        if let Some(r) = lookup_session_in_ai_requests(pool, id).await? {
+            return Ok(Some(r));
+        }
     }
     if let Some(r) = lookup_session_in_governance(pool, id).await? {
         return Ok(Some(r));
     }
-    lookup_session_in_user_contexts(pool, id).await
+    #[cfg(feature = "agents")]
+    if let Some(r) = lookup_session_in_user_contexts(pool, id).await? {
+        return Ok(Some(r));
+    }
+    Ok(None)
 }
 
+#[cfg(feature = "gateway")]
 async fn lookup_request_by_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT id AS "id!" FROM ai_requests
@@ -60,6 +72,7 @@ async fn lookup_request_by_id(pool: &PgPool, id: &str) -> Result<Option<Resolved
     }))
 }
 
+#[cfg(feature = "gateway")]
 async fn lookup_request_by_governance_id(
     pool: &PgPool,
     id: &str,
@@ -103,6 +116,7 @@ async fn lookup_trace(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sql
     }))
 }
 
+#[cfg(feature = "agents")]
 async fn lookup_context_in_user_contexts(
     pool: &PgPool,
     id: &str,
@@ -120,6 +134,7 @@ async fn lookup_context_in_user_contexts(
     }))
 }
 
+#[cfg(feature = "gateway")]
 async fn lookup_context_in_ai_requests(
     pool: &PgPool,
     id: &str,
@@ -137,6 +152,7 @@ async fn lookup_context_in_ai_requests(
     }))
 }
 
+#[cfg(feature = "gateway")]
 async fn lookup_session_in_ai_requests(
     pool: &PgPool,
     id: &str,
@@ -171,6 +187,7 @@ async fn lookup_session_in_governance(
     }))
 }
 
+#[cfg(feature = "agents")]
 async fn lookup_session_in_user_contexts(
     pool: &PgPool,
     id: &str,

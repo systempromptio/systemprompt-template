@@ -119,15 +119,9 @@ WITH base AS (
                   page.created_at AS "created_at!",
                   page.last_active,
                   page.last_active_source AS "last_active_source?",
-                  lc.context_id AS "last_context_id?: ContextId",
                   page.requests AS "requests!",
                   page.tokens AS "tokens!",
                   page.cost_microdollars AS "cost_microdollars!",
                   page.total_rows AS "total_rows!"
              FROM page
-             LEFT JOIN LATERAL (
-                 SELECT cr.context_id FROM conversation_requests cr
-                 WHERE cr.user_id = page.id AND cr.effective_kind = 'turn'
-                 ORDER BY cr.created_at DESC, cr.id DESC LIMIT 1
-             ) lc ON TRUE
              ORDER BY page.position

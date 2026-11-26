@@ -3,8 +3,8 @@
 //! One transaction: `expire_raw_evidence` (schema `32_raw_retention.sql`)
 //! deletes the hook plane and what hangs off it, then each linked member's
 //! expiry runs: the gateway request log with `gateway`, the marketplace
-//! session bindings with `mcp`. The per-conversation record and the daily rollups are
-//! kept, so every figure the console shows outlives the raw rows.
+//! session bindings with `mcp`. The per-conversation record and the daily
+//! rollups are kept, so every figure the console shows outlives the raw rows.
 
 use crate::jobs::error::JobError;
 use sqlx::PgPool;

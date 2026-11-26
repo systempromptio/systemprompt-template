@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT ON (cr.user_id) cr.user_id AS \"user_id!\", cr.context_id AS \"context_id!\"\n           FROM conversation_requests cr\n           WHERE cr.user_id = ANY($1) AND cr.effective_kind = 'turn'\n           ORDER BY cr.user_id, cr.created_at DESC, cr.id DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "context_id!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "afb15a097556f1ae37dac9208fb788c2deedfca419bb4d0a20acf96475f6be00"
+}
