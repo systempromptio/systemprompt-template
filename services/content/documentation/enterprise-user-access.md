@@ -44,11 +44,11 @@ No CLI or database access is required for any of these operations. The CLI equiv
 
 ## Signing in and provisioning
 
-The login page at `/admin/login` signs in with a **passkey**. Someone on a new device, or who has lost their passkey, can ask for a time-limited, single-use email link that lets them create a passkey on that device, where the installation has email delivery configured. Operators create accounts from `/admin/users` or with `systemprompt admin users create`. On a development, non-cloud profile, `just dev-login <email>` prints a single-use login link; the route is not mounted anywhere else. See [Authentication](/documentation/authentication).
+The login page at `/admin/login` signs in with a **passkey**. Someone on a new device, or who has lost their passkey, can ask for a time-limited, single-use email link that lets them create a passkey on that device, where the installation has email delivery configured. Operators create accounts from `/admin/users` or with `systemprompt admin users create`. See [Authentication](/documentation/authentication).
 
 ## Optional AD FS SSO and deprovisioning
 
-AD FS SSO (SAML 2.0) is built in and **off by default**: it switches on when an installation adds `services/web/config/adfs.yaml`, which the template does not ship. The relying party is served at `/admin/auth/adfs/start` and `/admin/auth/adfs/acs`, and trust is pinned to the IdP's published signing certificate — there is no client secret. When it is configured:
+AD FS SSO (SAML 2.0) is built in and **off by default**: it switches on when an installation adds `services/web/config/adfs.yaml`, which the template does not ship. The web extension contributes it to core's sign-in slot, which serves the relying party at `/api/v1/core/sso/adfs/start`, `/api/v1/core/sso/adfs/callback` (the assertion consumer service) and `/api/v1/core/sso/adfs/metadata` and mints the session; the relying-party identifier stays `<external URL>/saml/metadata`. Trust is pinned to the IdP's published signing certificate — there is no client secret. When it is configured:
 
 - A verified assertion must carry an allowed email domain, and a group claim when `deny_without_group` is on (the default).
 - `auto_provision` (default off) decides whether SSO may create an account; off, SSO only signs in existing accounts.

@@ -32,7 +32,6 @@
 //! - the console landing page's two pure rules: when an MCP server counts as
 //!   alive from its session heartbeat, and the polarity of a window-over-window
 //!   delta
-//! - the developer login link's gate, code hash, and printed URL
 //! - the `project_manager` semi-admin role: which role sets reach the admin
 //!   dashboard, the AD group glob that grants it, and the project/history
 //!   scopes that widen for it
@@ -74,8 +73,6 @@ mod content_validation;
 mod content_validation_results;
 #[cfg(test)]
 mod conversation_view;
-#[cfg(test)]
-mod dev_login_pure;
 #[cfg(test)]
 mod devices_page;
 #[cfg(test)]

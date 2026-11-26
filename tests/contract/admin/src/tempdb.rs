@@ -167,8 +167,7 @@ async fn ensure_template(admin: &PgPool, base: &str, template: &str) {
         let dashboard_ready: bool = sqlx::query_scalar(
             "SELECT to_regclass('groups') IS NOT NULL
                  AND to_regclass('projects') IS NOT NULL
-                 AND to_regclass('conversation_requests') IS NOT NULL
-                 AND to_regclass('dev_login_codes') IS NOT NULL",
+                 AND to_regclass('conversation_requests') IS NOT NULL",
         )
         .fetch_one(&*pool)
         .await
