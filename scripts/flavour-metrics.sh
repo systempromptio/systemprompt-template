@@ -191,8 +191,14 @@ write_json() {
     local flavour="$1" file="$out/$1.json"
     local previous='{}'
     if [ -f "$file" ]; then previous="$(cat "$file")"; fi
-    jq -n --argjson previous "$previous" --rawfile kv "$kv" '
-        reduce ($kv | split("\n")[] | select(length > 0) | split("\t")) as [$key, $value]
+    # A re-measured section replaces the old one whole, so a key the new run
+    # did not write (an earlier failure's error) is not carried forward;
+    # build is kept because --no-clean reuses its clean_seconds.
+    jq -n --argjson previous "$previous" --rawfile kv "$kv" --argjson image "$do_image" --argjson dev "$do_dev" '
+        ($previous
+            | if $image then del(.binaries, .binary_bytes, .image, .crates, .crates_error, .deploy, .bench) else . end
+            | if $dev then del(.dev) else . end) as $previous
+        | reduce ($kv | split("\n")[] | select(length > 0) | split("\t")) as [$key, $value]
             ($previous; setpath($key | split("."); ($value | fromjson)))' > "$file.tmp"
     mv "$file.tmp" "$file"
 }
