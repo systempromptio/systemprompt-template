@@ -2,7 +2,7 @@
 //!
 //! Every query here takes the same [`SiteScope`] and applies it with a static
 //! null-skip bind: NULL spans every user, and otherwise the query narrows to
-//! the resolved user id list. Synthetic gateway rows
+//! the resolved user id list. Evaluation gateway rows
 //! (`ai_requests.traffic = 'evaluation'`) are excluded everywhere: demo traffic
 //! is not a business metric.
 
@@ -23,7 +23,9 @@ pub mod models;
 pub mod series;
 pub mod session_costs;
 pub mod sessions;
+#[cfg(feature = "mcp")]
 pub mod skills;
+#[cfg(feature = "mcp")]
 pub mod tools;
 pub mod user_rollups;
 
