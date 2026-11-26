@@ -18,3 +18,8 @@ storage/files/js/pages/profile-odoo.js
 storage/files/js/services/odoo-login.js
 storage/files/js/services/webauthn-register.js
 storage/files/images/blog/placeholder.svg
+
+# Served to MCP clients as the server icon: core's MCP host advertises
+# {website}/files/images/favicon-96x96.png in its initialize result, so the
+# reference lives in core, not in any template here.
+storage/files/images/favicon-96x96.png

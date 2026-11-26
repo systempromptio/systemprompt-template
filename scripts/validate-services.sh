@@ -112,6 +112,11 @@ BANDS = {"role", "group", "project", "connector"}
 # literal id of either kind would be minted rather than validated. Only the
 # glob is accepted for them, and only for them.
 glob_only = {"gateway_route", "hook"}
+# A model entity decides a gateway call no declared route matched. The model
+# catalog is not in this tree, so the projection keeps `model/*` as written and
+# core matches it per request; the whole-id glob is the one model form accepted
+# here beside a literal id.
+glob_open = {"model"}
 
 groups_doc = load(root / "services/web/config/groups.yaml")
 group_ids = {g.get("id") for g in (groups_doc.get("groups") or [])} | {"unassigned"}
@@ -141,8 +146,10 @@ for decl in rules_doc.get("entities") or []:
             errors.append(
                 f"rules.yaml: {ref}: {etype} ids are generated, never written — use {etype}/*"
             )
+    elif etype in glob_open and eid == "*":
+        pass
     elif "*" in eid:
-        errors.append(f"rules.yaml: {ref}: only gateway_route and hook take a glob")
+        errors.append(f"rules.yaml: {ref}: only gateway_route, hook and model/* take a glob")
     else:
         pool = known.get(etype)
         owner = decl.get("owner")
