@@ -10,7 +10,7 @@
 use std::path::Path;
 
 use sqlx::PgPool;
-use systemprompt::governance::authz::RegisteredEntities;
+use systemprompt::governance::authz::{RegisteredEntities, SERVICES_SOURCE};
 use systemprompt_web_admin::authz::CONSOLE_SOURCE;
 use systemprompt_web_admin::repositories::access_control::declared::{
     DeclaredInputs, build_declared_set,
@@ -95,7 +95,7 @@ async fn insert_only_adds_the_missing_and_leaves_everything_else() {
     );
     assert!(
         rows.iter()
-            .any(|r| r.0 == "group" && r.1 == "india-devs" && r.3 == "yaml")
+            .any(|r| r.0 == "group" && r.1 == "india-devs" && r.3 == SERVICES_SOURCE)
     );
     assert!(rows.iter().any(|r| r.0 == "role" && r.1 == "admin"));
 
@@ -122,7 +122,7 @@ async fn overwrite_corrects_and_deletes_governed_rows_but_spares_user_and_undecl
     let server = unique("srv");
     let other = unique("other");
     write_services_file(dir.path(), RULES, &rules_yaml(&server, "india-devs"));
-    insert_rule(&db.pool, &server, "group", "uk", "yaml").await;
+    insert_rule(&db.pool, &server, "group", "uk", SERVICES_SOURCE).await;
     insert_rule(&db.pool, &server, "user", "someone", CONSOLE_SOURCE).await;
     insert_rule(&db.pool, &other, "group", "uk", CONSOLE_SOURCE).await;
     sqlx::query(
@@ -178,8 +178,8 @@ async fn overwrite_retires_rows_code_wrote_on_an_entity_it_dropped_and_its_defau
     let server = unique("srv");
     let dropped = unique("dropped");
     write_services_file(dir.path(), RULES, &rules_yaml(&server, "india-devs"));
-    insert_rule(&db.pool, &dropped, "group", "uk", "yaml").await;
-    insert_rule(&db.pool, &dropped, "role", "admin", "yaml").await;
+    insert_rule(&db.pool, &dropped, "group", "uk", SERVICES_SOURCE).await;
+    insert_rule(&db.pool, &dropped, "role", "admin", SERVICES_SOURCE).await;
     sqlx::query(
         "UPDATE access_control_entities SET source = $2
          WHERE entity_type = 'mcp_server' AND entity_id = $1",
