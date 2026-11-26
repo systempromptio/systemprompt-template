@@ -123,22 +123,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-yaml \
     && rm -rf /var/lib/apt/lists/*
-RUN useradd -m -u 1000 app
-WORKDIR /app
 # /app/storage/data is runtime state (excluded from the build context), so it
 # is created here: a named volume mounted at a path the image lacks comes up
-# root-owned, and the server, running as uid 1000, cannot write it.
-RUN mkdir -p /app/bin /app/logs /app/data /app/storage/data /app/web /app/.systemprompt/profiles/docker
-COPY --from=builder /out/bin/ /app/bin/
-COPY --from=services /staged/services /app/services
-COPY storage /app/storage
-COPY web /app/web
-COPY docker/entrypoint.sh /app/entrypoint.sh
-COPY docker/migrate-profile.py /app/migrate-profile.py
-COPY docker/container-state.py /app/container-state.py
-RUN mkdir -p /app/storage/files/uploads /app/storage/files/images/generated \
-    && chmod +x /app/entrypoint.sh /app/bin/* \
+# root-owned, and the server, running as uid 1000, cannot write it. Ownership
+# is set on COPY: a recursive chown afterwards would store every copied file,
+# the binary included, a second time in its own layer.
+RUN useradd -m -u 1000 app \
+    && mkdir -p /app/bin /app/logs /app/data /app/storage/data \
+        /app/storage/files/uploads /app/storage/files/images/generated \
+        /app/web /app/.systemprompt/profiles/docker \
     && chown -R app:app /app
+WORKDIR /app
+COPY --from=builder --chown=app:app --chmod=0755 /out/bin/ /app/bin/
+COPY --from=services --chown=app:app /staged/services /app/services
+COPY --chown=app:app storage /app/storage
+COPY --chown=app:app web /app/web
+COPY --chown=app:app --chmod=0755 docker/entrypoint.sh /app/entrypoint.sh
+COPY --chown=app:app docker/migrate-profile.py docker/container-state.py /app/
 USER app
 EXPOSE 8080
 ENV HOST=0.0.0.0 \

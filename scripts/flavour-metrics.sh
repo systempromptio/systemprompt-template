@@ -144,7 +144,7 @@ measure_image() {
         fi
     else
         put deploy.boot_to_healthy_seconds null
-        put_str deploy.error "not healthy: $("${compose[@]}" logs --no-color app 2>&1 | grep -m1 -E 'Error|ERROR' | cut -c1-400)"
+        put_str deploy.error "not healthy: $("${compose[@]}" logs --no-color --no-log-prefix app 2>&1 | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -m1 -E 'Error|ERROR' | cut -c1-400)"
     fi
     "${compose[@]}" down -v --remove-orphans > /dev/null 2>&1 || true
 }
