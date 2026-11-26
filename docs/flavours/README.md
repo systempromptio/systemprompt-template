@@ -58,14 +58,20 @@ whether the publish pipeline runs.
 ## The kernel floor
 
 Every flavour links the kernel: the API server, the CLI, the runtime and MCP
-host, and the members they depend on directly (users, OAuth, AI, the gateway,
-files, documents, the scheduler, agent runs, issues and cloud). A flavour can
-leave out the agent and MCP client crates, content with the generator and
-templates, the marketplace, organisational memory, notifications, office, PDF
-and collaborative-file support, OpenTelemetry, Slack and Teams, and the
-template's own admin page groups. Shrinking the floor itself needs optional
-seams in the kernel; until then the size difference between flavours is
-bounded by it, and the metrics show by how much.
+host, and the members they depend on directly (users, OAuth, authorization,
+logging, events and the scheduler). No capability comes with the kernel: each
+flavour names the core capabilities it serves, mirroring core's
+`flavour-<name>` lines in `scripts/build-compositions.txt`, and a template
+page group or job that reads a capability compiles only under the feature that
+links it.
+
+| flavour | core facade capabilities (beside `runtime`, `identity`, `analytics`) | crates (normal + build) |
+|---|---|---|
+| gateway | ai, cloud, otel, bridge | 569 |
+| mcp | gateway's, mcp-servers, marketplace | 578 |
+| agents | mcp's, agents, agent-runs, notifications, brain | 586 |
+| site | content, files (with documents and issues), files-pdf | 596 |
+| full | `reference` and slack | 715 |
 
 ## Schema per flavour
 
