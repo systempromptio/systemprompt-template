@@ -12,11 +12,13 @@ use systemprompt::identifiers::{AgentId, SessionId, TraceId, UserId};
 
 mod list;
 mod list_row;
+mod resolve;
 mod spans;
 mod stats;
 
 pub use list::{TracePage, list_traces};
-pub use spans::{list_trace_spans, resolve_trace_session};
+pub use resolve::resolve_trace_session;
+pub use spans::list_trace_spans;
 pub use stats::get_trace_stats;
 
 #[derive(Debug, Clone, Serialize)]
