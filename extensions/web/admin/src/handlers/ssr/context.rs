@@ -90,7 +90,7 @@ pub(crate) struct BrandingShell<'a> {
 #[derive(Debug, Serialize)]
 struct NavSectionShell<'a> {
     id: &'a str,
-    title: &'a str,
+    label: &'a str,
     items: Vec<&'a NavItemView>,
 }
 
@@ -98,7 +98,7 @@ fn visible_nav(nav: &[NavSectionView], is_console: bool) -> Vec<NavSectionShell<
     nav.iter()
         .map(|section| NavSectionShell {
             id: section.id(),
-            title: section.title(),
+            label: section.title(),
             items: section
                 .items()
                 .iter()
