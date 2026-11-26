@@ -1,7 +1,7 @@
 //! Owner-authenticated source and revision authoring; no implicit activation.
 
 use crate::env::AdminEnv;
-use crate::error::{AdminError, AdminResult};
+use crate::error::AdminResult;
 use crate::handlers::shared::require_write_origin;
 use crate::handlers::ssr::page::Caller;
 use crate::routes::managed_state::ManagedState;
@@ -17,11 +17,13 @@ use systemprompt::identifiers::{
     SourceSnapshotId, WithdrawalProposalId,
 };
 use systemprompt::marketplace::managed::{
-    ConflictDecision, GitSyncRequest, NewResource, NewRevision, ReconciliationRequest,
-    RevisionFiles, RevisionManifest, SnapshotProvenance, SourceSpec,
+    ConflictDecision, NewResource, NewRevision, ReconciliationRequest, RevisionFiles,
+    RevisionManifest, SnapshotProvenance, SourceSpec,
 };
 
+mod git_sync;
 mod publication;
+pub(crate) use git_sync::sync_git;
 pub(crate) use publication::*;
 
 #[derive(Debug, Deserialize)]
@@ -73,56 +75,6 @@ pub(crate) async fn capture_snapshot(
         ),
     ))
 }
-
-pub(crate) async fn sync_git(
-    Extension(env): Extension<AdminEnv>,
-    Extension(_user): Extension<UserContext>,
-    Path(id): Path<ManagedSourceId>,
-    headers: HeaderMap,
-    Json(input): Json<GitSyncRequest>,
-) -> AdminResult<Json<serde_json::Value>> {
-    require_write_origin(&env, &headers)?;
-    if input.source_id != id {
-        return Err(AdminError::Conflict(
-            "Source path and body differ".to_owned(),
-        ));
-    }
-    let synced = env
-        .git_sync()
-        .sync(&systemprompt::traits::GitSourceSyncRequest {
-            source_id: input.source_id,
-            resource_id: input.resource_id,
-            upstream_root: input.upstream_root,
-            upstream_base_revision_id: input.upstream_base_revision_id,
-        })
-        .await?;
-    // JSON: the sync outcome relayed in the console's tagged shape
-    Ok(Json(match synced {
-        systemprompt::traits::GitSourceSynced::Incoming {
-            snapshot_id,
-            revision_id,
-            commit,
-            reconciliation_id,
-        } => serde_json::json!({
-            "result": "incoming",
-            "snapshot_id": snapshot_id,
-            "revision_id": revision_id,
-            "commit": commit,
-            "reconciliation_id": reconciliation_id,
-        }),
-        systemprompt::traits::GitSourceSynced::WithdrawalProposed {
-            snapshot_id,
-            proposal_id,
-            commit,
-        } => serde_json::json!({
-            "result": "withdrawal_proposed",
-            "snapshot_id": snapshot_id,
-            "proposal_id": proposal_id,
-            "commit": commit,
-        }),
-    }))
-}
-
 
 pub(crate) async fn begin_reconciliation(
     Extension(env): Extension<AdminEnv>,
