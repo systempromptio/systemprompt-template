@@ -25,6 +25,5 @@ pub fn web_assets(paths: &dyn systemprompt::extension::AssetPaths) -> Vec<AssetD
     // the bridge tarball and `install.sh` are already reachable at
     // `/files/downloads/<asset>` without being copied into `web/dist`.
     assets.extend(js_services::public_js_assets(&storage_js));
-    assets.extend(js_services::service_js_assets(&storage_js));
     assets
 }

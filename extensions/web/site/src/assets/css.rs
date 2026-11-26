@@ -23,7 +23,6 @@ fn core_css(p: &Path) -> Vec<AssetDefinition> {
     vec![
         css!(p, "core/variables.css"),
         css!(p, "core/compat.css"),
-        css!(p, "core/fonts.css"),
         css!(p, "core/page-tokens.css"),
         css!(p, "core/reset.css"),
         css!(p, "core/tokens-primitives.css"),
