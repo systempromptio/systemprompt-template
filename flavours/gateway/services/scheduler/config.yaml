@@ -48,11 +48,6 @@ scheduler:
       owner: admin
       enabled: true
 
-    - name: file_ingestion
-      extension: core
-      owner: admin
-      enabled: true
-
     - name: behavioral_analysis
       extension: core
       owner: admin
