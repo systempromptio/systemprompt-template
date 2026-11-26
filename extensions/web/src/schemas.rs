@@ -40,6 +40,10 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(SCHEMA_SCOPE_DEFAULTS),
         SchemaDefinition::sql_only(SCHEMA_CONNECTOR_CREDENTIALS),
         SchemaDefinition::sql_only(include_str!("../schema/26_connector_accounts.sql")),
+        #[cfg(feature = "agents")]
+        SchemaDefinition::sql_only(include_str!("../schema/26b_conversation_contexts.sql")),
+        #[cfg(not(feature = "agents"))]
+        SchemaDefinition::sql_only(include_str!("../schema/26b_conversation_contexts_unlinked.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/27_conversation_requests.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/28_ingestion_integrity.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/29_skill_version_impact.sql")),

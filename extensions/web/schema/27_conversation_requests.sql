@@ -104,7 +104,7 @@ SELECT a.context_id, a.user_id, u.display_name, a.session_id, a.client_session_i
        a.first_at, GREATEST(a.last_request_at, c.updated_at), s.status
 FROM agg a
 LEFT JOIN tools t ON t.context_id = a.context_id
-LEFT JOIN user_contexts c ON c.context_id = a.context_id
+LEFT JOIN conversation_contexts c ON c.context_id = a.context_id
 LEFT JOIN plugin_session_summaries s ON s.session_id = a.client_session_id
 LEFT JOIN users u ON u.id = a.user_id
 LEFT JOIN ai_request_scopes rs ON rs.request_id = a.last_request_id
@@ -132,7 +132,7 @@ CREATE OR REPLACE FUNCTION conversation_title(context_key text, client_session_k
 RETURNS text LANGUAGE sql STABLE AS $function$
 SELECT COALESCE(
     (SELECT s.ai_title FROM plugin_session_summaries s WHERE s.session_id = client_session_key),
-    (SELECT NULLIF(c.name, 'Gateway conversation') FROM user_contexts c WHERE c.context_id = context_key),
+    (SELECT NULLIF(c.name, 'Gateway conversation') FROM conversation_contexts c WHERE c.context_id = context_key),
     conversation_opening_prompt(context_key, 160),
     'Conversation ' || LEFT(context_key, 12) || '…')
 $function$;

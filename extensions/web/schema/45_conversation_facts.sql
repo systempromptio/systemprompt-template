@@ -354,7 +354,7 @@ BEGIN
         LEFT JOIN hooks h ON h.context_id = a.context_id
         LEFT JOIN skills k ON k.context_id = a.context_id
         LEFT JOIN ai_request_scopes rs ON rs.request_id = a.last_request_id
-        LEFT JOIN user_contexts c ON c.context_id = a.context_id
+        LEFT JOIN conversation_contexts c ON c.context_id = a.context_id
         LEFT JOIN plugin_session_summaries ps ON ps.session_id = a.client_session_id
         ON CONFLICT (context_id) DO UPDATE SET
             user_id = EXCLUDED.user_id, session_id = EXCLUDED.session_id,
