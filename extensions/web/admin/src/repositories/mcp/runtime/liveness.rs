@@ -3,8 +3,8 @@
 //! The heartbeat half of liveness lives in `repositories::overview::liveness`,
 //! which the dashboard also reads — one query answers "when did this server
 //! last speak" for both surfaces. What this module adds is the part only the
-//! MCP pages need: the proxy identities a live session is acting as, and the
-//! per-session detail behind the count.
+//! MCP pages need: the live sessions bound to a principal, and the per-session
+//! detail behind the count.
 //!
 //! Whether a server is alive is not decided here either: that rule is
 //! `repositories::overview::liveness::liveness_state`, and the MCP pages call
@@ -20,21 +20,21 @@ pub struct McpProxyIdentityCount {
     pub distinct_users: i64,
 }
 
-// Why: Unexpired proxy identities per server, with the people behind them.
-//
-// Keyed on the session the identity was minted for, so a server with open
-// sessions and no identities is a server nothing has authenticated through —
-// which is a different state from having no sessions at all.
+// Why: the proxy binds each session to its principal in `mcp_sessions`, so an
+// unexpired session with a user is an authenticated identity; a server with
+// open sessions and none of them is a server nothing has authenticated
+// through, a different state from having no sessions at all.
 pub async fn list_mcp_proxy_identity_counts(
     pool: &PgPool,
 ) -> Result<Vec<McpProxyIdentityCount>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
              s.mcp_server_id AS "server_id!: McpServerId",
-             COUNT(p.session_id) FILTER (WHERE p.expires_at > NOW())::BIGINT AS "identities!",
+             COUNT(s.session_id) FILTER (
+                 WHERE s.user_id IS NOT NULL AND s.expires_at > NOW()
+             )::BIGINT AS "identities!",
              COUNT(DISTINCT s.user_id)::BIGINT AS "distinct_users!"
            FROM mcp_sessions s
-           LEFT JOIN mcp_proxy_identities p ON p.session_id = s.session_id
           WHERE s.mcp_server_id IS NOT NULL
           GROUP BY s.mcp_server_id
           ORDER BY s.mcp_server_id"#
@@ -79,10 +79,9 @@ pub async fn list_mcp_sessions_for_server(
              s.created_at AS "created_at!",
              s.last_activity_at AS "last_activity_at!",
              s.expires_at AS "expires_at!",
-             (p.session_id IS NOT NULL AND p.expires_at > NOW()) AS "has_proxy_identity!",
-             p.user_type AS "proxy_user_type?"
+             (s.user_id IS NOT NULL AND s.expires_at > NOW()) AS "has_proxy_identity!",
+             NULL::TEXT AS "proxy_user_type?"
            FROM mcp_sessions s
-           LEFT JOIN mcp_proxy_identities p ON p.session_id = s.session_id
           WHERE s.mcp_server_id = $1
           ORDER BY s.last_activity_at DESC
           LIMIT $2"#,

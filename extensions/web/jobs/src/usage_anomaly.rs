@@ -135,7 +135,7 @@ async fn load_hourly_observation(pool: &PgPool) -> Result<HourlyObservation, Job
         FROM ai_requests r
         WHERE r.created_at >= DATE_TRUNC('hour', NOW()) - INTERVAL '169 hours'
           AND r.created_at < DATE_TRUNC('hour', NOW())
-          AND NOT r.synthetic
+          AND r.traffic = 'production'
         "#,
     )
     .fetch_one(pool)

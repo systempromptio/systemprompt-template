@@ -13,7 +13,7 @@ requests AS (
     SELECT r.id, r.cost_microdollars
     FROM conversations c
     JOIN ai_requests r ON r.user_id = c.user_id AND r.client_session_id = c.session_id
-                       AND NOT r.synthetic AND r.request_kind = 'turn'
+                       AND r.traffic = 'production' AND r.request_kind = 'turn'
 )
 SELECT
     (SELECT COUNT(*) FROM events)::BIGINT AS "invocations!",

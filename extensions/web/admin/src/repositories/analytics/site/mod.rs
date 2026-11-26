@@ -3,7 +3,7 @@
 //! Every query here takes the same [`SiteScope`] and applies it with a static
 //! null-skip bind: NULL spans every user, and otherwise the query narrows to
 //! the resolved user id list. Synthetic gateway rows
-//! (`ai_requests.synthetic`) are excluded everywhere: demo traffic is not a
+//! (`ai_requests.traffic = 'evaluation'`) are excluded everywhere: demo traffic is not a
 //! business metric.
 
 use sqlx::PgPool;

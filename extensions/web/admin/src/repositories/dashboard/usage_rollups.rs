@@ -125,7 +125,7 @@ async fn rollup_gateway_requests(pool: &PgPool, days_back: i32) -> Result<u64, M
             COALESCE(SUM(output_tokens), 0)::BIGINT,
             COALESCE(SUM(cost_microdollars), 0)::BIGINT
         FROM ai_requests
-        WHERE NOT COALESCE(synthetic, FALSE)
+        WHERE traffic = 'production'
           AND (created_at AT TIME ZONE 'UTC')::DATE >= (NOW() AT TIME ZONE 'UTC')::DATE - ($1::INT)
         GROUP BY user_id, (created_at AT TIME ZONE 'UTC')::DATE
         ON CONFLICT (user_id, date) DO UPDATE SET
