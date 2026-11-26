@@ -32,31 +32,34 @@ X.Y.Z [--check]` owns every core crate pin in **both** workspaces
 runs both, refreshes both lockfiles, migrates the local DB
 (`--profile local`) and builds.
 
-**`bridge/CORE_REF` names the core CI checks out** beside this repo
-(`.github/actions/core-checkout` → `../systemprompt-core`). There is no bridge
-crate here; the file exists for that checkout and for `core-guard`. With the
-override inert it must be `v<pin>` (`scripts/check-core-ref.sh`, a lint gate).
+**Core is pinned by git rev.** `bridge/CORE_REF` holds one 40-char SHA of
+https://github.com/systempromptio/systemprompt-core; every core crate
+`Cargo.toml` and `tests/Cargo.toml` name is a git dependency
+`{ version = "X.Y.Z", git = "<core url>", rev = "<sha>", … }` (no `[patch]`
+table), so core's inter-crate dependencies resolve inside that one git source
+and each lockfile holds exactly one copy of every `systemprompt-*` crate. Both
+lockfiles are committed resolved against it, so a fresh clone builds with no
+sibling checkout. Moving the pin is one command: `just core-pin <sha|branch>`
+(`scripts/core-pin.sh`: writes CORE_REF, rewrites every entry, re-resolves
+both locks). `scripts/core-pin.sh --check` (inside `scripts/check-core-ref.sh`,
+a lint gate) fails on another rev, a registry or duplicate core crate in a
+lock, or a `[patch]` table. Push the core commit before pinning it.
 
-**Building against unreleased core.** The override set lives inert under
-`[workspace.metadata.unreleased-core-patch]` in `Cargo.toml` and
-`tests/Cargo.toml`. To track core `next`, rename that table to
-`[patch.crates-io]` in **both** manifests (`[patch]` is per-workspace: patch
-the root alone and the tests quietly build against crates.io), add the
-`# ACTIVE: core X.Y.Z is unreleased` marker above each, and move the pins to
-the sibling's workspace version — for a 0.x crate a `0.61.0` pin does not
-accept a `0.62.0` patch, and cargo **silently drops** the patch and builds
-the published crate. The only proof the patch is live is the build log naming
-`../systemprompt-core` paths. Then `just core-pin` (CORE_REF = the sibling's
-HEAD, push core first) and commit; `just deploy` runs `core-guard`, which
-refuses unless the sibling is clean and at CORE_REF. `.githooks/pre-commit`
-(`just init-hooks`) blocks a live patch without the marker; for a purely local
-experiment hide the four manifests/lockfiles with
-`git update-index --skip-worktree`. Do not run `just prepare` while the patch
-is live. `main` never carries a live patch (`scripts/validate-release.sh`).
+**Local core override.** `scripts/core-patch.sh on <core checkout>` appends a
+`[patch."<core url>"]` table of path entries (one per core crate each lockfile
+resolves) to both manifests and hides the four
+manifests/locks from git (skip-worktree); `scripts/core-patch.sh off` restores
+the committed pin; `status` prints `pin` or `path`. While it is on,
+`scripts/flavour-build.sh` passes the checkout as the `core` BuildKit context
+and `just deploy` (`core-guard`) refuses. `.githooks/pre-commit`
+(`just init-hooks`) refuses a staged `[patch]` path entry of either form and a
+pin that disagrees with CORE_REF. Do not run `just prepare` while an override
+is on. `main` never carries a core git dependency or a `[patch]` table
+(`scripts/validate-release.sh`).
 
 **Core (`../systemprompt-core`) is write-only from here.** Commit core changes
 on core's `next` and push; run no validation in the core checkout — this repo
-compiles the patched core anyway.
+compiles the pinned core anyway.
 
 ## Quick Start
 
@@ -278,7 +281,7 @@ systemprompt core skills show --help
 
 ## Architecture (big picture)
 
-- `src/main.rs` is a thin entry point that delegates to the published `systemprompt` core crates (sibling checkout at `../systemprompt-core`, patched in via `[patch.crates-io]` for cross-repo work). All customization is **compile-time** via the [`inventory`](https://docs.rs/inventory) crate — there is no dynamic plugin loader.
+- `src/main.rs` is a thin entry point that delegates to the published `systemprompt` core crates (pinned by git rev as git dependencies; `scripts/core-patch.sh on <checkout>` swaps in a local checkout). All customization is **compile-time** via the [`inventory`](https://docs.rs/inventory) crate — there is no dynamic plugin loader.
 - Rust code lives in `extensions/`: `extensions/mcp/*` for MCP server extensions, `extensions/web` for page data and template rendering. Each MCP extension has its own crate with `Cargo.toml` + `.sqlx/` offline cache.
 - Configuration is YAML under `services/`, loaded through `services/config/config.yaml`'s explicit `includes:` list. Unknown keys error loudly (`#[serde(deny_unknown_fields)]`).
 - Governance runs as a four-stage synchronous pipeline on every tool call: **scope check → configured secret scan → blocklist → rate limit**. Every decision is audited to Postgres with a trace_id linking identity → agent → tool → result → cost. The broad starter signature catalog lives in `services/governance/config.yaml`; forks own their final catalog.
@@ -405,7 +408,7 @@ Bot scopes: `commands`, `chat:write`, `users:read`, plus `users:read.email` only
 
 ## Critical Rules
 
-1. **Core is a crate dependency** — pinned to the published release, in lockstep with this repo's version. `next` may build against the sibling `../systemprompt-core` on its `next` branch through a live `[patch.crates-io]` (both manifests, `# ACTIVE` marker, `just core-pin`); `main` never does. Adopting a release is `just core-bump X.Y.Z` (every pin, both lockfiles, CORE_REF, local migrate), then `just schema-baseline`, a CHANGELOG entry and `just verify`. Read core's changelog for tightened identifier validators and new `NOT NULL` columns — runtime failures a build cannot catch. See [Branching](#branching-this-repo) and `docs/RELEASING.md`.
+1. **Core is a crate dependency** — pinned to the published release, in lockstep with this repo's version. Between releases core is pinned by git rev as git dependencies in both manifests (`bridge/CORE_REF`, `just core-pin <sha>`); `main` never is. Adopting a release is `just core-bump X.Y.Z` (every pin, both lockfiles, CORE_REF, local migrate), then `just schema-baseline`, a CHANGELOG entry and `just verify`. Read core's changelog for tightened identifier validators and new `NOT NULL` columns — runtime failures a build cannot catch. See [Branching](#branching-this-repo) and `docs/RELEASING.md`.
 2. **Rust code -> `extensions/`** — All `.rs` files live here.
 3. **Config only -> `services/`** — YAML/Markdown only. No Rust code.
 4. **CSS files -> `storage/files/css/`** — NEVER put CSS in `extensions/*/assets/css/`.

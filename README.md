@@ -34,7 +34,7 @@ This repository is the **evaluation template**: Core plus configuration, an admi
 
 ## Quick start
 
-Install Docker, [just](https://just.systems/) and Rust through rustup. The repo pins its toolchain in [rust-toolchain.toml](rust-toolchain.toml); the workspace requires Rust 1.96+. Local setup provisions PostgreSQL 18 and asks for an AI provider key. The template builds as one of several [flavours](docs/flavours/README.md); `just flavours` lists them and `full` is everything.
+Install Docker, [just](https://just.systems/) and Rust through rustup. The repo pins its toolchain in [rust-toolchain.toml](rust-toolchain.toml); the workspace requires Rust 1.96+. Local setup provisions PostgreSQL 18 and asks for an AI provider key. The template builds as one of several [flavours](docs/flavours/README.md); `just flavours` lists them and `full` is everything. Core is pinned by git rev ([Core pin](docs/flavours/README.md#core-pin)), so a clone builds without any other checkout.
 
 ```bash
 git clone https://github.com/systempromptio/systemprompt-template

@@ -170,6 +170,30 @@ invalidate each other's build or share a database.
 4. Run `bash scripts/check-flavours.sh`, then `just docker-build <name>`,
    `just smoke <name> --no-build` and `just metrics <name>`.
 
+## Core pin
+
+Every flavour builds against one systemprompt-core commit, pinned by git rev.
+`bridge/CORE_REF` holds the SHA; every core crate `Cargo.toml` and
+`tests/Cargo.toml` name is a git dependency
+`{ version = "X.Y.Z", git = "https://github.com/systempromptio/systemprompt-core", rev = "<sha>", … }`
+(no `[patch]` table), so each lockfile holds one copy of every core crate, and
+both lockfiles are committed resolved against it. A clone builds every
+flavour, and `docker build` fetches core itself (cached in `~/.cargo/git`), with
+no sibling checkout.
+
+- Move the pin: `just core-pin <sha|branch>` (`scripts/core-pin.sh`), then
+  commit `bridge/CORE_REF`, both manifests and both lockfiles.
+- Every flavour's composition installs the web member, which serves the
+  connector token route (the `broker-calls` conferral), so every flavour's
+  server needs `mcp_credential_broker_secret` in its secrets. `just setup`
+  and the image's first boot mint it once and keep it; a supplied profile
+  (`SYSTEMPROMPT_PROFILE_DIR`) must carry it.
+- Check it: `scripts/core-pin.sh --check` (part of `scripts/check-core-ref.sh`).
+- Build against a local core checkout: `scripts/core-patch.sh on <checkout>`
+  appends a `[patch."<core url>"]` table of path entries and hides the manifests and locks from
+  git; `scripts/flavour-build.sh` then passes the checkout as the `core` build
+  context. `scripts/core-patch.sh off` restores the pin.
+
 ## Metrics
 
 `scripts/flavour-metrics.sh <flavour|all>` (`just metrics`) writes
@@ -192,9 +216,9 @@ cores and memory.
 - `--table`: measure nothing; rebuild `table.md` from the per-flavour JSON.
   Each row names the core and template commit it measured.
 
-While the root builds against a patched core and `tests/` still resolves
-systemprompt from crates.io, `--dev` records the `tests/` steps as
-`"status": "not available"` with the reason, not as a time.
+Without `SYSTEMPROMPT_TEST_DATABASE_URL`, `--dev` records the `tests/` run
+as `"status": "not available"` with the reason, not as a time: its database
+tiers would otherwise skip and read as a fast pass.
 
 The `Flavours` workflow builds, measures and smokes every flavour and attaches
 the JSON and table to the run. Nothing generated is committed; the release

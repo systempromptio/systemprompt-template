@@ -8,9 +8,9 @@ them, and the tooling below keeps that honest.
 |---|---|---|
 | Purpose | development; the coming release | released; every commit on it is a promotion merge with a `vX.Y.Z` tag |
 | Default branch | yes — a fresh clone starts here | protected by a ruleset: pull request only, no bypass |
-| Core | the published release, **or** core `next` through the sibling `../systemprompt-core` while the next core is unreleased | always the published release |
-| Core override | inert under `[workspace.metadata.unreleased-core-patch]`, or live as `[patch.crates-io]` (with the `# ACTIVE: core X.Y.Z is unreleased` marker) in **both** `Cargo.toml` and `tests/Cargo.toml` | inert |
-| `bridge/CORE_REF` | `vX.Y.Z` of the pinned core; a 40-char core `next` SHA while the patch is live (`just core-pin`) | `vX.Y.Z`, equal to the pin (`scripts/check-core-ref.sh`) |
+| Core | the published release, **or** a core commit pinned by git rev (every core entry a `{ version, git, rev }` dependency in **both** `Cargo.toml` and `tests/Cargo.toml`, no `[patch]`) while the next core is unreleased | always the published release |
+| Local core override | `scripts/core-patch.sh on <checkout>` in the working tree only; never committed (`.githooks/pre-commit`) | never |
+| `bridge/CORE_REF` | `vX.Y.Z` of the published core, or the 40-char SHA every pin entry names (`just core-pin`) | `vX.Y.Z`, equal to the pin (`scripts/check-core-ref.sh`) |
 | CI on push | `.github/workflows/gates.yml` — the whole gate, nothing published | `docker.yml` re-verifies the merge and publishes `:edge` / `:sha-*`; `helm.yml`; `coverage.yml` measures |
 | Releases | — | the `vX.Y.Z` tag `just release` pushes at the merge starts `release-gateway.yml` |
 | Allowed to break? | a red gate on `next` is information, not an incident | no |
@@ -48,22 +48,24 @@ refreshes both.
 
 A `[patch]` whose version does not satisfy the pin is **dropped without an
 error**: cargo resolves the published crate instead, the build passes, and it
-has proved nothing about the core you meant to test. For a 0.x crate
-`version = "0.61.0"` means `>=0.61.0, <0.62.0`, so a patch pointing at a
-0.62.0 tree is ignored by a 0.61.0 pin. `[patch]` is also per-workspace: patch
-the root alone and the test crates quietly build against crates.io.
+has proved nothing about the core you meant to test. `[patch]` is also
+per-workspace. That is why the committed pin is not a patch at all: each core
+crate the manifests name is a git dependency on the rev, and the crates core
+itself depends on resolve inside the same git source. The only `[patch]` is
+the working-tree override `scripts/core-patch.sh on` writes.
 
 Defences, in the order they catch it:
 
 1. `scripts/sync-core-version.sh <core-version> --check` — every core pin in
    both workspaces agrees.
-2. `scripts/check-core-ref.sh` (a lint gate) — with the patch inert,
-   `bridge/CORE_REF` must be `v<pin>`.
-3. The build log. With the patch live it must name
-   `../systemprompt-core/...` paths for the `systemprompt-*` crates; a bare
-   `v0.62.0` with no path is a dropped patch.
+2. `scripts/check-core-ref.sh` (a lint gate) — without a core git dependency,
+   `bridge/CORE_REF` must be `v<pin>`; with one, `scripts/core-pin.sh --check`
+   requires every entry and both lockfiles to name the CORE_REF rev.
+3. The lockfiles. With the pin, every core crate's `source` is
+   `git+https://github.com/systempromptio/systemprompt-core?rev=<sha>#<sha>`,
+   once; `core-pin.sh --check` fails on a registry copy or a second copy.
 4. `scripts/validate-release.sh` refuses a release whose manifests carry a
-   live patch or a `../systemprompt-core` path.
+   core git dependency, a `[patch]` table or a `../systemprompt-core` path.
 
 ## Working on `next`
 
@@ -74,36 +76,38 @@ just verify                      # what gates.yml runs: static, lint, test tiers
 git push origin next             # gates.yml runs; nothing is published
 ```
 
-Against unreleased core `next`:
+Against an unreleased core commit (pinned by git rev):
 
 ```bash
-# Rename [workspace.metadata.unreleased-core-patch] to [patch.crates-io] in
-# Cargo.toml AND tests/Cargo.toml, add "# ACTIVE: core X.Y.Z is unreleased"
-# above each, and move the pins to the sibling's workspace version.
-scripts/sync-core-version.sh X.Y.Z --check   # after editing the pins
-just core-pin                    # bridge/CORE_REF = the sibling's HEAD; commit it
+# Push the core commit first; the pin must name a commit on GitHub.
+just core-pin <sha|branch>       # bridge/CORE_REF, every core entry in both manifests, both lockfiles
 just verify
-git push origin next             # CI checks core out at CORE_REF (.github/actions/core-checkout)
-just deploy                      # runs core-guard: the sibling must be clean and at CORE_REF
+git push origin next             # CI builds from the pin; no core checkout is needed to compile
 ```
 
-`.githooks/pre-commit` (`just init-hooks`) blocks a live patch without the
-marker, so a personal local pin cannot leak into a commit. For a purely local
-experiment, keep the patch as a working-tree edit hidden with
-`git update-index --skip-worktree Cargo.toml Cargo.lock tests/Cargo.toml tests/Cargo.lock`.
+Against a local core checkout (working tree only):
+
+```bash
+scripts/core-patch.sh on ../systemprompt-core   # [patch."<core url>"] path entries; manifests and locks hidden from git
+just verify
+scripts/core-patch.sh off                       # the committed pin is back
+```
+
+`.githooks/pre-commit` (`just init-hooks`) refuses a staged `[patch]` path entry and a
+pin that disagrees with `bridge/CORE_REF`, so a local override cannot leak into
+a commit; `just deploy` (`core-guard`) refuses while one is on.
 
 Core changes are **write-only from here**: commit them on core's `next` and
 push — core's CI is their validation surface. `bridge/CORE_REF` must name a
 commit that exists on GitHub, so push core before pushing here.
 
-**Do not run `just prepare` while the patch is live.** It bakes core's own
+**Do not run `just prepare` while a local override is on.** It bakes core's own
 queries into this repo's `.sqlx/`.
 
 ## Landing `next` on `main` (once core X.Y.Z is on crates.io)
 
 ```bash
-# Make the override inert again in BOTH manifests (back under
-# [workspace.metadata.unreleased-core-patch], marker removed), then:
+# Drop the git and rev keys from every core entry in BOTH manifests, then:
 just core-bump X.Y.Z             # every pin + CORE_REF, both lockfiles, local migrate, build, clippy
 just schema-baseline             # record tests/fixtures/schema/release-baseline-X.Y.Z.sql
 # write the CHANGELOG `## [X.Y.Z] - YYYY-MM-DD` entry
@@ -114,10 +118,10 @@ just release X.Y.Z               # after its proof is green: merges and tags vX.
 ```
 
 `just release` refuses when the tree is dirty, when run off `next` (a clean
-detached worktree at `origin/next` also qualifies), when a patch block is
-live, when a pin or `CORE_REF` disagrees, when the schema ladder has no rung
+detached worktree at `origin/next` also qualifies), when a core git dependency
+or a `[patch]` table is present, when a pin or `CORE_REF` disagrees, when the schema ladder has no rung
 for the version, when the changelog has no heading for it, when `HEAD` is not
 `origin/next`, or when `main` is not an ancestor of it.
 
-Afterwards, to resume development against the next unreleased core, make the
-patch live again, `just core-pin`, and move the pins to the sibling's version.
+Afterwards, to resume development against the next unreleased core, add the
+`git` and `rev` keys back to every core entry in both manifests and `just core-pin <sha>`.
