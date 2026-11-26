@@ -6,7 +6,9 @@ import { test, expect, AUTH, type AccessRow } from '../support/fixtures';
 import { expectAccessible, expectDensity } from '../support/a11y';
 import { PATHS } from '../support/paths';
 import { TOKENS } from '../support/pages/selectors';
+import { attachAuthenticator, passkeySetupPath } from '../support/passkey';
 import { authorizationTable } from '../support/shared';
+import { E2E } from '../../setup/seed';
 
 const PATH = PATHS.login;
 
@@ -22,7 +24,7 @@ test.describe('renders', () => {
   test('offers passkey sign-in and registration', async ({ anonPage }) => {
     await anonPage.goto(PATH);
     await expect(anonPage.locator('main')).toContainText(/sign in with your passkey/i);
-    await expect(anonPage.getByRole('link', { name: /register/i })).toBeVisible();
+    await expect(anonPage.getByRole('link', { name: 'Register', exact: true })).toBeVisible();
   });
 
   test('is where an anonymous visitor to the console is sent', async ({ browser }) => {
@@ -35,6 +37,26 @@ test.describe('renders', () => {
 });
 
 test.describe('actions', () => {
+  // The whole sign-in as a person does it: link a passkey through the setup
+  // link, then sign in on this page and land where the console sent them.
+  test('a passkey signs the admin in and returns them to their destination', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await attachAuthenticator(context, page);
+
+    await page.goto(passkeySetupPath(E2E.admin.email));
+    await page.getByRole('button', { name: /register passkey/i }).click();
+    await expect(page.locator('body')).toContainText(/passkey registered successfully/i);
+
+    await page.goto(`${PATH}?redirect=${encodeURIComponent(PATHS.users)}`);
+    await page.locator('#login-email').fill(E2E.admin.email);
+    await page.getByRole('button', { name: /sign in with passkey/i }).click();
+    await expect(page).toHaveURL(new RegExp(`${PATHS.users}$`));
+    await expect(page.locator('h1').first()).toBeVisible();
+    expect((await context.cookies()).some((c) => c.name === 'access_token')).toBe(true);
+    await context.close();
+  });
+
   test('carries the redirect target through to the form', async ({ anonPage }) => {
     await anonPage.goto(`${PATH}?redirect=${encodeURIComponent(PATHS.users)}`);
     await expect(anonPage.getByRole('heading', { name: /sign in/i })).toBeVisible();
