@@ -27,6 +27,7 @@ use crate::repositories::analytics::conversation_rows::{
     ConversationFilter, ConversationPage, ConversationPageMode, ConversationPageResult,
     ConversationSort, ConversationTotals, get_conversation_totals, load_conversation_page,
 };
+use crate::repositories::analytics::session_detail::find_session_header;
 use crate::repositories::governance::filter_options::{FilterOptions, get_filter_options};
 use crate::repositories::scope::{ScopeRequest, SubjectScope};
 use crate::templates::AdminTemplateEngine;
@@ -217,7 +218,7 @@ async fn load_sessions_data(
             BreadcrumbView::link("AI activity", "/admin/analytics"),
             BreadcrumbView::current("Sessions"),
         ],
-        current: current_session_view(user_ctx),
+        current: current_session_view(pool, user_ctx).await,
         time_range: view::time_range_context(range, &preset),
         filter_ribbon: FilterRibbon {
             base_url: BASE_URL,
@@ -267,9 +268,23 @@ fn preset_str(query: &SessionListQuery, range: TimeRange) -> String {
     range.preset.as_str().to_owned()
 }
 
-fn current_session_view(user_ctx: &UserContext) -> CurrentSessionView {
-    let session_url = user_ctx.session_id.as_ref().map(session_detail_url);
+// Why: a browser session that has made no AI request has no session page, so
+// it is named without a link rather than linked to a 404.
+async fn current_session_view(pool: &PgPool, user_ctx: &UserContext) -> CurrentSessionView {
     let session_id = user_ctx.session_id.clone();
+    let recorded = match &session_id {
+        Some(id) => find_session_header(pool, id)
+            .await
+            .inspect_err(|e| tracing::warn!(error = %e, "find_session_header failed"))
+            .ok()
+            .flatten()
+            .is_some(),
+        None => false,
+    };
+    let session_url = session_id
+        .as_ref()
+        .filter(|_| recorded)
+        .map(session_detail_url);
     CurrentSessionView {
         username: user_ctx.username.clone(),
         session_id_short: session_id.as_ref().map(|s| short_id(s.as_str())),

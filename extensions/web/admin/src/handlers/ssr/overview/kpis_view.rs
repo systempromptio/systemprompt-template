@@ -8,6 +8,7 @@
 
 use serde::Serialize;
 
+use crate::dashboard::page_url;
 use crate::handlers::ssr::format::{format_cost, format_duration_ms, short_num};
 use crate::handlers::ssr::types::{LineChartSpec, SvgLineChartView, SvgSeriesInput, line_chart};
 use crate::repositories::overview::kpis::OverviewKpis;
@@ -30,7 +31,7 @@ pub(super) struct KpiTileView {
     pub value: String,
     pub sub: String,
     pub hint: String,
-    pub href: String,
+    pub href: Option<String>,
     pub tone: &'static str,
     pub delta: String,
     pub delta_dir: &'static str,
@@ -107,7 +108,7 @@ fn traffic_tiles(k: &OverviewKpis, range: OverviewRange, comparable: bool) -> Ve
                 value: short_num(k.requests),
                 sub: comparison(&short_num(k.prev_requests), vs),
                 hint: "gateway requests in the window".to_owned(),
-                href: format!("/admin/requests?preset={preset}"),
+                href: Some(format!("/admin/requests?preset={preset}")),
                 tone: "",
             },
             comparable.then(|| delta(k.requests, k.prev_requests, true)),
@@ -118,7 +119,7 @@ fn traffic_tiles(k: &OverviewKpis, range: OverviewRange, comparable: bool) -> Ve
                 value: format_cost(k.cost_microdollars),
                 sub: comparison(&format_cost(k.prev_cost_microdollars), vs),
                 hint: format!("{} across the window", format_cost(k.cost_microdollars)),
-                href: format!("/admin/analytics?tab=cost&preset={preset}"),
+                href: Some(format!("/admin/analytics?tab=cost&preset={preset}")),
                 tone: "",
             },
             comparable.then(|| delta(k.cost_microdollars, k.prev_cost_microdollars, false)),
@@ -129,7 +130,7 @@ fn traffic_tiles(k: &OverviewKpis, range: OverviewRange, comparable: bool) -> Ve
                 value: k.active_users.to_string(),
                 sub: comparison(&k.prev_active_users.to_string(), vs),
                 hint: format!("{} distinct accounts made a request", k.active_users),
-                href: "/admin/users".to_owned(),
+                href: Some("/admin/users".to_owned()),
                 tone: "",
             },
             comparable.then(|| delta(k.active_users, k.prev_active_users, true)),
@@ -147,7 +148,7 @@ fn health_tiles(k: &OverviewKpis, range: OverviewRange, comparable: bool) -> Vec
                 value: format_duration_ms(k.p50_latency_ms),
                 sub: comparison(&format_duration_ms(k.prev_p50_latency_ms), vs),
                 hint: "half of routed requests finished faster than this".to_owned(),
-                href: format!("/admin/traces?preset={preset}"),
+                href: page_url("traces", &format!("?preset={preset}")),
                 tone: "",
             },
             comparable.then(|| delta(k.p50_latency_ms, k.prev_p50_latency_ms, false)),
@@ -158,7 +159,7 @@ fn health_tiles(k: &OverviewKpis, range: OverviewRange, comparable: bool) -> Vec
                 value: format_duration_ms(k.p95_latency_ms),
                 sub: comparison(&format_duration_ms(k.prev_p95_latency_ms), vs),
                 hint: "95% of routed requests finished faster than this".to_owned(),
-                href: format!("/admin/traces?preset={preset}"),
+                href: page_url("traces", &format!("?preset={preset}")),
                 tone: "",
             },
             comparable.then(|| delta(k.p95_latency_ms, k.prev_p95_latency_ms, false)),
@@ -172,7 +173,7 @@ fn health_tiles(k: &OverviewKpis, range: OverviewRange, comparable: bool) -> Vec
                     vs,
                 ),
                 hint: format!("{} failed of {}", k.errors, short_num(k.requests)),
-                href: format!("/admin/requests?status=failed&preset={preset}"),
+                href: Some(format!("/admin/requests?status=failed&preset={preset}")),
                 tone: if k.errors > 0 { "err" } else { "" },
             },
             comparable.then(|| delta(k.error_rate_tenths(), k.prev_error_rate_tenths(), false)),
@@ -183,7 +184,7 @@ fn health_tiles(k: &OverviewKpis, range: OverviewRange, comparable: bool) -> Vec
                 value: k.denied.to_string(),
                 sub: comparison(&k.prev_denied.to_string(), vs),
                 hint: "refused by policy or quota before routing".to_owned(),
-                href: format!("/admin/requests?status=rejected&preset={preset}"),
+                href: Some(format!("/admin/requests?status=rejected&preset={preset}")),
                 tone: if k.denied > 0 { "warn" } else { "" },
             },
             comparable.then(|| delta(k.denied, k.prev_denied, false)),
@@ -202,7 +203,7 @@ struct Tile {
     // reader as the tile's title, so the sub line can stay one band and still
     // say what the previous window held.
     hint: String,
-    href: String,
+    href: Option<String>,
     tone: &'static str,
 }
 

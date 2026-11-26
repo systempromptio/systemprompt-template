@@ -104,7 +104,7 @@ fn served_row(
         state_tone: tone,
         state_note: note,
         applied: None,
-        link: kind.page_url.map(str::to_owned),
+        link: kind.page_url().map(str::to_owned),
         link_label: "Open",
     }
 }
@@ -143,7 +143,7 @@ pub(super) async fn build_rows(
                 path: plane.source_file(),
                 is_dir: false,
                 plane: Some(plane.id()),
-                page_url: Some(plane.owner_url()),
+                page: Some(plane.owner_page()),
             };
             rows.insert(
                 rows.iter().filter(|r| r.is_projected).count(),

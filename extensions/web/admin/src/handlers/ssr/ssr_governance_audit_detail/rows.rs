@@ -13,7 +13,7 @@ use crate::repositories::governance::chain::AiRequestSummary;
 pub(super) struct RequestRowView {
     id: String,
     request_id: AiRequestId,
-    url: String,
+    url: Option<String>,
     is_primary: bool,
     provider: String,
     model: String,
@@ -29,7 +29,7 @@ pub(super) fn build_request_row(r: &AiRequestSummary, is_primary: bool) -> Reque
     RequestRowView {
         id: r.id.clone(),
         request_id: r.request_id.clone(),
-        url: request_detail_url(&r.request_id),
+        url: crate::dashboard::link_to("requests", || request_detail_url(&r.request_id)),
         is_primary,
         provider: r.provider.clone().unwrap_or_else(|| "—".to_owned()),
         model: r.model.clone().unwrap_or_else(|| "—".to_owned()),

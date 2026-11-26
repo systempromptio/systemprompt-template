@@ -92,7 +92,9 @@ pub(super) async fn load(pool: &PgPool, request_ids: &[String]) -> EvidenceView 
             tool_name: t.tool_name,
             sequence_number: t.sequence_number,
             mcp_execution_id: t.mcp_execution_id,
-            artifact_url: t.artifact_id.map(|id| format!("/admin/artifacts/{id}")),
+            artifact_url: t.artifact_id.and_then(|id| {
+                crate::dashboard::link_to("tools", || format!("/admin/artifacts/{id}"))
+            }),
             state_tone: match (t.state.as_str(), t.execution_status.as_deref()) {
                 (_, Some("failed" | "timeout")) => "err",
                 ("executed", _) => "ok",

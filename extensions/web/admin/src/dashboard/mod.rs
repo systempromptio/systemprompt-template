@@ -167,6 +167,41 @@ impl ConsoleDashboard {
     }
 }
 
+/// Every registry page by nav id, mapped to its href or to `null`.
+///
+/// A page this build does not compile maps to `null`, so a template branches
+/// a cross-page link on the same registry that builds the sidebar.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct PageLinks;
+
+impl Serialize for PageLinks {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+        let mut map = serializer.serialize_map(None)?;
+        for item in registry::all() {
+            map.serialize_entry(item.id, &item.compiled.then_some(item.href))?;
+        }
+        map.end()
+    }
+}
+
+#[must_use]
+pub fn page_href(id: &str) -> Option<&'static str> {
+    registry::find(id)
+        .filter(|item| item.compiled)
+        .map(|item| item.href)
+}
+
+#[must_use]
+pub fn page_url(id: &str, rest: &str) -> Option<String> {
+    page_href(id).map(|base| format!("{base}{rest}"))
+}
+
+#[must_use]
+pub fn link_to(id: &str, url: impl FnOnce() -> String) -> Option<String> {
+    page_href(id).map(|_| url())
+}
+
 fn compiled(place: &'static str, id: &str) -> Result<&'static NavItemDef, DashboardError> {
     let item = registry::find(id).ok_or_else(|| DashboardError::UnknownItem {
         place,

@@ -16,7 +16,7 @@
     <section class="sp-kpi-grid" aria-label="Setup progress">
         {{> components/kpi label="Phases complete" value=complete_count note=(concat "of " phase_count) tone="ok"}}
         {{> components/kpi label="Plugins reaching you" value=total_plugins note="phase 1 and 2 signal"}}
-        {{> components/kpi label="Skills in your library" value=total_skills note="phase 3 signal" href="/admin/contexts"}}
+        {{> components/kpi label="Skills in your library" value=total_skills note="phase 3 signal" href=@root.pages.by_person}}
     </section>
 
     {{#if just_verified}}

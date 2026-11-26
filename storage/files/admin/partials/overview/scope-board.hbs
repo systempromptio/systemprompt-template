@@ -7,7 +7,7 @@
 --}}
 <section class="sp-p-overview__board" aria-label="{{board.title}}">
     {{#> components/section title=board.title note=board.caption}}
-        {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{board.all_href}}">All</a>{{/inline}}
+        {{#*inline "section_actions"}}{{#if board.all_href}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{board.all_href}}">All</a>{{/if}}{{/inline}}
     {{/components/section}}
     {{#if board.error}}{{> components/notice tone="err" title="Leaderboard unavailable" message=board.error}}{{/if}}
     {{#if board.has_rows}}

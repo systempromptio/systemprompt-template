@@ -123,7 +123,7 @@ pub(crate) struct ProjectSkillRowView {
 pub(crate) struct ProjectSessionRowView {
     pub session_id: SessionId,
     pub session_short: String,
-    pub href: String,
+    pub href: Option<String>,
     pub user_id: UserId,
     // Why: the name a reader knows the person by; the id when no member row
     // carries one, so a printed report never shows an empty cell.

@@ -17,6 +17,7 @@ use axum::response::Response;
 use serde::Serialize;
 use sqlx::PgPool;
 
+use crate::dashboard::link_to;
 use crate::error::AdminHtmlResult;
 use crate::handlers::ssr::entity_urls::{session_detail_url, trace_detail_url};
 use crate::handlers::ssr::page::Page;
@@ -59,7 +60,7 @@ struct Summary {
     session_id_short: String,
     trace_id: Option<TraceId>,
     trace_url: Option<String>,
-    session_url: String,
+    session_url: Option<String>,
     user_id: UserId,
     user_url: String,
     agent_id: Option<AgentId>,
@@ -170,8 +171,11 @@ fn build_summary(env: &ChainEnvelope) -> Summary {
         session_id: env.session_id.clone(),
         session_id_short: short_id(env.session_id.as_str()),
         trace_id: env.trace_id.clone(),
-        trace_url: env.trace_id.as_ref().map(trace_detail_url),
-        session_url: session_detail_url(&env.session_id),
+        trace_url: env
+            .trace_id
+            .as_ref()
+            .and_then(|t| link_to("traces", || trace_detail_url(t))),
+        session_url: link_to("sessions", || session_detail_url(&env.session_id)),
         user_id: env.identity.user_id.clone(),
         user_url: format!(
             "/admin/users/{}",

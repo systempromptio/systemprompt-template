@@ -25,7 +25,7 @@ pub(super) struct ArtifactsView {
 #[derive(Debug, Serialize)]
 pub(super) struct ArtifactLinkView {
     pub artifact_key: String,
-    pub url: String,
+    pub url: Option<String>,
     pub tool_name: String,
     pub server_name: String,
     pub artifact_type: String,
@@ -79,7 +79,9 @@ fn artifact_link(
 ) -> Option<ArtifactLinkView> {
     let artifact_key = r.artifact_key.clone()?;
     Some(ArtifactLinkView {
-        url: format!("/admin/artifacts/{}", urlencoding::encode(&artifact_key)),
+        url: crate::dashboard::link_to("tools", || {
+            format!("/admin/artifacts/{}", urlencoding::encode(&artifact_key))
+        }),
         artifact_key,
         tool_name: r.tool_name.clone().unwrap_or_else(|| "—".to_owned()),
         server_name: r.server_name.clone().unwrap_or_default(),

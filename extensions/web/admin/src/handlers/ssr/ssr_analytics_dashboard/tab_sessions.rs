@@ -74,9 +74,9 @@ fn row(r: &SessionCostRow, max: i64) -> SessionCostRowView {
             .filter(|s| !s.is_empty())
             .unwrap_or_else(|| "—".to_owned()),
         updated_display: format_date(r.updated_at),
-        detail_url: format!(
-            "/admin/sessions/{}",
-            urlencoding::encode(r.session_id.as_str())
+        detail_url: crate::dashboard::page_url(
+            "sessions",
+            &format!("/{}", urlencoding::encode(r.session_id.as_str())),
         ),
         user_url: format!("/admin/users/{}", urlencoding::encode(r.user_id.as_str())),
         session_id: r.session_id.clone(),

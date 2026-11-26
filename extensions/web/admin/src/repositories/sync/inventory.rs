@@ -19,12 +19,20 @@ pub struct ConfigKind {
     pub label: &'static str,
     pub purpose: &'static str,
     // Why: `path` is relative to `services/` and names a directory when
-    // `is_dir`; `plane` is set only for a projected kind; `page_url` only
-    // where the console has a page for the kind.
+    // `is_dir`; `plane` is set only for a projected kind; `page` is the nav
+    // id of the console page for the kind, linked only where this build
+    // compiles it.
     pub path: &'static str,
     pub is_dir: bool,
     pub plane: Option<&'static str>,
-    pub page_url: Option<&'static str>,
+    pub page: Option<&'static str>,
+}
+
+impl ConfigKind {
+    #[must_use]
+    pub fn page_url(&self) -> Option<&'static str> {
+        self.page.and_then(crate::dashboard::page_href)
+    }
 }
 
 const fn file(
@@ -40,7 +48,7 @@ const fn file(
         path,
         is_dir: false,
         plane: None,
-        page_url: None,
+        page: None,
     }
 }
 
@@ -57,21 +65,21 @@ const fn dir(
         path,
         is_dir: true,
         plane: None,
-        page_url: None,
+        page: None,
     }
 }
 
-const fn paged(kind: ConfigKind, page_url: &'static str) -> ConfigKind {
+const fn paged(kind: ConfigKind, page: &'static str) -> ConfigKind {
     ConfigKind {
-        page_url: Some(page_url),
+        page: Some(page),
         ..kind
     }
 }
 
-const fn projected(kind: ConfigKind, plane: &'static str, page_url: &'static str) -> ConfigKind {
+const fn projected(kind: ConfigKind, plane: &'static str, page: &'static str) -> ConfigKind {
     ConfigKind {
         plane: Some(plane),
-        ..paged(kind, page_url)
+        ..paged(kind, page)
     }
 }
 
@@ -86,7 +94,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "access-control/rules.yaml",
         ),
         "access_control",
-        "/admin/access-control",
+        "access_control",
     ),
     projected(
         file(
@@ -96,7 +104,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "web/config/groups.yaml",
         ),
         "groups",
-        "/admin/groups",
+        "groups",
     ),
     #[cfg(feature = "gateway")]
     projected(
@@ -107,7 +115,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "gateway/policies.yaml",
         ),
         "gateway_policies",
-        "/admin/gateway/policies",
+        "gateway_policies",
     ),
     projected(
         file(
@@ -117,7 +125,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "ai/gateway.yaml",
         ),
         "gateway_routes",
-        "/admin/gateway",
+        "gateway",
     ),
     projected(
         file(
@@ -127,7 +135,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "governance/config.yaml",
         ),
         "governance",
-        "/admin/governance",
+        "governance",
     ),
     file(
         "config",
@@ -142,7 +150,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "what a signed-in user is offered; a content hash is its version",
             "marketplaces",
         ),
-        "/admin/marketplaces",
+        "marketplaces",
     ),
     paged(
         dir(
@@ -151,7 +159,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "binding descriptors that group skills, servers and hooks by reference",
             "plugins",
         ),
-        "/admin/plugins",
+        "plugins",
     ),
     paged(
         dir(
@@ -160,7 +168,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "the instruction bodies the bridge ships to Claude Code",
             "skills",
         ),
-        "/admin/skills",
+        "skills",
     ),
     paged(
         dir(
@@ -169,7 +177,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
             "server definitions the instance supervises and proxies",
             "mcp",
         ),
-        "/admin/mcp",
+        "mcp_servers",
     ),
     dir(
         "agents",

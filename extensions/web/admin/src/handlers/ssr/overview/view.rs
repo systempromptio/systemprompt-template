@@ -192,7 +192,7 @@ fn usage_view(range: OverviewRange, data: &UsageData) -> UsageView {
             BoardSpec {
                 title: "Top projects by spend",
                 caption: "Exclusive attribution — each person counts once.",
-                all_href: "/admin/projects",
+                all_href: crate::dashboard::page_href("projects"),
                 unattributed: "Unattributed (no primary project)",
             },
             &data.projects,
@@ -201,7 +201,7 @@ fn usage_view(range: OverviewRange, data: &UsageData) -> UsageView {
             BoardSpec {
                 title: "Top groups by spend",
                 caption: "Exclusive attribution — each person counts once.",
-                all_href: "/admin/groups",
+                all_href: crate::dashboard::page_href("groups"),
                 unattributed: "Unattributed (no primary group)",
             },
             &data.groups,

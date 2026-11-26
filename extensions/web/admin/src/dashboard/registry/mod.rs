@@ -26,7 +26,7 @@ pub(crate) struct NavItemDef {
     pub(crate) icon: &'static str,
 }
 
-pub(crate) fn find(id: &str) -> Option<&'static NavItemDef> {
+pub(crate) fn all() -> impl Iterator<Item = &'static NavItemDef> {
     [
         activity::ITEMS,
         people::ITEMS,
@@ -35,5 +35,8 @@ pub(crate) fn find(id: &str) -> Option<&'static NavItemDef> {
     ]
     .into_iter()
     .flatten()
-    .find(|item| item.id == id)
+}
+
+pub(crate) fn find(id: &str) -> Option<&'static NavItemDef> {
+    all().find(|item| item.id == id)
 }

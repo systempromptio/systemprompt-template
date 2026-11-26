@@ -121,8 +121,8 @@ impl SyncPlane for GatewayPoliciesPlane {
         "ai_gateway_policies"
     }
 
-    fn owner_url(&self) -> &'static str {
-        "/admin/gateway/policies"
+    fn owner_page(&self) -> &'static str {
+        "gateway_policies"
     }
 
     async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift> {

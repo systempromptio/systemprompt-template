@@ -71,7 +71,7 @@ fn subject_url(kind: &str, id: &str) -> Option<String> {
     match kind {
         "user" => Some(format!("/admin/users/{id}")),
         "group" => Some(format!("/admin/groups/{id}")),
-        "project" => Some(format!("/admin/projects/{id}")),
+        "project" => crate::dashboard::page_url("projects", &format!("/{id}")),
         _ => None,
     }
 }

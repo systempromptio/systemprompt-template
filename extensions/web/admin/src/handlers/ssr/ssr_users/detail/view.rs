@@ -191,7 +191,10 @@ fn session_row(row: &SigninSessionRow) -> UserSessionRowView {
     UserSessionRowView {
         session_id: row.session_id.clone(),
         short_id: id.chars().take(12).collect(),
-        detail_url: format!("/admin/sessions/{}", urlencoding::encode(id)),
+        detail_url: crate::dashboard::page_url(
+            "sessions",
+            &format!("/{}", urlencoding::encode(id)),
+        ),
         source: row.session_source.clone().unwrap_or_else(|| "—".to_owned()),
         ip: row.ip_address.clone().unwrap_or_default(),
         user_agent: row.user_agent.clone().unwrap_or_default(),

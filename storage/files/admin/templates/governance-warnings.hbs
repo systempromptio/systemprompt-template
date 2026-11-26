@@ -6,7 +6,7 @@
       {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/approvals">Approvals</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/secrets">Secrets audit</a>
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/quotas">Quotas</a>
+        {{#if @root.pages.quotas}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.quotas}}">Quotas</a>{{/if}}
         {{> components/export-button export}}
       {{/inline}}
     {{/components/page-header}}

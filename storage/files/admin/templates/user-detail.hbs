@@ -10,7 +10,7 @@
         {{/inline}}
         {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/users/{{header.user_id}}?tab=access">Access &amp; connections</a>
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests?user_id={{header.user_id}}">Request log</a>
+        {{#if @root.pages.requests}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.requests}}?user_id={{header.user_id}}">Request log</a>{{/if}}
         {{#if can_write}}
         <button type="button" class="sp-btn sp-btn--sm sp-btn--danger" data-revoke-all="{{header.user_id}}">Sign out everywhere</button>
         {{/if}}
@@ -247,7 +247,7 @@
             <tbody>
             {{#each sessions.rows}}
             <tr data-session-id="{{this.session_id}}">
-                <td><a class="sp-u-mono" href="{{this.detail_url}}">{{this.short_id}}</a></td>
+                <td>{{#if this.detail_url}}<a class="sp-u-mono" href="{{this.detail_url}}">{{this.short_id}}</a>{{else}}<span class="sp-u-mono">{{this.short_id}}</span>{{/if}}</td>
                 <td>{{this.source}}</td>
                 <td class="sp-u-mono">{{#if this.ip}}{{this.ip}}{{else}}&mdash;{{/if}}</td>
                 <td class="sp-table__cell--num sp-u-num">{{this.requests}}</td>

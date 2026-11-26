@@ -161,7 +161,7 @@ pub(super) struct SessionCostRowView {
     pub rating_display: String,
     pub outcome_display: String,
     pub updated_display: String,
-    pub detail_url: String,
+    pub detail_url: Option<String>,
     pub user_url: String,
 }
 

@@ -12,7 +12,7 @@
 
     {{#> components/section title="Skills" count=skills.skill_count}}
       {{#*inline "section_actions"}}
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/analysis/skills">Analysis</a>
+        {{#if @root.pages.analysis_skills}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.analysis_skills}}">Analysis</a>{{/if}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/skills">Skill catalog</a>
       {{/inline}}
     {{/components/section}}

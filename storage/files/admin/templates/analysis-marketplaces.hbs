@@ -41,7 +41,7 @@
 <td class="sp-table__cell--num sp-u-num">{{users}}</td>
 <td class="sp-table__cell--num sp-u-num">{{requests}}{{#if failed}} <span class="sp-u-text-danger">{{failed}} failed</span>{{/if}}</td>
 <td class="sp-table__cell--num sp-u-num">{{cost}}</td>
-<td class="sp-table__cell--actions"><a class="sp-table__link" href="{{href}}">History</a> <a class="sp-table__link" href="{{href}}&amp;tab=compare">Compare</a></td>
+<td class="sp-table__cell--actions"><a class="sp-table__link" href="{{href}}">History</a> <a class="sp-table__link" href="{{href}}?tab=compare">Compare</a></td>
 </tr>
 {{else}}
 <tr class="sp-table__empty"><td colspan="13">{{> components/empty-state heading="No marketplace versions recorded" message="Versions are recorded at boot and on every inventory sync. Press Sync inventory now on Skills, or restart the server after importing a marketplace."}}</td></tr>

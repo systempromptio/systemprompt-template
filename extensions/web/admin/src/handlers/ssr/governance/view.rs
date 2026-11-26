@@ -217,7 +217,12 @@ pub(super) fn decision_rows(rows: &[DecisionCallRow]) -> Vec<DecisionRow> {
                     .trace_id
                     .as_deref()
                     .filter(|t| !t.is_empty())
-                    .map(|t| format!("/admin/traces/{}", urlencoding::encode(t))),
+                    .and_then(|t| {
+                        crate::dashboard::page_url(
+                            "traces",
+                            &format!("/{}", urlencoding::encode(t)),
+                        )
+                    }),
             }
         })
         .collect()

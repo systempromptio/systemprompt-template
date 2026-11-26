@@ -199,7 +199,7 @@ pub(crate) struct UserSessionsTabView {
 pub(crate) struct UserSessionRowView {
     pub session_id: SessionId,
     pub short_id: String,
-    pub detail_url: String,
+    pub detail_url: Option<String>,
     pub source: String,
     pub ip: String,
     pub user_agent: String,
