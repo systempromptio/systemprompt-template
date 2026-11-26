@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                u.id AS \"user_id!: UserId\",\n                COALESCE(u.display_name, u.full_name, u.name) AS display_name,\n                u.email AS \"email?: Email\",\n                (u.status = 'active') AS \"is_active!\",\n                r.roles AS \"roles!: Vec<String>\",\n                r.manual_roles AS \"manual_roles!: Vec<String>\"\n           FROM users u\n           CROSS JOIN LATERAL (\n                SELECT ARRAY_AGG(x ORDER BY x) AS roles,\n                       ARRAY_REMOVE(\n                           ARRAY_AGG(CASE WHEN m.user_id IS NOT NULL THEN x END ORDER BY x),\n                           NULL\n                       ) AS manual_roles\n                  FROM UNNEST(u.roles) AS x\n                  LEFT JOIN user_manual_roles m ON m.user_id = u.id AND m.role = x\n                 WHERE x = ANY($1::TEXT[])\n           ) r\n           WHERE r.roles IS NOT NULL\n           ORDER BY LOWER(COALESCE(u.email, u.id))\n           LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "email?: Email",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "is_active!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "manual_roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "df4ad86e5321f165fb187a22b053e5496845f30ecff5955abd55a887d8cca413"
+}

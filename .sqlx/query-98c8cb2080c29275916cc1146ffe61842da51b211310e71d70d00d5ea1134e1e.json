@@ -1,0 +1,99 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.id AS \"id!\", r.user_id AS \"user_id!: UserId\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email, r.user_id) AS \"display_name!\",\n            'prompt' AS \"category!: ActivityCategory\",\n            'submitted' AS \"action!: ActivityAction\",\n            'gateway_route' AS entity_type, r.model AS entity_name,\n            CASE WHEN r.status = 'completed'\n                THEN 'Gateway request to ' || r.model || ' (' || r.provider || ')'\n                ELSE 'Gateway request to ' || r.model || ' (' || r.provider || '): ' || r.status\n            END AS \"description!\",\n            r.created_at AS \"created_at!\"\n        FROM ai_requests r\n        JOIN users u ON u.id = r.user_id\n        WHERE r.user_id = $1\n        ORDER BY r.created_at DESC LIMIT 50",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "category!: ActivityCategory",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "action!: ActivityAction",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "entity_type",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "entity_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "description!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "98c8cb2080c29275916cc1146ffe61842da51b211310e71d70d00d5ea1134e1e"
+}
