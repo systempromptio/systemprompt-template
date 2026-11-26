@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Measure flavours: image, deploy and developer-loop numbers.
 #   scripts/flavour-metrics.sh FLAVOUR|all [--image] [--dev] [--bench]
-#       [--compare OLD.json] [--keep] [--no-clean]
+#       [--compare OLD.json] [--keep] [--no-clean] [--table]
 # --image  stripped binary bytes, image bytes (uncompressed, gzip), layers,
 #          crates in the dependency closure, clean and cached image build
 #          seconds, migrate seconds on a fresh database, boot-to-healthy
@@ -15,14 +15,15 @@
 #          seconds; the 15 slowest units of a clean `cargo build`. Every cargo
 #          command runs alone; FLAVOUR_METRICS_JOBS sets -j. Its target dirs
 #          (target/flavour-metrics/dev-*) are removed afterwards unless --keep.
+# --table  measure nothing: rebuild table.md from the per-flavour JSON
 # --compare OLD.json  print before/after deltas against the new (or, with no
 #          measuring mode, the existing) target/flavour-metrics/<flavour>.json
 # Writes target/flavour-metrics/<flavour>.json and target/flavour-metrics/table.md.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
-selection="${1:?usage: flavour-metrics.sh FLAVOUR|all [--image] [--dev] [--bench] [--compare OLD.json] [--keep] [--no-clean]}"
+selection="${1:?usage: flavour-metrics.sh FLAVOUR|all [--image] [--dev] [--bench] [--compare OLD.json] [--keep] [--no-clean] [--table]}"
 shift
-do_image=false do_dev=false do_bench=false keep=false compare="" clean=true
+do_image=false do_dev=false do_bench=false keep=false compare="" clean=true table_only=false
 while [ $# -gt 0 ]; do
     case "$1" in
         --image) do_image=true; shift ;;
@@ -30,11 +31,12 @@ while [ $# -gt 0 ]; do
         --bench) do_bench=true; do_image=true; shift ;;
         --keep) keep=true; shift ;;
         --no-clean) clean=false; shift ;;
+        --table) table_only=true; shift ;;
         --compare) compare="${2:?}"; shift 2 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
-if [ "$do_image" = false ] && [ "$do_dev" = false ] && [ -z "$compare" ]; then do_image=true; fi
+if [ "$do_image" = false ] && [ "$do_dev" = false ] && [ -z "$compare" ] && [ "$table_only" = false ]; then do_image=true; fi
 cd "$FLAVOUR_ROOT"
 out="$FLAVOUR_ROOT/target/flavour-metrics"
 mkdir -p "$out"
@@ -159,6 +161,16 @@ measure_image() {
     "${compose[@]}" down -v --remove-orphans > /dev/null 2>&1 || true
 }
 
+# Why: tests/ is its own workspace and takes systemprompt from crates.io
+# unless its own [patch.crates-io] is live; while the root builds against a
+# patched core and tests/ does not, its numbers would measure a different
+# core, so the steps are reported as not available rather than as zero.
+tests_unported() {
+    if [ "$(bash scripts/core-patch.sh status)" = live ] && ! grep -qx '\[patch\.crates-io\]' tests/Cargo.toml; then
+        echo "tests/ resolves systemprompt $(sed -n 's/^systemprompt = { version = "\([^"]*\)".*/\1/p' tests/Cargo.toml | head -1) from crates.io while the root builds against the patched core; tests/ is not ported to it"
+    fi
+}
+
 measure_dev() {
     local flavour="$1" features dev="$out/dev-$1"
     features="$(flavour_py features "$flavour")"
@@ -176,9 +188,17 @@ measure_dev() {
         touch "$deep"
         timed "dev.$tool.touch_admin_seconds" env CARGO_TARGET_DIR="$dir" "${cargo[@]}" "$tool" "${args[@]}" "${extra[@]}"
     done
-    echo "  tests/ workspace (compile, then run)"
-    timed dev.tests.compile_seconds env CARGO_TARGET_DIR="$dev/tests" "${cargo[@]}" test --no-run --locked --manifest-path tests/Cargo.toml --workspace "${jobs[@]}"
-    timed dev.tests.run_seconds env CARGO_TARGET_DIR="$dev/tests" "${cargo[@]}" test --locked --manifest-path tests/Cargo.toml --workspace "${jobs[@]}"
+    local unported; unported="$(tests_unported)"
+    if [ -n "$unported" ]; then
+        echo "  tests/ workspace skipped: $unported"
+        put_str dev.tests.status "not available"
+        put_str dev.tests.reason "$unported"
+    else
+        echo "  tests/ workspace (compile, then run)"
+        put_str dev.tests.status measured
+        timed dev.tests.compile_seconds env CARGO_TARGET_DIR="$dev/tests" "${cargo[@]}" test --no-run --locked --manifest-path tests/Cargo.toml --workspace "${jobs[@]}"
+        timed dev.tests.run_seconds env CARGO_TARGET_DIR="$dev/tests" "${cargo[@]}" test --locked --manifest-path tests/Cargo.toml --workspace "${jobs[@]}"
+    fi
     echo "  cargo build --timings (clean)"
     local start; start="$(now)"
     if env CARGO_TARGET_DIR="$dev/build" "${cargo[@]}" build "${args[@]}" --timings=json -Z unstable-options \
@@ -217,11 +237,12 @@ write_table() {
     jq -s -r '
         def mb: if . == null then "–" else (. / 1048576 * 10 | round / 10 | tostring) + " MiB" end;
         def s: if . == null then "–" else (. | tostring) + " s" end;
-        "| flavour | binary | image | image gz | layers | crates | build clean | build cached | migrate | boot | idle RSS | check clean | check incr (admin) | clippy clean | clippy incr (admin) | tests compile |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
-        (.[] | "| \(.flavour) | \(.binary_bytes | mb) | \(.image.bytes | mb) | \(.image.gzip_bytes | mb) | \(.image.layers // "–") | \(.crates // "–") | \(.build.clean_seconds | s) | \(.build.cached_seconds | s) | \(.deploy.migrate_fresh_seconds | s) | \(.deploy.boot_to_healthy_seconds | s) | \(.deploy.idle_rss_bytes | mb) | \(.dev.check.clean_seconds | s) | \(.dev.check.touch_admin_seconds | s) | \(.dev.clippy.clean_seconds | s) | \(.dev.clippy.touch_admin_seconds | s) | \(.dev.tests.compile_seconds | s) |"),
+        def tests: if .dev.tests.status == "not available" then "not available" else (.dev.tests.compile_seconds | s) end;
+        "| flavour | binary | image | image gz | layers | crates | build clean | build cached | migrate | boot | idle RSS | check clean | check incr (admin) | clippy clean | clippy incr (admin) | tests compile | core | template | measured |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        (.[] | "| \(.flavour) | \(.binary_bytes | mb) | \(.image.bytes | mb) | \(.image.gzip_bytes | mb) | \(.image.layers // "–") | \(.crates // "–") | \(.build.clean_seconds | s) | \(.build.cached_seconds | s) | \(.deploy.migrate_fresh_seconds | s) | \(.deploy.boot_to_healthy_seconds | s) | \(.deploy.idle_rss_bytes | mb) | \(.dev.check.clean_seconds | s) | \(.dev.check.touch_admin_seconds | s) | \(.dev.clippy.clean_seconds | s) | \(.dev.clippy.touch_admin_seconds | s) | \(tests) | \(.stamp.core_rev // "?" | .[0:9]) | \(.stamp.template_sha // "?" | .[0:8]) | \(.stamp.measured_at // "?") |"),
         "",
-        (.[0].stamp | "core \(.core_rev // "?"), template \(.template_sha // "?"), \(.rustc // "?"), \(.host_cores // "?") cores, \(.host_ram_bytes // 0 | . / 1073741824 | round) GiB RAM, \(.measured_at // "?")")
+        (.[0].stamp | "\(.rustc // "?"), \(.host_cores // "?") cores, \(.host_ram_bytes // 0 | . / 1073741824 | round) GiB RAM; each row names the core and template it measured")
         ' "${rows[@]}" > "$out/table.md"
 }
 

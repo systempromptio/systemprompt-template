@@ -56,12 +56,21 @@ while IFS= read -r file; do
             [ "$count" -gt 0 ] || break
             count=$((count - 1))
             case "$src" in /*|\$*|"") continue ;; esac
-            # Tracked, not merely present: a glob that matches no tracked file
-            # is as broken as a missing literal.
-            if [ -z "$(git ls-files -- "$src" | head -1)" ]; then
-                echo "$file: COPY source '$src' is not tracked, so it will not exist in the release build context"
-                fail=1
-            fi
+            # Why: the FLAVOUR build arg picks one flavour's file, so a path
+            # naming ${FLAVOUR} must exist for every flavour the image builds.
+            candidates=("$src")
+            case "$src" in *'${FLAVOUR}'*)
+                candidates=()
+                for flavour in $(python3 scripts/flavour.py list); do candidates+=("${src//'${FLAVOUR}'/$flavour}"); done ;;
+            esac
+            for candidate in "${candidates[@]}"; do
+                # Tracked, not merely present: a glob that matches no tracked
+                # file is as broken as a missing literal.
+                if [ -z "$(git ls-files -- "$candidate" | head -1)" ]; then
+                    echo "$file: COPY source '$candidate' is not tracked, so it will not exist in the release build context"
+                    fail=1
+                fi
+            done
         done
     done < <(grep -E '^[[:space:]]*COPY[[:space:]]' "$file")
 done < <(git ls-files '*Dockerfile' '*Dockerfile.*' '.github/workflows/*.yml' | grep -v '\.bak')
