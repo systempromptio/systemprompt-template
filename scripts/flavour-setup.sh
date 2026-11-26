@@ -90,7 +90,7 @@ if [ -z "$bin" ]; then
 fi
 
 step "Staging the $flavour services tree at $services_dir"
-run bash "$root/scripts/flavour-stage-services.sh" "$flavour" "$services_dir" --link
+run bash "$root/scripts/flavour-stage-services.sh" "$flavour" "$services_dir"
 
 mkdir -p "$(dirname "$compose_file")"
 if [ -f "$compose_file" ] && ! grep -q "\"${pg_port}:5432\"" "$compose_file"; then
