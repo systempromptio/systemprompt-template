@@ -41,10 +41,6 @@ documentation = "https://systemprompt.io/documentation"
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
 systemprompt = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513", default-features = false, features = ["core"] }
-systemprompt-security = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
-systemprompt-users = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
-systemprompt-content = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
-systemprompt-marketplace = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
 systemprompt-extension = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
 
 # ============================================
@@ -87,7 +83,6 @@ reqwest = { version = "0.13", default-features = false, features = ["json", "str
 # Utilities
 chacha20poly1305 = "0.10"
 schemars = { version = "1.0", features = ["derive"] }
-inventory = "0.3"
 walkdir = "2.0"
 tempfile = "3.0"
 zip = { version = "9", default-features = false, features = ["deflate-flate2"] }

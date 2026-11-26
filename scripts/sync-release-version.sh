@@ -23,8 +23,15 @@
 # core 0.37.0) is the one sanctioned divergence and passes. Core pins and
 # bridge/CORE_REF beyond the two listed below are scripts/sync-core-version.sh's.
 #
+# Between releases core may be pinned by git rev to an unreleased branch. That
+# tree cannot ship — scripts/release.sh refuses a git-pinned or patched core
+# before it reaches this check — so the workspace version still names the last
+# release and lockstep has no published core to compare it with. --check then
+# reports the git pin and asserts every other pin; lockstep is judged on the
+# published-core tree the release boundary produces.
+#
 # Covered pins:
-#   Cargo.toml            workspace version + systemprompt/-security/-extension
+#   Cargo.toml            workspace version + systemprompt/-extension
 #                         core pins (extensions/web inherits -extension)
 #   tests/Cargo.toml      systemprompt/-security pins (separate workspace)
 #   helm/gateway/Chart.yaml  appVersion + artifacthub images annotation
@@ -64,7 +71,13 @@ fi
 case "$CORE_VERSION" in
   *[!0-9.]*|*..*|.*|*.) echo "ERROR: CORE_VERSION '$CORE_VERSION' is not a plain semver (X.Y.Z)"; exit 1 ;;
 esac
-if [ "${CORE_VERSION%.*}" != "$MAJ.$MIN" ]; then
+core_git_pinned=0
+if sed -n '/^systemprompt = {/p' Cargo.toml | head -1 | command grep -qF 'git = "https://github.com/systempromptio/systemprompt-core"'; then
+    core_git_pinned=1
+fi
+if [ "$MODE" = "--check" ] && [ "$core_git_pinned" -eq 1 ]; then
+    echo "core is pinned by git rev (unreleased $CORE_VERSION): lockstep is asserted on the release tree"
+elif [ "${CORE_VERSION%.*}" != "$MAJ.$MIN" ]; then
     echo "DRIFT: release $VERSION is not in lockstep with core $CORE_VERSION (MAJOR.MINOR must match)"
     fail=1
 fi
@@ -94,11 +107,6 @@ check_or_apply Cargo.toml \
     "s|^systemprompt = { version = \"[0-9.]*\"|systemprompt = { version = \"$CORE_VERSION\"|" \
     "^systemprompt = \\{ version = \"$CORE_VERSION\"" \
     "systemprompt core pin"
-check_or_apply Cargo.toml \
-    "s|^systemprompt-security = { version = \"[0-9.]*\"|systemprompt-security = { version = \"$CORE_VERSION\"|" \
-    "^systemprompt-security = \\{ version = \"$CORE_VERSION\"" \
-    "systemprompt-security core pin"
-
 check_or_apply Cargo.toml \
     "s|^systemprompt-extension = { version = \"[0-9.]*\"|systemprompt-extension = { version = \"$CORE_VERSION\"|" \
     "^systemprompt-extension = \\{ version = \"$CORE_VERSION\"" \
