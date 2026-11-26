@@ -6,12 +6,15 @@ export function generateRandomString(length) {
   return Array.from(array, b => b.toString(36).padStart(2, '0')).join('').slice(0, length);
 }
 
+export function arrayBufferToBase64url(buffer) {
+  let binary = '';
+  for (const byte of new Uint8Array(buffer)) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 export async function generateCodeChallenge(verifier) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  return arrayBufferToBase64url(digest);
 }
 
 export function base64urlToArrayBuffer(base64url) {

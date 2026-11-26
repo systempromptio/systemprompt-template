@@ -1,6 +1,6 @@
 import {
   makeRequest, preparePublicKeyCredentialCreationOptions, assertRpIdMatchesOrigin
-} from '/js/services/webauthn-utils.js?v=3';
+} from '/js/services/webauthn-utils.js?v=4';
 import { buildCreationCredentialPayload, WEBAUTHN_BASE } from '/js/services/webauthn-passkey-helpers.js';
 import { showLoading, showRegisterError } from '/js/services/webauthn-login-ui.js?v=4';
 import { startPasskeyAuth, finishPasskeyAuth, redirectWithPkce } from '/js/services/webauthn-helpers.js?v=3';

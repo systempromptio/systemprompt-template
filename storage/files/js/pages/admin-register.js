@@ -14,7 +14,7 @@ import { hasValidAdminToken } from '../services/admin-token.js';
 import { showError, showLoading, showUnsupported, describeError } from './admin-register-ui.js';
 
 const LOGIN_PATH = '/admin/login';
-const ADMIN_PATH = '/admin/';
+const ADMIN_PATH = '/admin';
 const FALLBACK_REDIRECT_MS = 2000;
 
 const autoLogin = async (email) => {

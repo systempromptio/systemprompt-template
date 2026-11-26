@@ -2,7 +2,7 @@ import {
   preparePublicKeyCredentialCreationOptions,
   preparePublicKeyCredentialRequestOptions, makeRequest,
   assertRpIdMatchesOrigin
-} from '/js/services/webauthn-utils.js?v=3';
+} from '/js/services/webauthn-utils.js?v=4';
 
 import { rawResponse } from '/js/services/api.js';
 

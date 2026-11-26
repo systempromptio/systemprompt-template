@@ -1,5 +1,5 @@
 import { rawResponse, errorMessage } from '/js/services/api.js';
-import { generateRandomString, generateCodeChallenge } from '/js/services/webauthn-utils.js?v=3';
+import { generateRandomString, generateCodeChallenge } from '/js/services/webauthn-utils.js?v=4';
 import {
   DEFAULT_REDIRECT, resolveRedirect, exchangeToken, storeSession
 } from '/js/services/webauthn-session.js';
