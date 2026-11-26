@@ -66,13 +66,11 @@ pub async fn list_rules_for_entity(
     .await
 }
 
-const SOURCE_LABEL: &str = "admin:dashboard";
-
 // Why: replaces the entity's rule set with `rules`, but as an upsert plus a
 // delete of what is absent rather than a wipe and re-insert. A row the file
 // already declared and the console left alone keeps its `yaml` source and its
 // justification, so it does not turn into drift; only rows the console changed
-// or added are stamped `dashboard`.
+// or added are stamped with the console source.
 pub async fn set_entity_rules(
     pool: &PgPool,
     entity_type: EntityKind,
@@ -84,7 +82,7 @@ pub async fn set_entity_rules(
     // the two leaves a catalog row with no grants — an entity that exists and
     // grants nothing, which is what an unruled entity already means here.
     catalog(pool)
-        .ensure_entity(entity_type, entity_id, SOURCE_LABEL)
+        .ensure_entity(entity_type, entity_id, crate::authz::CONSOLE_SOURCE)
         .await?;
     let mut tx = pool.begin().await?;
     replace_rules(&mut tx, entity_type.as_str(), entity_id, rules).await?;
@@ -102,7 +100,7 @@ pub async fn bulk_set_rules(
     let catalog = catalog(pool);
     for (entity_type, entity_id) in entities {
         catalog
-            .ensure_entity(*entity_type, entity_id, SOURCE_LABEL)
+            .ensure_entity(*entity_type, entity_id, crate::authz::CONSOLE_SOURCE)
             .await?;
     }
     let mut tx = pool.begin().await?;

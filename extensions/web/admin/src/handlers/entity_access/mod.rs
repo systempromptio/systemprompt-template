@@ -189,7 +189,7 @@ pub(crate) async fn set_entity_default_handler(
             entity.kind(),
             entity.id_str(),
             body.default_included,
-            "admin:dashboard",
+            crate::authz::CONSOLE_SOURCE,
         )
         .await
         .map_err(AdminError::internal)?;
