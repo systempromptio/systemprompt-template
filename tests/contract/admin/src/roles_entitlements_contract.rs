@@ -23,7 +23,7 @@ async fn role_entitlements_render_mixed_allow_and_deny_with_entity_defaults() {
     for (entity, default_included) in [(&allow, false), (&deny, true)] {
         sqlx::query(
             "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
-             VALUES ('skill', $1, $2, 'dashboard')",
+             VALUES ('skill', $1, $2, 'console:fixture')",
         )
         .bind(entity)
         .bind(default_included)
@@ -36,7 +36,7 @@ async fn role_entitlements_render_mixed_allow_and_deny_with_entity_defaults() {
             "INSERT INTO access_control_rules
                 (id, entity_type, entity_id, rule_type, rule_value, access, justification, source)
              VALUES ($1, 'skill', $2, 'role', 'project_manager', $3,
-                     'role entitlement fixture', 'dashboard')",
+                     'role entitlement fixture', 'console:fixture')",
         )
         .bind(seed::unique("role-rule"))
         .bind(entity)

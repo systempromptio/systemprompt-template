@@ -114,7 +114,7 @@ async fn setting_marketplaces_never_touches_the_entity_default() {
     seed_group(&db.pool, &group).await;
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source) \
-         VALUES ('marketplace', 'open-to-everyone', true, 'test') \
+         VALUES ('marketplace', 'open-to-everyone', true, 'console:fixture') \
          ON CONFLICT (entity_type, entity_id) DO UPDATE SET default_included = true",
     )
     .execute(&*db.pool)

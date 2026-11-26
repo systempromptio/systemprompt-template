@@ -216,6 +216,9 @@ fn expand_ids(
     entity: &EntityRef,
     inputs: &DeclaredInputs<'_>,
 ) -> Result<Vec<String>, DeclaredError> {
+    if entity.is_glob() && entity.kind == EntityKind::Model {
+        return Ok(vec![entity.id.clone()]);
+    }
     if entity.is_glob() {
         let ids: Vec<String> = match entity.kind {
             EntityKind::GatewayRoute => inputs

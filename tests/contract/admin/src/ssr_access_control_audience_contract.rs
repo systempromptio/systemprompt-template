@@ -13,7 +13,7 @@ const MARKETPLACE: &str = "enterprise-demo";
 async fn seed_developer_deny(db: &TempDb, reason: &str) {
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
-         VALUES ('marketplace', $1, true, 'dashboard')
+         VALUES ('marketplace', $1, true, 'console:fixture')
          ON CONFLICT (entity_type, entity_id) DO NOTHING",
     )
     .bind(MARKETPLACE)
@@ -23,7 +23,7 @@ async fn seed_developer_deny(db: &TempDb, reason: &str) {
     sqlx::query(
         "INSERT INTO access_control_rules
              (id, entity_type, entity_id, rule_type, rule_value, access, justification, source)
-         VALUES ($1, 'marketplace', $2, 'role', 'developer', 'deny', $3, 'dashboard')",
+         VALUES ($1, 'marketplace', $2, 'role', 'developer', 'deny', $3, 'console:fixture')",
     )
     .bind(seed::unique("audience-deny"))
     .bind(MARKETPLACE)

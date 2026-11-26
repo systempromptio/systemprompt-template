@@ -26,7 +26,7 @@ async fn access_control_ledger_filters_and_explains_expiring_mixed_rules() {
     let deny_rule = seed::unique("access-ledger-deny");
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
-         VALUES ('skill', $1, false, 'dashboard')",
+         VALUES ('skill', $1, false, 'console:fixture')",
     )
     .bind(&entity)
     .execute(&*db.pool)
@@ -34,7 +34,7 @@ async fn access_control_ledger_filters_and_explains_expiring_mixed_rules() {
     .expect("register closed skill");
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
-         VALUES ('skill', $1, false, 'dashboard')",
+         VALUES ('skill', $1, false, 'console:fixture')",
     )
     .bind(&non_expiring_entity)
     .execute(&*db.pool)
@@ -59,7 +59,7 @@ async fn access_control_ledger_filters_and_explains_expiring_mixed_rules() {
         sqlx::query(
             "INSERT INTO access_control_rules
                  (id, entity_type, entity_id, rule_type, rule_value, access, justification, source)
-             VALUES ($1, 'skill', $2, $3, $4, $5, $6, 'dashboard')",
+             VALUES ($1, 'skill', $2, $3, $4, $5, $6, 'console:fixture')",
         )
         .bind(id)
         .bind(&entity)
@@ -80,7 +80,7 @@ async fn access_control_ledger_filters_and_explains_expiring_mixed_rules() {
     sqlx::query(
         "INSERT INTO access_control_rules
              (id, entity_type, entity_id, rule_type, rule_value, access, justification, source)
-         VALUES ($1, 'skill', $2, 'group', $3, 'allow', 'permanent comparison rule', 'dashboard')",
+         VALUES ($1, 'skill', $2, 'group', $3, 'allow', 'permanent comparison rule', 'console:fixture')",
     )
     .bind(seed::unique("access-ledger-permanent"))
     .bind(&non_expiring_entity)
