@@ -9,14 +9,26 @@ const LOGIN_PATH = '/admin/login';
 export const DEFAULT_REDIRECT = '/admin/profile';
 
 export const resolveRedirect = async (target) => {
-  if (!target || !target.startsWith('/admin/')) return DEFAULT_REDIRECT;
+  if (!target || !target.startsWith('/') || /[\\\s]/.test(target) || target.startsWith('//')) {
+    return DEFAULT_REDIRECT;
+  }
+  let parsed;
   try {
-    const probe = await rawResponse(target, { method: 'HEAD' });
+    parsed = new URL(target, window.location.origin);
+  } catch {
+    return DEFAULT_REDIRECT;
+  }
+  if (parsed.origin !== window.location.origin || !parsed.pathname.startsWith('/admin/')) {
+    return DEFAULT_REDIRECT;
+  }
+  const path = parsed.pathname + parsed.search + parsed.hash;
+  try {
+    const probe = await rawResponse(path, { method: 'HEAD' });
     if (probe.status === 404) return DEFAULT_REDIRECT;
   } catch {
-    return target;
+    return path;
   }
-  return target;
+  return path;
 };
 
 export const exchangeToken = async (code, codeVerifier) => {
@@ -40,10 +52,7 @@ export const storeSession = async (tokenData) => {
   const response = await rawResponse('/api/public/auth/session', {
     method: 'POST',
     credentials: 'same-origin',
-    body: JSON.stringify({
-      access_token: tokenData.access_token,
-      expires_in: tokenData.expires_in || 3600
-    }),
+    body: JSON.stringify({ access_token: tokenData.access_token }),
   });
   if (!response.ok) {
     throw new Error(await errorMessage(response) || 'Failed to store session');

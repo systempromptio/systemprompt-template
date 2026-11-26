@@ -27,7 +27,7 @@ use template_test_common::env::EnvFixture;
 use template_test_common::paths::repo_root;
 use tower::ServiceExt as _;
 
-use crate::fixtures::{insert_user_full, unique};
+use crate::fixtures::{AclRuleSpec, insert_acl_rule, insert_user_full, unique};
 
 const ANONYMOUS: &str = "anonymous-session";
 const ANONYMOUS_ROW: &str = "user-typed-token-on-an-anonymous-row";
@@ -170,10 +170,38 @@ async fn console(db: &TempDb) -> Router {
         },
     );
     let api = admin::admin_router(&database, Arc::clone(&db.pool), &db.pool, operator);
+    let session = admin::session_router(Arc::clone(&db.pool), true);
     Router::new()
         .nest_service("/admin", ssr)
         .nest("/api", api)
+        .merge(session)
         .layer(axum::Extension(fixture.env))
+}
+
+async fn send(router: &Router, request: Request<Body>) -> (StatusCode, Vec<String>) {
+    let response = router
+        .clone()
+        .oneshot(request)
+        .await
+        .expect("the router is infallible");
+    let cookies = response
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .map(|v| v.to_str().expect("cookies are ASCII").to_owned())
+        .collect();
+    (response.status(), cookies)
+}
+
+fn set_session(token: &str) -> Request<Body> {
+    Request::builder()
+        .method("POST")
+        .uri("/auth/session")
+        .header("content-type", "application/json")
+        .body(Body::from(
+            serde_json::json!({ "access_token": token }).to_string(),
+        ))
+        .expect("build the request")
 }
 
 async fn get(router: &Router, path: &str, token: Option<&str>) -> (StatusCode, String) {
@@ -255,6 +283,111 @@ async fn a_signed_in_member_is_admitted_to_their_pages_and_kept_out_of_the_conso
 
     let (status, _) = get(&router, "/admin/auth/me", Some(ADMIN)).await;
     assert_eq!(status, StatusCode::OK);
+
+    db.cleanup().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_session_cookie_is_set_only_for_a_signed_in_principal() {
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let router = console(&db).await;
+
+    let (status, cookies) = send(&router, set_session(MEMBER)).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(cookies.len(), 1);
+    let cookie = &cookies[0];
+    assert!(
+        cookie.starts_with(&format!("access_token={MEMBER}; ")),
+        "{cookie}"
+    );
+    for attribute in ["HttpOnly", "SameSite=Lax", "Secure", "Path=/"] {
+        assert!(
+            cookie.contains(attribute),
+            "{attribute} missing from {cookie}"
+        );
+    }
+    let max_age: i64 = cookie
+        .split("; ")
+        .find_map(|part| part.strip_prefix("Max-Age="))
+        .and_then(|value| value.parse().ok())
+        .expect("a Max-Age attribute");
+    assert!(
+        (3500..=3600).contains(&max_age),
+        "the lifetime is the token's own expiry, not a client-chosen number: {max_age}"
+    );
+
+    for token in [
+        ANONYMOUS,
+        ANONYMOUS_ROW,
+        EXPIRED,
+        "x; Domain=.evil.example; Max-Age=99999999",
+    ] {
+        let (status, cookies) = send(&router, set_session(token)).await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED, "{token}");
+        assert!(
+            cookies.is_empty(),
+            "{token} must set no cookie: {cookies:?}"
+        );
+    }
+
+    let unknown_field = Request::builder()
+        .method("POST")
+        .uri("/auth/session")
+        .header("content-type", "application/json")
+        .body(Body::from(
+            serde_json::json!({ "access_token": MEMBER, "expires_in": 99_999_999 }).to_string(),
+        ))
+        .expect("build the request");
+    let (status, cookies) = send(&router, unknown_field).await;
+    assert!(status.is_client_error(), "{status}");
+    assert!(cookies.is_empty());
+
+    let clear = Request::builder()
+        .method("DELETE")
+        .uri("/auth/session")
+        .body(Body::empty())
+        .expect("build the request");
+    let (status, cookies) = send(&router, clear).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(cookies.len(), 1);
+    assert!(cookies[0].starts_with("access_token=; "), "{}", cookies[0]);
+    assert!(cookies[0].contains("Max-Age=0"), "{}", cookies[0]);
+
+    db.cleanup().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn an_agent_configuration_is_shown_only_to_a_caller_granted_the_agent() {
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let router = console(&db).await;
+    let path = "/api/agents/developer_agent";
+
+    let (status, _) = get(&router, path, Some(MEMBER)).await;
+    assert_eq!(
+        status,
+        StatusCode::NOT_FOUND,
+        "an ungranted agent is indistinguishable from an absent one"
+    );
+    let (status, _) = get(&router, path, Some(ADMIN)).await;
+    assert_eq!(status, StatusCode::OK, "an admin sees every agent");
+
+    insert_acl_rule(
+        &db.pool,
+        &AclRuleSpec::allow("agent", "developer_agent", "role", "user"),
+    )
+    .await;
+    let (status, _) = get(&router, path, Some(MEMBER)).await;
+    assert_eq!(status, StatusCode::OK, "a granted member sees the agent");
+
+    let (status, _) = get(&router, "/api/agents/associate_agent", Some(MEMBER)).await;
+    assert_eq!(status, StatusCode::NOT_FOUND, "the grant is per agent");
+
+    let (status, _) = get(&router, path, Some(ANONYMOUS)).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
 
     db.cleanup().await;
 }

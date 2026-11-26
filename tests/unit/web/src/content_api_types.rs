@@ -1,22 +1,15 @@
 //! The content API's JSON envelopes are what browsers and the admin JS parse,
 //! so their field names and derived counts are a wire contract: errors are
-//! `{"error": ...}`, acknowledgements are `{"ok": true}`, and a link listing
+//! `{"error": ...}`, and a link listing
 //! reports a `total` derived from the payload rather than supplied by the
 //! caller.
 
 use systemprompt_web_extension::api::{ErrorResponse, ListLinksResponse};
-use systemprompt_web_shared::session_cookie::OkResponse;
 
 #[test]
 fn error_response_serialises_to_a_single_error_field() {
     let json = serde_json::to_value(ErrorResponse::new("link not found")).unwrap();
     assert_eq!(json, serde_json::json!({ "error": "link not found" }));
-}
-
-#[test]
-fn ok_response_serialises_the_flag_it_was_given() {
-    let json = serde_json::to_value(OkResponse { ok: true }).unwrap();
-    assert_eq!(json, serde_json::json!({ "ok": true }));
 }
 
 #[test]

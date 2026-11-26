@@ -1,7 +1,7 @@
 //! Request bodies for the plugin, agent, MCP, and hook editing endpoints.
 
 use serde::Deserialize;
-use systemprompt::identifiers::{AgentId, McpServerId, PluginId, SkillId, UserId};
+use systemprompt::identifiers::{AgentId, McpServerId, PluginId, SkillId};
 
 #[derive(Debug, Deserialize)]
 pub struct CreateAgentRequest {
@@ -134,11 +134,6 @@ pub struct UpdatePluginRequest {
     pub agents: Option<Vec<AgentId>>,
     pub mcp_servers: Option<Vec<McpServerId>>,
     pub hooks: Option<Vec<CreateHookRequest>>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct UserQuery {
-    pub user_id: Option<UserId>,
 }
 
 #[derive(Debug, Deserialize)]

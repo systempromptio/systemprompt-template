@@ -5,17 +5,16 @@ use axum::Extension;
 use std::sync::Arc;
 
 use axum::Json;
-use axum::extract::{Path, Query, State};
-use axum::http::HeaderMap;
+use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use systemprompt::identifiers::{PluginId, UserId};
+use systemprompt::identifiers::PluginId;
 
-use crate::error::{AdminError, AdminResult};
+use crate::error::AdminResult;
 use crate::repositories;
-use crate::types::UserQuery;
+use crate::types::UserContext;
 
 use super::responses::PluginEnvResponse;
 
@@ -23,22 +22,9 @@ pub(crate) async fn list_plugin_env_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(env): Extension<AdminEnv>,
     Path(plugin_id): Path<PluginId>,
-    headers: HeaderMap,
-    Query(query): Query<UserQuery>,
+    Extension(user_ctx): Extension<UserContext>,
 ) -> AdminResult<Response> {
-    // Why: cookie absence is the "logged-out" branch, not an error — the
-    // handler falls through to `resolve_principal` to honour the explicit
-    // `user_id` query parameter.
-    let cookie_uid = super::extract_user_from_cookie(&env, &headers)
-        .await
-        .ok()
-        .map(|s| s.user_id);
-    let Some(user_id) = resolve_principal(
-        cookie_uid.as_ref().map(UserId::as_str),
-        query.user_id.as_ref().map(UserId::as_str),
-    ) else {
-        return Err(AdminError::Unauthorized("missing principal".to_owned()));
-    };
+    let user_id = user_ctx.user_id;
 
     // Why: this must not degrade to an empty list — `definitions` decides
     // `missing_required`, which decides `valid`, which is the flag the UI uses
@@ -71,16 +57,6 @@ pub(crate) async fn list_plugin_env_handler(
         missing_required,
     })
     .into_response())
-}
-
-// Why: A principal resolves only from an authenticated cookie session or an
-// explicit `user_id` query parameter. Absent both, the request has no
-// principal — one is never synthesized to make the call succeed.
-pub fn resolve_principal(
-    cookie_user_id: Option<&str>,
-    query_user_id: Option<&str>,
-) -> Option<UserId> {
-    cookie_user_id.or(query_user_id).map(UserId::new)
 }
 
 fn load_plugin_variable_defs(

@@ -87,8 +87,6 @@ pub mod test_support {
     pub use crate::handlers::hooks_track::loc::{LocDelta, compute_loc_delta};
     #[cfg(feature = "agents")]
     pub use crate::handlers::hooks_track::session_summary::GeneratedSessionSummary;
-    #[cfg(feature = "mcp")]
-    pub use crate::handlers::resolve_principal;
     #[cfg(feature = "agents")]
     pub use crate::handlers::ssr::analysis::marketplace_versions::diff::{
         Change, ManifestDiff, SkillChange, diff as manifest_diff,
@@ -151,6 +149,19 @@ pub fn bridge_identity_router(pool: Arc<PgPool>) -> Router {
             get(handlers::bridge_whoami::bridge_whoami_handler),
         )
         .with_state(pool)
+}
+
+pub fn session_router(pool: Arc<PgPool>, use_https: bool) -> Router {
+    Router::new()
+        .route(
+            "/auth/session",
+            post(handlers::session_cookie::set_session)
+                .delete(handlers::session_cookie::clear_session),
+        )
+        .with_state(handlers::session_cookie::SessionState {
+            pool,
+            secure: handlers::session_cookie::CookieSecure(use_https),
+        })
 }
 
 pub fn share_manifest_router(pool: Arc<PgPool>) -> Router {

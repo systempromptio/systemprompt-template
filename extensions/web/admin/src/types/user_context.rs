@@ -8,27 +8,31 @@ use super::role::{ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM, Role, has_any, pa
 use super::users::CookieSession;
 use crate::repositories::users::queries::UserAccessProfile;
 
+/// The signed-in console principal, built only by the verifying middleware.
+///
+/// Its fields are crate-private and [`UserContext::signed_in`] takes a
+/// [`CookieSession`] that only core-verified credentials produce.
 #[derive(Debug, Clone, Serialize)]
 pub struct UserContext {
-    pub user_id: UserId,
-    pub username: String,
-    pub email: Email,
-    pub roles: Vec<String>,
+    pub(crate) user_id: UserId,
+    pub(crate) username: String,
+    pub(crate) email: Email,
+    pub(crate) roles: Vec<String>,
     // Why: the groups and projects the caller belongs to, resolved once per
     // request. Listings narrow to these for a caller who may not see the
     // whole estate, so they are part of identity rather than something each
     // handler re-reads.
-    pub group_ids: Vec<String>,
-    pub project_ids: Vec<String>,
+    pub(crate) group_ids: Vec<String>,
+    pub(crate) project_ids: Vec<String>,
     // Why: `is_admin` is the write tier — `admin` or `platform_admin` — and
     // still guards every privileged mutation. `is_console` is the wider "may
     // see the admin dashboard" test, which `project_manager` also passes.
-    pub is_admin: bool,
-    pub is_console: bool,
-    pub is_platform_admin: bool,
-    pub is_developer: bool,
-    pub email_verified: bool,
-    pub session_id: Option<SessionId>,
+    pub(crate) is_admin: bool,
+    pub(crate) is_console: bool,
+    pub(crate) is_platform_admin: bool,
+    pub(crate) is_developer: bool,
+    pub(crate) email_verified: bool,
+    pub(crate) session_id: Option<SessionId>,
 }
 
 /// Why a verified credential is not a signed-in console principal.
@@ -63,12 +67,17 @@ impl NotSignedIn {
 }
 
 impl UserContext {
-    pub fn signed_in(
+    pub(crate) fn signed_in(
         session: CookieSession,
         account: Option<UserAccessProfile>,
     ) -> Result<Self, NotSignedIn> {
         let account = account.ok_or(NotSignedIn::NoAccount)?;
-        if parse_roles(&account.roles).is_empty() {
+        if parse_roles(&account.roles).is_empty()
+            || account
+                .roles
+                .iter()
+                .any(|r| r.eq_ignore_ascii_case("anonymous"))
+        {
             return Err(NotSignedIn::NoConsoleRole);
         }
         let roles = account.roles;

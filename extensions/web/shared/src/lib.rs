@@ -7,7 +7,7 @@
 //! - [`config_loader`] — branding and ADFS loaders the console reads on every
 //!   flavour.
 //! - [`dashboard`] — the console dashboard config (landing, home, nav).
-//! - [`session_cookie`] — the session-cookie login endpoint.
+//! - [`redirect`] — same-origin redirect targets from a query string.
 //! - [`config`] / [`config_errors`] — typed YAML schemas with
 //!   `#[serde(deny_unknown_fields)]` plus the error type that surfaces
 //!   misconfigurations at startup.
@@ -33,7 +33,7 @@ pub mod format;
 pub mod ids;
 pub mod models;
 pub mod pagination;
-pub mod session_cookie;
+pub mod redirect;
 pub mod settings;
 mod utils;
 

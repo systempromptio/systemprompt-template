@@ -1075,6 +1075,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cookie"
+version = "0.18.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d55f2d6c30eeec7d5c6f98bd4395d4abb1895629eab97ee6522d340623615f8a"
+dependencies = [
+ "time",
+ "version_check",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8465,6 +8475,7 @@ dependencies = [
  "base64 0.22.1",
  "chacha20poly1305 0.10.1",
  "chrono",
+ "cookie",
  "flate2",
  "futures-util",
  "handlebars",

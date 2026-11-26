@@ -1,7 +1,7 @@
 //! HTTP handlers for plugin listing and installation.
 
 use axum::Json;
-use axum::extract::{Extension, Query, State};
+use axum::extract::{Extension, State};
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use std::sync::Arc;
@@ -10,7 +10,7 @@ use crate::env::AdminEnv;
 use crate::error::AdminResult;
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::{UserContext, UserQuery};
+use crate::types::UserContext;
 
 use super::responses::PluginsListResponse;
 
@@ -18,7 +18,6 @@ pub(crate) async fn list_plugins_handler(
     Extension(env): Extension<AdminEnv>,
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
-    Query(_query): Query<UserQuery>,
 ) -> AdminResult<Response> {
     let services_path = shared::get_services_path(&env);
     // Why: not a bare `?` — this reads the plugin YAML off disk, so a

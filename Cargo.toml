@@ -87,6 +87,7 @@ walkdir = "2.0"
 tempfile = "3.0"
 zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 url = "2.5"
+cookie = { version = "0.18", default-features = false }
 urlencoding = "2.1"
 # RS256 signing of the per-user identity token for external MCP servers,
 # with core's authority key — so the version must be core's.

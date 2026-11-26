@@ -7,36 +7,16 @@
 
 use std::collections::BTreeMap;
 
-use systemprompt::identifiers::{Email, UserId};
 use systemprompt::models::auth::UserType;
-use systemprompt_web_admin::repositories::analytics::conversations::has_full_history_view;
-use systemprompt_web_admin::repositories::users::queries::UserAccessProfile;
+use systemprompt_web_admin::repositories::analytics::conversations::roles_grant_full_history;
 use systemprompt_web_admin::types::{
-    CookieSession, NotSignedIn, ROLE_ADMIN, ROLE_PROJECT_MANAGER, ROLE_USER, roles_grant_console,
-    roles_grant_manage,
+    NotSignedIn, ROLE_ADMIN, ROLE_PROJECT_MANAGER, ROLE_USER, roles_grant_console,
+    roles_grant_manage, roles_grant_platform,
 };
-use systemprompt_web_admin::{AdfsConfig, UserContext, group_matches_pattern};
+use systemprompt_web_admin::{AdfsConfig, group_matches_pattern};
 
 fn roles(list: &[&str]) -> Vec<String> {
     list.iter().map(|r| (*r).to_owned()).collect()
-}
-
-fn ctx(list: &[&str], groups: &[&str]) -> UserContext {
-    let roles = roles(list);
-    UserContext {
-        user_id: UserId::new("u-1".to_owned()),
-        username: "u-1".to_owned(),
-        email: Email::try_new("u-1@example.test".to_owned()).expect("fixture email"),
-        group_ids: groups.iter().map(|g| (*g).to_owned()).collect(),
-        project_ids: Vec::new(),
-        is_admin: roles_grant_manage(&roles),
-        is_console: roles_grant_console(&roles),
-        is_platform_admin: roles.iter().any(|r| r == "platform_admin"),
-        is_developer: roles.iter().any(|r| r == "developer"),
-        roles,
-        email_verified: true,
-        session_id: None,
-    }
 }
 
 #[test]
@@ -55,13 +35,13 @@ fn only_the_admin_roles_and_project_manager_reach_the_console() {
 
 #[test]
 fn a_project_manager_is_not_an_admin() {
-    let pm = ctx(&[ROLE_PROJECT_MANAGER, ROLE_USER], &[]);
-    assert!(pm.is_console);
+    let pm = roles(&[ROLE_PROJECT_MANAGER, ROLE_USER]);
+    assert!(roles_grant_console(&pm));
     assert!(
-        !pm.is_admin,
+        !roles_grant_manage(&pm),
         "is_admin still guards every privileged mutation and must mean the write tier alone"
     );
-    assert!(!pm.is_platform_admin);
+    assert!(!roles_grant_platform(&pm));
 }
 
 #[test]
@@ -142,28 +122,11 @@ fn an_unmapped_group_grants_no_role() {
 
 #[test]
 fn a_project_manager_sees_every_conversation() {
-    assert!(has_full_history_view(&ctx(
-        &[ROLE_PROJECT_MANAGER, ROLE_USER],
-        &[]
-    )));
-    assert!(!has_full_history_view(&ctx(&[ROLE_USER], &["europe-devs"])));
-}
-
-fn session() -> CookieSession {
-    CookieSession {
-        user_id: UserId::new("u-2".to_owned()),
-        username: "u-2".to_owned(),
-        email: Email::try_new("u-2@example.test".to_owned()).expect("fixture email"),
-        session_id: None,
-    }
-}
-
-fn account(list: &[&str]) -> Option<UserAccessProfile> {
-    Some(UserAccessProfile {
-        roles: roles(list),
-        group_ids: vec!["g-1".to_owned()],
-        project_ids: Vec::new(),
-    })
+    assert!(roles_grant_full_history(&roles(&[
+        ROLE_PROJECT_MANAGER,
+        ROLE_USER
+    ])));
+    assert!(!roles_grant_full_history(&roles(&[ROLE_USER])));
 }
 
 #[test]
@@ -174,30 +137,4 @@ fn an_anonymous_session_token_is_never_a_console_principal() {
     );
     assert_eq!(NotSignedIn::refuse_token(UserType::User), Ok(()));
     assert_eq!(NotSignedIn::refuse_token(UserType::Admin), Ok(()));
-}
-
-#[test]
-fn an_account_signs_in_only_with_a_role_from_the_closed_set() {
-    assert_eq!(
-        UserContext::signed_in(session(), account(&["anonymous"])).err(),
-        Some(NotSignedIn::NoConsoleRole)
-    );
-    assert_eq!(
-        UserContext::signed_in(session(), account(&[])).err(),
-        Some(NotSignedIn::NoConsoleRole)
-    );
-    assert_eq!(
-        UserContext::signed_in(session(), None).err(),
-        Some(NotSignedIn::NoAccount),
-        "a token whose account row is gone is not granted a default role"
-    );
-
-    let member = UserContext::signed_in(session(), account(&["user"])).expect("a member signs in");
-    assert!(!member.is_console);
-    assert_eq!(member.group_ids, vec!["g-1".to_owned()]);
-
-    let pm = UserContext::signed_in(session(), account(&[ROLE_PROJECT_MANAGER]))
-        .expect("a project manager signs in");
-    assert!(pm.is_console);
-    assert!(!pm.is_admin);
 }

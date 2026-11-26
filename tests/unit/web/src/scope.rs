@@ -6,36 +6,20 @@
 //! for a group they are not in is silently ignored rather than refused — a
 //! 403 there would confirm the group exists.
 
-use systemprompt::identifiers::{Email, UserId};
 use systemprompt_web_admin::repositories::scope::{ScopeRequest, SubjectScope, Visibility};
-use systemprompt_web_admin::types::{UserContext, roles_grant_console, roles_grant_manage};
+use systemprompt_web_admin::types::roles_grant_console;
 
-fn ctx(roles: &[&str], groups: &[&str]) -> UserContext {
+fn visibility(roles: &[&str], groups: &[&str]) -> Visibility {
     let roles: Vec<String> = roles.iter().map(|r| (*r).to_owned()).collect();
-    UserContext {
-        user_id: UserId::new("u-1".to_owned()),
-        username: "u-1".to_owned(),
-        email: Email::try_new("u-1@example.test".to_owned()).expect("fixture email"),
-        group_ids: groups.iter().map(|g| (*g).to_owned()).collect(),
-        project_ids: Vec::new(),
-        is_admin: roles_grant_manage(&roles),
-        is_console: roles_grant_console(&roles),
-        is_platform_admin: roles.iter().any(|r| r == "platform_admin"),
-        is_developer: roles.iter().any(|r| r == "developer"),
-        roles,
-        email_verified: true,
-        session_id: None,
-    }
+    let groups: Vec<String> = groups.iter().map(|g| (*g).to_owned()).collect();
+    Visibility::of(roles_grant_console(&roles), &groups)
 }
 
 #[test]
 fn a_console_caller_sees_every_group() {
+    assert_eq!(visibility(&["admin"], &["europe-devs"]), Visibility::All);
     assert_eq!(
-        Visibility::for_user(&ctx(&["admin"], &["europe-devs"])),
-        Visibility::All
-    );
-    assert_eq!(
-        Visibility::for_user(&ctx(&["project_manager", "user"], &[])),
+        visibility(&["project_manager", "user"], &[]),
         Visibility::All
     );
 }
@@ -43,28 +27,31 @@ fn a_console_caller_sees_every_group() {
 #[test]
 fn everyone_else_sees_their_own_groups() {
     assert_eq!(
-        Visibility::for_user(&ctx(&["user"], &["europe-devs", "storefront"])),
+        visibility(&["user"], &["europe-devs", "storefront"]),
         Visibility::Groups(vec!["europe-devs".to_owned(), "storefront".to_owned()])
     );
 }
 
 #[test]
 fn a_user_in_no_group_narrows_to_nothing_rather_than_everything() {
-    let request = ScopeRequest::from_query(&ctx(&["user"], &[]), None, None);
+    let request = ScopeRequest::narrow(visibility(&["user"], &[]), None, None);
     assert_eq!(request.group_filter(), Some(Vec::new()));
 }
 
 #[test]
 fn a_console_caller_may_ask_for_any_group() {
-    let request = ScopeRequest::from_query(&ctx(&["admin"], &[]), Some("india-devs"), None);
+    let request = ScopeRequest::narrow(visibility(&["admin"], &[]), Some("india-devs"), None);
     assert_eq!(request.group, Some("india-devs".to_owned()));
     assert_eq!(request.group_filter(), Some(vec!["india-devs".to_owned()]));
 }
 
 #[test]
 fn asking_for_a_group_you_are_not_in_is_ignored_not_refused() {
-    let request =
-        ScopeRequest::from_query(&ctx(&["user"], &["europe-devs"]), Some("india-devs"), None);
+    let request = ScopeRequest::narrow(
+        visibility(&["user"], &["europe-devs"]),
+        Some("india-devs"),
+        None,
+    );
     assert_eq!(request.group, None, "the filter is dropped, not honoured");
     assert_eq!(
         request.group_filter(),
@@ -75,8 +62,8 @@ fn asking_for_a_group_you_are_not_in_is_ignored_not_refused() {
 
 #[test]
 fn asking_for_a_group_you_are_in_narrows_to_it() {
-    let request = ScopeRequest::from_query(
-        &ctx(&["user"], &["europe-devs", "business-users"]),
+    let request = ScopeRequest::narrow(
+        visibility(&["user"], &["europe-devs", "business-users"]),
         Some("europe-devs"),
         None,
     );
@@ -85,7 +72,7 @@ fn asking_for_a_group_you_are_in_narrows_to_it() {
 
 #[test]
 fn the_project_filter_is_carried_through_verbatim() {
-    let request = ScopeRequest::from_query(&ctx(&["user"], &["europe-devs"]), None, Some("core"));
+    let request = ScopeRequest::narrow(visibility(&["user"], &["europe-devs"]), None, Some("core"));
     assert_eq!(request.project, Some("core".to_owned()));
 }
 

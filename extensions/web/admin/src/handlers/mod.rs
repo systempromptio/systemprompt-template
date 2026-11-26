@@ -35,6 +35,7 @@ pub(crate) mod roles;
 pub(crate) mod scope_defaults;
 pub(crate) mod secrets;
 pub(crate) mod self_service;
+pub(crate) mod session_cookie;
 pub(crate) mod share;
 pub(crate) mod shared;
 pub(crate) mod ssr;
@@ -60,7 +61,6 @@ pub(crate) use plugins::list_plugins_handler;
 #[cfg(feature = "mcp")]
 pub(crate) use plugins_env::list_plugin_env_handler;
 #[cfg(feature = "mcp")]
-pub use plugins_env::resolve_principal;
 #[cfg(feature = "agents")]
 pub(crate) use resources::{get_agent_handler, list_agents_handler};
 pub(crate) use user_sessions::{

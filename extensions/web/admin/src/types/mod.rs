@@ -56,7 +56,7 @@ pub use plugins_requests::{
     CreateAgentRequest, CreateHookRequest, CreateMcpRequest, CreatePluginRequest, EnvVarEntry,
     ImportPluginRequest, UpdateAgentRequest, UpdateHookRequest, UpdateMcpRawYamlRequest,
     UpdateMcpRequest, UpdatePluginEnvRequest, UpdatePluginRequest, UpdatePluginSkillsRequest,
-    UpdateSkillFileRequest, UserQuery,
+    UpdateSkillFileRequest,
 };
 pub use role::{
     ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM, Role, RoleChangeRefusal, authorize_role_change,

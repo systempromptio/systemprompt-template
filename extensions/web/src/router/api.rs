@@ -3,7 +3,6 @@
 use std::sync::Arc;
 
 use axum::Router;
-use axum::routing::post;
 
 use systemprompt::users::{UserRepository, UserService};
 
@@ -11,7 +10,6 @@ use super::pools::DbHandles;
 use crate::admin;
 #[cfg(feature = "content")]
 use crate::extension::WebExtension;
-use crate::shared::session_cookie;
 
 pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings) -> Router {
     let admin_api = admin::admin_router(&db.db, Arc::clone(&db.read), &db.write, db.owner.clone());
@@ -20,12 +18,7 @@ pub(crate) fn build(db: &DbHandles, settings: &crate::WebSettings) -> Router {
     let webhook_api = admin::hooks_webhook_router(Arc::clone(&db.write), users);
     let secrets_api = admin::secrets_router(Arc::clone(&db.write));
     let bridge_identity = admin::bridge_identity_router(Arc::clone(&db.read));
-    let router = Router::new().route(
-        "/auth/session",
-        post(session_cookie::set_session)
-            .delete(session_cookie::clear_session)
-            .with_state(session_cookie::CookieSecure(settings.use_https)),
-    );
+    let router = admin::session_router(Arc::clone(&db.read), settings.use_https);
     #[cfg(feature = "content")]
     let router = router.merge(crate::api::router(
         Arc::clone(&db.read),

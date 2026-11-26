@@ -22,10 +22,15 @@ pub enum Visibility {
 impl Visibility {
     #[must_use]
     pub fn for_user(user_ctx: &UserContext) -> Self {
-        if user_ctx.is_console {
+        Self::of(user_ctx.is_console, &user_ctx.group_ids)
+    }
+
+    #[must_use]
+    pub fn of(is_console: bool, group_ids: &[String]) -> Self {
+        if is_console {
             Self::All
         } else {
-            Self::Groups(user_ctx.group_ids.clone())
+            Self::Groups(group_ids.to_vec())
         }
     }
 }
@@ -46,7 +51,11 @@ impl ScopeRequest {
     // back, never an error that would tell them the group exists.
     #[must_use]
     pub fn from_query(user_ctx: &UserContext, group: Option<&str>, project: Option<&str>) -> Self {
-        let visibility = Visibility::for_user(user_ctx);
+        Self::narrow(Visibility::for_user(user_ctx), group, project)
+    }
+
+    #[must_use]
+    pub fn narrow(visibility: Visibility, group: Option<&str>, project: Option<&str>) -> Self {
         let group = match (&visibility, group) {
             (_, None) => None,
             (Visibility::All, Some(g)) => Some(g.to_owned()),

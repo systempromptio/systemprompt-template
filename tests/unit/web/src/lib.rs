@@ -237,11 +237,11 @@ mod marketplace_catalog_pure;
 #[cfg(test)]
 mod marketplace_hooks_pure;
 #[cfg(test)]
-mod plugins_env_unauth;
-#[cfg(test)]
 mod profile_schema;
 #[cfg(test)]
 mod projects_page;
+#[cfg(test)]
+mod redirect_target;
 #[cfg(test)]
 mod route_labels_pure;
 #[cfg(test)]

@@ -95,10 +95,10 @@ pub struct UserBasicInfo {
 
 #[derive(Debug, Clone)]
 pub struct CookieSession {
-    pub user_id: UserId,
-    pub username: String,
-    pub email: Email,
-    pub session_id: Option<SessionId>,
+    pub(crate) user_id: UserId,
+    pub(crate) username: String,
+    pub(crate) email: Email,
+    pub(crate) session_id: Option<SessionId>,
 }
 
 #[derive(Debug, Clone, Copy)]

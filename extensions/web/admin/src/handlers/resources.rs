@@ -12,7 +12,7 @@ use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::UserContext;
+use crate::types::{AgentDetail, UserContext};
 
 use super::responses::AgentsListResponse;
 
@@ -24,13 +24,42 @@ pub(crate) async fn list_agents_handler(
     let services_path = shared::get_services_path(&env);
     let agents = repositories::config::agents::list_configured_agents(&services_path)
         .map_err(AdminError::internal)?;
-    // Why: `admin`, not `is_console`. The unfiltered list includes
+    let agents = visible_agents(&env, &pool, &user_ctx, agents).await?;
+    Ok(Json(AgentsListResponse { agents }).into_response())
+}
+
+pub(crate) async fn get_agent_handler(
+    Extension(env): Extension<AdminEnv>,
+    State(pool): State<Arc<PgPool>>,
+    Extension(user_ctx): Extension<UserContext>,
+    Path(agent_id): Path<String>,
+) -> AdminResult<Response> {
+    let services_path = shared::get_services_path(&env);
+    let agent = repositories::config::agents::find_agent(&services_path, &AgentId::new(agent_id))
+        .map_err(AdminError::internal)?;
+    let agent = match agent {
+        Some(agent) => visible_agents(&env, &pool, &user_ctx, vec![agent])
+            .await?
+            .pop(),
+        None => None,
+    };
+    let agent = agent.ok_or_else(|| AdminError::NotFound("Agent not found".to_owned()))?;
+    Ok(Json(agent).into_response())
+}
+
+async fn visible_agents(
+    env: &AdminEnv,
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    agents: Vec<AgentDetail>,
+) -> AdminResult<Vec<AgentDetail>> {
+    // Why: `admin`, not `is_console`. The unfiltered set includes
     // `admin_console`, which a project manager is deliberately not granted;
     // they get the plugin-filtered view like every other role.
     if user_ctx.is_admin {
-        return Ok(Json(AgentsListResponse { agents }).into_response());
+        return Ok(agents);
     }
-    let access = crate::authz::catalog::CatalogAccess::load(&env, &pool, &user_ctx.user_id).await?;
+    let access = crate::authz::catalog::CatalogAccess::load(env, pool, &user_ctx.user_id).await?;
     let ids = agents
         .iter()
         .filter(|a| a.enabled)
@@ -39,20 +68,8 @@ pub(crate) async fn list_agents_handler(
     let allowed = access
         .allowed(systemprompt::governance::authz::EntityKind::Agent, &ids)
         .await?;
-    let filtered: Vec<_> = agents
+    Ok(agents
         .into_iter()
         .filter(|a| a.enabled && allowed.contains(a.id.as_str()))
-        .collect();
-    Ok(Json(AgentsListResponse { agents: filtered }).into_response())
-}
-
-pub(crate) async fn get_agent_handler(
-    Extension(env): Extension<AdminEnv>,
-    Path(agent_id): Path<String>,
-) -> AdminResult<Response> {
-    let services_path = shared::get_services_path(&env);
-    let agent = repositories::config::agents::find_agent(&services_path, &AgentId::new(agent_id))
-        .map_err(AdminError::internal)?
-        .ok_or_else(|| AdminError::NotFound("Agent not found".to_owned()))?;
-    Ok(Json(agent).into_response())
+        .collect())
 }

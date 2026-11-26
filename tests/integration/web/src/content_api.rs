@@ -16,7 +16,7 @@ use std::sync::Arc;
 use axum::Router;
 use axum::body::Body;
 use axum::extract::{Json as JsonExtract, Path as PathExtract, State};
-use axum::http::{HeaderMap, Request, StatusCode, header};
+use axum::http::{Request, StatusCode, header};
 use http_body_util::BodyExt as _;
 use serde_json::{Value, json};
 use systemprompt::identifiers::{CampaignId, LinkClickId, LinkId, SessionId, SourceId};
@@ -787,81 +787,4 @@ async fn getting_an_article_that_does_not_exist_is_a_404() {
     );
 
     db.cleanup().await;
-}
-
-#[tokio::test]
-async fn setting_a_session_issues_an_access_cookie_and_a_refresh_cookie() {
-    let (headers, _) = systemprompt_web_shared::session_cookie::set_session(
-        State(systemprompt_web_shared::session_cookie::CookieSecure(true)),
-        axum::Json(systemprompt_web_shared::session_cookie::SetSessionRequest {
-            access_token: "access-abc".to_owned(),
-            expires_in: Some(120),
-            refresh_token: Some("refresh-xyz".to_owned()),
-        }),
-    )
-    .await;
-
-    let cookies = set_cookies(&headers);
-    assert_eq!(cookies.len(), 2, "both cookies are issued");
-    assert!(
-        cookies[0]
-            .starts_with("access_token=access-abc; Path=/; HttpOnly; SameSite=Lax; Max-Age=120")
-    );
-    assert!(
-        cookies[0].contains("; Secure"),
-        "a secure-cookie mount sets Secure"
-    );
-    assert!(cookies[1].contains("refresh_token=refresh-xyz"));
-    assert!(
-        cookies[1].contains("Path=/api/public/auth"),
-        "the refresh cookie is scoped to the refresh endpoint"
-    );
-}
-
-#[tokio::test]
-async fn a_session_with_no_refresh_token_issues_only_the_access_cookie() {
-    let (headers, body) = systemprompt_web_shared::session_cookie::set_session(
-        State(systemprompt_web_shared::session_cookie::CookieSecure(true)),
-        axum::Json(systemprompt_web_shared::session_cookie::SetSessionRequest {
-            access_token: "access-only".to_owned(),
-            expires_in: None,
-            refresh_token: None,
-        }),
-    )
-    .await;
-
-    assert!(body.ok);
-    let cookies = set_cookies(&headers);
-    assert_eq!(cookies.len(), 1);
-    assert!(
-        cookies[0].contains("Max-Age=3600"),
-        "an unspecified lifetime defaults to an hour: {}",
-        cookies[0]
-    );
-}
-
-#[tokio::test]
-async fn clearing_a_session_expires_both_cookies() {
-    let (headers, body) = systemprompt_web_shared::session_cookie::clear_session(State(
-        systemprompt_web_shared::session_cookie::CookieSecure(true),
-    ))
-    .await;
-
-    assert!(body.ok);
-    let cookies = set_cookies(&headers);
-    assert_eq!(cookies.len(), 2);
-    for cookie in &cookies {
-        assert!(
-            cookie.contains("Max-Age=0"),
-            "every cleared cookie expires immediately: {cookie}"
-        );
-    }
-}
-
-fn set_cookies(headers: &HeaderMap) -> Vec<String> {
-    headers
-        .get_all(header::SET_COOKIE)
-        .iter()
-        .map(|v| v.to_str().expect("cookies are ASCII").to_owned())
-        .collect()
 }

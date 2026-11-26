@@ -50,16 +50,27 @@ async fn extract_user_with_audiences(
     audiences: &[JwtAudience],
 ) -> Result<crate::types::CookieSession, AdminError> {
     let token = extract_token_from_headers(headers)?;
-    let (context, user) = crate::services::auth::verify_bearer(env, &token, audiences).await?;
+    session_from_token(env, &token, audiences)
+        .await
+        .map(|(session, _)| session)
+}
+
+pub(crate) async fn session_from_token(
+    env: &AdminEnv,
+    token: &str,
+    audiences: &[JwtAudience],
+) -> Result<(crate::types::CookieSession, i64), AdminError> {
+    let (context, user) = crate::services::auth::verify_bearer(env, token, audiences).await?;
     crate::types::NotSignedIn::refuse_token(context.user_type)
         .map_err(AdminError::unauthenticated)?;
     let email = Email::try_new(user.email).map_err(AdminError::unauthenticated)?;
-    Ok(crate::types::CookieSession {
+    let session = crate::types::CookieSession {
         user_id: context.user_id,
         username: user.name,
         email,
         session_id: Some(context.session_id),
-    })
+    };
+    Ok((session, context.exp))
 }
 
 pub(crate) fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, AdminError> {

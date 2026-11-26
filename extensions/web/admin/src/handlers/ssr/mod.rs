@@ -183,7 +183,10 @@ pub(crate) async fn login_page(
         return Ok(Redirect::to(target).into_response());
     }
 
-    let redirect_encoded = sanitize_login_redirect(params.redirect.as_deref())
+    let redirect_encoded = params
+        .redirect
+        .as_deref()
+        .and_then(systemprompt_web_shared::redirect::same_origin_path)
         .map(|target| urlencoding::encode(&target).into_owned());
 
     let ctx = LoginContext {
@@ -193,11 +196,6 @@ pub(crate) async fn login_page(
     };
     let html = engine.render("login", &ctx)?;
     Ok(Html(html).into_response())
-}
-
-fn sanitize_login_redirect(raw: Option<&str>) -> Option<String> {
-    let raw = raw?.trim();
-    (raw.starts_with('/') && !raw.starts_with("//")).then(|| raw.to_owned())
 }
 
 pub(crate) mod analysis;
