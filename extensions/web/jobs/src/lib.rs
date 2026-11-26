@@ -32,7 +32,7 @@ pub use registry::contribute_jobs;
 
 pub use ingestion::ContentIngestionJob;
 pub use llms_txt::LlmsTxtGenerationJob;
-pub use publish::PublishPipelineJob;
+pub use publish::{PublishConfig, PublishPipelineJob};
 pub use robots::RobotsTxtGenerationJob;
 
 /// The pure helpers behind the jobs above, re-exported for the external test

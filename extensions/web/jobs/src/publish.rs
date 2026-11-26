@@ -42,6 +42,12 @@ impl PipelineStats {
     }
 }
 
+/// The runtime configuration the sitemap step reads. `ConfigView` is an
+/// install seed that job contexts do not carry, so the web member provides
+/// it, sealed, to its own jobs.
+#[derive(Debug, Clone)]
+pub struct PublishConfig(pub Arc<ConfigView>);
+
 #[derive(Debug, Clone, Copy)]
 pub struct PublishPipelineJob {
     assets: AssetDeclaration,
@@ -176,9 +182,9 @@ impl PublishPipelineJob {
         let outcome = async {
             let db_pool = ctx.get::<DbPool>()?;
             let paths = ctx.get::<Arc<AppPaths>>()?.as_ref();
-            let config = ctx.get::<Arc<ConfigView>>()?;
+            let config = ctx.get::<PublishConfig>()?;
             let content_repo = systemprompt::content::ContentRepository::new(db_pool);
-            generate_sitemap(content_repo, config, paths).await?;
+            generate_sitemap(content_repo, &config.0, paths).await?;
             Ok::<(), JobError>(())
         }
         .await;
