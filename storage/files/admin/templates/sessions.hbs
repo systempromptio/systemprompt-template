@@ -6,7 +6,7 @@
         title="Sessions"
         subtitle="Every conversation in the window — one row per Claude Code run or gateway context, with its turns, tool calls and cost. Open one to read it."}}
       {{#*inline "header_meta"}}
-        <span class="sp-session-current">{{#if current.session_url}}This browser: <a href="{{current.session_url}}"><code class="sp-code-inline" title="{{current.session_id}}">{{current.session_id_short}}</code></a>{{else}}This browser's token carries no session id{{/if}}</span>
+        <span class="sp-session-current">{{#if current.session_id}}This browser: {{#if current.session_url}}<a href="{{current.session_url}}"><code class="sp-code-inline" title="{{current.session_id}}">{{current.session_id_short}}</code></a>{{else}}<code class="sp-code-inline" title="{{current.session_id}}">{{current.session_id_short}}</code> (no AI activity yet){{/if}}{{else}}This browser's token carries no session id{{/if}}</span>
       {{/inline}}
       {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/contexts">Conversations</a>

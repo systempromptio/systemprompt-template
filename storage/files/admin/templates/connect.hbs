@@ -77,7 +77,7 @@
                             <div class="sp-p-connect__ready" data-connect-ready hidden>
                                 <p class="sp-p-connect__label">Linux, WSL and macOS terminal</p>
                                 <pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>
-                                <p class="sp-p-connect__lede">Open a new terminal and run <code class="sp-u-mono">claude</code>. Send your first message, then <a href="/admin/history">view your conversation</a> to check that it reached this gateway.</p>
+                                <p class="sp-p-connect__lede">Open a new terminal and run <code class="sp-u-mono">claude</code>. Send your first message, then {{#if @root.pages.history}}<a href="{{@root.pages.history}}">view your conversation</a>{{else}}view your conversation{{/if}} to check that it reached this gateway.</p>
                                 <details class="sp-p-connect__advanced"><summary>Already have the bridge? Sign in again</summary>
                                 <pre class="sp-connect__cmd"><code data-connect-field="login_command"></code></pre>
                                 </details>
