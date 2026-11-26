@@ -11,14 +11,14 @@ ref="$(tr -d '[:space:]' < "$ref_file")"
 }
 version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$core/Cargo.toml" | head -1)"
 names=" systemprompt $(awk '/^systemprompt.* =.*path =/ { print $1 }' "$core/Cargo.toml" | tr '\n' ' ') "
-for manifest in Cargo.toml tests/Cargo.toml crates/tests/Cargo.toml; do
+for manifest in Cargo.toml tests/Cargo.toml crates/tests/Cargo.toml extensions/harness/Cargo.toml; do
     [ -f "$manifest" ] || continue
     grep -q '^\[patch\.crates-io\]' "$manifest" || {
         echo "$manifest must override core in next builds" >&2
         exit 1
     }
 done
-for lock in Cargo.lock tests/Cargo.lock crates/tests/Cargo.lock bridge/Cargo.lock; do
+for lock in Cargo.lock tests/Cargo.lock crates/tests/Cargo.lock extensions/harness/Cargo.lock bridge/Cargo.lock; do
     [ -f "$lock" ] || continue
     awk -v names="$names" -v expected="$version" -v lock="$lock" '
         function check() {

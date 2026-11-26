@@ -27,7 +27,7 @@ cd "$(dirname "$0")/.."
 
 fail=0
 
-declared=$(for flavour in $(python3 scripts/flavour.py list); do
+declared=$(for flavour in $(python3 scripts/flavour.py list --artefact image); do
     python3 scripts/flavour.py get "$flavour" binaries
 done | sort -u)
 
@@ -61,7 +61,7 @@ while IFS= read -r file; do
             candidates=("$src")
             case "$src" in *'${FLAVOUR}'*)
                 candidates=()
-                for flavour in $(python3 scripts/flavour.py list); do candidates+=("${src//'${FLAVOUR}'/$flavour}"); done ;;
+                for flavour in $(python3 scripts/flavour.py list --artefact image); do candidates+=("${src//'${FLAVOUR}'/$flavour}"); done ;;
             esac
             for candidate in "${candidates[@]}"; do
                 # Tracked, not merely present: a glob that matches no tracked

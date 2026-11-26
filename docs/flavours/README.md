@@ -1,16 +1,24 @@
 # Flavours
 
-A flavour is a named build of this template: one cargo feature on the root
-crate (`flavour-<name>`), the binaries it ships, the parts of `services/` it
-loads, and what its image and local install do at boot. Every flavour is a real
-feature subset: a capability a flavour does not name is not compiled in, so its
-routes, CLI groups, jobs and tables are absent rather than switched off.
+A flavour is a named build of this template. Its `artefact` says what the
+build produces:
 
-`flavours/index.yaml` lists the flavours in order. Each has a directory:
+- `image` (the default, and every flavour but one): a server image. One cargo
+  feature on the root crate (`flavour-<name>`), the binaries it ships, the
+  parts of `services/` it loads, and what its image and local install do at
+  boot. Every image flavour is a real feature subset: a capability a flavour
+  does not name is not compiled in, so its routes, CLI groups, jobs and tables
+  are absent rather than switched off.
+- `desktop`: installers for Windows, macOS and Linux, built from a cargo
+  workspace of its own. `harness` is the one desktop flavour; see
+  [The desktop flavour](#the-desktop-flavour).
+
+`flavours/index.yaml` lists the flavours in order. Each image flavour has a
+directory:
 
 | File | Holds |
 |---|---|
-| `flavours/<name>/flavour.yaml` | description, `cargo_feature`, `extra_features`, `binaries`, the shared `services` subtrees, `requires_ai_key`, `site`, `runtime` (`slim` or `full`) and the `smoke` expectations |
+| `flavours/<name>/flavour.yaml` | `name`, `description`, `artefact` (`image` when omitted), `cargo_feature`, `extra_features`, `binaries`, the shared `services` subtrees, `requires_ai_key`, `site`, `runtime` (`slim` or `full`) and the `smoke` expectations |
 | `flavours/<name>/profile.overlay.yaml` | profile keys set on top of what `admin setup` writes |
 | `flavours/<name>/services/` | overrides copied over the shared subtrees; every subset flavour overrides `scheduler/config.yaml` (only the jobs it compiles: core refuses to boot on a configured job no member contributes) and `config/config.yaml` (only the includes of the subtrees it ships) |
 | `flavours/<name>/README.md` | how to run it |
@@ -19,6 +27,31 @@ routes, CLI groups, jobs and tables are absent rather than switched off.
 `get <name> <key>`, `features <name>`, `matrix`, `check`); every script,
 recipe and workflow asks it. It runs on any `python3` with PyYAML
 (`python3-yaml`), which the setup scripts already need.
+
+`get <name> artefact` prints `image` or `desktop` for every flavour.
+`list` and `matrix` take `--artefact image|desktop` to keep one kind, and
+`matrix` prints `{"flavour", "artefact"}` objects, so a workflow builds its
+matrix from the kind it can build: the `Flavours` workflow asks for
+`--artefact image`. `features <name>` answers for image flavours only.
+
+## The desktop flavour
+
+`flavours/harness/` holds `flavour.yaml` and `README.md`, nothing else.
+Its `flavour.yaml` sets `name`, `description`, `artefact: desktop` and
+`workspace`, the directory of the cargo workspace it is built from
+(`extensions/harness`, separate from the root workspace, with its own
+`Cargo.lock`). `check` requires that workspace to exist and refuses, on a
+desktop flavour, every key and file an image reads: `cargo_feature`,
+`extra_features`, `binaries`, `services`, `requires_ai_key`, `site`,
+`runtime`, `smoke`, `profile.overlay.yaml` and a `services/` directory.
+For image flavours `check` is as strict as before.
+
+`scripts/flavour-build.sh`, `flavour-smoke.sh`, `flavour-metrics.sh` and
+`flavour-setup.sh` branch on `artefact`. The workspace has no members yet,
+so for a desktop flavour each prints that the desktop build arrives in stage
+S1 of the harness programme and exits 0; `metrics all` measures the image
+flavours. The `Harness` workflow runs the desktop flavour's jobs on the three
+systems. Everything below this section describes image flavours.
 
 ## The flavours
 

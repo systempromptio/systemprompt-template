@@ -1,0 +1,194 @@
+# Desktop shell workspace for the Enterprise Demo template.
+#
+# Kept as a SEPARATE workspace (the root [workspace] lists it under `exclude`)
+# with its own Cargo.lock, so the server image never compiles the window
+# toolkit and the desktop build never compiles the server closure. The crates
+# that land under this directory are the only ones in the repository that link
+# the window toolkit.
+#
+# It has no members yet: README.md names the crates that arrive and where they
+# come from. Until the first one lands, `cargo metadata` resolves the
+# workspace and every command that needs a package to act on (check, build,
+# clippy, fmt, test) reports that there is none.
+#
+# rust-toolchain.toml, rustfmt.toml, clippy.toml and deny.toml are the
+# template's: rustup, rustfmt, clippy and cargo-deny each find them by walking
+# up from this directory, the same way the tests/ workspace does.
+[workspace]
+members = []
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.96"
+version = "0.70.0"
+authors = ["systemprompt.io <ed@systemprompt.io>"]
+license = "MIT"
+repository = "https://github.com/systempromptio/systemprompt-template"
+homepage = "https://systemprompt.io"
+documentation = "https://systemprompt.io/documentation"
+
+# The root workspace's lint table, unchanged. [workspace.lints] is read per
+# workspace, so the shell carries its own copy; keep the two identical.
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+
+cargo_common_metadata = "allow"
+multiple_crate_versions = "allow"
+return_self_not_must_use = "allow"
+must_use_candidate = "allow"
+trivially_copy_pass_by_ref = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+cast_precision_loss = "allow"
+cast_possible_wrap = "allow"
+format_push_string = "allow"
+uninlined_format_args = "allow"
+result_unit_err = "allow"
+missing_docs_in_private_items = "allow"
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+derive_partial_eq_without_eq = "allow"
+cognitive_complexity = "allow"
+unwrap_or_default = "allow"
+redundant_pub_crate = "allow"
+
+too_many_arguments = "deny"
+type_complexity = "warn"
+too_many_lines = "warn"
+inefficient_to_string = "warn"
+unnecessary_wraps = "warn"
+unused_async = "warn"
+
+if_not_else = "warn"
+redundant_else = "warn"
+manual_let_else = "warn"
+match_bool = "warn"
+option_if_let_else = "warn"
+needless_pass_by_value = "warn"
+items_after_statements = "warn"
+semicolon_if_nothing_returned = "warn"
+
+or_fun_call = "warn"
+redundant_clone = "warn"
+unnecessary_to_owned = "warn"
+implicit_clone = "warn"
+large_futures = "warn"
+
+match_wild_err_arm = "warn"
+
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+let_underscore_must_use = "deny"
+let_underscore_future = "deny"
+exit = "deny"
+rc_mutex = "deny"
+mem_forget = "deny"
+await_holding_lock = "deny"
+await_holding_refcell_ref = "deny"
+lossy_float_literal = "deny"
+read_zero_byte_vec = "deny"
+path_buf_push_overwrite = "deny"
+verbose_file_reads = "deny"
+empty_structs_with_brackets = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+clone_on_ref_ptr = "warn"
+separated_literal_suffix = "warn"
+try_err = "warn"
+
+map_err_ignore = "warn"
+str_to_string = "warn"
+undocumented_unsafe_blocks = "warn"
+self_named_module_files = "warn"
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+missing_debug_implementations = "warn"
+missing_copy_implementations = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+unused_import_braces = "warn"
+unused_qualifications = "warn"
+variant_size_differences = "warn"
+unreachable_pub = "warn"
+unused_lifetimes = "warn"
+single_use_lifetimes = "warn"
+
+# The override set for building against an unreleased systemprompt-core: the
+# root manifest's set, with each path re-based to this directory. It is inert
+# here; `scripts/core-patch.sh on` renames the table to [patch.crates-io] in
+# both manifests and hides them and their lockfiles from git.
+[workspace.metadata.unreleased-core-patch]
+systemprompt-provider-contracts = { path = "../../../core-f-compose/crates/shared/provider-contracts" }
+systemprompt-identifiers = { path = "../../../core-f-compose/crates/shared/identifiers" }
+systemprompt-traits = { path = "../../../core-f-compose/crates/shared/traits" }
+systemprompt-models = { path = "../../../core-f-compose/crates/shared/models" }
+systemprompt-wire = { path = "../../../core-f-compose/crates/shared/wire" }
+systemprompt-manifest = { path = "../../../core-f-compose/crates/shared/manifest" }
+systemprompt-client = { path = "../../../core-f-compose/crates/shared/client" }
+systemprompt-extension = { path = "../../../core-f-compose/crates/shared/extension" }
+systemprompt-template-provider = { path = "../../../core-f-compose/crates/shared/template-provider" }
+systemprompt-database = { path = "../../../core-f-compose/crates/infra/database" }
+systemprompt-storage = { path = "../../../core-f-compose/crates/infra/storage" }
+systemprompt-logging = { path = "../../../core-f-compose/crates/infra/logging" }
+systemprompt-config = { path = "../../../core-f-compose/crates/infra/config" }
+systemprompt-events = { path = "../../../core-f-compose/crates/infra/events" }
+systemprompt-security = { path = "../../../core-f-compose/crates/infra/security" }
+systemprompt-governance = { path = "../../../core-f-compose/crates/infra/governance" }
+systemprompt-cloud = { path = "../../../core-f-compose/crates/infra/cloud" }
+systemprompt-loader = { path = "../../../core-f-compose/crates/infra/loader" }
+systemprompt-users = { path = "../../../core-f-compose/crates/domain/users" }
+systemprompt-oauth = { path = "../../../core-f-compose/crates/domain/oauth" }
+systemprompt-files = { path = "../../../core-f-compose/crates/domain/files" }
+systemprompt-analytics = { path = "../../../core-f-compose/crates/domain/analytics" }
+systemprompt-content = { path = "../../../core-f-compose/crates/domain/content" }
+systemprompt-mcp = { path = "../../../core-f-compose/crates/domain/mcp" }
+systemprompt-ai = { path = "../../../core-f-compose/crates/domain/ai" }
+systemprompt-agent = { path = "../../../core-f-compose/crates/domain/agent" }
+systemprompt-templates = { path = "../../../core-f-compose/crates/domain/templates" }
+systemprompt-marketplace = { path = "../../../core-f-compose/crates/domain/marketplace" }
+systemprompt-slack = { path = "../../../core-f-compose/crates/domain/slack" }
+systemprompt-teams = { path = "../../../core-f-compose/crates/domain/teams" }
+systemprompt-notifications = { path = "../../../core-f-compose/crates/domain/notifications" }
+systemprompt-brain = { path = "../../../core-f-compose/crates/domain/brain" }
+systemprompt-runtime = { path = "../../../core-f-compose/crates/app/runtime" }
+systemprompt-agent-runs = { path = "../../../core-f-compose/crates/app/agent-runs" }
+systemprompt-mcp-host = { path = "../../../core-f-compose/crates/app/mcp-host" }
+systemprompt-documents = { path = "../../../core-f-compose/crates/app/documents" }
+systemprompt-oauth-issuance = { path = "../../../core-f-compose/crates/app/oauth-issuance" }
+systemprompt-issues = { path = "../../../core-f-compose/crates/app/issues" }
+systemprompt-scheduler = { path = "../../../core-f-compose/crates/app/scheduler" }
+systemprompt-generator = { path = "../../../core-f-compose/crates/app/generator" }
+systemprompt-gateway = { path = "../../../core-f-compose/crates/app/gateway" }
+systemprompt-api = { path = "../../../core-f-compose/crates/entry/api" }
+systemprompt-cli = { path = "../../../core-f-compose/crates/entry/cli" }
+systemprompt-slack-entry = { path = "../../../core-f-compose/crates/entry/slack" }
+systemprompt-teams-entry = { path = "../../../core-f-compose/crates/entry/teams" }
+systemprompt-agent-runs-entry = { path = "../../../core-f-compose/crates/entry/agent-runs" }
+systemprompt-notifications-entry = { path = "../../../core-f-compose/crates/entry/notifications" }
+systemprompt-cloud-entry = { path = "../../../core-f-compose/crates/entry/cloud" }
+systemprompt-analytics-entry = { path = "../../../core-f-compose/crates/entry/analytics" }
+systemprompt-content-entry = { path = "../../../core-f-compose/crates/entry/content" }
+systemprompt-marketplace-entry = { path = "../../../core-f-compose/crates/entry/marketplace" }
+systemprompt-files-entry = { path = "../../../core-f-compose/crates/entry/files" }
+systemprompt-mcp-entry = { path = "../../../core-f-compose/crates/entry/mcp" }
+systemprompt-agent-entry = { path = "../../../core-f-compose/crates/entry/agent" }
+systemprompt-brain-entry = { path = "../../../core-f-compose/crates/entry/brain" }
+systemprompt-gateway-entry = { path = "../../../core-f-compose/crates/entry/gateway" }
+systemprompt-identity-entry = { path = "../../../core-f-compose/crates/entry/identity" }
+systemprompt = { path = "../../../core-f-compose/systemprompt" }

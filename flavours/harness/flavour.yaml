@@ -1,0 +1,8 @@
+# harness: the desktop app, built from its own cargo workspace
+# Read by scripts/flavour.py (the only reader); docs/flavours/README.md
+# describes every key. A desktop flavour produces installers, not an image,
+# so it sets none of the keys an image flavour needs.
+name: harness
+description: "The desktop app for Windows, macOS and Linux: installers built from extensions/harness, not an image"
+artefact: desktop
+workspace: extensions/harness

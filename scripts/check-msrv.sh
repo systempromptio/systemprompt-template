@@ -29,6 +29,16 @@ if [ -z "$root_msrv" ]; then
     echo "error: no rust-version in Cargo.toml" >&2
     exit 1
 fi
+# Why: the desktop shell is a separate workspace built by the same toolchain
+# file, so its declared MSRV must be the root's. Only the number is compared:
+# the workspace has no member to check until its first crate lands.
+harness_msrv=$(read_msrv extensions/harness/Cargo.toml)
+if [ "$root_msrv" != "$harness_msrv" ]; then
+    echo "error: the root and shell workspaces declare different MSRVs — they must agree:" >&2
+    echo "  Cargo.toml:                    $root_msrv" >&2
+    echo "  extensions/harness/Cargo.toml: ${harness_msrv:-none}" >&2
+    exit 1
+fi
 if [ -n "$bridge_msrv" ] && [ "$root_msrv" != "$bridge_msrv" ]; then
     echo "error: the two workspaces declare different MSRVs — they must agree:" >&2
     echo "  Cargo.toml:        $root_msrv" >&2

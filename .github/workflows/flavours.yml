@@ -1,11 +1,13 @@
 name: Flavours
 
-# Every flavour in flavours/index.yaml: the flavour lint, then per flavour the
-# query gate (scripts/check-flavour-queries.sh: every compile-checked query
-# against a database that flavour migrated), a clean and a cached image build
-# with deploy metrics (scripts/flavour-metrics.sh --image) and the image smoke
-# (scripts/flavour-smoke.sh). Metrics JSON and the
-# smoke results are uploaded; table.md is appended to the job summary.
+# Every flavour in flavours/index.yaml: the flavour lint, then per image
+# flavour the query gate (scripts/check-flavour-queries.sh: every
+# compile-checked query against a database that flavour migrated), a clean and
+# a cached image build with deploy metrics (scripts/flavour-metrics.sh --image)
+# and the image smoke (scripts/flavour-smoke.sh). Metrics JSON and the smoke
+# results are uploaded; table.md is appended to the job summary. A desktop
+# flavour (artefact: desktop) is linted here and built by its own workflow,
+# never by this matrix.
 #
 # A runner has no sibling core checkout. While Cargo.toml carries the
 # unreleased-core override table (scripts/core-patch.sh), core cannot be
@@ -38,7 +40,7 @@ jobs:
       - run: bash scripts/check-flavours.sh
       - id: plan
         run: |
-          echo "flavours=$(python3 scripts/flavour.py matrix)" >> "$GITHUB_OUTPUT"
+          echo "flavours=$(python3 scripts/flavour.py matrix --artefact image)" >> "$GITHUB_OUTPUT"
           if grep -qE '^\[(workspace\.metadata\.unreleased-core-patch|patch\.crates-io)\]' Cargo.toml; then
             echo "buildable=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Cargo.toml overrides core with a sibling checkout; flavour images build once core is pinned by git rev."
@@ -55,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavour: ${{ fromJSON(needs.plan.outputs.flavours) }}
+        include: ${{ fromJSON(needs.plan.outputs.flavours) }}
     env:
       FLAVOUR_QUERIES_ADMIN_URL: postgres://queries:queries@localhost:5432/queries
     services:
@@ -90,7 +92,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavour: ${{ fromJSON(needs.plan.outputs.flavours) }}
+        include: ${{ fromJSON(needs.plan.outputs.flavours) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/reclaim-disk

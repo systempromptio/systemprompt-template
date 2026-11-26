@@ -4,6 +4,8 @@ set dotenv-load
 # value into two arguments before the CLI ever parses it.
 set positional-arguments
 
+import 'harness.just'
+
 # The flavour every build, run and test recipe targets (flavours/index.yaml;
 # `just flavours` lists them). Each flavour builds into its own target dir and
 # runs its own profile, so two flavours never invalidate each other's build.
@@ -67,9 +69,14 @@ _db-url:
 # BUILD & CHECK
 # ══════════════════════════════════════════════════════════════════════════════
 
+# Guard: build, check and clippy compile the root package, which only an image
+# flavour names; for a desktop flavour flavour.py's message is the whole answer.
+_image-flavour:
+    @python3 scripts/flavour.py features {{FLAVOUR}}
+
 # Build (Windows) - always uses offline mode
 [windows]
-build *FLAGS:
+build *FLAGS: _image-flavour
     $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo build -p systemprompt-template --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Build (Unix) - one build in flight at a time, always of the latest source;
@@ -92,7 +99,7 @@ build-force *FLAGS:
 
 # The real build. Call `just build` instead - this one skips coordination.
 [unix]
-_build-uncoordinated *FLAGS:
+_build-uncoordinated *FLAGS: _image-flavour
     #!/usr/bin/env bash
     set -euo pipefail
     bash scripts/check-core-ref.sh
@@ -102,12 +109,12 @@ _build-uncoordinated *FLAGS:
     SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo build -p systemprompt-template --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Type-check the selected flavour's root package (offline).
-check *FLAGS:
+check *FLAGS: _image-flavour
     SQLX_OFFLINE=true CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}" cargo check -p systemprompt-template --locked --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}}
 
 # Clippy (Windows) - always uses offline mode
 [windows]
-clippy *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
+clippy *FLAGS: _image-flavour lint-no-synthesis lint-no-untyped-admin lint-gates
     $env:SQLX_OFFLINE="true"; $env:CARGO_TARGET_DIR="{{FLAVOUR_TARGET}}"; cargo clippy -p systemprompt-template --no-default-features --features "$(python3 scripts/flavour.py features {{FLAVOUR}})" {{FLAGS}} -- -D warnings
 
 # Clippy (Unix) - single-flight, same coordinator as `just build`
@@ -117,7 +124,7 @@ clippy *FLAGS:
 
 # The real clippy. Call `just clippy` instead - this one skips coordination.
 [unix]
-_clippy-uncoordinated *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
+_clippy-uncoordinated *FLAGS: _image-flavour lint-no-synthesis lint-no-untyped-admin lint-gates
     #!/usr/bin/env bash
     set -euo pipefail
     export CC="${CC:-clang}"
@@ -928,7 +935,7 @@ docker-build FLAVOUR=FLAVOUR *ARGS:
 docker-build-all:
     #!/usr/bin/env bash
     set -euo pipefail
-    for flavour in $(python3 scripts/flavour.py list); do
+    for flavour in $(python3 scripts/flavour.py list --artefact image); do
         bash scripts/flavour-build.sh "$flavour"
     done
 

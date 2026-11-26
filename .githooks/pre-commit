@@ -12,11 +12,12 @@ set -euo pipefail
 # table to [patch.crates-io] (next, while core is unreleased), and the
 # manifest then carries an "# ACTIVE: core X.Y.Z is unreleased" marker above
 # it to say so. This blocks an active patch that lacks the marker — i.e. a
-# developer's ad-hoc local pin leaking into a commit. `tests/` is a separate
-# cargo workspace with its own mirror of the patch ([patch] only applies
-# per-workspace), so both manifests are guarded.
+# developer's ad-hoc local pin leaking into a commit. `tests/` and
+# `extensions/harness/` are separate cargo workspaces, each with its own
+# mirror of the patch ([patch] only applies per-workspace), so every manifest
+# is guarded.
 violations=()
-for manifest in Cargo.toml tests/Cargo.toml; do
+for manifest in Cargo.toml tests/Cargo.toml extensions/harness/Cargo.toml; do
   git diff --cached --name-only | grep -qx "$manifest" || continue
   staged="$(git show ":$manifest" 2>/dev/null || true)"
   if printf '%s\n' "$staged" | grep -Eq '^\[patch\.crates-io\]'; then

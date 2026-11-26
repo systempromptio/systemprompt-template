@@ -56,11 +56,12 @@ gh() { mock_gh "$@"; }
 # only the patch-presence probe as well, rather than requiring the live branch
 # under test to be in main's published-core shape.
 grep() {
-    if [ "$#" -eq 4 ] \
+    if [ "$#" -eq 5 ] \
         && [ "$1" = -q ] \
         && [ "$2" = '^\[patch\.crates-io\]' ] \
         && [ "$3" = Cargo.toml ] \
-        && [ "$4" = tests/Cargo.toml ]; then
+        && [ "$4" = tests/Cargo.toml ] \
+        && [ "$5" = extensions/harness/Cargo.toml ]; then
         return 1
     fi
     # The changelog heading is written as part of the release commit; the

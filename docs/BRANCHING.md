@@ -9,7 +9,7 @@ them, and the tooling below keeps that honest.
 | Purpose | development; the coming release | released; every commit on it is a promotion merge with a `vX.Y.Z` tag |
 | Default branch | yes — a fresh clone starts here | protected by a ruleset: pull request only, no bypass |
 | Core | the published release, **or** core `next` through the sibling `../systemprompt-core` while the next core is unreleased | always the published release |
-| Core override | inert under `[workspace.metadata.unreleased-core-patch]`, or live as `[patch.crates-io]` (with the `# ACTIVE: core X.Y.Z is unreleased` marker) in **both** `Cargo.toml` and `tests/Cargo.toml` | inert |
+| Core override | inert under `[workspace.metadata.unreleased-core-patch]`, or live as `[patch.crates-io]` (with the `# ACTIVE: core X.Y.Z is unreleased` marker) in **every** workspace manifest: `Cargo.toml`, `tests/Cargo.toml` and `extensions/harness/Cargo.toml` (`scripts/core-patch.sh on|off` moves the root and the shell together) | inert |
 | `bridge/CORE_REF` | `vX.Y.Z` of the pinned core; a 40-char core `next` SHA while the patch is live (`just core-pin`) | `vX.Y.Z`, equal to the pin (`scripts/check-core-ref.sh`) |
 | CI on push | `.github/workflows/gates.yml` — the whole gate, nothing published | `docker.yml` re-verifies the merge and publishes `:edge` / `:sha-*`; `helm.yml`; `coverage.yml` measures |
 | Releases | — | the `vX.Y.Z` tag `just release` pushes at the merge starts `release-gateway.yml` |
@@ -78,8 +78,9 @@ Against unreleased core `next`:
 
 ```bash
 # Rename [workspace.metadata.unreleased-core-patch] to [patch.crates-io] in
-# Cargo.toml AND tests/Cargo.toml, add "# ACTIVE: core X.Y.Z is unreleased"
-# above each, and move the pins to the sibling's workspace version.
+# Cargo.toml, tests/Cargo.toml AND extensions/harness/Cargo.toml, add
+# "# ACTIVE: core X.Y.Z is unreleased" above each, and move the pins to the
+# sibling's workspace version.
 scripts/sync-core-version.sh X.Y.Z --check   # after editing the pins
 just core-pin                    # bridge/CORE_REF = the sibling's HEAD; commit it
 just verify
@@ -90,7 +91,9 @@ just deploy                      # runs core-guard: the sibling must be clean an
 `.githooks/pre-commit` (`just init-hooks`) blocks a live patch without the
 marker, so a personal local pin cannot leak into a commit. For a purely local
 experiment, keep the patch as a working-tree edit hidden with
-`git update-index --skip-worktree Cargo.toml Cargo.lock tests/Cargo.toml tests/Cargo.lock`.
+`scripts/core-patch.sh on` (the root and `extensions/harness` manifests and
+lockfiles) and
+`git update-index --skip-worktree tests/Cargo.toml tests/Cargo.lock`.
 
 Core changes are **write-only from here**: commit them on core's `next` and
 push — core's CI is their validation surface. `bridge/CORE_REF` must name a
@@ -102,7 +105,7 @@ queries into this repo's `.sqlx/`.
 ## Landing `next` on `main` (once core X.Y.Z is on crates.io)
 
 ```bash
-# Make the override inert again in BOTH manifests (back under
+# Make the override inert again in EVERY manifest (back under
 # [workspace.metadata.unreleased-core-patch], marker removed), then:
 just core-bump X.Y.Z             # every pin + CORE_REF, both lockfiles, local migrate, build, clippy
 just schema-baseline             # record tests/fixtures/schema/release-baseline-X.Y.Z.sql

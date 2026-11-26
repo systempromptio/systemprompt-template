@@ -22,6 +22,10 @@
 # --compare-images  measure nothing: print the bytes, gzip bytes, layers and
 #          systemprompt binary bytes of two built images, before and after
 # Writes target/flavour-metrics/<flavour>.json and target/flavour-metrics/table.md.
+# Every number here is an image flavour's. `all` is the image flavours; a
+# desktop flavour (artefact: desktop) named alone has nothing to measure until
+# its build arrives in stage S1 of the harness programme, so this says so and
+# exits 0.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
 
@@ -65,7 +69,17 @@ if [ "$do_image" = false ] && [ "$do_dev" = false ] && [ -z "$compare" ] && [ "$
 cd "$FLAVOUR_ROOT"
 out="$FLAVOUR_ROOT/target/flavour-metrics"
 mkdir -p "$out"
-if [ "$selection" = all ]; then mapfile -t flavours < <(flavour_py list); else flavour_require "$selection"; flavours=("$selection"); fi
+if [ "$selection" = all ]; then
+    mapfile -t flavours < <(flavour_py list --artefact image)
+else
+    flavour_require "$selection"
+    flavour="$selection"
+    if [ "$(flavour_get "$flavour" artefact)" = desktop ]; then
+        echo "flavour $flavour is a desktop artefact, not an image: the desktop build arrives in stage S1 of the harness programme, so there is nothing to measure yet"
+        exit 0
+    fi
+    flavours=("$selection")
+fi
 jobs=()
 if [ -n "${FLAVOUR_METRICS_JOBS:-}" ]; then jobs=(-j "$FLAVOUR_METRICS_JOBS"); fi
 
@@ -259,7 +273,7 @@ write_json() {
 
 write_table() {
     local rows=()
-    for flavour in $(flavour_py list); do [ -f "$out/$flavour.json" ] && rows+=("$out/$flavour.json"); done
+    for flavour in $(flavour_py list --artefact image); do [ -f "$out/$flavour.json" ] && rows+=("$out/$flavour.json"); done
     [ ${#rows[@]} -gt 0 ] || return 0
     jq -s -r '
         def mb: if . == null then "–" else (. / 1048576 * 10 | round / 10 | tostring) + " MiB" end;

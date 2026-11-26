@@ -40,7 +40,8 @@ override inert it must be `v<pin>` (`scripts/check-core-ref.sh`, a lint gate).
 **Building against unreleased core.** The override set lives inert under
 `[workspace.metadata.unreleased-core-patch]` in `Cargo.toml` and
 `tests/Cargo.toml`. To track core `next`, rename that table to
-`[patch.crates-io]` in **both** manifests (`[patch]` is per-workspace: patch
+`[patch.crates-io]` in **every** manifest (`scripts/core-patch.sh on` does the
+root and `extensions/harness`; `tests/` by hand — `[patch]` is per-workspace: patch
 the root alone and the tests quietly build against crates.io), add the
 `# ACTIVE: core X.Y.Z is unreleased` marker above each, and move the pins to
 the sibling's workspace version — for a 0.x crate a `0.61.0` pin does not
@@ -50,7 +51,7 @@ the published crate. The only proof the patch is live is the build log naming
 HEAD, push core first) and commit; `just deploy` runs `core-guard`, which
 refuses unless the sibling is clean and at CORE_REF. `.githooks/pre-commit`
 (`just init-hooks`) blocks a live patch without the marker; for a purely local
-experiment hide the four manifests/lockfiles with
+experiment hide the six manifests/lockfiles with
 `git update-index --skip-worktree`. Do not run `just prepare` while the patch
 is live. `main` never carries a live patch (`scripts/validate-release.sh`).
 

@@ -16,8 +16,9 @@ if awk '
     /^\[patch\.crates-io\]/ { live = 1 }
     !inert && /^[^#]*path.*(\.\.\/)+systemprompt-core/ { live = 1 }
     END { exit live ? 0 : 1 }
-' Cargo.toml tests/Cargo.toml; then
+' Cargo.toml tests/Cargo.toml extensions/harness/Cargo.toml; then
     echo "Release must resolve core from crates.io" >&2; exit 1
 fi
 cargo metadata --locked --no-deps --format-version 1 >/dev/null
 cargo metadata --manifest-path tests/Cargo.toml --locked --no-deps --format-version 1 >/dev/null
+cargo metadata --manifest-path extensions/harness/Cargo.toml --locked --no-deps --format-version 1 >/dev/null

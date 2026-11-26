@@ -41,7 +41,7 @@ push_tag() {
 [ -z "$(git status --porcelain)" ] || die 'working tree is not clean'
 branch="$(git branch --show-current)"
 [ -z "$branch" ] || [ "$branch" = next ] || die 'use next or a detached release worktree'
-! grep -q '^\[patch\.crates-io\]' Cargo.toml tests/Cargo.toml || die 'published releases cannot use local core patches'
+! grep -q '^\[patch\.crates-io\]' Cargo.toml tests/Cargo.toml extensions/harness/Cargo.toml || die 'published releases cannot use local core patches'
 scripts/sync-release-version.sh "$version" --check
 scripts/sync-core-version.sh --check
 bash scripts/check-core-ref.sh
