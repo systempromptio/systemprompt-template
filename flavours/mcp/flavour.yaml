@@ -31,10 +31,13 @@ smoke:
     - "/"
     - "/.well-known/jwks.json"
     - "/admin/"
+    - "/admin/login"
+    - "/css/admin-bundle.css"
+    - "/js/pages/admin-login.js"
+    - "/api/v1/mcp/registry"
   routes_absent:
     - "/sitemap.xml"
     - "/api/public/links"
-    - "/api/v1/agents/registry"
     - "/api/v1/agent-runs"
     - "/api/v1/brain"
     - "/api/public/search"
@@ -47,6 +50,9 @@ smoke:
     - "web"
     - "cloud"
     - "build"
+    - "admin mcp"
+    - "admin bridge"
+    - "admin agent-host"
   cli_groups_absent:
     - "admin agents"
   capabilities:
@@ -55,3 +61,4 @@ smoke:
   mcp_servers:
     - "systemprompt"
   models_endpoint: true
+  root_redirect: "/admin/"
