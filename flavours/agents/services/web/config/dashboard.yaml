@@ -13,9 +13,9 @@ home:
   - item: conversations
     title: "Conversations"
     note: "What everyone has been asking."
-  - item: traces
-    title: "Traces"
-    note: "Latency and failures across a run."
+  - item: mcp_servers
+    title: "MCP servers"
+    note: "The tool servers agents reach, and who may use them."
   - item: tools
     title: "Tools"
     note: "Every tool result, from every client."

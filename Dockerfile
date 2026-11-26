@@ -82,6 +82,14 @@ COPY scripts/flavour.py scripts/flavour-stage-services.sh /stage/scripts/
 COPY scripts/lib /stage/scripts/lib
 RUN bash scripts/flavour-stage-services.sh "$FLAVOUR" /staged/services
 
+# The storage tree the runtime serves from. Without the public site (SITE is
+# not true) the site's video assets are declared by no linked member, so they
+# are left out.
+FROM debian:bookworm-slim AS storage
+ARG SITE
+COPY storage /storage
+RUN if [ "$SITE" != true ]; then rm -rf /storage/files/video; fi
+
 # hey drives the demo/performance load tests; its upstream binary host answers
 # 403, so it is built from source.
 FROM golang:1-bookworm AS heybuilder
@@ -138,7 +146,7 @@ RUN useradd -m -u 1000 app \
 WORKDIR /app
 COPY --from=builder --chown=app:app --chmod=0755 /out/bin/ /app/bin/
 COPY --from=services --chown=app:app /staged/services /app/services
-COPY --chown=app:app storage /app/storage
+COPY --from=storage --chown=app:app /storage /app/storage
 COPY --chown=app:app web /app/web
 COPY --chown=app:app --chmod=0755 docker/entrypoint.sh /app/entrypoint.sh
 COPY --chown=app:app docker/migrate-profile.py docker/container-state.py /app/
