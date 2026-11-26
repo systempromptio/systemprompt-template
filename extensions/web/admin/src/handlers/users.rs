@@ -94,9 +94,16 @@ pub(crate) fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, 
 }
 
 pub(crate) async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> AdminResult<Response> {
-    let data =
-        repositories::dashboard::get_dashboard_data(&pool, "7 days", "4 hours", "today", "7d")
-            .await?;
+    let data = repositories::dashboard::get_dashboard_data(
+        &pool,
+        repositories::dashboard::DashboardWindows {
+            chart_interval: "7 days",
+            chart_bucket: "4 hours",
+            traffic_range: "today",
+            content_range: "7d",
+        },
+    )
+    .await?;
     Ok(Json(data).into_response())
 }
 

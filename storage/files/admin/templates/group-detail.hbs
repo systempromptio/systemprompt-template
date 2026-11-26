@@ -114,11 +114,12 @@
         {{/if}}
     </section>
 
+    {{#with overview.tool_panel}}
     <section class="sp-group-panel" aria-label="Top MCP tools">
         <h2 class="sp-section__title">Top MCP tools <span class="sp-group-panel__label">member view &mdash; overlaps</span></h2>
-        {{#if overview.tools}}
+        {{#if tools}}
         <ul class="sp-rank-list">
-            {{#each overview.tools}}
+            {{#each tools}}
             <li class="sp-rank-list__item">
                 <span class="sp-rank-list__name">{{name}}</span>
                 {{> components/share-bar share_pct=share_pct label=(concat name " share")}}
@@ -130,6 +131,7 @@
         {{> components/empty-state message="No MCP tool calls recorded for this group."}}
         {{/if}}
     </section>
+    {{/with}}
     </div>
     {{/if}}
 

@@ -30,7 +30,7 @@ pub(super) const ITEMS: &[NavItemDef] = &[
         external: false,
         attention: false,
         needs: None,
-        compiled: true,
+        compiled: cfg!(feature = "gateway"),
         icon: r#"<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M3.5 13V8.5M7 13V4.5M10.5 13V6.5M14 13V3" stroke-linecap="round"/></svg>"#,
     },
     NavItemDef {

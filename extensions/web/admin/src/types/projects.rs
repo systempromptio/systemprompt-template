@@ -27,9 +27,10 @@ pub struct ProjectSummary {
     pub name: String,
     pub description: Option<String>,
     pub member_count: i64,
-    pub active_members_30d: i64,
-    pub requests_30d: i64,
-    pub cost_30d_microdollars: i64,
+    #[cfg(feature = "gateway")]
+    #[serde(flatten)]
+    #[sqlx(flatten)]
+    pub usage: crate::types::Usage30d,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

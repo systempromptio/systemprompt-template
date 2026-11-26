@@ -5,30 +5,45 @@
 //! failed, so one broken aggregate costs the reader that panel and nothing
 //! else.
 
+#[cfg(feature = "gateway")]
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
+#[cfg(feature = "gateway")]
 use crate::handlers::ssr::format::{format_cost, short_num};
+#[cfg(feature = "gateway")]
 use crate::handlers::ssr::ssr_analytics_dashboard::{ms, qualifier, short_name};
+#[cfg(feature = "gateway")]
 use crate::repositories::analytics::site::models::ModelStatsRow;
+#[cfg(feature = "gateway")]
 use crate::repositories::overview::queues::{UsageAnomalyRow, anomaly_tone};
+#[cfg(feature = "gateway")]
 use crate::repositories::overview::scopes::ScopeCostRow;
 
-use super::data::{OverviewData, TOP_MODELS, TOP_SCOPES};
+use super::data::OverviewData;
+#[cfg(feature = "gateway")]
+use super::data::{Loaded, TOP_MODELS, TOP_SCOPES, UsageData};
+#[cfg(feature = "gateway")]
 use super::view::OverviewRange;
 
 #[derive(Debug, Serialize)]
-pub(super) struct QueuesView {
-    pub approvals_error: Option<String>,
-    pub approvals: i64,
-    pub approvals_tone: &'static str,
-    pub anomalies_error: Option<String>,
-    pub anomalies: Vec<OverviewAnomalyRowView>,
-    pub anomaly_count: usize,
-    pub anomalies_tone: &'static str,
-    pub has_anomalies: bool,
+pub(super) struct ApprovalsView {
+    pub error: Option<String>,
+    pub count: i64,
+    pub tone: &'static str,
 }
 
+#[cfg(feature = "gateway")]
+#[derive(Debug, Serialize)]
+pub(super) struct AnomaliesView {
+    pub error: Option<String>,
+    pub rows: Vec<OverviewAnomalyRowView>,
+    pub count: usize,
+    pub tone: &'static str,
+    pub has_rows: bool,
+}
+
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(super) struct OverviewAnomalyRowView {
     pub metric: &'static str,
@@ -39,6 +54,7 @@ pub(super) struct OverviewAnomalyRowView {
     pub severity_tone: &'static str,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(super) struct ModelsBoardView {
     pub error: Option<String>,
@@ -48,6 +64,7 @@ pub(super) struct ModelsBoardView {
     pub summary: String,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(super) struct OverviewModelRowView {
     pub model: String,
@@ -61,6 +78,7 @@ pub(super) struct OverviewModelRowView {
     pub is_unrouted: bool,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(super) struct ScopeBoardView {
     pub title: &'static str,
@@ -71,6 +89,7 @@ pub(super) struct ScopeBoardView {
     pub has_rows: bool,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(super) struct ScopeRowView {
     pub label: String,
@@ -81,35 +100,41 @@ pub(super) struct ScopeRowView {
     pub is_unattributed: bool,
 }
 
-pub(super) fn queues(data: &OverviewData) -> QueuesView {
-    let approvals = data.pending_approvals.as_ref().copied().unwrap_or(0);
-    let anomalies: Vec<OverviewAnomalyRowView> = data
-        .anomalies
+pub(super) fn approvals(data: &OverviewData) -> ApprovalsView {
+    let count = data.pending_approvals.as_ref().copied().unwrap_or(0);
+    ApprovalsView {
+        error: data
+            .pending_approvals
+            .as_ref()
+            .err()
+            .map(|e| format!("The approval queue could not be read: {e}")),
+        count,
+        tone: if count > 0 { "warn" } else { "ok" },
+    }
+}
+
+#[cfg(feature = "gateway")]
+pub(super) fn anomalies(data: &UsageData) -> AnomaliesView {
+    let loaded: &Loaded<Vec<UsageAnomalyRow>> = &data.anomalies;
+    let rows: Vec<OverviewAnomalyRowView> = loaded
         .as_deref()
         .unwrap_or(&[])
         .iter()
         .map(anomaly_row)
         .collect();
-    QueuesView {
-        anomalies_tone: worst_tone(&anomalies),
-        approvals_error: data
-            .pending_approvals
-            .as_ref()
-            .err()
-            .map(|e| format!("The approval queue could not be read: {e}")),
-        approvals,
-        approvals_tone: if approvals > 0 { "warn" } else { "ok" },
-        anomalies_error: data
-            .anomalies
+    AnomaliesView {
+        tone: worst_tone(&rows),
+        error: loaded
             .as_ref()
             .err()
             .map(|e| format!("Open anomalies could not be read: {e}")),
-        has_anomalies: !anomalies.is_empty(),
-        anomaly_count: anomalies.len(),
-        anomalies,
+        has_rows: !rows.is_empty(),
+        count: rows.len(),
+        rows,
     }
 }
 
+#[cfg(feature = "gateway")]
 fn anomaly_row(row: &UsageAnomalyRow) -> OverviewAnomalyRowView {
     let is_cost = row.metric == "cost";
     let show = |value: i64| {
@@ -133,6 +158,7 @@ fn anomaly_row(row: &UsageAnomalyRow) -> OverviewAnomalyRowView {
     }
 }
 
+#[cfg(feature = "gateway")]
 fn severity_display(observed: i64, baseline: i64) -> String {
     if baseline <= 0 {
         return "new".to_owned();
@@ -142,6 +168,7 @@ fn severity_display(observed: i64, baseline: i64) -> String {
 
 // Why: the tile above the table carries the worst row's colour, so an
 // operator sees red before they read a row.
+#[cfg(feature = "gateway")]
 fn worst_tone(rows: &[OverviewAnomalyRowView]) -> &'static str {
     if rows.iter().any(|r| r.severity_tone == "err") {
         "err"
@@ -155,7 +182,8 @@ fn worst_tone(rows: &[OverviewAnomalyRowView]) -> &'static str {
 // Why: the models the window actually ran, in the order the Models tab lists
 // them. Share is of every request the window carried, so the five rows shown
 // tell the reader how much of the traffic they are looking at.
-pub(super) fn models_board(range: OverviewRange, data: &OverviewData) -> ModelsBoardView {
+#[cfg(feature = "gateway")]
+pub(super) fn models_board(range: OverviewRange, data: &UsageData) -> ModelsBoardView {
     let rows = data.models.as_deref().unwrap_or(&[]);
     let total: i64 = rows.iter().map(|r| r.requests).sum();
     let preset = range.preset();
@@ -178,6 +206,7 @@ pub(super) fn models_board(range: OverviewRange, data: &OverviewData) -> ModelsB
     }
 }
 
+#[cfg(feature = "gateway")]
 fn model_row(r: &ModelStatsRow, total: i64, all_href: &str) -> OverviewModelRowView {
     OverviewModelRowView {
         model: r.model.clone(),
@@ -192,6 +221,7 @@ fn model_row(r: &ModelStatsRow, total: i64, all_href: &str) -> OverviewModelRowV
     }
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Clone, Copy)]
 pub(super) struct BoardSpec {
     pub title: &'static str,
@@ -200,6 +230,7 @@ pub(super) struct BoardSpec {
     pub unattributed: &'static str,
 }
 
+#[cfg(feature = "gateway")]
 pub(super) fn scope_board(
     spec: BoardSpec,
     loaded: &Result<Vec<ScopeCostRow>, sqlx::Error>,
@@ -227,6 +258,7 @@ pub(super) fn scope_board(
 // Why: the unattributed bucket is a real row with no page behind it — traffic
 // with no user, a job or MCP actor, or a person no primary container covers.
 // It is listed rather than dropped so the board sums back to the spend tile.
+#[cfg(feature = "gateway")]
 fn scope_row(row: &ScopeCostRow, total: i64, base: &str, absent: &str) -> ScopeRowView {
     let unattributed = row.is_unattributed();
     ScopeRowView {
@@ -243,6 +275,7 @@ fn scope_row(row: &ScopeCostRow, total: i64, base: &str, absent: &str) -> ScopeR
     }
 }
 
+#[cfg(feature = "gateway")]
 fn share_display(part: i64, total: i64) -> String {
     if total <= 0 {
         return "\u{2014}".to_owned();
@@ -252,6 +285,7 @@ fn share_display(part: i64, total: i64) -> String {
 
 // Why: an absolute timestamp makes a reader do the subtraction the state badge
 // already did. The elapsed time is the fact the row is about.
+#[cfg(feature = "gateway")]
 fn ago_display(now: DateTime<Utc>, ts: DateTime<Utc>) -> String {
     let secs = (now - ts).num_seconds().max(0);
     if secs < 60 {

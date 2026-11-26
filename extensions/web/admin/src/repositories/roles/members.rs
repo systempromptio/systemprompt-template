@@ -17,7 +17,9 @@ pub struct RoleHolderRow {
     pub is_active: bool,
     pub roles: Vec<String>,
     pub manual_roles: Vec<String>,
+    #[cfg(feature = "gateway")]
     pub requests_30d: i64,
+    #[cfg(feature = "gateway")]
     pub cost_30d_microdollars: i64,
 }
 
@@ -29,17 +31,14 @@ pub async fn list_role_holders(
     roles: &[String],
     limit: i64,
 ) -> Result<Vec<RoleHolderRow>, sqlx::Error> {
-    sqlx::query_as!(
-        RoleHolderRow,
+    let rows = sqlx::query!(
         r#"SELECT
                 u.id AS "user_id!: UserId",
                 COALESCE(u.display_name, u.full_name, u.name) AS display_name,
                 u.email AS "email?: Email",
                 (u.status = 'active') AS "is_active!",
                 r.roles AS "roles!: Vec<String>",
-                r.manual_roles AS "manual_roles!: Vec<String>",
-                COALESCE(a.requests, 0)::BIGINT AS "requests_30d!",
-                COALESCE(a.cost, 0)::BIGINT AS "cost_30d_microdollars!"
+                r.manual_roles AS "manual_roles!: Vec<String>"
            FROM users u
            CROSS JOIN LATERAL (
                 SELECT ARRAY_AGG(x ORDER BY x) AS roles,
@@ -51,13 +50,6 @@ pub async fn list_role_holders(
                   LEFT JOIN user_manual_roles m ON m.user_id = u.id AND m.role = x
                  WHERE x = ANY($1::TEXT[])
            ) r
-           LEFT JOIN LATERAL (
-                SELECT COUNT(*) AS requests,
-                       SUM(ar.cost_microdollars) AS cost
-                FROM ai_requests ar
-                WHERE ar.user_id = u.id
-                  AND ar.created_at >= NOW() - INTERVAL '30 days'
-           ) a ON TRUE
            WHERE r.roles IS NOT NULL
            ORDER BY LOWER(COALESCE(u.email, u.id))
            LIMIT $2"#,
@@ -65,5 +57,57 @@ pub async fn list_role_holders(
         limit,
     )
     .fetch_all(pool)
-    .await
+    .await?;
+    #[cfg(feature = "gateway")]
+    let spend = list_spend_30d(
+        pool,
+        &rows
+            .iter()
+            .map(|r| r.user_id.as_str().to_owned())
+            .collect::<Vec<_>>(),
+    )
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| {
+            #[cfg(feature = "gateway")]
+            let (requests_30d, cost_30d_microdollars) =
+                spend.get(r.user_id.as_str()).copied().unwrap_or_default();
+            RoleHolderRow {
+                user_id: r.user_id,
+                display_name: r.display_name,
+                email: r.email,
+                is_active: r.is_active,
+                roles: r.roles,
+                manual_roles: r.manual_roles,
+                #[cfg(feature = "gateway")]
+                requests_30d,
+                #[cfg(feature = "gateway")]
+                cost_30d_microdollars,
+            }
+        })
+        .collect())
+}
+
+// Why: the gateway member's thirty-day requests and cost per holder, keyed by
+// the ids the holder read returned. A holder with no request has spent nothing.
+#[cfg(feature = "gateway")]
+async fn list_spend_30d(
+    pool: &PgPool,
+    ids: &[String],
+) -> Result<std::collections::HashMap<String, (i64, i64)>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"SELECT user_id AS "user_id!", COUNT(*)::BIGINT AS "requests!",
+                  COALESCE(SUM(cost_microdollars), 0)::BIGINT AS "cost!"
+           FROM ai_requests
+           WHERE user_id = ANY($1) AND created_at >= NOW() - INTERVAL '30 days'
+           GROUP BY user_id"#,
+        ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| (r.user_id, (r.requests, r.cost)))
+        .collect())
 }

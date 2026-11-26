@@ -100,6 +100,7 @@ pub mod test_support {
     };
     #[cfg(feature = "agents")]
     pub use crate::handlers::ssr::ssr_history::command_name as history_command_name;
+    #[cfg(feature = "agents")]
     pub use crate::handlers::ssr::transcript_view::{
         ConversationView, EmptyReason, ParsedAssistant, SideCallRowView, SideCallsView, StepView,
         ThreadView, ToolChipView, ToolUseMarker, TranscriptMetaView, TranscriptOptions,
@@ -121,10 +122,10 @@ pub fn hooks_webhook_router(
     let routes = Router::new()
         .route("/hooks/govern", post(handlers::govern_tool_use))
         .route("/govern/authz", post(handlers::govern_authz))
-        .route("/hooks/statusline", post(handlers::track_statusline_event))
-        .route("/hooks/transcript", post(handlers::track_transcript_event));
+        .route("/hooks/statusline", post(handlers::track_statusline_event));
     #[cfg(feature = "agents")]
     let routes = routes
+        .route("/hooks/transcript", post(handlers::track_transcript_event))
         .route(
             "/hooks/track",
             post(handlers::hooks_track::handle_hook_track),

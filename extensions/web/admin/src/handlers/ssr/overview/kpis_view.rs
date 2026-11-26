@@ -14,7 +14,7 @@ use crate::repositories::overview::kpis::OverviewKpis;
 use crate::repositories::overview::series::BUCKETS;
 use crate::util::delta::{Delta, delta};
 
-use super::data::OverviewData;
+use super::data::UsageData;
 use super::view::OverviewRange;
 
 #[derive(Debug, Serialize)]
@@ -43,7 +43,7 @@ pub(super) struct KpiTileView {
 // the floor the tiles say what the prior window held instead.
 const COMPARABLE_PRIOR_REQUESTS: i64 = 100;
 
-pub(super) fn kpi_strip(range: OverviewRange, data: &OverviewData) -> OverviewKpiStripView {
+pub(super) fn kpi_strip(range: OverviewRange, data: &UsageData) -> OverviewKpiStripView {
     let k = data.kpis.as_ref().copied().unwrap_or_default();
     // Why: one gate for all seven tiles rather than a floor per figure. Every
     // one of them is derived from the same prior window's traffic, so either
@@ -71,7 +71,7 @@ pub(super) fn kpi_strip(range: OverviewRange, data: &OverviewData) -> OverviewKp
 // Why: the request spine drawn as a real chart with axes, in the same
 // component every analytics page uses, so the shape of the day reads the same
 // here as it does one click deeper.
-pub(super) fn volume_chart(range: OverviewRange, data: &OverviewData) -> SvgLineChartView {
+pub(super) fn volume_chart(range: OverviewRange, data: &UsageData) -> SvgLineChartView {
     let buckets = data.buckets.as_deref().unwrap_or(&[]);
     let total: i64 = buckets.iter().sum();
     line_chart(LineChartSpec {

@@ -15,6 +15,7 @@
 //! [`acl_detect`], which is DB-backed but belongs to this domain: it re-runs
 //! the configured ACL over traffic that already went through.
 
+#[cfg(feature = "gateway")]
 pub mod acl_detect;
 pub mod agents;
 pub mod gateway;

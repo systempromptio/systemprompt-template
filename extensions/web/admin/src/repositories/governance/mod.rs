@@ -36,6 +36,7 @@ pub mod decision_log;
 pub mod decisions;
 pub mod effective;
 pub mod filter_options;
+#[cfg(feature = "gateway")]
 pub mod findings;
 pub mod hook_events;
 pub mod rankings;

@@ -3,23 +3,19 @@
 
 use sqlx::PgPool;
 
-use super::fetch::{find_summary, find_transcript, list_decisions, list_events, list_requests};
+#[cfg(feature = "gateway")]
+use super::fetch::list_requests;
+use super::fetch::{find_summary, find_transcript, list_decisions, list_events};
 use super::resolve::resolve_session_id;
-use super::{
-    AiRequestSummary, ChainEnvelope, ChainIdentity, ChainTotals, ChainUsageEvent, DecisionStage,
-};
+#[cfg(feature = "gateway")]
+use super::{AiRequestSummary, RequestTotals};
+use super::{ChainEnvelope, ChainIdentity, ChainTotals};
 
-fn compute_totals(
-    decisions: &[DecisionStage],
-    requests: &[AiRequestSummary],
-    events: &[ChainUsageEvent],
-) -> ChainTotals {
-    let mut totals = ChainTotals {
-        decision_count: decisions.len() as i64,
-        deny_count: decisions.iter().filter(|d| d.decision == "deny").count() as i64,
-        event_count: events.len() as i64,
+#[cfg(feature = "gateway")]
+fn request_totals(requests: &[AiRequestSummary]) -> RequestTotals {
+    let mut totals = RequestTotals {
         request_count: requests.len() as i64,
-        ..ChainTotals::default()
+        ..RequestTotals::default()
     };
     for r in requests {
         totals.total_cost_microdollars += r.cost_microdollars;
@@ -41,7 +37,8 @@ pub async fn find_decision_chain(
     };
 
     let (decisions, slots) = list_decisions(pool, &session_id).await?;
-    let (requests, trace_id) = list_requests(pool, &session_id).await?;
+    #[cfg(feature = "gateway")]
+    let (requests, request_trace_id) = list_requests(pool, &session_id).await?;
     let events = list_events(pool, &session_id).await?;
     let transcript = find_transcript(pool, &session_id).await?;
     let summary = find_summary(pool, &session_id).await?;
@@ -52,13 +49,24 @@ pub async fn find_decision_chain(
         agent_scope: slots.agent_scope,
     };
 
-    let totals = compute_totals(&decisions, &requests, &events);
+    let totals = ChainTotals {
+        decisions: decisions.len() as i64,
+        denials: decisions.iter().filter(|d| d.decision == "deny").count() as i64,
+        events: events.len() as i64,
+        #[cfg(feature = "gateway")]
+        requests: request_totals(&requests),
+    };
+    #[cfg(feature = "gateway")]
+    let trace_id = request_trace_id;
+    #[cfg(not(feature = "gateway"))]
+    let trace_id = None;
 
     Ok(Some(ChainEnvelope {
         trace_id,
         session_id,
         identity,
         decisions,
+        #[cfg(feature = "gateway")]
         requests,
         events,
         transcript,

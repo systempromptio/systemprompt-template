@@ -14,16 +14,20 @@ use crate::repositories;
 use crate::repositories::analytics::conversation_rows::{
     ConversationFilter, find_latest_conversation, get_conversation_totals,
 };
+#[cfg(feature = "agents")]
 use crate::repositories::analytics::conversation_rows::{ConversationRow, ConversationTotals};
 #[cfg(feature = "agents")]
 use crate::repositories::analytics::conversations::{
     HistoryFilter, HistoryItem, list_history_items,
 };
-use crate::repositories::users::enrolment::{UserCommitRow, UserDeviceRow};
+#[cfg(feature = "gateway")]
+use crate::repositories::users::enrolment::UserCommitRow;
+use crate::repositories::users::enrolment::UserDeviceRow;
 use crate::repositories::users::sessions::SigninSessionRow;
 
 // Why: how many commits the Usage tab lists before deferring to the sessions
 // pages.
+#[cfg(feature = "gateway")]
 pub(super) const COMMIT_LIMIT: i64 = 20;
 
 // Why: how many sign-in sessions one page of the Sessions tab carries.
@@ -170,23 +174,30 @@ pub(super) async fn load_sessions(pool: &PgPool, user_id: &UserId) -> Vec<Signin
     )
 }
 
+#[cfg(feature = "gateway")]
 pub(super) struct UsageData {
     pub summary: repositories::users::usage::UserGatewayUsage,
     pub models: Vec<repositories::users::usage::ModelShare>,
+    #[cfg(feature = "agents")]
+    pub conversations: ConversationUsage,
+    pub commits: Vec<UserCommitRow>,
+}
+
+#[cfg(feature = "agents")]
+pub(super) struct ConversationUsage {
     pub latest: Option<ConversationRow>,
     pub totals: ConversationTotals,
-    pub commits: Vec<UserCommitRow>,
 }
 
 
 // Why: no project filter — this is the admin's view of one named account, so
 // the project scoping that guards the cross-user list has nothing to add and
 // would only hide rows from an admin who asked for them by id.
+#[cfg(feature = "gateway")]
 pub(super) async fn load_usage(pool: &PgPool, user_id: &UserId) -> UsageData {
-    let (summary, models, (latest, totals), commits) = tokio::join!(
+    let (summary, models, commits) = tokio::join!(
         repositories::users::usage::get_ai_request_summary(pool, user_id),
         repositories::users::usage::list_top_models(pool, user_id, None, 10),
-        load_conversation_usage(pool, user_id),
         repositories::users::enrolment::list_user_commits(pool, user_id, COMMIT_LIMIT),
     );
     UsageData {
@@ -194,17 +205,14 @@ pub(super) async fn load_usage(pool: &PgPool, user_id: &UserId) -> UsageData {
             .inspect_err(|e| tracing::warn!(error = %e, "user detail: usage summary failed"))
             .unwrap_or_default(),
         models: warn_empty(models, "top models"),
-        latest,
-        totals,
+        #[cfg(feature = "agents")]
+        conversations: load_conversation_usage(pool, user_id).await,
         commits: warn_empty(commits, "commits"),
     }
 }
 
 #[cfg(feature = "agents")]
-async fn load_conversation_usage(
-    pool: &PgPool,
-    user_id: &UserId,
-) -> (Option<ConversationRow>, ConversationTotals) {
+async fn load_conversation_usage(pool: &PgPool, user_id: &UserId) -> ConversationUsage {
     let filter = ConversationFilter {
         user_id: Some(user_id.clone()),
         include_side_calls: true,
@@ -216,22 +224,14 @@ async fn load_conversation_usage(
         find_latest_conversation(pool, user_id),
         get_conversation_totals(pool, &filter),
     );
-    (
-        latest
+    ConversationUsage {
+        latest: latest
             .inspect_err(|e| tracing::warn!(error = %e, "user detail: latest conversation failed"))
             .unwrap_or_default(),
-        totals
+        totals: totals
             .inspect_err(|e| tracing::warn!(error = %e, "user detail: conversation totals failed"))
             .unwrap_or_default(),
-    )
-}
-
-#[cfg(not(feature = "agents"))]
-fn load_conversation_usage(
-    _pool: &PgPool,
-    _user_id: &UserId,
-) -> std::future::Ready<(Option<ConversationRow>, ConversationTotals)> {
-    std::future::ready((None, ConversationTotals::default()))
+    }
 }
 
 fn warn_empty<T>(res: Result<Vec<T>, sqlx::Error>, what: &'static str) -> Vec<T> {
@@ -241,6 +241,7 @@ fn warn_empty<T>(res: Result<Vec<T>, sqlx::Error>, what: &'static str) -> Vec<T>
 
 pub(super) struct Headline {
     pub(super) profile: Option<repositories::users::queries::UserAccessProfile>,
+    #[cfg(feature = "gateway")]
     pub(super) summary: repositories::users::usage::UserGatewayUsage,
     pub(super) defaults: Option<repositories::scope::defaults::ScopeDefaults>,
 }
@@ -248,9 +249,8 @@ pub(super) struct Headline {
 // Why: the three headline reads are independent and each degrades to an
 // empty panel on its own rather than failing the page.
 pub(super) async fn load_headline(pool: &PgPool, user_id: &UserId) -> Headline {
-    let (profile, summary, defaults) = tokio::join!(
+    let (profile, defaults) = tokio::join!(
         repositories::users::queries::find_user_access_profile(pool, user_id),
-        repositories::users::usage::get_ai_request_summary(pool, user_id),
         repositories::scope::defaults::find_scope_defaults(pool, user_id),
     );
     Headline {
@@ -258,7 +258,9 @@ pub(super) async fn load_headline(pool: &PgPool, user_id: &UserId) -> Headline {
             .inspect_err(|e| tracing::warn!(error = %e, "user detail: access profile unavailable"))
             .ok()
             .flatten(),
-        summary: summary
+        #[cfg(feature = "gateway")]
+        summary: repositories::users::usage::get_ai_request_summary(pool, user_id)
+            .await
             .inspect_err(|e| tracing::warn!(error = %e, "user detail: request summary unavailable"))
             .unwrap_or_default(),
         defaults: defaults

@@ -5,7 +5,9 @@
 //! opening the Identity tab does not pay for a usage aggregate.
 
 use serde::Serialize;
-use systemprompt::identifiers::{ContextId, SessionId, UserId};
+#[cfg(feature = "agents")]
+use systemprompt::identifiers::ContextId;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::handlers::ssr::list_view::Pagination;
 #[cfg(feature = "agents")]
@@ -43,6 +45,7 @@ pub(crate) struct UserDetailContext {
     pub access: Option<AccessTabView>,
     pub devices: Option<DevicesTabView>,
     pub sessions: Option<UserSessionsTabView>,
+    #[cfg(feature = "gateway")]
     pub usage: Option<UsageTabView>,
 }
 
@@ -73,13 +76,20 @@ pub(crate) struct UserHeaderView {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct DetailKpiView {
-    pub requests_display: String,
-    pub cost_display: String,
-    pub tokens_display: String,
+    #[cfg(feature = "gateway")]
+    pub spend: DetailSpendView,
     pub sessions: i64,
     pub devices: i64,
     pub groups: usize,
     pub projects: usize,
+}
+
+#[cfg(feature = "gateway")]
+#[derive(Debug, Serialize)]
+pub(crate) struct DetailSpendView {
+    pub requests: String,
+    pub cost: String,
+    pub tokens: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -210,29 +220,41 @@ pub(crate) struct UserConversationsTabView {
     pub pagination: Pagination,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct UsageTabView {
     pub window_label: String,
     pub requests: i64,
-    pub conversations: i64,
-    pub turns: i64,
-    pub tool_calls: i64,
-    pub side_calls: i64,
-    pub side_call_cost_display: String,
+    #[cfg(feature = "agents")]
+    #[serde(flatten)]
+    pub conversations: UsageConversationsView,
     pub failed: i64,
     pub tokens_display: String,
     pub cost_display: String,
     pub first_request_at: String,
     pub last_request_at: String,
-    pub latest: Option<LatestConversationView>,
     pub models: Vec<UserModelRowView>,
     pub has_models: bool,
-    pub conversations_url: String,
     pub log_url: String,
     pub commits: Vec<CommitRowView>,
     pub has_commits: bool,
 }
 
+// Why: the usage tab's conversation figures, which the agents member's
+// conversation record supplies.
+#[cfg(feature = "agents")]
+#[derive(Debug, Serialize)]
+pub(crate) struct UsageConversationsView {
+    pub conversations: i64,
+    pub turns: i64,
+    pub tool_calls: i64,
+    pub side_calls: i64,
+    pub side_call_cost_display: String,
+    pub latest: Option<LatestConversationView>,
+    pub conversations_url: String,
+}
+
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct UserModelRowView {
     pub model: String,
@@ -243,6 +265,7 @@ pub(crate) struct UserModelRowView {
 
 // Why: the card at the top of the tab — the one conversation an admin opening
 // this account most often wants, without scanning the table for it.
+#[cfg(feature = "agents")]
 #[derive(Debug, Serialize)]
 pub(crate) struct LatestConversationView {
     pub conversation_title: String,
@@ -257,6 +280,7 @@ pub(crate) struct LatestConversationView {
 }
 
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(crate) struct CommitRowView {
     pub short_hash: String,

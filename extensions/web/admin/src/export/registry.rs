@@ -27,19 +27,29 @@ pub(crate) const ALL: &[&dyn DataSet] = &[
     #[cfg(feature = "agents")]
     &datasets::contexts::People,
     &datasets::people::Users,
+    #[cfg(feature = "gateway")]
     &datasets::people::Groups,
+    #[cfg(feature = "mcp")]
     &datasets::projects::Projects,
     #[cfg(feature = "agents")]
     &datasets::history::History,
     #[cfg(feature = "agents")]
     &datasets::history::OrgHistory,
+    #[cfg(feature = "gateway")]
     &datasets::dashboard::ModelStats,
-    &datasets::dashboard::SkillStats,
-    &datasets::dashboard::ToolStats,
-    &datasets::dashboard::ToolServers,
+    #[cfg(feature = "mcp")]
+    &datasets::dashboard_tools::SkillStats,
+    #[cfg(feature = "mcp")]
+    &datasets::dashboard_tools::ToolStats,
+    #[cfg(feature = "mcp")]
+    &datasets::dashboard_tools::ToolServers,
+    #[cfg(feature = "gateway")]
     &datasets::dashboard::SessionCosts,
+    #[cfg(feature = "gateway")]
     &datasets::dashboard_cost::ProviderCosts,
+    #[cfg(feature = "gateway")]
     &datasets::dashboard_cost::ProviderCostByDay,
+    #[cfg(feature = "gateway")]
     &datasets::dashboard_cost::ContainerUsage,
     #[cfg(feature = "agents")]
     &datasets::analysis_skills::Skills,
@@ -64,12 +74,18 @@ pub(crate) const ALL: &[&dyn DataSet] = &[
     #[cfg(feature = "agents")]
     &datasets::plugin_eval::PluginEvalTools,
     &datasets::governance::Decisions,
+    #[cfg(feature = "gateway")]
     &datasets::governance::Findings,
     &datasets::governance::Secrets,
+    #[cfg(feature = "gateway")]
     &datasets::reports::CustomerUsers,
+    #[cfg(feature = "gateway")]
     &datasets::reports::CustomerProjects,
+    #[cfg(feature = "gateway")]
     &datasets::reports::CustomerModels,
+    #[cfg(feature = "gateway")]
     &datasets::reports::InternalProviders,
+    #[cfg(feature = "gateway")]
     &datasets::reports::InternalModels,
 ];
 

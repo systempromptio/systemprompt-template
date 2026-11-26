@@ -20,11 +20,15 @@
         message="Admin pages, the systemprompt MCP server and the admin plugins are hidden. An operator promotes an account with `systemprompt admin users role promote`; sign out and back in afterwards, because the admin scope is minted with the token."}}
     {{/unless}}
 
+    {{#if usage}}
     <section class="sp-kpi-grid" aria-label="Your usage">
         {{> components/kpi label="Spend · 30d" value=(formatUsd usage.d30.cost_microdollars) note=(concat "7d " (formatUsd usage.d7.cost_microdollars) " · 24h " (formatUsd usage.d1.cost_microdollars)) delta=(deltaPct usage.d30.cost_microdollars usage.d30.previous_cost_microdollars)}}
+        {{#if usage.conversations}}
         {{> components/kpi label="Conversations" value=(formatNumber usage.conversations.total_conversations) note=(concat (formatNumber usage.conversations.total_ai_requests) " AI requests") href="/admin/history"}}
+        {{/if}}
         {{> components/kpi label="Models used" value=models_count note=(concat (formatNumber usage.d30.tokens) " tokens · 30d")}}
     </section>
+    {{/if}}
 
     {{#if latest_conversation}}
     <section aria-label="Your latest conversation">
@@ -46,6 +50,7 @@
     </section>
     {{/if}}
 
+    {{#if usage.conversations}}
     <section aria-label="Recent conversations">
         {{#> components/section title="Recent conversations" count=recent_count note="Your ten most recent conversations. Side calls — cache probes and title generation — are not listed."}}
             {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/history">Search all</a>{{/inline}}
@@ -76,6 +81,7 @@
         {{> components/empty-state heading="No conversations yet" message="Conversations are grouped by context id on incoming inference requests. Connect a client above to start one."}}
         {{/if}}
     </section>
+    {{/if}}
 
 
     <details class="sp-p-profile__more">

@@ -9,6 +9,7 @@
 
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "gateway")]
 use sqlx::PgPool;
 
 /// Query parameters parsed from `?from=&to=&preset=` on audit pages.
@@ -206,6 +207,7 @@ pub fn preset_to_range(preset: TimeRangePreset) -> TimeRange {
 // Why: Cheap probe for the auto-widen path: just count rows in `ai_requests`
 // inside the candidate window. Used to decide whether the default 24h
 // window has data, or whether to fall back to a wider preset.
+#[cfg(feature = "gateway")]
 pub async fn count_requests_in_range(pool: &PgPool, range: TimeRange) -> Result<i64, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT COUNT(*)::bigint AS "count!"

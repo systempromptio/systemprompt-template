@@ -33,13 +33,16 @@ mod governance_quotas;
 pub(crate) mod list_view;
 mod overview;
 pub(crate) mod page;
+#[cfg(feature = "gateway")]
 pub(crate) mod people_chart;
+#[cfg(feature = "gateway")]
 pub(crate) mod people_view;
 #[cfg(any(feature = "gateway", feature = "mcp"))]
 pub(crate) mod pickable_users;
 mod roles;
 pub(crate) mod secrets_audit;
 mod ssr_access_control;
+#[cfg(feature = "gateway")]
 pub(crate) mod ssr_analytics_dashboard;
 #[cfg(feature = "gateway")]
 pub(crate) mod ssr_analytics_requests;
@@ -52,7 +55,9 @@ mod ssr_context_detail;
 mod ssr_conversations_raw;
 mod ssr_demo_help;
 mod ssr_governance_audit_detail;
+#[cfg(feature = "gateway")]
 mod ssr_group_detail;
+#[cfg(feature = "gateway")]
 mod ssr_groups;
 pub(crate) mod ssr_helpers;
 #[cfg(feature = "agents")]
@@ -62,6 +67,7 @@ mod ssr_perf_trace_detail;
 #[cfg(feature = "agents")]
 pub(crate) mod ssr_perf_traces;
 mod ssr_profile;
+#[cfg(feature = "mcp")]
 mod ssr_projects;
 mod ssr_search_resolve;
 #[cfg(feature = "agents")]
@@ -78,6 +84,7 @@ mod ssr_sync_import;
 pub(crate) mod ssr_tools;
 mod ssr_users;
 pub(crate) mod sync_plane;
+#[cfg(feature = "agents")]
 pub(crate) mod transcript_view;
 pub(crate) mod types;
 
@@ -96,6 +103,7 @@ pub(crate) use overview::overview_page;
 pub(crate) use roles::roles_page;
 pub(crate) use secrets_audit::secrets_audit_page;
 pub(crate) use ssr_access_control::access_control_page;
+#[cfg(feature = "gateway")]
 pub(crate) use ssr_analytics_dashboard::analytics_dashboard_page;
 #[cfg(feature = "gateway")]
 pub(crate) use ssr_analytics_requests::analytics_requests_page;
@@ -107,7 +115,9 @@ pub(crate) use ssr_context_detail::context_detail_page;
 #[cfg(feature = "agents")]
 pub(crate) use ssr_conversations_raw::conversations_raw;
 pub(crate) use ssr_governance_audit_detail::governance_audit_detail_page;
+#[cfg(feature = "gateway")]
 pub(crate) use ssr_group_detail::group_detail_page;
+#[cfg(feature = "gateway")]
 pub(crate) use ssr_groups::groups_page;
 pub(crate) use ssr_helpers::{branding_context, render_typed_page};
 #[cfg(feature = "agents")]
@@ -119,6 +129,7 @@ pub(crate) use ssr_perf_trace_detail::perf_trace_detail_page;
 #[cfg(feature = "agents")]
 pub(crate) use ssr_perf_traces::perf_traces_page;
 pub(crate) use ssr_profile::{issue_bridge_code, profile_page};
+#[cfg(feature = "mcp")]
 pub(crate) use ssr_projects::{project_detail_page, project_report_page, projects_page};
 pub(crate) use ssr_search_resolve::search_resolve;
 #[cfg(feature = "agents")]

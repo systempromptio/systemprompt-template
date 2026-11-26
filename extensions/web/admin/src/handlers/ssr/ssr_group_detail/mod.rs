@@ -126,7 +126,10 @@ async fn load_overview(
         models: people_view::model_rows(&loaded.models),
         daily_requests: daily_requests_chart(&loaded.daily),
         skills: people_view::name_count_rows(&loaded.skills),
-        tools: people_view::name_count_rows(&loaded.tools),
+        #[cfg(feature = "mcp")]
+        tool_panel: super::types::ToolPanelView {
+            tools: people_view::name_count_rows(&loaded.tools),
+        },
         leaderboard: loaded
             .leaderboard
             .iter()

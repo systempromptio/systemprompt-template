@@ -31,7 +31,11 @@ pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, s
             return Ok(Some(r));
         }
     }
-    if let Some(r) = lookup_trace(pool, id).await? {
+    #[cfg(feature = "gateway")]
+    if let Some(r) = lookup_trace_in_ai_requests(pool, id).await? {
+        return Ok(Some(r));
+    }
+    if let Some(r) = lookup_trace_in_governance(pool, id).await? {
         return Ok(Some(r));
     }
     #[cfg(feature = "agents")]
@@ -94,18 +98,33 @@ async fn lookup_request_by_governance_id(
     }))
 }
 
-async fn lookup_trace(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sqlx::Error> {
-    // Why: an enforcement site with no AI request still writes a governance
-    // row, and since core 0.34.0 its trace id lives in `governance_decisions`
-    // alone -- searching `ai_requests` only would leave those traces
-    // unresolvable.
+#[cfg(feature = "gateway")]
+async fn lookup_trace_in_ai_requests(
+    pool: &PgPool,
+    id: &str,
+) -> Result<Option<ResolvedId>, sqlx::Error> {
     let row = sqlx::query!(
-        r#"SELECT trace_id AS "trace_id!" FROM (
-               SELECT trace_id FROM ai_requests WHERE trace_id = $1
-               UNION ALL
-               SELECT trace_id FROM governance_decisions WHERE trace_id = $1
-           ) t
-           WHERE trace_id IS NOT NULL LIMIT 1"#,
+        r#"SELECT trace_id AS "trace_id!" FROM ai_requests
+           WHERE trace_id = $1 LIMIT 1"#,
+        id,
+    )
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|r| ResolvedId {
+        kind: ResolvedKind::Trace,
+        id: r.trace_id,
+    }))
+}
+
+// Why: an enforcement site with no AI request still writes a governance row,
+// and since core 0.34.0 its trace id lives in `governance_decisions` alone.
+async fn lookup_trace_in_governance(
+    pool: &PgPool,
+    id: &str,
+) -> Result<Option<ResolvedId>, sqlx::Error> {
+    let row = sqlx::query!(
+        r#"SELECT trace_id AS "trace_id!" FROM governance_decisions
+           WHERE trace_id = $1 LIMIT 1"#,
         id,
     )
     .fetch_optional(pool)

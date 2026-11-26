@@ -9,6 +9,8 @@ use sqlx::PgPool;
 use systemprompt_web_shared::GroupId;
 
 use crate::error::{AdminError, AdminResult};
+#[cfg(feature = "gateway")]
+use crate::types::Usage30d;
 use crate::types::groups::{CreateGroupRequest, GroupRecord, GroupSummary, UpdateGroupRequest};
 
 pub async fn list_groups(pool: &PgPool) -> Result<Vec<GroupRecord>, sqlx::Error> {
@@ -35,14 +37,11 @@ pub async fn find_group(
 
 // Why: membership counts come from the `user_groups` view, so the derived
 // `unassigned` members are counted the same way as everyone else and the
-// listing does not have to special-case the system row.
-//
-// Why: the thirty-day figures are joined here rather than fetched beside the
-// listing, so the JSON endpoint and the groups page cannot disagree about a
-// number they both put on the same row.
+// listing does not have to special-case the system row. The thirty-day
+// gateway figures are a keyed read beside it in the builds that link the
+// gateway member, so the JSON endpoint and the groups page read one number.
 pub async fn list_group_summaries(pool: &PgPool) -> Result<Vec<GroupSummary>, sqlx::Error> {
-    sqlx::query_as!(
-        GroupSummary,
+    let rows = sqlx::query!(
         r#"
         SELECT
             g.id AS "id!: GroupId",
@@ -50,10 +49,7 @@ pub async fn list_group_summaries(pool: &PgPool) -> Result<Vec<GroupSummary>, sq
             g.description,
             g.is_system AS "is_system!",
             COALESCE(m.member_count, 0)::BIGINT AS "member_count!",
-            COALESCE(pc.project_count, 0)::BIGINT AS "project_count!",
-            COALESCE(u.active_members, 0)::BIGINT AS "active_members_30d!",
-            COALESCE(u.requests, 0)::BIGINT AS "requests_30d!",
-            COALESCE(u.cost_microdollars, 0)::BIGINT AS "cost_30d_microdollars!"
+            COALESCE(pc.project_count, 0)::BIGINT AS "project_count!"
         FROM groups g
         LEFT JOIN (
             SELECT group_id, COUNT(DISTINCT user_id) AS member_count
@@ -65,22 +61,60 @@ pub async fn list_group_summaries(pool: &PgPool) -> Result<Vec<GroupSummary>, sq
             JOIN user_projects pm ON pm.user_id = ug.user_id
             GROUP BY ug.group_id
         ) pc ON pc.group_id = g.id
-        LEFT JOIN (
-            SELECT ug.group_id,
-                   COUNT(DISTINCT r.user_id) AS active_members,
-                   COUNT(r.id) AS requests,
-                   COALESCE(SUM(r.cost_microdollars), 0) AS cost_microdollars
-            FROM user_groups ug
-            JOIN ai_requests r
-              ON r.user_id = ug.user_id
-             AND r.created_at >= NOW() - INTERVAL '30 days'
-            GROUP BY ug.group_id
-        ) u ON u.group_id = g.id
         ORDER BY g.is_system, g.name
         "#
     )
     .fetch_all(pool)
-    .await
+    .await?;
+    #[cfg(feature = "gateway")]
+    let usage = list_group_usage_30d(pool).await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| GroupSummary {
+            #[cfg(feature = "gateway")]
+            usage: usage.get(r.id.as_str()).copied().unwrap_or_default(),
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            is_system: r.is_system,
+            member_count: r.member_count,
+            project_count: r.project_count,
+        })
+        .collect())
+}
+
+#[cfg(feature = "gateway")]
+async fn list_group_usage_30d(
+    pool: &PgPool,
+) -> Result<std::collections::HashMap<String, Usage30d>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"
+        SELECT ug.group_id AS "group_id!",
+               COUNT(DISTINCT r.user_id)::BIGINT AS "active_members!",
+               COUNT(r.id)::BIGINT AS "requests!",
+               COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS "cost_microdollars!"
+        FROM user_groups ug
+        JOIN ai_requests r
+          ON r.user_id = ug.user_id
+         AND r.created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY ug.group_id
+        "#
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| {
+            (
+                r.group_id,
+                Usage30d {
+                    active_members_30d: r.active_members,
+                    requests_30d: r.requests,
+                    cost_30d_microdollars: r.cost_microdollars,
+                },
+            )
+        })
+        .collect())
 }
 
 pub async fn insert_group(

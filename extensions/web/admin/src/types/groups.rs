@@ -21,6 +21,15 @@ pub struct GroupRecord {
     pub source: String,
 }
 
+/// A container's thirty-day gateway figures, as its members' requests add up.
+#[cfg(feature = "gateway")]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, FromRow)]
+pub struct Usage30d {
+    pub active_members_30d: i64,
+    pub requests_30d: i64,
+    pub cost_30d_microdollars: i64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct GroupSummary {
     pub id: GroupId,
@@ -29,9 +38,10 @@ pub struct GroupSummary {
     pub is_system: bool,
     pub member_count: i64,
     pub project_count: i64,
-    pub active_members_30d: i64,
-    pub requests_30d: i64,
-    pub cost_30d_microdollars: i64,
+    #[cfg(feature = "gateway")]
+    #[serde(flatten)]
+    #[sqlx(flatten)]
+    pub usage: Usage30d,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

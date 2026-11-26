@@ -42,12 +42,8 @@ pub(crate) struct RosterKpiView {
     pub unassigned: i64,
     pub no_role: i64,
     pub inactive: i64,
-    pub cost_display: String,
-    pub cost_delta: String,
-    pub cost_delta_dir: &'static str,
-    pub requests_display: String,
-    pub requests_delta: String,
-    pub requests_delta_dir: &'static str,
+    #[cfg(feature = "gateway")]
+    pub spend: RosterSpendKpiView,
     pub unassigned_url: String,
     pub no_role_url: String,
     pub inactive_url: String,
@@ -56,6 +52,25 @@ pub(crate) struct RosterKpiView {
     pub unassigned_active: bool,
     pub no_role_active: bool,
     pub inactive_active: bool,
+}
+
+#[cfg(feature = "gateway")]
+#[derive(Debug, Serialize)]
+pub(crate) struct RosterSpendKpiView {
+    pub cost_display: String,
+    pub cost_delta: String,
+    pub cost_delta_dir: &'static str,
+    pub requests_display: String,
+    pub requests_delta: String,
+    pub requests_delta_dir: &'static str,
+}
+
+#[cfg(feature = "gateway")]
+#[derive(Debug, Serialize)]
+pub(crate) struct RosterSpendRowView {
+    pub cost: String,
+    pub requests: String,
+    pub tokens: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -84,9 +99,8 @@ pub(crate) struct RosterRowView {
     pub last_active_title: String,
     // Why: the conversation the stamp came from, when it was a gateway turn.
     pub last_active_url: Option<String>,
-    pub cost_display: String,
-    pub requests_display: String,
-    pub tokens_display: String,
+    #[cfg(feature = "gateway")]
+    pub spend: RosterSpendRowView,
     pub is_active: bool,
     pub status_label: &'static str,
     pub status_tone: &'static str,

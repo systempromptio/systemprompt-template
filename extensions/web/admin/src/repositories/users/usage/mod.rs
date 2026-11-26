@@ -33,8 +33,11 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{ContextId, UserId};
 
+#[cfg(feature = "agents")]
 mod conversations;
 
+#[cfg(feature = "agents")]
+#[cfg(feature = "agents")]
 pub use conversations::get_conversation_summary;
 
 #[derive(Debug, Clone, Copy, Default, Serialize)]

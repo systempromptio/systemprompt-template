@@ -4,6 +4,8 @@ mod detail;
 mod events;
 mod identity;
 mod listing;
+#[cfg(any(feature = "gateway", feature = "mcp"))]
+mod member_activity;
 mod role;
 mod runtime;
 

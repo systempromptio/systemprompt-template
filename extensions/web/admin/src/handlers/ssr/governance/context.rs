@@ -35,6 +35,7 @@ pub(super) struct GovernancePageContext {
     pub(super) tabs: Vec<TabLink>,
     pub(super) tab_label: &'static str,
     pub(super) is_decisions: bool,
+    #[cfg(feature = "gateway")]
     pub(super) is_safety: bool,
     pub(super) is_hooks: bool,
     pub(super) time_range: TimeRangeContext,
@@ -50,6 +51,7 @@ pub(super) struct GovernancePageContext {
     pub(super) attention_more_url: String,
     pub(super) columns: Vec<ColumnHeader>,
     pub(super) decisions: Vec<view::DecisionRow>,
+    #[cfg(feature = "gateway")]
     pub(super) findings: Vec<view::FindingRow>,
     pub(super) hooks: Vec<view::HookRow>,
     pub(super) has_rows: bool,
@@ -57,6 +59,7 @@ pub(super) struct GovernancePageContext {
     pub(super) pagination: Pagination,
     pub(super) policy: String,
     pub(super) policies: Vec<SelectOptionView>,
+    #[cfg(feature = "gateway")]
     pub(super) categories: Vec<SelectOptionView>,
     pub(super) outcomes: Vec<SelectOptionView>,
     pub(super) search: String,
@@ -134,6 +137,7 @@ pub(super) fn build(input: Build<'_>) -> GovernancePageContext {
 
     let (rows_shown, total, noun) = match tab {
         GovernanceTab::Decisions => (data.decisions.len(), data.decision_total, "calls"),
+        #[cfg(feature = "gateway")]
         GovernanceTab::Safety => (data.findings.len(), data.finding_total, "findings"),
         GovernanceTab::Hooks => (
             data.hooks.len(),
@@ -160,6 +164,7 @@ pub(super) fn build(input: Build<'_>) -> GovernancePageContext {
         tabs: tab_links(query, tab, data),
         tab_label: tab.label(),
         is_decisions: tab == GovernanceTab::Decisions,
+        #[cfg(feature = "gateway")]
         is_safety: tab == GovernanceTab::Safety,
         is_hooks: tab == GovernanceTab::Hooks,
         time_range: time_range_context(query, range),
@@ -171,6 +176,7 @@ pub(super) fn build(input: Build<'_>) -> GovernancePageContext {
         attention_more_url: attention_more_url(query, data),
         columns: columns(query, tab, sort),
         decisions: view::decision_rows(&data.decisions),
+        #[cfg(feature = "gateway")]
         findings: view::finding_rows(&data.findings),
         hooks: view::hook_rows(&data.hooks),
         has_rows: rows_shown > 0,
@@ -178,6 +184,7 @@ pub(super) fn build(input: Build<'_>) -> GovernancePageContext {
         pagination: build_pagination(query, window, noun),
         policy: query.policy.clone().unwrap_or_default(),
         policies: options("All policies", query.policy.as_deref(), &data.policies),
+        #[cfg(feature = "gateway")]
         categories: options(
             "All categories",
             query.category.as_deref(),
@@ -204,6 +211,7 @@ fn tab_links(
 ) -> Vec<TabLink> {
     [
         (GovernanceTab::Decisions, data.stats.evaluated),
+        #[cfg(feature = "gateway")]
         (GovernanceTab::Safety, data.safety.findings),
         (GovernanceTab::Hooks, data.pretool_24h + data.posttool_24h),
     ]
@@ -272,6 +280,11 @@ fn time_range_context(query: &GovernanceQuery, range: TimeRange) -> TimeRangeCon
     }
 }
 
+#[cfg(feature = "gateway")]
+const DECISIONS_FIRST: &[&str] = &["governance-decisions", "governance-findings"];
+#[cfg(not(feature = "gateway"))]
+const DECISIONS_FIRST: &[&str] = &["governance-decisions"];
+
 // Why: the export stays one row per evaluation while the console folds them
 // into calls — evidence wants everything that was decided. The active tab's
 // plane leads; the other is a pick away.
@@ -279,10 +292,9 @@ fn export_view(query: &GovernanceQuery, tab: GovernanceTab) -> crate::export::Ex
     let query = url_with(query, &[("page", ""), ("tab", "")]);
     let query = query.split_once('?').map_or("", |(_, q)| q);
     let ids: &[&str] = match tab {
+        #[cfg(feature = "gateway")]
         GovernanceTab::Safety => &["governance-findings", "governance-decisions"],
-        GovernanceTab::Decisions | GovernanceTab::Hooks => {
-            &["governance-decisions", "governance-findings"]
-        },
+        GovernanceTab::Decisions | GovernanceTab::Hooks => DECISIONS_FIRST,
     };
     crate::export::ExportView::new(ids, query)
 }

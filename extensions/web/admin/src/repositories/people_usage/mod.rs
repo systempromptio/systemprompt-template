@@ -12,15 +12,22 @@
 //! component columns are the fallback for rows written before it existed.
 
 pub mod breakdown;
+#[cfg(feature = "gateway")]
 pub mod totals;
 
+#[cfg(feature = "gateway")]
 use std::collections::HashMap;
 
+#[cfg(feature = "gateway")]
 use chrono::{DateTime, NaiveDate, Utc};
+#[cfg(feature = "gateway")]
 use serde::Serialize;
+#[cfg(feature = "gateway")]
 use sqlx::PgPool;
+#[cfg(feature = "gateway")]
 use systemprompt::identifiers::UserId;
 
+#[cfg(feature = "gateway")]
 use crate::repositories::scope::ScopeQuery;
 
 // Why: The window every page and endpoint defaults to.
@@ -29,6 +36,7 @@ pub const DEFAULT_WINDOW_DAYS: i32 = 30;
 // Why: How many rows a leaderboard carries. Ten is what the screens draw.
 pub const LEADERBOARD_LIMIT: i64 = 10;
 
+#[cfg(feature = "gateway")]
 /// One container's thirty-day totals, keyed back to the container.
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct ScopeUsageRow {
@@ -41,6 +49,7 @@ pub struct ScopeUsageRow {
     pub cost_microdollars: i64,
 }
 
+#[cfg(feature = "gateway")]
 /// What one member of a container spent inside it.
 #[derive(Debug, Clone)]
 pub struct MemberUsageRow {
@@ -51,6 +60,7 @@ pub struct MemberUsageRow {
     pub last_active: Option<DateTime<Utc>>,
 }
 
+#[cfg(feature = "gateway")]
 /// One day's request and cost total, gap-filled so a chart's spine is the
 /// calendar rather than the days that happened to carry traffic.
 #[derive(Debug, Clone, Copy, Serialize)]
@@ -60,6 +70,7 @@ pub struct DailyRequests {
     pub cost_microdollars: i64,
 }
 
+#[cfg(feature = "gateway")]
 pub async fn get_scope_usage(
     pool: &PgPool,
     q: &ScopeQuery<'_>,
@@ -94,6 +105,7 @@ pub async fn get_scope_usage(
     })
 }
 
+#[cfg(feature = "gateway")]
 pub async fn list_member_usage(
     pool: &PgPool,
     q: &ScopeQuery<'_>,
@@ -134,6 +146,7 @@ pub async fn list_member_usage(
         .collect())
 }
 
+#[cfg(feature = "gateway")]
 pub async fn list_daily_requests(
     pool: &PgPool,
     q: &ScopeQuery<'_>,

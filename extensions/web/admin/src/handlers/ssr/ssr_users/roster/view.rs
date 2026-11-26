@@ -5,8 +5,12 @@
 
 use std::collections::BTreeMap;
 
-use crate::handlers::ssr::format::{format_cost, format_token_total, relative_time};
+use crate::handlers::ssr::format::relative_time;
+#[cfg(feature = "gateway")]
+use crate::handlers::ssr::format::{format_cost, format_token_total};
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
+#[cfg(feature = "gateway")]
+use crate::repositories::users::roster::RosterSpend;
 use crate::repositories::users::roster::{RosterFilter, RosterRow, RosterStats};
 
 use super::super::BASE_URL;
@@ -15,6 +19,8 @@ use crate::handlers::ssr::entity_urls::context_detail_url;
 use crate::handlers::ssr::types::FilterChipView;
 
 use super::context::{RosterChipView, RosterKpiView, RosterRowView};
+#[cfg(feature = "gateway")]
+use super::context::{RosterSpendKpiView, RosterSpendRowView};
 
 pub(super) fn build_chips(url: &RosterUrlState, totals: &RosterStats) -> Vec<FilterChipView> {
     let prefix = url.link_prefix(&["filter", "page"]);
@@ -47,23 +53,31 @@ pub(super) fn build_chips(url: &RosterUrlState, totals: &RosterStats) -> Vec<Fil
     ]
 }
 
+#[cfg(feature = "gateway")]
+fn spend_kpis(spend: &RosterSpend) -> RosterSpendKpiView {
+    let (cost_delta, cost_delta_dir) =
+        delta(spend.cost_microdollars, spend.prior_cost_microdollars);
+    let (requests_delta, requests_delta_dir) = delta(spend.requests, spend.prior_requests);
+    RosterSpendKpiView {
+        cost_display: format_cost(spend.cost_microdollars),
+        cost_delta,
+        cost_delta_dir,
+        requests_display: format_token_total(spend.requests),
+        requests_delta,
+        requests_delta_dir,
+    }
+}
+
 pub(super) fn build_kpis(url: &RosterUrlState, totals: &RosterStats) -> RosterKpiView {
     let prefix = url.link_prefix(&["filter", "page"]);
-    let (cost_delta, cost_delta_dir) =
-        delta(totals.cost_microdollars, totals.prior_cost_microdollars);
-    let (requests_delta, requests_delta_dir) = delta(totals.requests, totals.prior_requests);
     RosterKpiView {
         total: totals.total,
         active: totals.active,
         unassigned: totals.unassigned,
         no_role: totals.no_role,
         inactive: totals.inactive_30d,
-        cost_display: format_cost(totals.cost_microdollars),
-        cost_delta,
-        cost_delta_dir,
-        requests_display: format_token_total(totals.requests),
-        requests_delta,
-        requests_delta_dir,
+        #[cfg(feature = "gateway")]
+        spend: spend_kpis(&totals.spend),
         unassigned_url: format!("{prefix}filter=unassigned"),
         no_role_url: format!("{prefix}filter=no-role"),
         inactive_url: format!("{prefix}filter=inactive-30d"),
@@ -78,6 +92,7 @@ pub(super) fn build_kpis(url: &RosterUrlState, totals: &RosterStats) -> RosterKp
 // Why: a percentage against the previous window of the same length. With no
 // prior traffic there is nothing to compare, so the tile shows no delta rather
 // than an infinite rise.
+#[cfg(feature = "gateway")]
 fn delta(current: i64, prior: i64) -> (String, &'static str) {
     if prior == 0 {
         return (String::new(), "flat");
@@ -136,9 +151,12 @@ pub(super) fn build_rows(input: &RowInput<'_>) -> Vec<RosterRowView> {
                 last_active: row.last_active.map(relative_time),
                 last_active_title: last_active_title(row),
                 last_active_url: row.last_context_id.as_ref().map(context_detail_url),
-                cost_display: format_cost(row.cost_microdollars),
-                requests_display: format_token_total(row.requests),
-                tokens_display: format_token_total(row.tokens),
+                #[cfg(feature = "gateway")]
+                spend: RosterSpendRowView {
+                    cost: format_cost(row.cost_microdollars),
+                    requests: format_token_total(row.requests),
+                    tokens: format_token_total(row.tokens),
+                },
                 status_label: if row.is_active { "Active" } else { "Suspended" },
                 status_tone: if row.is_active { "ok" } else { "muted" },
                 is_active: row.is_active,

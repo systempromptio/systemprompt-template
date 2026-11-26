@@ -10,4 +10,5 @@ pub mod crud;
 pub mod mappings;
 pub mod marketplaces;
 pub mod members;
+#[cfg(feature = "gateway")]
 pub mod usage;

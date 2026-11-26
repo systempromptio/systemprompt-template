@@ -24,6 +24,7 @@ use sqlx::PgPool;
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::list_view::scope_filter_view;
 use crate::repositories::governance::decision_log::{DecisionFilter, DecisionLogRow, DecisionSort};
+#[cfg(feature = "gateway")]
 use crate::repositories::governance::findings::{FindingFilter, SafetyFindingLogRow};
 use crate::repositories::governance::{DecisionPage, PageSlice};
 use crate::repositories::scope::{ScopeRequest, SubjectScope, membership};
@@ -46,6 +47,7 @@ const PAGE_SIZE: i64 = 50;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum GovernanceTab {
     Decisions,
+    #[cfg(feature = "gateway")]
     Safety,
     Hooks,
 }
@@ -53,6 +55,7 @@ pub(crate) enum GovernanceTab {
 impl GovernanceTab {
     fn parse(raw: Option<&str>) -> Self {
         match raw {
+            #[cfg(feature = "gateway")]
             Some("safety") => Self::Safety,
             Some("hooks") => Self::Hooks,
             _ => Self::Decisions,
@@ -62,6 +65,7 @@ impl GovernanceTab {
     const fn as_str(self) -> &'static str {
         match self {
             Self::Decisions => "decisions",
+            #[cfg(feature = "gateway")]
             Self::Safety => "safety",
             Self::Hooks => "hooks",
         }
@@ -70,6 +74,7 @@ impl GovernanceTab {
     const fn label(self) -> &'static str {
         match self {
             Self::Decisions => "Decisions",
+            #[cfg(feature = "gateway")]
             Self::Safety => "Safety findings",
             Self::Hooks => "Hook events",
         }
@@ -146,6 +151,7 @@ fn attention_on(query: &GovernanceQuery) -> bool {
     non_empty(query.attention.as_deref()).is_some_and(|v| v != "0")
 }
 
+#[cfg(feature = "gateway")]
 fn finding_filter(query: &GovernanceQuery) -> FindingFilter {
     FindingFilter {
         category: non_empty(query.category.as_deref()),
@@ -207,6 +213,7 @@ pub(crate) async fn export_decisions(
     )
 }
 
+#[cfg(feature = "gateway")]
 pub(crate) async fn export_findings(
     pool: &PgPool,
     user_ctx: &UserContext,
@@ -250,6 +257,7 @@ pub(crate) async fn governance_page(
             range,
             scope: &scope,
             decision_filter: &decision_filter(&query),
+            #[cfg(feature = "gateway")]
             finding_filter: &finding_filter(&query),
             sort,
             page_size: PAGE_SIZE,

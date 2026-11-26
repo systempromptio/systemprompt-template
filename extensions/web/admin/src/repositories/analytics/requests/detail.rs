@@ -55,26 +55,98 @@ pub async fn list_request_safety_findings(
     .await
 }
 
+// Why: a call the ledger has no row for is one the model asked for and nothing
+// executed — `intended`. The ledger is the MCP member's table, so a build
+// without that member reads every call that way.
 pub async fn list_request_tool_calls(
     pool: &PgPool,
     ai_request_ids: &[String],
 ) -> Result<Vec<RequestToolCallRow>, sqlx::Error> {
-    sqlx::query_as!(
-        RequestToolCallRow,
-        r#"SELECT t.tool_name AS "tool_name!", t.sequence_number AS "sequence_number!",
-                  l.mcp_execution_id,
-                  l.artifact_id AS "artifact_id: ArtifactId",
-                  COALESCE(l.state, 'intended') AS "state!",
-                  l.execution_status,
-                  COALESCE(l.is_structured, FALSE) AS "is_structured!",
-                  t.created_at AS "created_at!"
+    let intents = sqlx::query!(
+        r#"SELECT t.id AS "id!", t.tool_name AS "tool_name!",
+                  t.sequence_number AS "sequence_number!", t.created_at AS "created_at!"
            FROM ai_request_tool_calls t
-           LEFT JOIN tool_call_ledger l ON l.intent_id = t.id
            WHERE t.request_id = ANY($1)
            ORDER BY t.created_at ASC, t.sequence_number ASC
            LIMIT 200"#,
         ai_request_ids
     )
     .fetch_all(pool)
-    .await
+    .await?;
+    #[cfg(feature = "mcp")]
+    let ledger = list_ledger_entries(
+        pool,
+        &intents.iter().map(|i| i.id.clone()).collect::<Vec<_>>(),
+    )
+    .await?;
+    Ok(intents
+        .into_iter()
+        .map(|i| {
+            let row = RequestToolCallRow {
+                tool_name: i.tool_name,
+                sequence_number: i.sequence_number,
+                mcp_execution_id: None,
+                artifact_id: None,
+                state: "intended".to_owned(),
+                execution_status: None,
+                is_structured: false,
+                created_at: i.created_at,
+            };
+            #[cfg(feature = "mcp")]
+            let row = match ledger.get(&i.id) {
+                Some(entry) => RequestToolCallRow {
+                    mcp_execution_id: entry.mcp_execution_id.clone(),
+                    artifact_id: entry.artifact_id.clone(),
+                    state: entry.state.clone(),
+                    execution_status: entry.execution_status.clone(),
+                    is_structured: entry.is_structured,
+                    ..row
+                },
+                None => row,
+            };
+            row
+        })
+        .collect())
+}
+
+#[cfg(feature = "mcp")]
+struct LedgerEntry {
+    mcp_execution_id: Option<String>,
+    artifact_id: Option<ArtifactId>,
+    state: String,
+    execution_status: Option<String>,
+    is_structured: bool,
+}
+
+#[cfg(feature = "mcp")]
+async fn list_ledger_entries(
+    pool: &PgPool,
+    intent_ids: &[String],
+) -> Result<std::collections::HashMap<String, LedgerEntry>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"SELECT l.intent_id AS "intent_id!", l.mcp_execution_id,
+                  l.artifact_id AS "artifact_id: ArtifactId",
+                  l.state AS "state!", l.execution_status,
+                  COALESCE(l.is_structured, FALSE) AS "is_structured!"
+           FROM tool_call_ledger l
+           WHERE l.intent_id = ANY($1)"#,
+        intent_ids
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| {
+            (
+                r.intent_id,
+                LedgerEntry {
+                    mcp_execution_id: r.mcp_execution_id,
+                    artifact_id: r.artifact_id,
+                    state: r.state,
+                    execution_status: r.execution_status,
+                    is_structured: r.is_structured,
+                },
+            )
+        })
+        .collect())
 }

@@ -27,6 +27,7 @@ pub mod attention;
 pub mod boot;
 pub mod declaration;
 pub mod drift_shape;
+#[cfg(feature = "gateway")]
 pub mod gateway_policies;
 pub mod gateway_routes;
 pub mod governance;

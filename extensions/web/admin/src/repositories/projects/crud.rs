@@ -35,38 +35,72 @@ pub async fn find_project(
 }
 
 pub async fn list_project_summaries(pool: &PgPool) -> Result<Vec<ProjectSummary>, sqlx::Error> {
-    sqlx::query_as!(
-        ProjectSummary,
+    let rows = sqlx::query!(
         r#"
         SELECT
             p.id AS "id!: ProjectId",
             p.name AS "name!",
             p.description,
-            COALESCE(m.member_count, 0)::BIGINT AS "member_count!",
-            COALESCE(u.active_members, 0)::BIGINT AS "active_members_30d!",
-            COALESCE(u.requests, 0)::BIGINT AS "requests_30d!",
-            COALESCE(u.cost_microdollars, 0)::BIGINT AS "cost_30d_microdollars!"
+            COALESCE(m.member_count, 0)::BIGINT AS "member_count!"
         FROM projects p
         LEFT JOIN (
             SELECT project_id, COUNT(*) AS member_count
             FROM user_projects GROUP BY project_id
         ) m ON m.project_id = p.id
-        LEFT JOIN (
-            SELECT pm.project_id,
-                   COUNT(DISTINCT r.user_id) AS active_members,
-                   COUNT(r.id) AS requests,
-                   COALESCE(SUM(r.cost_microdollars), 0) AS cost_microdollars
-            FROM user_projects pm
-            JOIN ai_requests r
-              ON r.user_id = pm.user_id
-             AND r.created_at >= NOW() - INTERVAL '30 days'
-            GROUP BY pm.project_id
-        ) u ON u.project_id = p.id
         ORDER BY p.name
         "#
     )
     .fetch_all(pool)
-    .await
+    .await?;
+    #[cfg(feature = "gateway")]
+    let usage = list_project_usage_30d(pool).await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| ProjectSummary {
+            #[cfg(feature = "gateway")]
+            usage: usage.get(r.id.as_str()).copied().unwrap_or_default(),
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            member_count: r.member_count,
+        })
+        .collect())
+}
+
+// Why: the thirty-day gateway figures, keyed by project, in the builds that
+// link the gateway member.
+#[cfg(feature = "gateway")]
+async fn list_project_usage_30d(
+    pool: &PgPool,
+) -> Result<std::collections::HashMap<String, crate::types::Usage30d>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"
+        SELECT pm.project_id AS "project_id!",
+               COUNT(DISTINCT r.user_id)::BIGINT AS "active_members!",
+               COUNT(r.id)::BIGINT AS "requests!",
+               COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS "cost_microdollars!"
+        FROM user_projects pm
+        JOIN ai_requests r
+          ON r.user_id = pm.user_id
+         AND r.created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY pm.project_id
+        "#
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| {
+            (
+                r.project_id,
+                crate::types::Usage30d {
+                    active_members_30d: r.active_members,
+                    requests_30d: r.requests,
+                    cost_30d_microdollars: r.cost_microdollars,
+                },
+            )
+        })
+        .collect())
 }
 
 pub async fn insert_project(

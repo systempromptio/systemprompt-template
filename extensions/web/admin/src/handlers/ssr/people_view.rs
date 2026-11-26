@@ -7,13 +7,15 @@
 
 use std::collections::{HashMap, HashSet};
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use systemprompt::identifiers::UserId;
 
-use super::format::short_num;
+use super::format::{expires_soon, short_num};
+#[cfg(feature = "mcp")]
+use super::types::MemberSetChipView;
 use super::types::{
-    MappingRowView, MemberRowView, MemberSetChipView, ModelMixRowView, NameCountRowView,
-    ProjectRowView, SourceBadgeView, StatTileView,
+    MappingRowView, MemberRowView, ModelMixRowView, NameCountRowView, ProjectRowView,
+    SourceBadgeView, StatTileView,
 };
 use crate::repositories::people_usage::breakdown::{LinkedScopeRow, ModelUsageRow};
 use crate::repositories::people_usage::{MemberUsageRow, ScopeUsageRow};
@@ -38,17 +40,6 @@ pub(crate) struct MemberInput<'a> {
     pub sources: &'a [String],
     pub source_ad_groups: &'a [String],
     pub valid_until: Option<DateTime<Utc>>,
-}
-
-// Why: the window inside which a membership counts as "expiring soon" on the
-// member tables and the access-control ledger — one working week, long enough
-// to renew before the sweep acts.
-pub(crate) const EXPIRING_SOON_DAYS: i64 = 7;
-
-#[must_use]
-pub(crate) fn expires_soon(valid_until: Option<DateTime<Utc>>, now: DateTime<Utc>) -> bool {
-    valid_until
-        .is_some_and(|until| until > now && until <= now + Duration::days(EXPIRING_SOON_DAYS))
 }
 
 pub(crate) struct MemberContext<'a> {
@@ -158,6 +149,7 @@ pub(crate) fn linked_rows(rows: &[LinkedScopeRow], prefix: &str) -> Vec<ProjectR
         .collect()
 }
 
+#[cfg(feature = "mcp")]
 pub(crate) fn chips(rows: &[LinkedScopeRow]) -> Vec<MemberSetChipView> {
     rows.iter()
         .map(|r| MemberSetChipView {

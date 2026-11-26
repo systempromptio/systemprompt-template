@@ -96,7 +96,7 @@ fn overview_routes() -> Router<Arc<PgPool>> {
 // the three together. Access control moved here from the catalog: it grants
 // people access to catalog entries, it is not itself one.
 fn people_routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let routes = Router::new()
         .route("/users", get(handlers::ssr::users_page))
         .route(
             "/users/{user_id}",
@@ -106,17 +106,6 @@ fn people_routes() -> Router<Arc<PgPool>> {
         // search resolve to; it stays mounted beside the path form rather
         // than forcing every caller to rewrite its links at once.
         .route("/user", get(handlers::ssr::user_detail_page))
-        .route("/groups", get(handlers::ssr::groups_page))
-        .route("/groups/{group_id}", get(handlers::ssr::group_detail_page))
-        .route("/projects", get(handlers::ssr::projects_page))
-        .route(
-            "/projects/{project_id}",
-            get(handlers::ssr::project_detail_page),
-        )
-        .route(
-            "/projects/{project_id}/report",
-            get(handlers::ssr::project_report_page),
-        )
         .route("/roles", get(handlers::ssr::roles_page))
         .route("/devices", get(handlers::ssr::devices_page))
         .route("/access-control", get(handlers::ssr::access_control_page))
@@ -131,6 +120,38 @@ fn people_routes() -> Router<Arc<PgPool>> {
         .route(
             "/devices/certs/{id}",
             axum::routing::delete(handlers::devices::revoke_cert),
+        );
+    #[cfg(feature = "gateway")]
+    let routes = routes.merge(group_routes());
+    #[cfg(feature = "mcp")]
+    let routes = routes.merge(project_routes());
+    routes
+}
+
+// Why: the group pages are container usage dashboards — every row and the
+// default tab are read through the gateway member's request log — so they are
+// compiled with that member.
+#[cfg(feature = "gateway")]
+fn group_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/groups", get(handlers::ssr::groups_page))
+        .route("/groups/{group_id}", get(handlers::ssr::group_detail_page))
+}
+
+// Why: the project pages answer "where is the spend and is the tooling
+// working", reading the gateway member's requests beside the MCP member's
+// executions and artifacts, so they are compiled with both.
+#[cfg(feature = "mcp")]
+fn project_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/projects", get(handlers::ssr::projects_page))
+        .route(
+            "/projects/{project_id}",
+            get(handlers::ssr::project_detail_page),
+        )
+        .route(
+            "/projects/{project_id}/report",
+            get(handlers::ssr::project_report_page),
         )
 }
 
@@ -138,11 +159,11 @@ fn people_routes() -> Router<Arc<PgPool>> {
 // share one scope contract (`?scope=`/`?range=`), which is why they are one
 // group rather than filed under the entity they happen to list.
 fn ai_activity_routes() -> Router<Arc<PgPool>> {
-    let routes = Router::new()
-        .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
-        .merge(super::ssr_export::routes());
+    let routes = Router::new().merge(super::ssr_export::routes());
     #[cfg(feature = "gateway")]
-    let routes = routes.merge(request_routes());
+    let routes = routes
+        .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
+        .merge(request_routes());
     #[cfg(feature = "agents")]
     let routes = routes.merge(agent_activity_routes());
     routes

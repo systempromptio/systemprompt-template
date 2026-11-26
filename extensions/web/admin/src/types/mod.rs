@@ -23,6 +23,10 @@ mod user_context;
 mod users;
 pub mod webhook;
 
+#[cfg(feature = "content")]
+pub use dashboard::DashboardSiteTraffic;
+#[cfg(feature = "mcp")]
+pub use dashboard::DashboardToolActivity;
 pub use dashboard::{
     AchievementInfo, ActivityStats, ContentPerformanceRow, DashboardData, DashboardQuery,
     DepartmentActivity, DepartmentQuery, DepartmentScore, EventBreakdown, EventFeedRow,
@@ -38,6 +42,8 @@ pub use gateway::{
     GatewayConfigView, GatewayRouteView, ReorderRoutesRequest, RouteFallbackView,
     UpdateGatewaySettingsRequest,
 };
+#[cfg(feature = "gateway")]
+pub use groups::Usage30d;
 pub use hooks_export::{HookEventType, HookHandler, HooksFile, HttpHook, MatcherGroup};
 pub use jobs::JobSummary;
 pub use plugins_config::{

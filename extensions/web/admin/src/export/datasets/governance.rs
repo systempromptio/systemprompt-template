@@ -6,15 +6,21 @@ use async_trait::async_trait;
 use crate::error::AdminResult;
 use crate::export::model::{Cell, CellKind, Column, DataSet, ExportContext, Table, Window};
 use crate::export::window::time_range;
-use crate::handlers::ssr::governance::{export_decisions, export_findings};
+use crate::handlers::ssr::governance::export_decisions;
+#[cfg(feature = "gateway")]
+use crate::handlers::ssr::governance::export_findings;
 use crate::handlers::ssr::secrets_audit;
 use crate::repositories::governance::decision_log::DecisionLogRow;
+#[cfg(feature = "gateway")]
 use crate::repositories::governance::findings::SafetyFindingLogRow;
 use crate::repositories::governance::secret_audit_log::SecretAuditRow;
 use crate::types::governance_labels::plane_of;
-use systemprompt::identifiers::{CallId, SessionId, UserId};
+use systemprompt::identifiers::CallId;
+#[cfg(feature = "gateway")]
+use systemprompt::identifiers::{SessionId, UserId};
 
 pub(crate) struct Decisions;
+#[cfg(feature = "gateway")]
 pub(crate) struct Findings;
 pub(crate) struct Secrets;
 
@@ -52,6 +58,7 @@ fn decision_row(r: &DecisionLogRow) -> Vec<Cell> {
     ]
 }
 
+#[cfg(feature = "gateway")]
 const FINDING_COLUMNS: &[Column] = &[
     Column::new("at", "Time", CellKind::Timestamp),
     Column::new("outcome", "Outcome", CellKind::Text),
@@ -68,6 +75,7 @@ const FINDING_COLUMNS: &[Column] = &[
     Column::new("record_id", "Record", CellKind::Text).optional(),
 ];
 
+#[cfg(feature = "gateway")]
 fn finding_row(r: &SafetyFindingLogRow) -> Vec<Cell> {
     vec![
         r.created_at.into(),
@@ -145,6 +153,7 @@ impl DataSet for Decisions {
     }
 }
 
+#[cfg(feature = "gateway")]
 #[async_trait]
 impl DataSet for Findings {
     fn id(&self) -> &'static str {

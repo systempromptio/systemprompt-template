@@ -8,19 +8,28 @@
 
 use serde::Serialize;
 
-use crate::handlers::ssr::types::{BreadcrumbView, SvgLineChartView};
+use crate::handlers::ssr::types::BreadcrumbView;
+#[cfg(feature = "gateway")]
+use crate::handlers::ssr::types::SvgLineChartView;
+#[cfg(feature = "gateway")]
 use crate::util::time_range::{TimeRange, TimeRangePreset};
 
 use super::data::OverviewData;
+#[cfg(feature = "gateway")]
+use super::data::UsageData;
+#[cfg(feature = "gateway")]
 use super::kpis_view::{OverviewKpiStripView, kpi_strip, volume_chart};
+#[cfg(feature = "gateway")]
 use super::panels_view::{
-    BoardSpec, ModelsBoardView, QueuesView, ScopeBoardView, models_board, queues, scope_board,
+    AnomaliesView, BoardSpec, ModelsBoardView, ScopeBoardView, anomalies, models_board, scope_board,
 };
+use super::panels_view::{ApprovalsView, approvals};
 
 // Why: three windows, not the audit pages' six. The overview answers a question
 // about now, and a fifteen-minute window is noise rather than signal at the
 // scale it reads. It carries the same `?preset=` name those pages use, so a
 // window chosen here survives the hop to the detail.
+#[cfg(feature = "gateway")]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum OverviewRange {
     Day,
@@ -28,6 +37,7 @@ pub(crate) enum OverviewRange {
     Month,
 }
 
+#[cfg(feature = "gateway")]
 impl OverviewRange {
     // Why: anything unrecognised lands on 24 hours rather than 400ing — a
     // mistyped preset in a shared link should still show the page.
@@ -114,15 +124,26 @@ pub(super) struct OverviewContext {
     pub title: &'static str,
     pub subtitle: String,
     pub breadcrumbs: Vec<BreadcrumbView>,
+    pub approvals: ApprovalsView,
+    #[cfg(feature = "gateway")]
+    pub usage: UsageView,
+}
+
+// Why: the widgets the gateway member's request log supplies, nested so the
+// template draws them under one `{{#with usage}}`.
+#[cfg(feature = "gateway")]
+#[derive(Debug, Serialize)]
+pub(super) struct UsageView {
     pub ranges: Vec<RangeLinkView>,
     pub kpis: OverviewKpiStripView,
     pub volume_chart: SvgLineChartView,
     pub models: ModelsBoardView,
-    pub queues: QueuesView,
+    pub anomalies: AnomaliesView,
     pub projects: ScopeBoardView,
     pub groups: ScopeBoardView,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(super) struct RangeLinkView {
     pub label: &'static str,
@@ -130,6 +151,7 @@ pub(super) struct RangeLinkView {
     pub is_active: bool,
 }
 
+#[cfg(feature = "gateway")]
 pub(super) fn overview_page(range: OverviewRange, data: &OverviewData) -> OverviewContext {
     OverviewContext {
         page: "overview",
@@ -139,11 +161,30 @@ pub(super) fn overview_page(range: OverviewRange, data: &OverviewData) -> Overvi
             range.window_label()
         ),
         breadcrumbs: vec![BreadcrumbView::current("Overview")],
+        approvals: approvals(data),
+        usage: usage_view(range, &data.usage),
+    }
+}
+
+#[cfg(not(feature = "gateway"))]
+pub(super) fn overview_page(data: &OverviewData) -> OverviewContext {
+    OverviewContext {
+        page: "overview",
+        title: "Overview",
+        subtitle: "What is waiting on a person.".to_owned(),
+        breadcrumbs: vec![BreadcrumbView::current("Overview")],
+        approvals: approvals(data),
+    }
+}
+
+#[cfg(feature = "gateway")]
+fn usage_view(range: OverviewRange, data: &UsageData) -> UsageView {
+    UsageView {
         ranges: range_links(range),
         kpis: kpi_strip(range, data),
         volume_chart: volume_chart(range, data),
         models: models_board(range, data),
-        queues: queues(data),
+        anomalies: anomalies(data),
         projects: scope_board(
             BoardSpec {
                 title: "Top projects by spend",
@@ -165,6 +206,7 @@ pub(super) fn overview_page(range: OverviewRange, data: &OverviewData) -> Overvi
     }
 }
 
+#[cfg(feature = "gateway")]
 fn range_links(active: OverviewRange) -> Vec<RangeLinkView> {
     [
         (OverviewRange::Day, "24h"),

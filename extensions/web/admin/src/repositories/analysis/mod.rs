@@ -8,12 +8,18 @@
 //! per-skill half of the same rollup (`conversation_skill_facts`), so a
 //! version's figures survive raw-event retention. Plugin evaluation scores
 //! each of those conversations from its stored messages by fixed rules.
+#[cfg(feature = "agents")]
 pub mod conversations;
 pub mod inventory_index;
+#[cfg(feature = "agents")]
 pub mod marketplace_versions;
+#[cfg(feature = "agents")]
 pub mod plugin_eval;
 #[cfg(feature = "mcp")]
 pub mod publications;
+#[cfg(feature = "agents")]
 pub mod reports;
+#[cfg(feature = "agents")]
 pub mod skills;
+#[cfg(feature = "mcp")]
 pub mod tools;

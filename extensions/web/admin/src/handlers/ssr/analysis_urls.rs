@@ -13,6 +13,7 @@ use systemprompt::identifiers::MarketplaceId;
 
 #[cfg(feature = "agents")]
 pub(crate) const ANALYSIS_CONVERSATIONS_URL: &str = "/admin/analysis/conversations";
+#[cfg(feature = "mcp")]
 pub(crate) const ANALYSIS_SKILLS_URL: &str = "/admin/analysis/skills";
 #[cfg(feature = "mcp")]
 pub(crate) const ANALYSIS_VERSIONS_URL: &str = "/admin/analysis/versions";
@@ -25,6 +26,7 @@ pub(crate) fn analysis_conversation_url(context: &ContextId) -> String {
     )
 }
 
+#[cfg(feature = "mcp")]
 pub(crate) fn analysis_skill_url(skill_key: &str) -> String {
     format!("{ANALYSIS_SKILLS_URL}/{}", urlencoding::encode(skill_key))
 }

@@ -15,7 +15,7 @@ use super::view::{
     AcAudienceBucketItemView, AcAudienceBucketView, AcAudienceCellView, AcAudienceColumnView,
     AcAudienceFocusView, AcAudienceKpiView, AcAudienceRowView,
 };
-use crate::handlers::ssr::people_view::expires_soon;
+use crate::handlers::ssr::format::expires_soon;
 use crate::repositories::access_control::rules::LedgerRuleRow;
 
 const BUCKETS: [(&str, &str); 4] = [

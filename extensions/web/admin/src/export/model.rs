@@ -26,11 +26,25 @@ pub(crate) const HARD_CAP: i64 = 50_000;
 #[serde(rename_all = "snake_case")]
 pub(crate) enum CellKind {
     Text,
+    #[cfg(feature = "gateway")]
     Integer,
+    #[cfg(feature = "gateway")]
     Decimal,
+    #[cfg(feature = "gateway")]
     Money,
     Timestamp,
     Bool,
+}
+
+impl CellKind {
+    // Why: numbers right-align in the markdown table.
+    pub(crate) const fn is_numeric(self) -> bool {
+        match self {
+            #[cfg(feature = "gateway")]
+            Self::Integer | Self::Decimal | Self::Money => true,
+            Self::Text | Self::Timestamp | Self::Bool => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize)]
@@ -78,7 +92,9 @@ pub(crate) enum Cell {
     Empty,
     Text(String),
     Integer(i64),
+    #[cfg(feature = "gateway")]
     Decimal(f64),
+    #[cfg(feature = "gateway")]
     Money(i64),
     Timestamp(DateTime<Utc>),
     Bool(bool),
@@ -93,10 +109,12 @@ impl Cell {
         value.map_or(Self::Empty, Self::text)
     }
 
+    #[cfg(feature = "gateway")]
     pub(crate) fn opt_int(value: Option<impl Into<i64>>) -> Self {
         value.map_or(Self::Empty, |v| Self::Integer(v.into()))
     }
 
+    #[cfg(feature = "gateway")]
     pub(crate) fn opt_decimal(value: Option<f64>) -> Self {
         value.map_or(Self::Empty, Self::Decimal)
     }
@@ -160,6 +178,7 @@ pub(crate) struct Table {
 }
 
 impl Table {
+    #[cfg(feature = "gateway")]
     pub(crate) fn complete(rows: Vec<Vec<Cell>>) -> Self {
         let total = i64::try_from(rows.len()).unwrap_or(i64::MAX);
         Self { rows, total }
@@ -168,6 +187,7 @@ impl Table {
     // Why: a loader whose repository stops at its own ceiling (below
     // `HARD_CAP`) still knows how many rows the filter matched; reporting that
     // total beside the rows is what lets the preview say the file is cut.
+    #[cfg(feature = "mcp")]
     pub(crate) const fn capped_at(rows: Vec<Vec<Cell>>, total: i64) -> Self {
         Self { rows, total }
     }
@@ -186,7 +206,9 @@ pub(crate) enum Window {
     Live,
     #[cfg(feature = "agents")]
     Retained,
+    #[cfg(feature = "gateway")]
     Days,
+    #[cfg(feature = "gateway")]
     Month,
     None,
 }

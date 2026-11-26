@@ -17,6 +17,7 @@ use sqlx::PgPool;
 pub(crate) use view::{AppliedView, HashView, PlaneCardView, SyncRecommendation};
 
 use crate::error::AdminResult;
+#[cfg(feature = "gateway")]
 use crate::handlers::ssr::types::TabLinkView;
 use crate::repositories::sync::plane::{DeclarationSource, SyncPlane};
 use crate::repositories::sync::registry::find_plane;
@@ -119,6 +120,7 @@ pub(crate) async fn plane_card_by_id(
         .map(Some)
 }
 
+#[cfg(feature = "gateway")]
 pub(crate) fn sync_tab(base_href: &str, is_active: bool) -> TabLinkView {
     TabLinkView {
         slug: SYNC_TAB,
@@ -129,6 +131,7 @@ pub(crate) fn sync_tab(base_href: &str, is_active: bool) -> TabLinkView {
     }
 }
 
+#[cfg(feature = "gateway")]
 pub(crate) fn is_sync_tab(tab: Option<&str>) -> bool {
     tab == Some(SYNC_TAB)
 }

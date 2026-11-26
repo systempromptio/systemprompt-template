@@ -15,7 +15,7 @@ use sqlx::PgPool;
 use super::super::handlers::{groups, projects};
 
 pub(crate) fn group_read_routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let routes = Router::new()
         .route("/groups", get(groups::list_groups_handler))
         .route("/groups/{group_id}", get(groups::get_group_handler))
         .route(
@@ -29,11 +29,13 @@ pub(crate) fn group_read_routes() -> Router<Arc<PgPool>> {
         .route(
             "/groups/{group_id}/marketplaces",
             get(groups::marketplaces::list_group_marketplaces_handler),
-        )
-        .route(
-            "/groups/{group_id}/usage",
-            get(groups::usage::get_group_usage_handler),
-        )
+        );
+    #[cfg(feature = "gateway")]
+    let routes = routes.route(
+        "/groups/{group_id}/usage",
+        get(groups::usage::get_group_usage_handler),
+    );
+    routes
 }
 
 pub(crate) fn group_write_routes() -> Router<Arc<PgPool>> {
@@ -70,7 +72,7 @@ pub(crate) fn group_platform_routes() -> Router<Arc<PgPool>> {
 }
 
 pub(crate) fn project_read_routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let routes = Router::new()
         .route("/projects", get(projects::list_projects_handler))
         .route("/projects/{project_id}", get(projects::get_project_handler))
         .route(
@@ -80,11 +82,13 @@ pub(crate) fn project_read_routes() -> Router<Arc<PgPool>> {
         .route(
             "/projects/{project_id}/ad-mappings",
             get(projects::mappings::list_project_ad_mappings_handler),
-        )
-        .route(
-            "/projects/{project_id}/usage",
-            get(projects::usage::get_project_usage_handler),
-        )
+        );
+    #[cfg(feature = "gateway")]
+    let routes = routes.route(
+        "/projects/{project_id}/usage",
+        get(projects::usage::get_project_usage_handler),
+    );
+    routes
 }
 
 pub(crate) fn project_write_routes() -> Router<Arc<PgPool>> {

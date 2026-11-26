@@ -103,6 +103,13 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         .map_err(JobError::from)?;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+    #[cfg(feature = "gateway")]
+    tracing::info!(
+        gateway_policies_declared = planes.gateway_policies.declared,
+        gateway_policies_seeded = planes.gateway_policies.seeded,
+        gateway_policies_drift = planes.gateway_policies.drift_rows,
+        "gateway policy plane reconciled"
+    );
     tracing::info!(
         gateway_entities = catalog.registered.known_ids(EntityKind::GatewayRoute).len(),
         gateway_entities_pruned = catalog.pruned,
@@ -112,9 +119,6 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         access_rules_declared = planes.access_control.declared,
         access_rules_seeded = planes.access_control.seeded,
         access_drift = planes.access_control.drift_rows,
-        gateway_policies_declared = planes.gateway_policies.declared,
-        gateway_policies_seeded = planes.gateway_policies.seeded,
-        gateway_policies_drift = planes.gateway_policies.drift_rows,
         slack_workspaces,
         service_sources = sources.sources,
         service_owned_ids = sources.owned_ids,

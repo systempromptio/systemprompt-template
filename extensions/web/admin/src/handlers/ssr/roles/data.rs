@@ -53,7 +53,9 @@ impl RolesQuery {
 
     pub(super) fn sort_key(&self) -> &str {
         match self.sort.as_deref() {
-            Some(key @ ("person" | "roles" | "requests" | "cost")) => key,
+            Some(key @ ("person" | "roles")) => key,
+            #[cfg(feature = "gateway")]
+            Some(key @ ("requests" | "cost")) => key,
             _ => "person",
         }
     }
@@ -170,7 +172,9 @@ pub(super) fn filtered_sorted(rows: &[RoleHolderRow], query: &RolesQuery) -> Vec
     let mut out: Vec<RoleHolderRow> = rows.iter().filter(|r| matches(r, query)).cloned().collect();
     match query.sort_key() {
         "roles" => out.sort_by_key(|r| (r.roles.len(), person_key(r))),
+        #[cfg(feature = "gateway")]
         "requests" => out.sort_by_key(|r| (r.requests_30d, person_key(r))),
+        #[cfg(feature = "gateway")]
         "cost" => out.sort_by_key(|r| (r.cost_30d_microdollars, person_key(r))),
         _ => out.sort_by_key(person_key),
     }

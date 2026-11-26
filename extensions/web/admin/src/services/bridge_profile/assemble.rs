@@ -7,111 +7,65 @@
 
 use crate::env::AdminEnv;
 
-use std::sync::Arc;
-
 use sqlx::PgPool;
 use systemprompt::identifiers::{TenantId, UserId};
 use uuid::Uuid;
 
 use crate::repositories::bridge::{BridgeIdentityRow, find_bridge_user};
+#[cfg(feature = "gateway")]
 use crate::repositories::users::usage as usage_repo;
 
-use super::{AgentItem, AgentsBlock, BridgeProfileBlock, ProfileMarketplaceView, ProfileUsage};
+#[cfg(feature = "gateway")]
+use super::ProfileUsage;
+use super::{AgentItem, AgentsBlock, BridgeProfileBlock, ProfileMarketplaceView};
 
-pub(super) struct UsageSections {
-    pub(super) d1: usage_repo::UsageWindow,
-    pub(super) d7: usage_repo::UsageWindow,
-    pub(super) d30: usage_repo::UsageWindow,
-    pub(super) top_models: Vec<usage_repo::ModelShare>,
-    pub(super) conversations: usage_repo::ConversationSummary,
-    pub(super) bridge_user: Option<BridgeIdentityRow>,
+pub(super) async fn load_bridge_user(pool: &PgPool, user_id: &UserId) -> Option<BridgeIdentityRow> {
+    find_bridge_user(pool, user_id)
+        .await
+        .inspect_err(|e| {
+            tracing::warn!(error = %e, user_id = %user_id, "bridge_profile: find_bridge_user failed");
+        })
+        .ok()
+        .flatten()
 }
 
-pub(super) async fn load_usage_sections(pool: &Arc<PgPool>, user_id: &UserId) -> UsageSections {
-    let pool_for_d1 = Arc::clone(pool);
-    let pool_for_d7 = Arc::clone(pool);
-    let pool_for_d30 = Arc::clone(pool);
-    let pool_for_models = Arc::clone(pool);
-    let pool_for_conv = Arc::clone(pool);
-    let pool_for_user = Arc::clone(pool);
-
-    let user_id_d1 = user_id.to_owned();
-    let user_id_d7 = user_id.to_owned();
-    let user_id_d30 = user_id.to_owned();
-    let user_id_models = user_id.to_owned();
-    let user_id_conv = user_id.to_owned();
-    let user_id_user = user_id.to_owned();
-
-    let (d1, d7, d30, top_models, conversations, bridge_user) = tokio::join!(
-        async move {
-            usage_repo::get_usage_window(&pool_for_d1, &user_id_d1, 1)
-                .await
-                .inspect_err(
-                    |e| tracing::warn!(error = %e, days = 1, "bridge profile: usage window failed"),
-                )
-                .unwrap_or_default()
-        },
-        async move {
-            usage_repo::get_usage_window(&pool_for_d7, &user_id_d7, 7)
-                .await
-                .inspect_err(
-                    |e| tracing::warn!(error = %e, days = 7, "bridge profile: usage window failed"),
-                )
-                .unwrap_or_default()
-        },
-        async move {
-            usage_repo::get_usage_window(&pool_for_d30, &user_id_d30, 30)
-                .await
-                .inspect_err(|e| tracing::warn!(error = %e, days = 30, "bridge profile: usage window failed"))
-                .unwrap_or_default()
-        },
-        async move {
-            usage_repo::list_top_models(
-                &pool_for_models,
-                &user_id_models,
-                Some(usage_repo::CONVERSATION_WINDOW_DAYS),
-                5,
+#[cfg(feature = "gateway")]
+pub(super) async fn load_usage(pool: &PgPool, user_id: &UserId) -> ProfileUsage {
+    let window = |days: i32| async move {
+        usage_repo::get_usage_window(pool, user_id, days)
+            .await
+            .inspect_err(
+                |e| tracing::warn!(error = %e, days, "bridge profile: usage window failed"),
             )
+            .unwrap_or_default()
+    };
+    let top_models = async {
+        usage_repo::list_top_models(pool, user_id, Some(usage_repo::CONVERSATION_WINDOW_DAYS), 5)
             .await
             .inspect_err(|e| tracing::warn!(error = %e, "bridge profile: top skills failed"))
             .unwrap_or_default()
-        },
-        async move {
-            usage_repo::get_conversation_summary(&pool_for_conv, &user_id_conv)
-                .await
-                .inspect_err(
-                    |e| tracing::warn!(error = %e, "bridge profile: conversation summary failed"),
-                )
-                .unwrap_or_default()
-        },
-        async move {
-            find_bridge_user(&pool_for_user, &user_id_user)
-                .await
-                .inspect_err(|e| {
-                    tracing::warn!(error = %e, user_id = %user_id_user, "bridge_profile: find_bridge_user failed");
-                })
-                .ok()
-                .flatten()
-        }
-    );
-
-    UsageSections {
+    };
+    #[cfg(feature = "agents")]
+    let conversations = async {
+        usage_repo::get_conversation_summary(pool, user_id)
+            .await
+            .inspect_err(
+                |e| tracing::warn!(error = %e, "bridge profile: conversation summary failed"),
+            )
+            .unwrap_or_default()
+    };
+    #[cfg(feature = "agents")]
+    let (d1, d7, d30, top_models, conversations) =
+        tokio::join!(window(1), window(7), window(30), top_models, conversations);
+    #[cfg(not(feature = "agents"))]
+    let (d1, d7, d30, top_models) = tokio::join!(window(1), window(7), window(30), top_models);
+    ProfileUsage {
         d1,
         d7,
         d30,
         top_models,
+        #[cfg(feature = "agents")]
         conversations,
-        bridge_user,
-    }
-}
-
-pub(super) fn build_usage(sections: UsageSections) -> ProfileUsage {
-    ProfileUsage {
-        d1: sections.d1,
-        d7: sections.d7,
-        d30: sections.d30,
-        top_models: sections.top_models,
-        conversations: sections.conversations,
     }
 }
 
