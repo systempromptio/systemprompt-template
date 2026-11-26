@@ -126,7 +126,10 @@ measure_image() {
         "${compose[@]}" restart app > /dev/null
         healthy=false
         for _ in $(seq 1 300); do
-            if curl -fs --max-time 2 "$base/api/v1/health" 2>/dev/null | jq -e '.status == "healthy"' > /dev/null 2>&1; then healthy=true; break; fi
+            # Why: the ephemeral host port is reassigned when the container restarts.
+            port="$("${compose[@]}" port app 8080 2>/dev/null | head -1 | sed 's/.*://')"
+            base="http://localhost:$port"
+            if [ -n "$port" ] && curl -fs --max-time 2 "$base/api/v1/health" 2>/dev/null | jq -e '.status == "healthy"' > /dev/null 2>&1; then healthy=true; break; fi
             sleep 1
         done
         if [ "$healthy" = true ]; then put deploy.second_boot_to_healthy_seconds "$(since "$second")"; else put deploy.second_boot_to_healthy_seconds null; fi
