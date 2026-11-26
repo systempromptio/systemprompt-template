@@ -32,6 +32,8 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(SCHEMA_ADMIN_DASHBOARD),
         SchemaDefinition::sql_only(SCHEMA_MANAGEMENT),
         SchemaDefinition::sql_only(SCHEMA_WEB_SIDE_TABLES),
+        #[cfg(feature = "content")]
+        SchemaDefinition::sql_only(include_str!("../schema/13b_content_enrichment.sql")),
         SchemaDefinition::sql_only(SCHEMA_AUDIT_EVENT_NOTIFY),
         SchemaDefinition::sql_only(SCHEMA_ORGANIZATIONS),
         SchemaDefinition::sql_only(SCHEMA_USAGE_METRICS),
