@@ -267,14 +267,14 @@ if [ -n "$pages$signed_absent" ]; then
         seed_console
         crawl="$(python3 -I "$FLAVOUR_ROOT/scripts/lib/console-crawl.py" "$base" "$cookie" 2> "$work/crawl.err" || true)"
         if [ -z "$crawl" ]; then record "console nav pages" fail "$(tail -1 "$work/crawl.err")"; fi
-        while read -r kind code page; do
+        while read -r kind code page from; do
             [ -n "$page" ] || continue
             if [ "$kind" = nav ]; then
                 if [ "$code" = 200 ]; then record "console nav page $page" pass "$code"; else record "console nav page $page" fail "$code"; fi
             elif [ "$code" != 404 ] && [ "$code" -lt 500 ] 2>/dev/null; then
                 record "console link $page" pass "$code"
             else
-                record "console link $page" fail "$code"
+                record "console link $page" fail "$code from $from"
             fi
         done <<< "$crawl"
         home="$(curl -s --max-time 10 -H "Cookie: $cookie" "$base/admin" || true)"

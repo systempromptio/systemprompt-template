@@ -6,8 +6,8 @@
 Reads /admin, takes every link in the admin navigation (the flavour's own
 dashboard.yaml, as the server rendered it), fetches each, then fetches every
 same-origin /admin link those pages carry, one hop deep. Prints one line per
-page: `nav CODE PATH` for a sidebar page, `link CODE PATH` for a page one hop
-beneath it. A strict-mode template reading a field the flavour's view model
+page: `nav CODE PATH /admin` for a sidebar page, `link CODE PATH FROM` for a
+page one hop beneath the sidebar page FROM that links it. A strict-mode template reading a field the flavour's view model
 does not supply answers 500, and a link to a page the flavour does not compile
 answers 404; the smoke fails both, so this is the render and link check for
 every page a flavour compiles and links."""
@@ -74,12 +74,12 @@ pages = []
 for path in admin_paths(home, True):
     seen.add(path)
     status, body = get(path)
-    print(f"nav {status} {path}", flush=True)
-    pages.append(body)
-for body in pages:
+    print(f"nav {status} {path} /admin", flush=True)
+    pages.append((path, body))
+for source, body in pages:
     for path in admin_paths(body, False):
         if path in seen:
             continue
         seen.add(path)
         status, _ = get(path)
-        print(f"link {status} {path}", flush=True)
+        print(f"link {status} {path} {source}", flush=True)
