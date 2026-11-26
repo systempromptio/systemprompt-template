@@ -5,8 +5,11 @@ import json
 import os
 from pathlib import Path
 import shutil
+import socket
+import struct
 import sys
 import subprocess
+from urllib.parse import unquote, urlsplit
 import yaml
 
 
@@ -107,8 +110,35 @@ def configure(profile_path, env):
     profile_path.chmod(0o600)
 
 
+def postgres_ready(url):
+    """pg_isready's answer for one attempt: the server is accepting
+    connections unless it refuses the socket or reports it is starting up
+    (SQLSTATE 57P03); an authentication request or any other error means it
+    is up, as PQping reads it."""
+    parts = urlsplit(url)
+    user = unquote(parts.username or 'postgres')
+    database = parts.path.lstrip('/') or user
+    body = struct.pack('!i', 196608)
+    for key, value in (('user', user), ('database', database)):
+        body += key.encode() + b'\0' + value.encode() + b'\0'
+    body += b'\0'
+    try:
+        with socket.create_connection((parts.hostname or 'localhost', parts.port or 5432), timeout=3) as conn:
+            conn.sendall(struct.pack('!i', len(body) + 4) + body)
+            kind = conn.recv(1)
+            if kind != b'E':
+                return kind != b''
+            length = struct.unpack('!i', conn.recv(4))[0]
+            fields = conn.recv(length - 4)
+            return b'C57P03\0' not in fields
+    except OSError:
+        return False
+
+
 if __name__ == '__main__':
-    if sys.argv[1] == 'attach':
+    if sys.argv[1] == 'postgres-ready':
+        sys.exit(0 if postgres_ready(sys.argv[2]) else 1)
+    elif sys.argv[1] == 'attach':
         attach_state(Path('/app'), Path(os.environ['SYSTEMPROMPT_DATA_DIR']))
     else:
         configure(Path(sys.argv[1]), os.environ)

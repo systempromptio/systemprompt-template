@@ -96,8 +96,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 #   jq               secrets.json edits in entrypoint.sh
 #   lsof             core's process supervision finds the pids holding a port
 #   openssl          signing-key generation in container-state.py
-#   postgresql-client  pg_isready before migrating
-#   python3, python3-yaml  container-state.py and migrate-profile.py rewrite the
+#   python3, python3-yaml  container-state.py waits for Postgres (the protocol
+#                    probe pg_isready makes, without postgresql-client and the
+#                    perl it pulls in); it and migrate-profile.py rewrite the
 #                    persisted profile YAML; no `admin config` command sets
 #                    security.allow_registration, rate_limits.disabled or
 #                    security.signing_key_path, and pre-0.47 volumes still
@@ -121,7 +122,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     jq \
     lsof \
     openssl \
-    postgresql-client \
     python3 \
     python3-yaml \
     && rm -rf /var/lib/apt/lists/*

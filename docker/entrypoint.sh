@@ -46,13 +46,13 @@ wait_for_postgres() {
     # Probe DATABASE_URL directly when provided (managed Postgres, e.g. Render);
     # fall back to the compose-style host/user/db vars otherwise.
     if [ -n "${DATABASE_URL:-}" ]; then
-        pg_probe() { pg_isready -d "$DATABASE_URL"; }
+        pg_probe() { python3 /app/container-state.py postgres-ready "$DATABASE_URL"; }
         echo "Waiting for Postgres at DATABASE_URL host..."
     else
         PG_HOST="${PG_HOST:-postgres}"
         PG_USER="${PG_USER:-systemprompt}"
         PG_DB="${PG_DB:-systemprompt}"
-        pg_probe() { pg_isready -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB"; }
+        pg_probe() { python3 /app/container-state.py postgres-ready "postgres://$PG_USER@$PG_HOST:5432/$PG_DB"; }
         echo "Waiting for Postgres at ${PG_HOST}..."
     fi
     i=0
