@@ -244,6 +244,14 @@ jobs:
       - name: Provision the full flavour profile
         timeout-minutes: 10
         run: just setup full --anthropic-key sk-ant-e2e-placeholder --http-port 8080 --pg-port 5432 --admin-email e2e@example.invalid --no-build
+      # Setup writes the profile and the database but no config plane, and
+      # /health reports "degraded" until the declared planes are applied — the
+      # image does this at boot (docker/entrypoint.sh), so the job does it here.
+      - name: Apply the declared config planes
+        timeout-minutes: 5
+        env:
+          SYSTEMPROMPT_PROFILE: .systemprompt/profiles/full/profile.yaml
+        run: target/flavour-full/debug/systemprompt admin config apply --reason "e2e boot"
       # `infra services start` holds the terminal for the life of the server.
       - name: Start the stack (detached)
         run: nohup just start > e2e-server.log 2>&1 &
