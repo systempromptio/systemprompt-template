@@ -66,11 +66,14 @@
             <div class="sp-kpi-grid">
                 {{> components/kpi label="Pending approvals" value=approvals.count tone=approvals.tone
                     note="calls held by require_approval" href="/admin/governance/approvals"}}
+                {{#if usage}}
                 {{#with usage.anomalies}}
                 {{> components/kpi label="Open anomalies" value=count tone=tone
                     note="detected in the last 24 hours" href="/admin/analytics?tab=spend"}}
                 {{/with}}
+                {{/if}}
             </div>
+            {{#if usage}}
             {{#with usage.anomalies}}
             {{#if error}}{{> components/notice tone="err" title="Anomalies unavailable" message=error}}{{/if}}
             {{#if has_rows}}
@@ -98,6 +101,7 @@
             {{> components/empty-state heading="Nothing flagged" message="No usage anomaly has been detected in the last 24 hours."}}
             {{/if}}
             {{/with}}
+            {{/if}}
         </section>
     </div>
 
