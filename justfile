@@ -331,8 +331,7 @@ preflight-static:
     check "release merge self-test" bash tests/scripts/release-merge.sh
     check "release helper self-test" bash tests/scripts/release-helper.sh
     check "deploy config" python3 scripts/check-deploy-config.py
-    check "docker migrate-profile" python3 docker/test_migrate_profile.py
-    check "docker container-state" python3 docker/test_container_state.py
+    check "docker entrypoint" sh -n docker/entrypoint.sh
     check "source gates" {{just_executable()}} _lint-gates-uncoordinated
     if [ "${#failed[@]}" -gt 0 ]; then printf '::error::preflight-static failed: %s\n' "${failed[@]}"; exit 1; fi
 

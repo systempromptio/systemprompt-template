@@ -1,10 +1,11 @@
 #!/bin/sh
 # Container entrypoint for systemprompt-template.
-# Authors a profile via `systemprompt admin setup` on first boot,
-# waits for Postgres, runs migrations, starts the server. The image's flavour
-# (Dockerfile ARGs) decides whether a provider key is required
+# Authors a profile via `systemprompt admin setup` on first boot, prepares
+# durable state, waits for Postgres, runs migrations, starts the server. The
+# image's flavour (Dockerfile ARGs) decides whether a provider key is required
 # (FLAVOUR_REQUIRES_AI_KEY) and whether the site or only the console assets
-# are published (FLAVOUR_SITE).
+# are published (FLAVOUR_SITE). The runtime is distroless plus busybox, jq and
+# lsof (docker/runtime-tools.sh): everything here is POSIX sh over those.
 set -eu
 umask 077
 profile_created=false
@@ -14,7 +15,8 @@ profile_created=false
 if [ "$(id -u)" = 0 ] && [ -n "${SYSTEMPROMPT_DATA_DIR:-}" ]; then
     mkdir -p "$SYSTEMPROMPT_DATA_DIR"
     chown -R app:app "$SYSTEMPROMPT_DATA_DIR"
-    exec gosu app "$0" "$@"
+    export HOME=/home/app
+    exec setpriv --reuid=app --regid=app --init-groups "$0" "$@"
 fi
 
 # One-click platforms (Railway et al.) export unfilled template variables as
@@ -37,22 +39,101 @@ EXTERNAL_URL="${EXTERNAL_URL:-${RENDER_EXTERNAL_URL:-}}"
 [ -n "${ADMIN_EMAIL:-}" ] || unset ADMIN_EMAIL
 ADMIN_EMAIL="${SYSTEMPROMPT_ADMIN_EMAIL:-${ADMIN_EMAIL:-}}"
 
+# A platform volume at SYSTEMPROMPT_DATA_DIR holds every durable path; each is
+# moved there once and the image path becomes a link to it, so packaged web
+# assets elsewhere under /app are never masked by the volume.
+attach_state() {
+    for relative in .systemprompt storage/data storage/files/uploads \
+        storage/files/images/generated storage/files/audio storage/files/video \
+        storage/files/documents; do
+        source="/app/$relative"
+        destination="$SYSTEMPROMPT_DATA_DIR/$relative"
+        mkdir -p "$destination"
+        if [ -L "$source" ]; then
+            if [ "$(readlink -f "$source")" != "$(readlink -f "$destination")" ]; then
+                echo "ERROR: $source points outside the configured state directory" >&2
+                exit 1
+            fi
+            continue
+        fi
+        if [ -e "$source" ]; then
+            (cd "$source" && find . -exec sh -c '
+                for item; do
+                    if [ -d "$item" ]; then mkdir -p "$0/$item"
+                    elif [ ! -e "$0/$item" ]; then cp -a "$item" "$0/$item"; fi
+                done' "$destination" {} +)
+            rm -rf "$source"
+        fi
+        mkdir -p "$(dirname "$source")"
+        ln -s "$destination" "$source"
+    done
+}
+
 if [ -n "${SYSTEMPROMPT_DATA_DIR:-}" ]; then
-    python3 /app/container-state.py attach
+    attach_state
 fi
+
+percent_decode() {
+    printf '%b' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')"
+}
+
+# Splits a postgres:// URL into db_host, db_port, db_user, db_password, db_name.
+parse_database_url() {
+    rest="${1#*://}"
+    rest="${rest%%\?*}"
+    authority="${rest%%/*}"
+    db_name=""
+    case "$rest" in */*) db_name="$(percent_decode "${rest#*/}")" ;; esac
+    userinfo=""
+    hostport="$authority"
+    case "$authority" in *@*) userinfo="${authority%@*}"; hostport="${authority##*@}" ;; esac
+    db_user="$(percent_decode "${userinfo%%:*}")"
+    db_password=""
+    case "$userinfo" in *:*) db_password="$(percent_decode "${userinfo#*:}")" ;; esac
+    db_port=""
+    case "$hostport" in
+        \[*\]*) db_host="${hostport%%]*}"; db_host="${db_host#[}"; db_port="${hostport##*]}"; db_port="${db_port#:}" ;;
+        *:*) db_host="${hostport%:*}"; db_port="${hostport##*:}" ;;
+        *) db_host="$hostport" ;;
+    esac
+    db_host="${db_host:-localhost}"
+    db_port="${db_port:-5432}"
+}
+
+be32() {
+    printf "\\$(printf %03o $(($1 >> 24 & 255)))\\$(printf %03o $(($1 >> 16 & 255)))\\$(printf %03o $(($1 >> 8 & 255)))\\$(printf %03o $(($1 & 255)))"
+}
+
+# pg_isready's answer for one attempt: a startup packet is sent and the server
+# is accepting connections unless it refuses the socket or reports it is
+# starting up (SQLSTATE 57P03); an authentication request or any other error
+# means it is up, as PQping reads it.
+postgres_ready() {
+    parse_database_url "$1"
+    probe_user="${db_user:-postgres}"
+    probe_db="${db_name:-$probe_user}"
+    length=$((25 + ${#probe_user} + ${#probe_db}))
+    reply="$({ be32 "$length"; be32 196608; printf 'user\000%s\000database\000%s\000\000' "$probe_user" "$probe_db"; sleep 2; } \
+        | timeout 3 nc "$db_host" "$db_port" 2>/dev/null | head -c 512 | tr '\000' ' ')" || true
+    case "$reply" in
+        "") return 1 ;;
+        E*57P03*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
 
 postgres_ready=false
 wait_for_postgres() {
     # Probe DATABASE_URL directly when provided (managed Postgres, e.g. Render);
     # fall back to the compose-style host/user/db vars otherwise.
     if [ -n "${DATABASE_URL:-}" ]; then
-        pg_probe() { python3 /app/container-state.py postgres-ready "$DATABASE_URL"; }
+        pg_probe() { postgres_ready "$DATABASE_URL"; }
         echo "Waiting for Postgres at DATABASE_URL host..."
     else
         PG_HOST="${PG_HOST:-postgres}"
         PG_USER="${PG_USER:-systemprompt}"
         PG_DB="${PG_DB:-systemprompt}"
-        pg_probe() { python3 /app/container-state.py postgres-ready "postgres://$PG_USER@$PG_HOST:5432/$PG_DB"; }
+        pg_probe() { postgres_ready "postgres://$PG_USER@$PG_HOST:5432/$PG_DB"; }
         echo "Waiting for Postgres at ${PG_HOST}..."
     fi
     i=0
@@ -106,12 +187,9 @@ if [ -n "${SYSTEMPROMPT_PROFILE_DIR:-}" ]; then
     # `signing_key_pem` secret; a single-node supplied profile may instead
     # point `security.signing_key_path` at a key file it ships.
     if [ -z "$(jq -r '.signing_key_pem // empty' "$SECRETS_FILE")" ]; then
-        key_file="$(python3 -c 'import sys, yaml
-from pathlib import Path
-profile = Path(sys.argv[1])
-key = (yaml.safe_load(profile.read_text()) or {}).get("security", {}).get("signing_key_path") or "/app/signing_key.pem"
-path = Path(key)
-print(path if path.is_absolute() else profile.parent / path)' "$PROFILE_FILE")"
+        key_file="$(sed -n 's/^  signing_key_path: *//p' "$PROFILE_FILE" | tr -d "\"'")"
+        key_file="${key_file:-/app/signing_key.pem}"
+        case "$key_file" in /*) ;; *) key_file="$PROFILE_DIR/$key_file" ;; esac
         if [ ! -s "$key_file" ]; then
             echo "ERROR: $SECRETS_FILE has no signing_key_pem and $key_file does not exist." >&2
             echo "  Supply the shared signing key as signing_key_pem (base64 PEM)." >&2
@@ -158,16 +236,8 @@ else
         # it cannot, so it is handed DATABASE_URL's parts (it reads no URL) once
         # Postgres answers.
         wait_for_postgres
-        db_parts="$(python3 -c 'import sys
-from urllib.parse import unquote, urlsplit
-u = urlsplit(sys.argv[1])
-print(u.hostname or "localhost", u.port or 5432, unquote(u.username or ""), u.path.lstrip("/"), sep="\n")
-print(unquote(u.password or ""))' "$DATABASE_URL")"
-        db_host="$(printf '%s\n' "$db_parts" | sed -n 1p)"
-        db_port="$(printf '%s\n' "$db_parts" | sed -n 2p)"
-        db_user="$(printf '%s\n' "$db_parts" | sed -n 3p)"
-        db_name="$(printf '%s\n' "$db_parts" | sed -n 4p)"
-        printf '%s\n' "$db_parts" | sed -n 5p | /app/bin/systemprompt admin setup -e docker \
+        parse_database_url "$DATABASE_URL"
+        printf '%s\n' "$db_password" | /app/bin/systemprompt admin setup -e docker \
             --db-host "$db_host" --db-port "$db_port" \
             --db-user "$db_user" --db-name "$db_name" --db-password-stdin \
             --admin-email "$ADMIN_EMAIL" \
@@ -177,26 +247,64 @@ print(unquote(u.password or ""))' "$DATABASE_URL")"
 
         # Setup authors a localhost dev profile; patch the parts the
         # container environment dictates.
-        # 1. Bind publicly (Render/compose port detection needs 0.0.0.0).
-        #    Overridable via HOST for platforms whose internal networking is
-        #    IPv6-only (Railway healthchecks need HOST=::).
-        # Quoted: bare "::" (IPv6 any) is invalid YAML.
-        sed -i "s/^  host: 127\.0\.0\.1$/  host: \"${HOST:-0.0.0.0}\"/" "$PROFILE_FILE"
-        # 1b. Binaries ship in /app/bin, not a cargo target dir.
+        # Binaries ship in /app/bin, not a cargo target dir; no `admin config`
+        # command sets paths.bin.
         sed -i 's|^  bin: .*|  bin: /app/bin|' "$PROFILE_FILE"
-        # 2. Point at the real database, not setup's generated localhost one.
-        jq --arg db "$DATABASE_URL" '.database_url = $db' "$SECRETS_FILE" \
-            > "$SECRETS_FILE.tmp" && mv "$SECRETS_FILE.tmp" "$SECRETS_FILE"
-        chmod 600 "$SECRETS_FILE"
     fi
 fi
 
-python3 /app/migrate-profile.py "$PROFILE_FILE"
-if [ -z "${SYSTEMPROMPT_PROFILE_DIR:-}" ]; then
-    PROFILE_CREATED="$profile_created" python3 /app/container-state.py "$PROFILE_FILE"
-fi
-
 export SYSTEMPROMPT_PROFILE="$PROFILE_FILE"
+
+secrets_set() {
+    jq --arg key "$1" --arg value "$2" '.[$key] = $value' "$SECRETS_FILE" > "$SECRETS_FILE.tmp"
+    mv "$SECRETS_FILE.tmp" "$SECRETS_FILE"
+    chmod 600 "$SECRETS_FILE"
+}
+
+# The container environment owns these on every boot; the rest of the profile
+# is what admin setup authored plus the flavour's base layer
+# (<profiles>/base.yaml, which core merges under profile.yaml).
+configure_profile() {
+    cp /app/profile.base.yaml "$(dirname "$PROFILE_DIR")/base.yaml"
+    case "$(printf '%s' "${ALLOW_REGISTRATION:-false}" | tr '[:upper:]' '[:lower:]')" in
+        true) allow_registration=true ;;
+        *) allow_registration=false ;;
+    esac
+    # Why: no `admin config` command sets security.allow_registration.
+    sed -i "s/^  allow_registration: .*/  allow_registration: $allow_registration/" "$PROFILE_FILE"
+    set -- --host "${HOST:-0.0.0.0}" --port "${PORT:-8080}"
+    if [ -n "$EXTERNAL_URL" ]; then set -- "$@" --external-url "${EXTERNAL_URL%/}"; fi
+    /app/bin/systemprompt admin config server set "$@" > /dev/null
+    /app/bin/systemprompt admin config rate-limits enable > /dev/null
+    secrets_set database_url "$DATABASE_URL"
+    # Optional read/write split: reads stay on DATABASE_URL, writes go to the
+    # primary named here (core refuses a standby as the write target).
+    if [ -n "${DATABASE_WRITE_URL:-}" ]; then secrets_set database_write_url "$DATABASE_WRITE_URL"; fi
+}
+
+# Platform-generated identity inputs (one-click templates) apply to the profile
+# this boot created; a redeploy keeps the identity it already has.
+apply_platform_identity() {
+    if [ -n "${OAUTH_AT_REST_PEPPER:-}" ]; then
+        if [ "${#OAUTH_AT_REST_PEPPER}" -lt 32 ]; then
+            echo "ERROR: OAUTH_AT_REST_PEPPER must contain at least 32 characters" >&2
+            exit 1
+        fi
+        secrets_set oauth_at_rest_pepper "$OAUTH_AT_REST_PEPPER"
+    fi
+    if [ -n "${MANIFEST_SIGNING_SECRET_SEED:-}" ]; then
+        if [ "$(printf '%s' "$MANIFEST_SIGNING_SECRET_SEED" | base64 -d 2>/dev/null | wc -c)" -ne 32 ]; then
+            echo "ERROR: MANIFEST_SIGNING_SECRET_SEED must encode 32 bytes" >&2
+            exit 1
+        fi
+        secrets_set manifest_signing_secret_seed "$MANIFEST_SIGNING_SECRET_SEED"
+    fi
+}
+
+if [ -z "${SYSTEMPROMPT_PROFILE_DIR:-}" ]; then
+    if [ "$profile_created" = true ]; then apply_platform_identity; fi
+    configure_profile
+fi
 
 if [ "$postgres_ready" = false ]; then wait_for_postgres; fi
 

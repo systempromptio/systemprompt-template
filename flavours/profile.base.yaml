@@ -1,6 +1,7 @@
 # Profile keys every flavour sets on top of what `admin setup` writes, applied
 # before flavours/<name>/profile.overlay.yaml by scripts/flavour-overlay.sh
-# (local installs) and docker/container-state.py (images).
+# (local installs); an image bakes both into its profile base layer (the
+# Dockerfile's services stage).
 # The web member is in every flavour and declares the GitHub MCP OAuth client
 # and the console connector secrets; core admits a member only when the
 # profile grants each secret it declares.

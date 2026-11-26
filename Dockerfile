@@ -7,8 +7,9 @@
 #   services   the flavour's services tree (scripts/flavour-stage-services.sh)
 #   artifacts  the binaries alone: --target artifacts --output type=local,dest=out
 #   cache-reset  empties the flavour's target cache (clean-build metrics)
-#   runtime    runtime-slim (what the entrypoint and healthcheck need) or
-#              runtime-full (adds demo/ and hey), chosen by RUNTIME
+#   runtime    runtime-slim (distroless plus what the entrypoint and
+#              healthcheck need) or runtime-full (adds demo/ and hey), chosen
+#              by RUNTIME
 ARG FLAVOUR=full
 ARG FEATURES=flavour-full
 ARG BINS=systemprompt
@@ -71,8 +72,17 @@ RUN --mount=type=cache,id=target-${FLAVOUR},target=/target,sharing=locked \
 FROM scratch AS artifacts
 COPY --from=builder /out/bin /bin
 
+# The flavour's content: its services tree (scripts/flavour-stage-services.sh),
+# the storage tree it serves and its profile base layer. Storage the flavour
+# links no member for is left out: the site's video assets without the public
+# site (SITE is not true), the hosted plugin bundles without a staged
+# services/plugins tree. The base layer is flavours/profile.base.yaml with the
+# flavour's profile.overlay.yaml merged over it the way core merges layers
+# (maps key by key, anything else replaced whole); core reads it as
+# <profiles>/base.yaml beneath the profile admin setup authors.
 FROM debian:bookworm-slim AS services
 ARG FLAVOUR
+ARG SITE
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-yaml \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /stage
@@ -80,15 +90,24 @@ COPY flavours /stage/flavours
 COPY services /stage/services
 COPY scripts/flavour.py scripts/flavour-stage-services.sh /stage/scripts/
 COPY scripts/lib /stage/scripts/lib
-RUN bash scripts/flavour-stage-services.sh "$FLAVOUR" /staged/services
-
-# The storage tree the runtime serves from. Without the public site (SITE is
-# not true) the site's video assets are declared by no linked member, so they
-# are left out.
-FROM debian:bookworm-slim AS storage
-ARG SITE
-COPY storage /storage
-RUN if [ "$SITE" != true ]; then rm -rf /storage/files/video; fi
+COPY storage /staged/storage
+RUN bash scripts/flavour-stage-services.sh "$FLAVOUR" /staged/services \
+    && if [ "$SITE" != true ]; then rm -rf /staged/storage/files/video; fi \
+    && if [ ! -d /staged/services/plugins ]; then rm -rf /staged/storage/files/plugins; fi
+RUN python3 - flavours/profile.base.yaml "flavours/$FLAVOUR/profile.overlay.yaml" > /staged/profile.base.yaml <<'PY'
+import sys, yaml
+def merge(base, overlay):
+    if isinstance(base, dict) and isinstance(overlay, dict):
+        for key, value in overlay.items():
+            base[key] = merge(base[key], value) if key in base else value
+        return base
+    return overlay
+layers = [yaml.safe_load(open(path)) or {} for path in sys.argv[1:]]
+merged = {}
+for layer in layers:
+    merged = merge(merged, layer)
+yaml.safe_dump(merged, sys.stdout, sort_keys=False)
+PY
 
 # hey drives the demo/performance load tests; its upstream binary host answers
 # 403, so it is built from source.
@@ -97,21 +116,21 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go install github.com/rakyll/hey@latest
 
-# Packages, each for the entrypoint or the healthcheck:
-#   ca-certificates  outbound TLS (providers, cloud, OAuth issuers)
-#   curl             HEALTHCHECK
-#   gosu             drop from root after preparing a root-owned volume
-#   jq               secrets.json edits in entrypoint.sh
-#   lsof             core's process supervision finds the pids holding a port
-#   openssl          signing-key generation in container-state.py
-#   python3, python3-yaml  container-state.py waits for Postgres (the protocol
-#                    probe pg_isready makes, without postgresql-client and the
-#                    perl it pulls in); it and migrate-profile.py rewrite the
-#                    persisted profile YAML; no `admin config` command sets
-#                    security.allow_registration, rate_limits.disabled or
-#                    security.signing_key_path, and pre-0.47 volumes still
-#                    need migrate-profile.py
-FROM debian:bookworm-slim AS runtime-slim
+# The runtime base: glibc, libgcc_s, CA certificates and tzdata, no shell and
+# no package manager. The binary links libc, libm and libgcc_s only; outbound
+# TLS reads the CA bundle, and chrono-tz carries its own zone data.
+FROM gcr.io/distroless/cc-debian12 AS distroless
+
+# What the entrypoint and the healthcheck run, taken from the same Debian
+# release as the base (docker/runtime-tools.sh lists each tool's reason).
+FROM debian:bookworm-slim AS runtime-tools
+RUN apt-get update && apt-get install -y --no-install-recommends busybox jq lsof \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=distroless / /distroless
+COPY docker/runtime-tools.sh /runtime-tools.sh
+RUN sh /runtime-tools.sh /distroless /rootfs /apphome
+
+FROM distroless AS runtime-slim
 ARG FLAVOUR
 ARG REQUIRES_AI_KEY
 ARG SITE
@@ -123,40 +142,26 @@ LABEL org.opencontainers.image.title="systemprompt" \
       org.opencontainers.image.vendor="systemprompt.io" \
       org.opencontainers.image.licenses="MIT AND BUSL-1.1" \
       org.systemprompt.flavour="${FLAVOUR}"
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    gosu \
-    jq \
-    lsof \
-    openssl \
-    python3 \
-    python3-yaml \
-    && rm -rf /var/lib/apt/lists/*
-# /app/storage/data is runtime state (excluded from the build context), so it
-# is created here: a named volume mounted at a path the image lacks comes up
-# root-owned, and the server, running as uid 1000, cannot write it. Ownership
-# is set on COPY: a recursive chown afterwards would store every copied file,
-# the binary included, a second time in its own layer.
-RUN useradd -m -u 1000 app \
-    && mkdir -p /app/bin /app/logs /app/data /app/storage/data \
-        /app/storage/files/uploads /app/storage/files/images/generated \
-        /app/web /app/.systemprompt/profiles/docker \
-    && chown -R app:app /app
+# /app and /home/app come owned by the app account (uid 1000): a named volume
+# mounted at a path the image lacks comes up root-owned, and the server cannot
+# write it. Ownership is set on COPY: a recursive chown afterwards would store
+# every copied file, the binary included, a second time in its own layer.
+COPY --from=runtime-tools /rootfs/ /
+COPY --from=runtime-tools --chown=1000:1000 /apphome/ /
 WORKDIR /app
-COPY --from=builder --chown=app:app --chmod=0755 /out/bin/ /app/bin/
-COPY --from=services --chown=app:app /staged/services /app/services
-COPY --from=storage --chown=app:app /storage /app/storage
-COPY --chown=app:app web /app/web
-COPY --chown=app:app --chmod=0755 docker/entrypoint.sh /app/entrypoint.sh
-COPY --chown=app:app docker/migrate-profile.py docker/container-state.py /app/
-COPY --chown=app:app flavours/profile.base.yaml flavours/${FLAVOUR}/profile.overlay.yaml /app/profile-overlay/
+COPY --from=builder --chown=1000:1000 --chmod=0755 /out/bin/ /app/bin/
+COPY --from=services --chown=1000:1000 /staged/services /app/services
+COPY --from=services --chown=1000:1000 /staged/storage /app/storage
+COPY --from=services --chown=1000:1000 /staged/profile.base.yaml /app/profile.base.yaml
+COPY --chown=1000:1000 web /app/web
+COPY --chown=1000:1000 --chmod=0755 docker/entrypoint.sh docker/healthcheck.sh /app/
 USER app
 EXPOSE 8080
-ENV HOST=0.0.0.0 \
+ENV HOME=/home/app \
+    HOST=0.0.0.0 \
     PORT=8080 \
     RUST_LOG=info \
-    PATH="/app/bin:${PATH}" \
+    PATH="/app/bin:/usr/local/bin:/usr/bin:/bin" \
     SYSTEMPROMPT_SERVICES_PATH=/app/services \
     SYSTEMPROMPT_MCP_PATH=/app/bin \
     SYSTEMPROMPT_PROFILE=/app/.systemprompt/profiles/docker/profile.yaml \
@@ -165,7 +170,7 @@ ENV HOST=0.0.0.0 \
     FLAVOUR_REQUIRES_AI_KEY="${REQUIRES_AI_KEY}" \
     FLAVOUR_SITE="${SITE}"
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8080/api/v1/health || exit 1
+    CMD ["/app/healthcheck.sh"]
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 FROM runtime-slim AS runtime-full
