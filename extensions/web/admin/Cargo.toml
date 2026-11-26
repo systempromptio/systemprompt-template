@@ -15,7 +15,7 @@ semver = "1"
 # Foundation
 systemprompt-web-shared = { workspace = true }
 # Audit: uses ai, identifiers, models, oauth, security — requires `full`.
-systemprompt = { workspace = true, features = ["reference"] }
+systemprompt = { workspace = true, features = ["core", "database", "config", "loader", "security", "api", "ai", "marketplace"] }
 systemprompt-security = { workspace = true }
 
 # Database

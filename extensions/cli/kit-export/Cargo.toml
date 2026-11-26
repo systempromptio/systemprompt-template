@@ -15,7 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Audit: uses loader (ConfigLoader), marketplace (CatalogContent, build_plugin_bundle, import), models — requires `full`.
-systemprompt = { workspace = true, features = ["reference"] }
+systemprompt = { workspace = true, features = ["core", "logging", "loader", "marketplace"] }
 
 anyhow.workspace = true
 clap.workspace = true

@@ -11,7 +11,7 @@ publish = false
 
 [dependencies]
 # Audit: the toolset host (`mcp::host`) is linked by the `api` feature.
-systemprompt = { workspace = true, features = ["reference"] }
+systemprompt = { workspace = true, features = ["core", "database", "api", "mcp"] }
 
 thiserror.workspace = true
 tokio.workspace = true
