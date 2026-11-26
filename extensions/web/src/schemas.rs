@@ -12,6 +12,11 @@ pub(crate) const SCHEMA_SECRETS: &str = include_str!("../schema/09_secrets.sql")
 pub(crate) const SCHEMA_ADMIN_DASHBOARD: &str = include_str!("../schema/10_admin_dashboard.sql");
 pub(crate) const SCHEMA_MANAGEMENT: &str = include_str!("../schema/12_management.sql");
 pub(crate) const SCHEMA_WEB_SIDE_TABLES: &str = include_str!("../schema/13_web_side_tables.sql");
+pub(crate) const SCHEMA_CONTENT_ENRICHMENT: Option<&str> = if cfg!(feature = "content") {
+    Some(include_str!("../schema/13_content_enrichment.sql"))
+} else {
+    None
+};
 pub(crate) const SCHEMA_AUDIT_EVENT_NOTIFY: &str =
     include_str!("../schema/14_audit_event_notify.sql");
 pub(crate) const SCHEMA_ORGANIZATIONS: &str = include_str!("../schema/16_organizations.sql");
@@ -25,7 +30,7 @@ pub(crate) const SCHEMA_CONNECTOR_CREDENTIALS: &str =
 
 #[doc(hidden)]
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
-    vec![
+    let mut definitions = vec![
         SchemaDefinition::sql_only(SCHEMA_PLUGIN_USAGE),
         SchemaDefinition::sql_only(SCHEMA_ANALYTICS),
         SchemaDefinition::sql_only(SCHEMA_SECRETS),
@@ -57,7 +62,9 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::sql_only(include_str!("../schema/45_conversation_facts.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/47_user_last_seen.sql")),
         SchemaDefinition::sql_only(include_str!("../schema/48_retention.sql")),
-    ]
+    ];
+    definitions.extend(SCHEMA_CONTENT_ENRICHMENT.map(SchemaDefinition::sql_only));
+    definitions
 }
 
 // Why: not `const` — with migrations present, `extension_migrations!()`
