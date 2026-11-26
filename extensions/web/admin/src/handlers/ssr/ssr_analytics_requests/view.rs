@@ -127,7 +127,7 @@ pub(super) fn request_row_to_json(r: &RequestRow) -> RequestListRowView {
         project_url: r
             .project_id
             .as_ref()
-            .map(|id| format!("/admin/projects/{id}")),
+            .and_then(|id| crate::dashboard::page_url("projects", &format!("/{id}"))),
         project_id: r.project_id.clone(),
         group_label: r
             .group_name

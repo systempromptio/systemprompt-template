@@ -183,8 +183,8 @@ impl SyncPlane for AccessControlPlane {
         "access_control_rules · access_control_entities"
     }
 
-    fn owner_url(&self) -> &'static str {
-        "/admin/access-control"
+    fn owner_page(&self) -> &'static str {
+        "access_control"
     }
 
     async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift> {

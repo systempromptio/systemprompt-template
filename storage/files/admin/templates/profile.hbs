@@ -9,9 +9,9 @@
             {{#if identity.provider}}<span>signed in via {{identity.provider}}</span>{{/if}}
         {{/inline}}
         {{#*inline "header_actions"}}
-            <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/connect">Connect a client</a>
-            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/connectors">Connectors</a>
-            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/history">My conversations</a>
+            {{#if @root.pages.connect}}<a class="sp-btn sp-btn--sm sp-btn--primary" href="{{@root.pages.connect}}">Connect a client</a>{{/if}}
+            {{#if @root.pages.connectors}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.connectors}}">Connectors</a>{{/if}}
+            {{#if @root.pages.history}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.history}}">My conversations</a>{{/if}}
         {{/inline}}
     {{/components/page-header}}
 
@@ -126,7 +126,7 @@
                 <tbody>
                 {{#each marketplaces}}
                 <tr>
-                    <td><a href="/admin/marketplaces/{{id}}">{{name}}</a></td>
+                    <td>{{#if @root.pages.marketplaces}}<a href="{{@root.pages.marketplaces}}/{{id}}">{{name}}</a>{{else}}{{name}}{{/if}}</td>
                     <td class="sp-table__cell--mono">{{version}}</td>
                     <td class="sp-table__cell--num sp-u-num">{{plugin_count}}</td>
                     <td>{{> components/badge tone="muted" text=layer}}</td>

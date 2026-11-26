@@ -137,7 +137,7 @@
             <tbody>
             {{#each usage.sessions}}
             <tr data-session-id="{{session_id}}">
-                <td class="sp-u-mono"><a href="{{href}}" title="{{session_id}}">{{session_short}}</a></td>
+                <td class="sp-u-mono">{{#if href}}<a href="{{href}}" title="{{session_id}}">{{session_short}}</a>{{else}}<span title="{{session_id}}">{{session_short}}</span>{{/if}}</td>
                 <td><a href="/admin/users/{{user_id}}">{{user_id}}</a></td>
                 <td class="sp-table__cell--num sp-u-num">{{formatNumber requests}}</td>
                 <td class="sp-table__cell--num sp-u-num">{{models}}</td>

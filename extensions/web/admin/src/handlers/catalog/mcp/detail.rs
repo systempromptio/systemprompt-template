@@ -109,8 +109,13 @@ pub(super) fn execution_rows(rows: Vec<McpExecutionRow>) -> Vec<McpExecutionRowV
                     |v| format_duration_ms(i64::from(v)),
                 ),
                 user_url: format!("/admin/users/{}", r.user_id),
-                session_url: (!session.is_empty()).then(|| format!("/admin/sessions/{session}")),
-                trace_url: r.trace_id.as_ref().map(|t| format!("/admin/traces/{t}")),
+                session_url: (!session.is_empty())
+                    .then(|| crate::dashboard::page_url("sessions", &format!("/{session}")))
+                    .flatten(),
+                trace_url: r
+                    .trace_id
+                    .as_ref()
+                    .and_then(|t| crate::dashboard::page_url("traces", &format!("/{t}"))),
                 session,
                 caller: r.user_id.as_str().to_owned(),
                 error_message: r.error_message.unwrap_or_default(),

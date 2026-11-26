@@ -8,7 +8,7 @@
         <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="create-user">New user</button>
         <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="bulk-roles" disabled>Change roles</button>
         {{/if}}
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/groups">Groups</a>
+        {{#if @root.pages.groups}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.groups}}">Groups</a>{{/if}}
         {{/inline}}
     {{/components/page-header}}
 

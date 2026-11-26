@@ -196,10 +196,16 @@ pub trait SyncPlane: Send + Sync {
     // Why: `None` for a plane whose declaration has no file form.
     async fn export(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<Option<Export>>;
 
-    // Why: the page the plane's data lives on — where its Sync tab is. The
-    // configuration page and an import preview link there.
+    // Why: the nav id of the page the plane's data lives on — where its Sync
+    // tab is. The configuration page and an import preview link there.
+    fn owner_page(&self) -> &'static str {
+        "sync"
+    }
+
+    // Why: a plane whose owner page this build leaves out is synced from the
+    // sync page, which every build compiles.
     fn owner_url(&self) -> &'static str {
-        "/admin/sync"
+        crate::dashboard::page_href(self.owner_page()).unwrap_or("/admin/sync")
     }
 
     // Why: the same drift, read from an uploaded file instead of disk. A

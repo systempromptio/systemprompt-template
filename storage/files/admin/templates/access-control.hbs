@@ -5,7 +5,7 @@
     {{#> components/page-header title=title subtitle="Who reaches what, and why. Expand an entity to inspect its rules."}}
         {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How it works</a>
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/groups">Group rules</a>
+        {{#if @root.pages.groups}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.groups}}">Group rules</a>{{/if}}
         {{#if can_write}}
         <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="new-group">+ New group</button>
         {{/if}}

@@ -152,7 +152,10 @@ pub(super) fn build_rows(input: &RowInput<'_>) -> Vec<RosterRowView> {
                     .collect(),
                 last_active: row.last_active.map(relative_time),
                 last_active_title: last_active_title(row),
-                last_active_url: row.last_context_id.as_ref().map(context_detail_url),
+                last_active_url: row
+                    .last_context_id
+                    .as_ref()
+                    .and_then(|c| crate::dashboard::link_to("by_person", || context_detail_url(c))),
                 #[cfg(feature = "gateway")]
                 spend: RosterSpendRowView {
                     cost: format_cost(row.cost_microdollars),

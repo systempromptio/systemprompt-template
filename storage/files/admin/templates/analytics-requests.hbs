@@ -4,7 +4,7 @@
     {{#> components/page-header title=title}}
         {{#*inline "header_actions"}}
         {{> components/export-button export}}
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/traces">Trace explorer</a>
+        {{#if @root.pages.traces}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.traces}}">Trace explorer</a>{{/if}}
         <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/analytics">Analytics</a>
         {{/inline}}
         {{#*inline "header_meta"}}
@@ -206,7 +206,7 @@
             </td>
             <td class="sp-table__cell--actions">
                 {{#if this.trace_id_short}}
-                    <a class="sp-u-mono" href="/admin/traces/{{this.trace_id}}">{{this.trace_id_short}}</a>
+                    {{#if @root.pages.traces}}<a class="sp-u-mono" href="{{@root.pages.traces}}/{{this.trace_id}}">{{this.trace_id_short}}</a>{{else}}<span class="sp-u-mono">{{this.trace_id_short}}</span>{{/if}}
                 {{else}}
                     <span class="sp-table__cell--muted">&mdash;</span>
                 {{/if}}

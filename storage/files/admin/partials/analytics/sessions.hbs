@@ -8,7 +8,7 @@
     {{#> components/section title="Sessions" count=sessions.session_count
         note="Client-reported cost and context-window totals, most expensive first."}}
       {{#*inline "section_actions"}}
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/sessions">Session log</a>
+        {{#if @root.pages.sessions}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{@root.pages.sessions}}">Session log</a>{{/if}}
       {{/inline}}
     {{/components/section}}
 
@@ -30,7 +30,7 @@
         {{#each sessions.rows}}
         <tr>
             <td class="sp-table__cell--mono sp-table__cell--primary sp-p-analytics__name">
-                <a href="{{this.detail_url}}" title="{{this.session_id}}">{{this.session_short}}</a>
+                {{#if this.detail_url}}<a href="{{this.detail_url}}" title="{{this.session_id}}">{{this.session_short}}</a>{{else}}<span title="{{this.session_id}}">{{this.session_short}}</span>{{/if}}
             </td>
             <td class="sp-p-analytics__name"><a href="{{this.user_url}}">{{this.user_id}}</a></td>
             <td class="sp-table__cell--mono">{{this.model_display}}</td>

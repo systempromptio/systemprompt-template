@@ -5,7 +5,7 @@
 use serde::Serialize;
 use systemprompt_web_shared::{BrandingConfig, RankTier, UserId};
 
-use crate::dashboard::{NavItemView, NavSectionView};
+use crate::dashboard::{NavItemView, NavSectionView, PageLinks};
 use crate::numeric;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -132,6 +132,7 @@ pub(crate) struct PageShell<'a, T> {
     // database disagree and nobody has decided yet. Console viewers only.
     access_attention: usize,
     nav_sections: Vec<NavSectionShell<'a>>,
+    pages: PageLinks,
     #[serde(flatten)]
     page: &'a T,
 }
@@ -165,6 +166,7 @@ impl<'a, T: Serialize> PageShell<'a, T> {
                 0
             },
             nav_sections: visible_nav(engine.dashboard().nav(), user_ctx.is_console),
+            pages: PageLinks,
             page,
         }
     }

@@ -68,7 +68,12 @@ pub(super) fn rows(rows: &[ApprovalRow]) -> Vec<ApprovalRowView> {
                     .trace_id
                     .as_deref()
                     .filter(|t| !t.is_empty())
-                    .map(|t| format!("/admin/traces/{}", urlencoding::encode(t))),
+                    .and_then(|t| {
+                        crate::dashboard::page_url(
+                            "traces",
+                            &format!("/{}", urlencoding::encode(t)),
+                        )
+                    }),
             }
         })
         .collect()

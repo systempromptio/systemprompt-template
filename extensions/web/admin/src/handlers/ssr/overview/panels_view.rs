@@ -83,7 +83,7 @@ pub(super) struct OverviewModelRowView {
 pub(super) struct ScopeBoardView {
     pub title: &'static str,
     pub caption: &'static str,
-    pub all_href: &'static str,
+    pub all_href: Option<&'static str>,
     pub error: Option<String>,
     pub rows: Vec<ScopeRowView>,
     pub has_rows: bool,
@@ -226,7 +226,7 @@ fn model_row(r: &ModelStatsRow, total: i64, all_href: &str) -> OverviewModelRowV
 pub(super) struct BoardSpec {
     pub title: &'static str,
     pub caption: &'static str,
-    pub all_href: &'static str,
+    pub all_href: Option<&'static str>,
     pub unattributed: &'static str,
 }
 
@@ -259,7 +259,7 @@ pub(super) fn scope_board(
 // with no user, a job or MCP actor, or a person no primary container covers.
 // It is listed rather than dropped so the board sums back to the spend tile.
 #[cfg(feature = "gateway")]
-fn scope_row(row: &ScopeCostRow, total: i64, base: &str, absent: &str) -> ScopeRowView {
+fn scope_row(row: &ScopeCostRow, total: i64, base: Option<&str>, absent: &str) -> ScopeRowView {
     let unattributed = row.is_unattributed();
     ScopeRowView {
         label: if unattributed {
@@ -267,7 +267,9 @@ fn scope_row(row: &ScopeCostRow, total: i64, base: &str, absent: &str) -> ScopeR
         } else {
             row.label.clone()
         },
-        href: (!unattributed).then(|| format!("{base}/{}", urlencoding::encode(&row.scope_id))),
+        href: base
+            .filter(|_| !unattributed)
+            .map(|base| format!("{base}/{}", urlencoding::encode(&row.scope_id))),
         requests_display: short_num(row.requests),
         cost_display: format_cost(row.cost_microdollars),
         share_display: share_display(row.cost_microdollars, total),

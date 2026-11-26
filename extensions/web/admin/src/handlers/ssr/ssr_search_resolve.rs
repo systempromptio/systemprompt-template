@@ -19,6 +19,7 @@ use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
+use crate::dashboard::link_to;
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::ssr::entity_urls::{
     context_detail_url, request_detail_url, session_detail_url, trace_detail_url,
@@ -65,7 +66,9 @@ pub(crate) async fn search_resolve(
     }
 
     if let Some(r) = resolve_id(&pool, trimmed).await? {
-        let hit = to_match(r)?;
+        let Some(hit) = to_match(r)? else {
+            return Ok(unresolved());
+        };
         return Ok(Json(SearchResponse {
             kind: hit.kind,
             url: Some(hit.url.clone()),
@@ -78,7 +81,10 @@ pub(crate) async fn search_resolve(
         .await?
         .into_iter()
         .map(to_match)
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>();
     let (kind, url) = match matches.as_slice() {
         [only] => (only.kind, Some(only.url.clone())),
         [] => ("none", None),
@@ -93,23 +99,32 @@ fn normalise(raw: &str) -> &str {
     raw.trim().trim_end_matches('…').trim()
 }
 
-fn to_match(r: ResolvedId) -> AdminResult<SearchMatch> {
+fn to_match(r: ResolvedId) -> AdminResult<Option<SearchMatch>> {
     // Why: The resolver picks the entity kind at runtime from an opaque id, so
     // the typed newtype is only known here, in the arm that matched.
-    let (kind, url) = match r.kind {
-        ResolvedKind::Request => ("request", request_detail_url(&AiRequestId::new(&r.id))),
-        ResolvedKind::Trace => ("trace", trace_detail_url(&TraceId::new(&r.id))),
-        ResolvedKind::Session => ("session", session_detail_url(&SessionId::new(&r.id))),
+    let (kind, page, url) = match r.kind {
+        ResolvedKind::Request => (
+            "request",
+            "requests",
+            request_detail_url(&AiRequestId::new(&r.id)),
+        ),
+        ResolvedKind::Trace => ("trace", "traces", trace_detail_url(&TraceId::new(&r.id))),
+        ResolvedKind::Session => (
+            "session",
+            "sessions",
+            session_detail_url(&SessionId::new(&r.id)),
+        ),
         ResolvedKind::Context => (
             "context",
+            "by_person",
             context_detail_url(&ContextId::try_new(&r.id).map_err(AdminError::internal)?),
         ),
     };
-    Ok(SearchMatch {
+    Ok(link_to(page, || url).map(|url| SearchMatch {
         kind,
         id: r.id,
         url,
-    })
+    }))
 }
 
 fn unresolved() -> Response {

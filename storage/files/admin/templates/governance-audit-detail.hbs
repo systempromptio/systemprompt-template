@@ -69,7 +69,7 @@
       {{/if}}
       <div class="sp-trace-detail__field">
         <span class="sp-trace-detail__label">Session</span>
-        <a href="{{summary.session_url}}"><code class="sp-code-inline" title="{{summary.session_id}}">{{summary.session_id_short}}</code></a>
+        {{#if summary.session_url}}<a href="{{summary.session_url}}"><code class="sp-code-inline" title="{{summary.session_id}}">{{summary.session_id_short}}</code></a>{{else}}<code class="sp-code-inline" title="{{summary.session_id}}">{{summary.session_id_short}}</code>{{/if}}
       </div>
       {{#if summary.trace_url}}
         <div class="sp-trace-detail__field">
@@ -154,7 +154,7 @@
           <tbody>
           {{#each requests}}
             <tr{{#if this.is_primary}} aria-current="true"{{/if}}>
-              <td><a href="{{this.url}}" title="{{this.id}}"><code class="sp-code-inline">{{shortId this.request_id}}</code></a>
+              <td>{{#if this.url}}<a href="{{this.url}}" title="{{this.id}}"><code class="sp-code-inline">{{shortId this.request_id}}</code></a>{{else}}<code class="sp-code-inline" title="{{this.id}}">{{shortId this.request_id}}</code>{{/if}}
                 {{#if this.is_primary}}<span class="sp-table__cell--muted"> · this request</span>{{/if}}</td>
               <td>{{this.provider}}</td>
               <td class="sp-table__cell--mono">{{this.model}}</td>
@@ -165,7 +165,7 @@
               <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
               <td class="sp-table__cell--num">{{this.latency_display}}</td>
               <td class="sp-table__cell--actions">
-                {{#unless this.is_primary}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{this.url}}">Open</a>{{/unless}}
+                {{#unless this.is_primary}}{{#if this.url}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{this.url}}">Open</a>{{/if}}{{/unless}}
               </td>
             </tr>
           {{/each}}
@@ -370,7 +370,7 @@
           <tbody>
           {{#each artifacts.rows}}
             <tr{{#if this.is_this_request}} aria-current="true"{{/if}}>
-              <td><a href="{{this.url}}"><code class="sp-code-inline">{{shortId this.artifact_key}}</code></a>{{#if this.is_error}} <span class="sp-badge sp-badge--err">error</span>{{/if}}</td>
+              <td>{{#if this.url}}<a href="{{this.url}}"><code class="sp-code-inline">{{shortId this.artifact_key}}</code></a>{{else}}<code class="sp-code-inline">{{shortId this.artifact_key}}</code>{{/if}}{{#if this.is_error}} <span class="sp-badge sp-badge--err">error</span>{{/if}}</td>
               <td><code class="sp-code-inline">{{this.tool_name}}</code> <span class="sp-table__cell--muted">{{this.server_name}}</span></td>
               <td>{{this.artifact_type}}{{#if this.is_structured}} <span class="sp-badge sp-badge--muted">structured</span>{{/if}}</td>
               <td class="sp-table__cell--muted">{{this.title}}</td>

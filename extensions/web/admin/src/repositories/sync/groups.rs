@@ -67,8 +67,8 @@ impl SyncPlane for GroupsPlane {
         "groups · projects · group_ad_mappings · project_ad_mappings"
     }
 
-    fn owner_url(&self) -> &'static str {
-        "/admin/groups"
+    fn owner_page(&self) -> &'static str {
+        "groups"
     }
 
     async fn drift(&self, env: &AdminEnv, pool: &PgPool) -> AdminResult<PlaneDrift> {
