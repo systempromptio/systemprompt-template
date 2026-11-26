@@ -122,6 +122,6 @@ pub use users::{
     UserTier, UserUsageEvent, UsersQuery,
 };
 pub use webhook::{
-    GovernQuery, HookEventPayload, StatusLinePayload, StatusLineQuery, TrackQuery,
-    TranscriptPayload, TranscriptQuery,
+    GovernQuery, HookEventPayload, StatusLinePayload, StatusLineQuery, TranscriptPayload,
+    TranscriptQuery,
 };
