@@ -67,11 +67,12 @@ fn a_request_naming_no_session_anywhere_is_rejected() {
 }
 
 #[test]
-fn a_malformed_session_key_is_rejected_by_name() {
-    let rejection = ingest(None, serde_json::json!({ "session_id": "has space" }))
-        .expect_err("spaces are not identifier bytes");
-    assert!(matches!(rejection, StatusLineRejection::InvalidSession(_)));
-    assert!(rejection.to_string().contains("session_id"));
+fn a_malformed_session_key_is_refused_when_the_payload_is_read() {
+    let refused = serde_json::from_value::<StatusLinePayload>(
+        serde_json::json!({ "session_id": "has space" }),
+    )
+    .expect_err("spaces are not identifier bytes");
+    assert!(refused.to_string().contains("SessionId"), "{refused}");
 }
 
 #[test]

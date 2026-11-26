@@ -2,10 +2,9 @@
 //! redeem route is mounted and the CLI will issue, the code hash stored at
 //! rest, and the URL the CLI prints.
 //!
-//! The gate is pinned here in full because the contract suite cannot prove
-//! the production branch: `ProfileBootstrap` is a per-process `OnceLock`
-//! installed once from the development fixture, so the route's absence on a
-//! production or cloud profile is only ever a matter of this predicate.
+//! The gate is pinned here in full: the provider is offered only when the
+//! profile's environment and target allow it, so its absence on a production
+//! or cloud profile is a matter of this predicate.
 
 use systemprompt::manifest::profile::{Environment, ProfileType};
 use systemprompt_web_admin::repositories::dev_login::hash_dev_login_code;
@@ -65,7 +64,7 @@ fn the_printed_link_targets_the_redeem_route_under_the_external_url() {
     );
     assert_eq!(
         dev_login_url("http://localhost:8080/", "c0de"),
-        "http://localhost:8080/admin/auth/dev/login?code=c0de",
+        "http://localhost:8080/api/v1/core/sso/dev/callback?code=c0de",
         "a trailing slash on the base must not double up"
     );
 }

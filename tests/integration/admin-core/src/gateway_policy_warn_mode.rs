@@ -64,7 +64,7 @@ async fn ingest_shipped(db: &TempDb) -> DbPool {
                 spec: &spec,
                 enabled: entry.enabled,
                 priority: entry.priority,
-                source: "fixture",
+                source: "console:fixture",
             },
         )
         .await

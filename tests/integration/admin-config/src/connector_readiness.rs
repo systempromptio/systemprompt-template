@@ -58,7 +58,7 @@ impl Harness {
         ));
         let repo = AccessControlRepository::from_pool(Arc::clone(&db.pool));
         for id in [CRM, CONTROL_PLANE] {
-            repo.upsert_entity(EntityKind::McpServer, id, true, "test")
+            repo.upsert_entity(EntityKind::McpServer, id, true, "console:test")
                 .await
                 .expect("upsert entity");
         }

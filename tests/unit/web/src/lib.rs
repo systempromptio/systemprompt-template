@@ -74,6 +74,7 @@ mod content_validation;
 mod content_validation_results;
 #[cfg(test)]
 mod conversation_view;
+#[cfg(test)]
 mod dev_login_pure;
 #[cfg(test)]
 mod devices_page;

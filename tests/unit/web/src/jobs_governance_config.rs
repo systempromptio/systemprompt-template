@@ -25,9 +25,12 @@ fn active(dir: &Path) -> usize {
 }
 
 #[test]
-fn an_absent_file_falls_back_to_the_four_built_in_policies() {
+fn an_absent_file_is_refused_rather_than_defaulted() {
     let dir = services_with(None);
-    assert_eq!(active(dir.path()), 4);
+    assert!(
+        check_governance_config(dir.path()).is_err(),
+        "the policies are the services tree's, never a built-in default"
+    );
 }
 
 #[test]

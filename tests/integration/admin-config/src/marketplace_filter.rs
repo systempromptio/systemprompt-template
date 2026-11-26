@@ -103,7 +103,7 @@ impl Harness {
 
     async fn entity(&self, kind: EntityKind, id: &str, default_included: bool) {
         self.repo
-            .upsert_entity(kind, id, default_included, "test")
+            .upsert_entity(kind, id, default_included, "console:test")
             .await
             .expect("upsert entity");
     }
