@@ -94,6 +94,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 #   curl             HEALTHCHECK
 #   gosu             drop from root after preparing a root-owned volume
 #   jq               secrets.json edits in entrypoint.sh
+#   lsof             core's process supervision finds the pids holding a port
 #   openssl          signing-key generation in container-state.py
 #   postgresql-client  pg_isready before migrating
 #   python3, python3-yaml  container-state.py and migrate-profile.py rewrite the
@@ -118,6 +119,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gosu \
     jq \
+    lsof \
     openssl \
     postgresql-client \
     python3 \
@@ -140,6 +142,7 @@ COPY --chown=app:app storage /app/storage
 COPY --chown=app:app web /app/web
 COPY --chown=app:app --chmod=0755 docker/entrypoint.sh /app/entrypoint.sh
 COPY --chown=app:app docker/migrate-profile.py docker/container-state.py /app/
+COPY --chown=app:app flavours/profile.base.yaml flavours/${FLAVOUR}/profile.overlay.yaml /app/profile-overlay/
 USER app
 EXPOSE 8080
 ENV HOST=0.0.0.0 \

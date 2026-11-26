@@ -33,8 +33,18 @@ def attach_state(root, state):
         source.symlink_to(destination, target_is_directory=True)
 
 
+def merge(target, overlay):
+    for key, value in overlay.items():
+        if isinstance(value, dict) and isinstance(target.get(key), dict):
+            merge(target[key], value)
+        else:
+            target[key] = value
+
+
 def configure(profile_path, env):
     profile = yaml.safe_load(profile_path.read_text())
+    for overlay in ('profile.base.yaml', 'profile.overlay.yaml'):
+        merge(profile, yaml.safe_load((Path('/app/profile-overlay') / overlay).read_text()) or {})
     security = profile.setdefault('security', {})
     security['allow_registration'] = env.get('ALLOW_REGISTRATION', 'false').lower() == 'true'
     server = profile.setdefault('server', {})

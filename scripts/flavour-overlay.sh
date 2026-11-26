@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Apply a flavour's profile.overlay.yaml (plus KEY=VALUE pairs the caller
+# Apply flavours/profile.base.yaml, then a flavour's profile.overlay.yaml (plus KEY=VALUE pairs the caller
 # fixes, e.g. paths.services) to a profile. Keys an `admin config` command
 # owns go through that command; the rest are written by a YAML merge because
 # no command sets them (paths.*, and any key outside the table below).
@@ -11,8 +11,9 @@ profile="${2:?}"
 bin="${3:?}"
 shift 3
 flavour_require "$flavour"
+base="$FLAVOUR_ROOT/flavours/profile.base.yaml"
 overlay="$FLAVOUR_ROOT/flavours/$flavour/profile.overlay.yaml"
-pairs="$(python3 - "$overlay" "$@" <<'PY'
+pairs="$(python3 - "$base" "$overlay" "$@" <<'PY'
 import sys, yaml
 def flatten(prefix, value):
     if isinstance(value, dict):
@@ -20,10 +21,11 @@ def flatten(prefix, value):
             yield from flatten(f"{prefix}{key}.", inner)
     else:
         yield prefix[:-1], value
-data = yaml.safe_load(open(sys.argv[1])) or {}
-for key, value in flatten("", data):
-    print(f"{key}={yaml.safe_dump(value, default_flow_style=True).strip().removesuffix('...').strip()}")
-for pair in sys.argv[2:]:
+for source in sys.argv[1:3]:
+    data = yaml.safe_load(open(source)) or {}
+    for key, value in flatten("", data):
+        print(f"{key}={yaml.safe_dump(value, default_flow_style=True).strip().removesuffix('...').strip()}")
+for pair in sys.argv[3:]:
     print(pair)
 PY
 )"
