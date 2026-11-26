@@ -110,7 +110,9 @@ wait_ready() {
     record health fail "not ready within 360 s"
     return 1
 }
-cli() { "${compose[@]}" exec -T "$app_service" /app/bin/systemprompt "$@"; }
+# Why: `compose exec` forwards stdin, so inside a `while read` loop it would
+# swallow the rest of the expectation list.
+cli() { "${compose[@]}" exec -T "$app_service" /app/bin/systemprompt "$@" < /dev/null; }
 psql_app() { "${compose[@]}" exec -T postgres psql -U systemprompt -d systemprompt "$@"; }
 users() { psql_app -Atc "SELECT id FROM users WHERE NOT ('anonymous' = ANY(roles)) ORDER BY id"; }
 audit() {
