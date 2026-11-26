@@ -15,7 +15,7 @@ use super::bands::{band_label, band_rank, chips, resolution};
 use super::summary::{self, options};
 use super::view::{AcEntitiesView, AcEntityGroupView, AcEntityView, AcRuleView};
 use crate::handlers::ssr::entity_kind::{entity_kind_label, entity_kind_plural, entity_kind_rank};
-use crate::handlers::ssr::people_view::expires_soon;
+use crate::handlers::ssr::format::expires_soon;
 use crate::repositories::access_control::drift::{DriftReport, EntityState};
 use crate::repositories::access_control::rules::LedgerRuleRow;
 use crate::repositories::config::gateway::RouteLabels;

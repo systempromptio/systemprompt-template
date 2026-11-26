@@ -5,14 +5,16 @@
     {{#> components/page-header title=title subtitle=subtitle}}
         {{#*inline "header_meta"}}
         <nav class="sp-time-range__presets" role="group" aria-label="Time range">
-            {{#each ranges}}
+            {{#each usage.ranges}}
             <a class="sp-time-range__btn{{#if this.is_active}} sp-time-range__btn--active{{/if}}" href="{{this.href}}"{{#if this.is_active}} aria-current="page"{{/if}}>{{this.label}}</a>
             {{/each}}
         </nav>
         {{/inline}}
         {{#*inline "header_actions"}}
+        {{#if usage}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Request log</a>
         <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/analytics">Analytics</a>
+        {{/if}}
         {{/inline}}
     {{/components/page-header}}
 
@@ -26,6 +28,7 @@
     </section>
     {{/if}}
 
+    {{#with usage}}
     <section aria-label="Headline figures">
         {{#if kpis.error}}{{> components/notice tone="err" title="Headline figures unavailable" message=kpis.error}}{{/if}}
         {{#if kpis.comparison_note}}<p class="sp-p-overview__note">{{kpis.comparison_note}}</p>{{/if}}
@@ -46,22 +49,27 @@
         {{> overview/scope-board board=groups}}
     </div>
 
+    {{/with}}
+
     <div class="sp-p-overview__two-up">
-        {{> overview/models-board}}
+        {{#with usage}}{{> overview/models-board}}{{/with}}
 
         <section aria-label="Waiting on a person">
             {{#> components/section title="Waiting on a person" note="Held for approval, and flagged usage."}}
                 {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance">Governance</a>{{/inline}}
             {{/components/section}}
-            {{#if queues.approvals_error}}{{> components/notice tone="err" title="Approval queue unavailable" message=queues.approvals_error}}{{/if}}
+            {{#if approvals.error}}{{> components/notice tone="err" title="Approval queue unavailable" message=approvals.error}}{{/if}}
             <div class="sp-kpi-grid">
-                {{> components/kpi label="Pending approvals" value=queues.approvals tone=queues.approvals_tone
+                {{> components/kpi label="Pending approvals" value=approvals.count tone=approvals.tone
                     note="calls held by require_approval" href="/admin/governance/approvals"}}
-                {{> components/kpi label="Open anomalies" value=queues.anomaly_count tone=queues.anomalies_tone
+                {{#with usage.anomalies}}
+                {{> components/kpi label="Open anomalies" value=count tone=tone
                     note="detected in the last 24 hours" href="/admin/analytics?tab=spend"}}
+                {{/with}}
             </div>
-            {{#if queues.anomalies_error}}{{> components/notice tone="err" title="Anomalies unavailable" message=queues.anomalies_error}}{{/if}}
-            {{#if queues.has_anomalies}}
+            {{#with usage.anomalies}}
+            {{#if error}}{{> components/notice tone="err" title="Anomalies unavailable" message=error}}{{/if}}
+            {{#if has_rows}}
             {{#> components/table caption="Usage anomalies detected in the last 24 hours"}}
                 <thead><tr>
                     <th scope="col">Metric</th>
@@ -71,7 +79,7 @@
                     <th scope="col">Severity</th>
                 </tr></thead>
                 <tbody>
-                {{#each queues.anomalies}}
+                {{#each rows}}
                 <tr>
                     <td>{{this.metric}}</td>
                     <td class="sp-table__cell--date">{{this.window_display}}</td>
@@ -85,6 +93,7 @@
             {{else}}
             {{> components/empty-state heading="Nothing flagged" message="No usage anomaly has been detected in the last 24 hours."}}
             {{/if}}
+            {{/with}}
         </section>
     </div>
 

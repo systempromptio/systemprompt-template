@@ -27,9 +27,10 @@ use crate::error::{AdminError, AdminResult};
 // trailing ids are literals so this file compiles whether or not those plane
 // modules are present yet — `reconcile_all` fails loudly on an unregistered
 // id, which is the check that matters.
-pub const BOOT_ORDER: [&str; 4] = [
+pub const BOOT_ORDER: &[&str] = &[
     super::groups::PLANE_ID,
     super::access_control::PLANE_ID,
+    #[cfg(feature = "gateway")]
     super::gateway_policies::PLANE_ID,
     "governance",
 ];
@@ -48,6 +49,7 @@ pub struct PlaneBoot {
 pub struct BootReport {
     pub groups: PlaneBoot,
     pub access_control: PlaneBoot,
+    #[cfg(feature = "gateway")]
     pub gateway_policies: PlaneBoot,
     pub gateway_routes: PlaneBoot,
     pub governance: PlaneBoot,
@@ -117,13 +119,14 @@ pub async fn reconcile_plane(
 
 pub async fn reconcile_all(env: &AdminEnv, pool: &PgPool) -> AdminResult<BootReport> {
     let mut report = BootReport::default();
-    for id in BOOT_ORDER {
+    for &id in BOOT_ORDER {
         let plane = find_plane(id)
             .ok_or_else(|| AdminError::internal(format!("sync plane '{id}' is not registered")))?;
         let boot = reconcile_plane(env, pool, plane.as_ref()).await?;
         match id {
             super::groups::PLANE_ID => report.groups = boot,
             super::access_control::PLANE_ID => report.access_control = boot,
+            #[cfg(feature = "gateway")]
             super::gateway_policies::PLANE_ID => report.gateway_policies = boot,
             "gateway_routes" => report.gateway_routes = boot,
             _ => report.governance = boot,

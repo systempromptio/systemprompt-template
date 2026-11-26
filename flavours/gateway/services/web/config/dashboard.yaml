@@ -31,7 +31,7 @@ nav:
     items: [gateway, gateway_policies, quotas, governance, approvals, secrets]
   - id: people
     title: "People & access"
-    items: [users, groups, projects, roles, access_control, devices]
+    items: [users, groups, roles, access_control, devices]
   - id: platform
     title: "Platform"
     items: [sync, configuration, lifecycle, observability]

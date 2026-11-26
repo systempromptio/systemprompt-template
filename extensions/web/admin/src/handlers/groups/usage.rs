@@ -18,9 +18,10 @@ use sqlx::PgPool;
 
 use crate::error::AdminResult;
 use crate::repositories::people_usage::breakdown::{
-    ModelUsageRow, SkillUsageRow, ToolUsageRow, list_scope_top_models, list_scope_top_skills,
-    list_scope_top_tools,
+    ModelUsageRow, SkillUsageRow, list_scope_top_models, list_scope_top_skills,
 };
+#[cfg(feature = "mcp")]
+use crate::repositories::people_usage::breakdown::{ToolUsageRow, list_scope_top_tools};
 use crate::repositories::people_usage::{
     DailyRequests, LEADERBOARD_LIMIT, get_scope_usage, list_daily_requests,
 };
@@ -40,6 +41,7 @@ pub(crate) struct GroupUsageResponse {
     pub summary: GroupUsageSummary,
     pub top_models: Vec<ModelUsageRow>,
     pub top_skills: Vec<SkillUsageRow>,
+    #[cfg(feature = "mcp")]
     pub top_tools: Vec<ToolUsageRow>,
     pub daily: Vec<DailyRequests>,
 }
@@ -78,6 +80,7 @@ pub(crate) async fn get_group_usage_handler(
         LEADERBOARD_LIMIT,
     )
     .await?;
+    #[cfg(feature = "mcp")]
     let top_tools = list_scope_top_tools(
         &pool,
         &ScopeQuery::new(ScopeTarget::Group(&group_id), Attribution::Member, days),
@@ -100,6 +103,7 @@ pub(crate) async fn get_group_usage_handler(
         },
         top_models,
         top_skills,
+        #[cfg(feature = "mcp")]
         top_tools,
         daily,
     })

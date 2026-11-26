@@ -7,7 +7,9 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use systemprompt::identifiers::{AgentId, AiRequestId, PluginId, SessionId, TraceId, UserId};
+#[cfg(feature = "gateway")]
+use systemprompt::identifiers::AiRequestId;
+use systemprompt::identifiers::{AgentId, PluginId, SessionId, TraceId, UserId};
 
 mod assemble;
 mod fetch;
@@ -37,6 +39,7 @@ pub struct DecisionStage {
     pub created_at: DateTime<Utc>,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Clone, Serialize)]
 pub struct AiRequestSummary {
     pub id: String,
@@ -92,9 +95,21 @@ pub struct SessionSummary {
 
 #[derive(Debug, Clone, Copy, Default, Serialize)]
 pub struct ChainTotals {
-    pub decision_count: i64,
-    pub deny_count: i64,
-    pub event_count: i64,
+    #[serde(rename = "decision_count")]
+    pub decisions: i64,
+    #[serde(rename = "deny_count")]
+    pub denials: i64,
+    #[serde(rename = "event_count")]
+    pub events: i64,
+    #[cfg(feature = "gateway")]
+    #[serde(flatten)]
+    pub requests: RequestTotals,
+}
+
+/// The session's gateway request totals, which the gateway member supplies.
+#[cfg(feature = "gateway")]
+#[derive(Debug, Clone, Copy, Default, Serialize)]
+pub struct RequestTotals {
     pub request_count: i64,
     pub total_cost_microdollars: i64,
     pub total_input_tokens: i64,
@@ -107,6 +122,7 @@ pub struct ChainEnvelope {
     pub session_id: SessionId,
     pub identity: ChainIdentity,
     pub decisions: Vec<DecisionStage>,
+    #[cfg(feature = "gateway")]
     pub requests: Vec<AiRequestSummary>,
     pub events: Vec<ChainUsageEvent>,
     pub transcript: Option<TranscriptEnvelope>,

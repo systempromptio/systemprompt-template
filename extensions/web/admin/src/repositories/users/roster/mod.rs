@@ -1,9 +1,12 @@
 //! The paged, sorted, filtered user roster behind `/admin/users`.
 //!
 //! One statement answers the whole page: the row set, every row's group and
-//! project membership, its thirty-day gateway spend, and the total the
-//! pagination footer needs, so a fifty-row page is one round trip rather than
-//! fifty-one.
+//! project membership, its thirty-day gateway spend when the gateway member is
+//! linked, and the total the pagination footer needs, so a fifty-row page is
+//! one round trip rather than fifty-one. The gateway build reads
+//! `page_gateway.sql`, which adds the spend columns and the gateway term of
+//! "last seen"; every other build reads `page.sql`, which names no gateway
+//! table.
 //!
 //! Sorting and filtering are bound parameters, never interpolated text. The
 //! `ORDER BY` is a fixed ladder of `CASE` arms — one pair per sortable column —
@@ -17,6 +20,8 @@
 
 mod stats;
 
+#[cfg(feature = "gateway")]
+pub use stats::RosterSpend;
 pub use stats::{RosterStats, get_roster_stats};
 
 use chrono::{DateTime, Utc};
@@ -31,6 +36,7 @@ use crate::repositories::scope::SubjectScope;
 pub const DEFAULT_PAGE_SIZE: i64 = 50;
 
 // Why: the window every cost and request figure on the roster is measured over.
+#[cfg(feature = "gateway")]
 pub const WINDOW_DAYS: i32 = 30;
 
 /// One roster row: who they are, what they belong to, what they spent.
@@ -54,8 +60,11 @@ pub struct RosterRow {
     // Why: the conversation of the user's latest turn, so the row can link to
     // what they were last doing rather than to a bare timestamp.
     pub last_context_id: Option<ContextId>,
+    #[cfg(feature = "gateway")]
     pub requests: i64,
+    #[cfg(feature = "gateway")]
     pub tokens: i64,
+    #[cfg(feature = "gateway")]
     pub cost_microdollars: i64,
 }
 
@@ -100,15 +109,26 @@ pub struct RosterSort {
 
 impl RosterSort {
     // Why: every column the header row offers, in table order.
-    pub const COLUMNS: [&'static str; 9] = [
+    #[cfg(feature = "gateway")]
+    pub const COLUMNS: &'static [&'static str] = &[
         "name", "email", "roles", "groups", "projects", "seen", "cost", "requests", "status",
     ];
+    #[cfg(not(feature = "gateway"))]
+    pub const COLUMNS: &'static [&'static str] = &[
+        "name", "email", "roles", "groups", "projects", "seen", "status",
+    ];
+
+    // Why: spend first where there is spend to read; otherwise recency.
+    #[cfg(feature = "gateway")]
+    pub const DEFAULT_COLUMN: &'static str = "cost";
+    #[cfg(not(feature = "gateway"))]
+    pub const DEFAULT_COLUMN: &'static str = "seen";
 
     #[must_use]
     pub fn parse_sort(column: Option<&str>, direction: Option<&str>) -> Self {
         let column = column
-            .and_then(|c| Self::COLUMNS.into_iter().find(|known| *known == c))
-            .unwrap_or("cost");
+            .and_then(|c| Self::COLUMNS.iter().copied().find(|known| *known == c))
+            .unwrap_or(Self::DEFAULT_COLUMN);
         Self {
             column,
             descending: direction.unwrap_or("desc") != "asc",
@@ -119,7 +139,7 @@ impl RosterSort {
 impl Default for RosterSort {
     fn default() -> Self {
         Self {
-            column: "cost",
+            column: Self::DEFAULT_COLUMN,
             descending: true,
         }
     }
@@ -146,10 +166,25 @@ pub async fn list_users_paged(
     query: &RosterQuery,
 ) -> Result<(Vec<RosterRow>, i64), sqlx::Error> {
     let mut transaction = crate::repositories::dashboard_read::begin(pool).await?;
+    #[cfg(feature = "gateway")]
+    let rows = sqlx::query_file!(
+        "src/repositories/users/roster/page_gateway.sql",
+        scope.as_sql(),
+        WINDOW_DAYS,
+        query.filter.as_str(),
+        query.role.as_deref(),
+        query.search.as_deref(),
+        query.sort.column,
+        query.sort.descending,
+        query.limit,
+        query.offset,
+    )
+    .fetch_all(&mut *transaction)
+    .await?;
+    #[cfg(not(feature = "gateway"))]
     let rows = sqlx::query_file!(
         "src/repositories/users/roster/page.sql",
         scope.as_sql(),
-        WINDOW_DAYS,
         query.filter.as_str(),
         query.role.as_deref(),
         query.search.as_deref(),
@@ -183,8 +218,11 @@ pub async fn list_users_paged(
             last_active: row.last_active,
             last_active_source: row.last_active_source,
             last_context_id: None,
+            #[cfg(feature = "gateway")]
             requests: row.requests,
+            #[cfg(feature = "gateway")]
             tokens: row.tokens,
+            #[cfg(feature = "gateway")]
             cost_microdollars: row.cost_microdollars,
         })
         .collect();

@@ -15,14 +15,18 @@
 //! would be a dead end where a redirect is a door.
 
 mod data;
+#[cfg(feature = "gateway")]
 mod kpis_view;
 mod panels_view;
 mod view;
 
 use std::sync::Arc;
 
-use axum::extract::{Extension, Query, State};
+#[cfg(feature = "gateway")]
+use axum::extract::Query;
+use axum::extract::{Extension, State};
 use axum::response::{IntoResponse, Redirect, Response};
+#[cfg(feature = "gateway")]
 use serde::Deserialize;
 use sqlx::PgPool;
 
@@ -31,6 +35,7 @@ use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
+#[cfg(feature = "gateway")]
 use view::OverviewRange;
 
 // Why: `preset` is the same parameter the AI-activity pages carry, so a window
@@ -38,6 +43,7 @@ use view::OverviewRange;
 // put on the query string is ignored here on purpose — the overview is
 // instance-wide, and honouring a container filter halfway would show a scoped
 // number under an unscoped heading.
+#[cfg(feature = "gateway")]
 #[derive(Debug, Default, Deserialize)]
 pub(crate) struct OverviewQuery {
     pub preset: Option<String>,
@@ -55,7 +61,7 @@ pub(crate) async fn overview_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(query): Query<OverviewQuery>,
+    #[cfg(feature = "gateway")] Query(query): Query<OverviewQuery>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_console {
         return Ok(Redirect::to("/admin/profile").into_response());
@@ -65,10 +71,15 @@ pub(crate) async fn overview_page(
         return Ok(Redirect::to(dashboard.landing()).into_response());
     }
 
-    let range = OverviewRange::from_query(query.preset.as_deref());
-    let loaded = data::load_overview(&pool, range).await;
+    #[cfg(feature = "gateway")]
+    let page = {
+        let range = OverviewRange::from_query(query.preset.as_deref());
+        view::overview_page(range, &data::load_overview(&pool, range).await)
+    };
+    #[cfg(not(feature = "gateway"))]
+    let page = view::overview_page(&data::load_overview(&pool).await);
     let page = OverviewWithHome {
-        page: view::overview_page(range, &loaded),
+        page,
         home: dashboard.home(),
     };
 

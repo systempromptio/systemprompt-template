@@ -34,7 +34,7 @@ pub async fn list_model_cost_series(
             SELECT r.model
             FROM ai_requests r
             WHERE r.created_at >= $1 AND r.created_at < $2
-              AND NOT r.synthetic
+              AND r.traffic = 'production'
               AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
               AND ($4::TEXT IS NULL OR r.user_id = $4)
             GROUP BY r.model
@@ -49,7 +49,7 @@ pub async fn list_model_cost_series(
         FROM ai_requests r
         LEFT JOIN ranked k ON k.model = r.model
         WHERE r.created_at >= $1 AND r.created_at < $2
-          AND NOT r.synthetic
+          AND r.traffic = 'production'
           AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
           AND ($4::TEXT IS NULL OR r.user_id = $4)
         GROUP BY 1, 2

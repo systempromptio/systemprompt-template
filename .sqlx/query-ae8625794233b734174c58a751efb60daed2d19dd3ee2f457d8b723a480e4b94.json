@@ -1,0 +1,120 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH base AS (\n               SELECT u.id,\n                      COALESCE(u.display_name, u.full_name, u.name) AS display_name,\n                      u.email, u.roles, (u.status = 'active') AS is_active, u.created_at\n                 FROM users u\n                WHERE NOT ('anonymous' = ANY(u.roles))\n                  AND u.email NOT LIKE '%@anonymous.local'\n                  AND ($1::TEXT[] IS NULL OR u.id = ANY($1))\n                  AND ($3::TEXT IS NULL OR $3 = ANY(u.roles))\n                  AND ($4::TEXT IS NULL OR position(lower($4) in lower(\n                      COALESCE(u.display_name, u.full_name, u.name, '') || ' ' || COALESCE(u.email, '') || ' ' || u.id)) > 0)\n           ), enriched AS (\n               SELECT b.id, b.display_name, b.email, b.roles, b.is_active, b.created_at,\n                      COALESCE(g.ids, ARRAY[]::TEXT[]) AS group_ids,\n                      COALESCE(p.ids, ARRAY[]::TEXT[]) AS project_ids,\n                      GREATEST(ls.last_session, a.last_seen) AS last_active,\n                      CASE\n                        WHEN GREATEST(ls.last_session, a.last_seen) IS NULL THEN NULL\n                        WHEN ls.last_session = GREATEST(ls.last_session, a.last_seen) THEN 'session'\n                        ELSE 'console'\n                      END AS last_active_source\n                 FROM base b\n                 LEFT JOIN LATERAL (\n                     SELECT array_agg(DISTINCT ug.group_id) AS ids\n                       FROM user_groups ug WHERE ug.user_id = b.id) g ON TRUE\n                 LEFT JOIN LATERAL (\n                     SELECT array_agg(DISTINCT pm.project_id) AS ids\n                       FROM project_members pm WHERE pm.user_id = b.id) p ON TRUE\n                 LEFT JOIN LATERAL (\n                     SELECT MAX(ua.created_at) AS last_seen\n                       FROM user_activity ua WHERE ua.user_id = b.id) a ON TRUE\n                 LEFT JOIN LATERAL (\n                     SELECT MAX(us.last_activity_at) AS last_session\n                       FROM user_sessions us WHERE us.user_id = b.id) ls ON TRUE\n           ), filtered AS (\n               SELECT * FROM enriched e\n                WHERE CASE $2::TEXT\n                        WHEN 'unassigned' THEN\n                            cardinality(e.group_ids) = 0 OR 'unassigned' = ANY(e.group_ids)\n                        WHEN 'no-role' THEN\n                            cardinality(array_remove(array_remove(e.roles, 'user'), 'anonymous')) = 0\n                        WHEN 'inactive-30d' THEN\n                            e.last_active IS NULL OR e.last_active < NOW() - INTERVAL '30 days'\n                        ELSE TRUE\n                      END\n                  AND ($3::TEXT IS NULL OR $3 = ANY(e.roles))\n                  AND ($4::TEXT IS NULL OR position(lower($4) in lower(\n                          COALESCE(e.display_name, '') || ' ' || COALESCE(e.email, '') || ' ' || e.id)) > 0)\n           )\n           , page AS MATERIALIZED (\n               SELECT f.*, COUNT(*) OVER ()::bigint AS total_rows,\n                   ROW_NUMBER() OVER (            ORDER BY\n              CASE WHEN $5::TEXT = 'name'     AND     $6::BOOLEAN THEN lower(COALESCE(f.display_name, f.id)) END DESC,\n              CASE WHEN $5::TEXT = 'name'     AND NOT $6::BOOLEAN THEN lower(COALESCE(f.display_name, f.id)) END ASC,\n              CASE WHEN $5::TEXT = 'email'    AND     $6::BOOLEAN THEN lower(COALESCE(f.email, '')) END DESC,\n              CASE WHEN $5::TEXT = 'email'    AND NOT $6::BOOLEAN THEN lower(COALESCE(f.email, '')) END ASC,\n              CASE WHEN $5::TEXT = 'roles'    AND     $6::BOOLEAN THEN cardinality(f.roles) END DESC,\n              CASE WHEN $5::TEXT = 'roles'    AND NOT $6::BOOLEAN THEN cardinality(f.roles) END ASC,\n              CASE WHEN $5::TEXT = 'groups'   AND     $6::BOOLEAN THEN cardinality(f.group_ids) END DESC,\n              CASE WHEN $5::TEXT = 'groups'   AND NOT $6::BOOLEAN THEN cardinality(f.group_ids) END ASC,\n              CASE WHEN $5::TEXT = 'projects' AND     $6::BOOLEAN THEN cardinality(f.project_ids) END DESC,\n              CASE WHEN $5::TEXT = 'projects' AND NOT $6::BOOLEAN THEN cardinality(f.project_ids) END ASC,\n              CASE WHEN $5::TEXT = 'seen'     AND     $6::BOOLEAN THEN f.last_active END DESC NULLS LAST,\n              CASE WHEN $5::TEXT = 'seen'     AND NOT $6::BOOLEAN THEN f.last_active END ASC NULLS FIRST,\n              CASE WHEN $5::TEXT = 'status'   AND     $6::BOOLEAN THEN f.is_active::INT END DESC,\n              CASE WHEN $5::TEXT = 'status'   AND NOT $6::BOOLEAN THEN f.is_active::INT END ASC,\n              f.id\n) AS position\n             FROM filtered f\n            ORDER BY\n              CASE WHEN $5::TEXT = 'name'     AND     $6::BOOLEAN THEN lower(COALESCE(f.display_name, f.id)) END DESC,\n              CASE WHEN $5::TEXT = 'name'     AND NOT $6::BOOLEAN THEN lower(COALESCE(f.display_name, f.id)) END ASC,\n              CASE WHEN $5::TEXT = 'email'    AND     $6::BOOLEAN THEN lower(COALESCE(f.email, '')) END DESC,\n              CASE WHEN $5::TEXT = 'email'    AND NOT $6::BOOLEAN THEN lower(COALESCE(f.email, '')) END ASC,\n              CASE WHEN $5::TEXT = 'roles'    AND     $6::BOOLEAN THEN cardinality(f.roles) END DESC,\n              CASE WHEN $5::TEXT = 'roles'    AND NOT $6::BOOLEAN THEN cardinality(f.roles) END ASC,\n              CASE WHEN $5::TEXT = 'groups'   AND     $6::BOOLEAN THEN cardinality(f.group_ids) END DESC,\n              CASE WHEN $5::TEXT = 'groups'   AND NOT $6::BOOLEAN THEN cardinality(f.group_ids) END ASC,\n              CASE WHEN $5::TEXT = 'projects' AND     $6::BOOLEAN THEN cardinality(f.project_ids) END DESC,\n              CASE WHEN $5::TEXT = 'projects' AND NOT $6::BOOLEAN THEN cardinality(f.project_ids) END ASC,\n              CASE WHEN $5::TEXT = 'seen'     AND     $6::BOOLEAN THEN f.last_active END DESC NULLS LAST,\n              CASE WHEN $5::TEXT = 'seen'     AND NOT $6::BOOLEAN THEN f.last_active END ASC NULLS FIRST,\n              CASE WHEN $5::TEXT = 'status'   AND     $6::BOOLEAN THEN f.is_active::INT END DESC,\n              CASE WHEN $5::TEXT = 'status'   AND NOT $6::BOOLEAN THEN f.is_active::INT END ASC,\n              f.id\n            LIMIT $7 OFFSET $8\n           )\n           SELECT page.id AS \"user_id!: UserId\",\n                  page.display_name,\n                  page.email AS \"email?: Email\",\n                  page.roles AS \"roles!: Vec<String>\",\n                  page.group_ids AS \"group_ids!: Vec<String>\",\n                  page.project_ids AS \"project_ids!: Vec<String>\",\n                  page.is_active AS \"is_active!\",\n                  page.created_at AS \"created_at!\",\n                  page.last_active,\n                  page.last_active_source AS \"last_active_source?\",\n                  page.total_rows AS \"total_rows!\"\n             FROM page\n             ORDER BY page.position\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "email?: Email",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "group_ids!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "project_ids!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_active!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "last_active",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "last_active_source?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "total_rows!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      null,
+      null,
+      null,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ae8625794233b734174c58a751efb60daed2d19dd3ee2f457d8b723a480e4b94"
+}

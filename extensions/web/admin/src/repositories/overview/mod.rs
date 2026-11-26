@@ -10,8 +10,12 @@
 //! failed is worse than a page that says which number it could not read, so
 //! nothing here is folded into a single fallible load.
 
+#[cfg(feature = "gateway")]
 pub mod kpis;
+#[cfg(feature = "mcp")]
 pub mod liveness;
 pub mod queues;
+#[cfg(feature = "gateway")]
 pub mod scopes;
+#[cfg(feature = "gateway")]
 pub mod series;

@@ -10,6 +10,7 @@ use systemprompt::identifiers::{PluginId, UserId};
 
 use crate::handlers::ssr::format::local_time;
 use crate::repositories::governance::decision_calls::{ChainEvaluation, DecisionCallRow};
+#[cfg(feature = "gateway")]
 use crate::repositories::governance::findings::SafetyFindingLogRow;
 use crate::repositories::governance::hook_events::RecentHookEvent;
 
@@ -55,6 +56,7 @@ pub(super) struct DecisionRow {
     pub(super) trace_url: Option<String>,
 }
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Serialize)]
 pub(super) struct FindingRow {
     pub(super) created_at: String,
@@ -97,6 +99,7 @@ pub(super) const fn decision_tone(decision: &str) -> &'static str {
     }
 }
 
+#[cfg(feature = "gateway")]
 const fn severity_tone(severity: &str) -> &'static str {
     match severity.as_bytes() {
         b"critical" | b"high" => "err",
@@ -236,6 +239,7 @@ fn span_of(row: &DecisionCallRow) -> String {
     format!("+{seconds:.1}s")
 }
 
+#[cfg(feature = "gateway")]
 pub(super) fn finding_rows(rows: &[SafetyFindingLogRow]) -> Vec<FindingRow> {
     rows.iter()
         .map(|r| FindingRow {
@@ -265,6 +269,7 @@ pub(super) fn finding_rows(rows: &[SafetyFindingLogRow]) -> Vec<FindingRow> {
 // last dash-separated segment instead rendered `e2e-dreq-000` as "000" beside a
 // UUID's twelve-character tail, so two ids in the same column had nothing in
 // common to compare.
+#[cfg(feature = "gateway")]
 fn short(id: &str) -> String {
     if id.is_empty() {
         return "\u{2014}".to_owned();

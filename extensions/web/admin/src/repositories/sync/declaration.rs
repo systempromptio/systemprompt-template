@@ -12,7 +12,6 @@ use std::path::PathBuf;
 
 use super::plane::DeclarationSource;
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::gateway_policies::declared::services_root;
 
 // Why: `None` only for an absent file on disk; uploaded text is always the
 // whole declaration.
@@ -24,7 +23,7 @@ pub fn read_or_text(
     match from {
         DeclarationSource::Text(text) => Ok(Some(text.to_owned())),
         DeclarationSource::Disk => {
-            let path: PathBuf = services_root(env).join(source_file);
+            let path: PathBuf = env.active_services_root().join(source_file);
             match std::fs::read_to_string(&path) {
                 Ok(s) => Ok(Some(s)),
                 Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),

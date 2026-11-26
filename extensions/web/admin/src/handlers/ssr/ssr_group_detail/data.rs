@@ -13,9 +13,10 @@ use crate::repositories;
 use crate::services::marketplaces::load_marketplaces;
 use crate::types::groups::{GroupAdMappingRow, GroupMemberRow};
 
+#[cfg(feature = "mcp")]
+use crate::repositories::people_usage::breakdown::list_scope_top_tools;
 use crate::repositories::people_usage::breakdown::{
-    LinkedScopeRow, ModelUsageRow, list_linked_scopes, list_scope_top_models,
-    list_scope_top_skills, list_scope_top_tools,
+    LinkedScopeRow, ModelUsageRow, list_linked_scopes, list_scope_top_models, list_scope_top_skills,
 };
 use crate::repositories::people_usage::{
     DEFAULT_WINDOW_DAYS, LEADERBOARD_LIMIT, MemberUsageRow, ScopeUsageRow, get_scope_usage,
@@ -39,6 +40,7 @@ pub(super) struct UsageTabData {
     pub models: Vec<ModelUsageRow>,
     pub daily: Vec<i64>,
     pub skills: Vec<(String, i64)>,
+    #[cfg(feature = "mcp")]
     pub tools: Vec<(String, i64)>,
     pub leaderboard: Vec<MemberUsageRow>,
 }
@@ -87,11 +89,10 @@ pub(super) async fn load_usage(pool: &PgPool, group_id: &GroupId) -> ScopeUsageR
 
 pub(super) async fn load_usage_tab(pool: &PgPool, group_id: &GroupId) -> UsageTabData {
     let q = member_query(group_id);
-    let (models, daily, skills, tools, members) = tokio::join!(
+    let (models, daily, skills, members) = tokio::join!(
         list_scope_top_models(pool, &q, LEADERBOARD_LIMIT),
         list_daily_requests(pool, &q),
         list_scope_top_skills(pool, &q, LEADERBOARD_LIMIT),
-        list_scope_top_tools(pool, &q, LEADERBOARD_LIMIT),
         list_member_usage(pool, &q),
     );
     let mut leaderboard: Vec<MemberUsageRow> = or_default("group member leaderboard", members)
@@ -112,19 +113,24 @@ pub(super) async fn load_usage_tab(pool: &PgPool, group_id: &GroupId) -> UsageTa
         .into_iter()
         .map(|s| (s.skill, s.invocations))
         .collect();
-    let tools = or_default("group top tools", tools)
-        .into_iter()
-        .map(|t| {
-            (
-                format!("{} · {}", t.server_name, t.tool_name),
-                t.invocations,
-            )
-        })
-        .collect();
+    #[cfg(feature = "mcp")]
+    let tools = or_default(
+        "group top tools",
+        list_scope_top_tools(pool, &q, LEADERBOARD_LIMIT).await,
+    )
+    .into_iter()
+    .map(|t| {
+        (
+            format!("{} · {}", t.server_name, t.tool_name),
+            t.invocations,
+        )
+    })
+    .collect();
     UsageTabData {
         models,
         daily,
         skills,
+        #[cfg(feature = "mcp")]
         tools,
         leaderboard,
     }

@@ -33,10 +33,10 @@ pub(super) fn columns() -> Vec<SortColumn> {
             hint: "Open sessions, and how many of them are still beating",
         },
         SortColumn {
-            key: "identities",
-            label: "Ident",
+            key: "bound",
+            label: "Bound",
             class: "sp-table__cell--num",
-            hint: "Unexpired proxy identities a live session is acting as",
+            hint: "Live sessions bound to a principal",
         },
         SortColumn {
             key: "calls",
@@ -71,7 +71,7 @@ pub(super) fn kpis(rows: &[McpServerRow]) -> Vec<McpKpiView> {
     let configured = rows.iter().filter(|r| r.configured).count();
     let alive = rows.iter().filter(|r| r.alive).count();
     let sessions: i64 = rows.iter().map(|r| r.sessions_open).sum();
-    let identities: i64 = rows.iter().map(|r| r.proxy_identities).sum();
+    let bound: i64 = rows.iter().map(|r| r.bound_sessions).sum();
     let calls: i64 = rows.iter().map(|r| r.calls).sum();
     let errors: i64 = rows.iter().map(|r| r.errors).sum();
     let unconfigured = rows.len() - configured;
@@ -95,7 +95,7 @@ pub(super) fn kpis(rows: &[McpServerRow]) -> Vec<McpKpiView> {
         McpKpiView {
             label: "Open sessions",
             value: short_num(sessions),
-            sub: format!("{identities} proxy identities"),
+            sub: format!("{bound} bound to a principal"),
             tone: "",
             unit: "",
         },

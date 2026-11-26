@@ -71,6 +71,7 @@ pub(super) async fn fill_tab(
                 super::load::SESSION_PAGE_SIZE,
             ));
         },
+        #[cfg(feature = "gateway")]
         "usage" => {
             data.usage = Some(super::view::usage_tab(
                 super::load::load_usage(pool, user_id).await,

@@ -7,13 +7,23 @@
         "ordinal": 0,
         "name": "user_id!",
         "type_info": "Varchar",
-        "origin": "Expression"
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "context_id!",
         "type_info": "Varchar",
-        "origin": "Expression"
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "context_id"
+          }
+        }
       }
     ],
     "parameters": {
@@ -22,8 +32,8 @@
       ]
     },
     "nullable": [
-      null,
-      null
+      true,
+      true
     ]
   },
   "hash": "afb15a097556f1ae37dac9208fb788c2deedfca419bb4d0a20acf96475f6be00"

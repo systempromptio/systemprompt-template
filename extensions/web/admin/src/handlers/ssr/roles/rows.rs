@@ -15,6 +15,8 @@ use crate::types::Role;
 use crate::types::access_control::AccessDecision;
 
 use super::data::RolesQuery;
+#[cfg(feature = "gateway")]
+use super::view::RoleHolderSpendView;
 use super::view::{RoleCardView, RoleEntitlementView, RoleHolderView, RolePillView, SelectOption};
 
 fn label_for(role: &str) -> String {
@@ -112,8 +114,11 @@ pub(super) fn member_views(rows: &[RoleHolderRow], query: &RolesQuery) -> Vec<Ro
                 is_active: row.is_active,
                 status: if row.is_active { "Active" } else { "Inactive" },
                 status_tone: if row.is_active { "ok" } else { "muted" },
-                requests_30d: row.requests_30d,
-                cost_30d_microdollars: row.cost_30d_microdollars,
+                #[cfg(feature = "gateway")]
+                spend: RoleHolderSpendView {
+                    requests_30d: row.requests_30d,
+                    cost_30d_microdollars: row.cost_30d_microdollars,
+                },
                 href: format!("/admin/users/{}", urlencoding::encode(id)),
                 user_id: row.user_id.clone(),
             }
@@ -178,12 +183,14 @@ pub(super) fn sort_headers(query: &RolesQuery) -> Vec<SortHeaderView> {
             "sp-col-roles",
             "Every role this person holds. A coloured role was granted by hand; a grey one comes from the directory.",
         ),
+        #[cfg(feature = "gateway")]
         (
             "requests",
             "Requests 30d",
             "sp-table__cell--num sp-col-num",
             "Gateway requests this account made in the last 30 days.",
         ),
+        #[cfg(feature = "gateway")]
         (
             "cost",
             "Cost 30d",

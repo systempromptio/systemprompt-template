@@ -1,0 +1,119 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id AS \"id!\", user_id AS \"user_id!: UserId\",\n            display_name AS \"display_name!\",\n            category AS \"category!: ActivityCategory\",\n            action AS \"action!: ActivityAction\",\n            entity_type, entity_name, description AS \"description!\", created_at AS \"created_at!\"\n        FROM (\n            SELECT a.id, a.user_id,\n                COALESCE(u.display_name, u.full_name, u.name, u.email, a.user_id) AS display_name,\n                a.category, a.action,\n                a.entity_type, a.entity_name, a.description, a.created_at\n            FROM user_activity a\n            JOIN users u ON u.id = a.user_id\n            WHERE a.user_id = $1\n        ) feed\n        ORDER BY created_at DESC LIMIT 50",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "category!: ActivityCategory",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "category"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "action!: ActivityAction",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "action"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "entity_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "entity_type"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "entity_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "entity_name"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "description!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "de87a397e15a296211c962be37552dc081d3e165d68e294125321df8998575af"
+}

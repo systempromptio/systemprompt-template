@@ -76,8 +76,17 @@ pub(crate) struct GroupOverviewView {
     pub models: Vec<ModelMixRowView>,
     pub daily_requests: SvgLineChartView,
     pub skills: Vec<NameCountRowView>,
-    pub tools: Vec<NameCountRowView>,
+    #[cfg(feature = "mcp")]
+    pub tool_panel: ToolPanelView,
     pub leaderboard: Vec<UsageLeaderRowView>,
+}
+
+// Why: the MCP member's tool calls, nested so the template draws the panel
+// only in the builds that link that member.
+#[cfg(feature = "mcp")]
+#[derive(Debug, Serialize)]
+pub(crate) struct ToolPanelView {
+    pub tools: Vec<NameCountRowView>,
 }
 
 #[derive(Debug, Clone, Serialize)]

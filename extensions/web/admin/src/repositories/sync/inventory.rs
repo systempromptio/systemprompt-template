@@ -98,6 +98,7 @@ pub const CONFIG_KINDS: &[ConfigKind] = &[
         "groups",
         "/admin/groups",
     ),
+    #[cfg(feature = "gateway")]
     projected(
         file(
             "gateway_policies",

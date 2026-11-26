@@ -10,7 +10,7 @@
 use crate::error::AdminError;
 use std::sync::Arc;
 
-use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
+use systemprompt::identifiers::{AgentId, SessionId, TraceId, UserId};
 
 use axum::extract::{Path, State};
 use axum::response::Response;
@@ -22,11 +22,18 @@ use crate::handlers::ssr::entity_urls::{session_detail_url, trace_detail_url};
 use crate::handlers::ssr::page::Page;
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::governance::chain::{
-    AiRequestSummary, ChainEnvelope, DecisionStage, TranscriptEnvelope, find_decision_chain,
+    ChainEnvelope, DecisionStage, TranscriptEnvelope, find_decision_chain,
 };
 
+#[cfg(feature = "agents")]
+mod artifacts;
+#[cfg(feature = "gateway")]
 mod evidence;
+#[cfg(feature = "gateway")]
+mod request;
+#[cfg(feature = "gateway")]
 mod rows;
+#[cfg(feature = "gateway")]
 mod schemas;
 
 #[derive(Debug, Serialize)]
@@ -34,14 +41,12 @@ struct AuditDetailContext<'a> {
     page: &'static str,
     title: String,
     breadcrumbs: Vec<BreadcrumbView>,
-    evidence: evidence::EvidenceView,
-    schemas: schemas::SchemaView,
-    artifacts: schemas::ArtifactsView,
+    #[cfg(feature = "gateway")]
+    #[serde(flatten)]
+    panels: request::RequestPanels,
     summary: Summary,
-    primary: Option<PrimaryRequest>,
     banner: Option<Banner>,
     decisions: &'a [DecisionStage],
-    requests: Vec<rows::RequestRowView>,
     events: &'a [crate::repositories::governance::chain::ChainUsageEvent],
     session_summary: &'a Option<crate::repositories::governance::chain::SessionSummary>,
     transcript: &'a Option<TranscriptEnvelope>,
@@ -61,28 +66,9 @@ struct Summary {
     agent_scope: Option<String>,
     decision_count: i64,
     deny_count: i64,
-    request_count: i64,
-    input_tokens: i64,
-    output_tokens: i64,
-    cost_usd: String,
-    cost_microdollars: i64,
-    latency_ms: i64,
-}
-
-#[derive(Debug, Serialize)]
-struct PrimaryRequest {
-    id: String,
-    request_id: AiRequestId,
-    model: String,
-    provider: String,
-    status: String,
-    is_failed: bool,
-    error_message: Option<String>,
-    input_tokens: Option<i32>,
-    output_tokens: Option<i32>,
-    latency_ms: Option<i32>,
-    cost_microdollars: i64,
-    created_at_local: String,
+    #[cfg(feature = "gateway")]
+    #[serde(flatten)]
+    usage: request::RequestUsage,
 }
 
 #[derive(Debug, Serialize)]
@@ -117,53 +103,45 @@ pub(crate) async fn governance_audit_detail_page(
         return Err(AdminError::NotFound("No audit chain found for that id.".to_owned()).into());
     };
 
-    let primary = pick_primary(&envelope, &id);
-    let title = primary.map_or_else(
-        || format!("Request · {}", short_id(envelope.session_id.as_str())),
-        |r| format!("Request · {}", short_id(&r.id)),
-    );
-
-    let request_ids: Vec<String> = envelope.requests.iter().map(|r| r.id.clone()).collect();
-    let primary_id = primary.map(|r| r.id.as_str());
-    let primary_provider = primary
-        .and_then(|r| r.provider.as_deref())
-        .unwrap_or_default();
-    let (evidence, schemas, artifacts) = tokio::join!(
-        evidence::load(&pool, &request_ids),
-        schemas::load_schemas(&pool, primary_id.unwrap_or_default(), primary_provider),
-        schemas::load_artifacts(&pool, &envelope.session_id, primary_id),
+    #[cfg(feature = "gateway")]
+    let (panels, title, failure) = {
+        let primary = request::pick_primary(&envelope, &id);
+        let title = primary.map_or_else(
+            || format!("Request · {}", short_id(envelope.session_id.as_str())),
+            |r| format!("Request · {}", short_id(&r.id)),
+        );
+        let failure = primary.map(|r| (r.status.clone(), r.error_message.clone()));
+        (
+            request::load_request_panels(&pool, &envelope, primary).await,
+            title,
+            failure,
+        )
+    };
+    #[cfg(not(feature = "gateway"))]
+    let (title, failure) = (
+        format!("Decision · {}", short_id(envelope.session_id.as_str())),
+        None,
     );
 
     let summary = build_summary(&envelope);
-    let primary_json = primary.map(build_primary_json);
-    let banner = build_banner(primary, &envelope);
+    let banner = build_banner(failure, &envelope);
 
     let ctx = AuditDetailContext {
         page: "request-detail",
         breadcrumbs: vec![
-            BreadcrumbView::link("Requests", "/admin/requests"),
+            BreadcrumbView::link(BACK_LABEL, BACK_URL),
             BreadcrumbView::current(title.clone()),
         ],
         title,
-        evidence,
-        schemas,
-        artifacts,
+        #[cfg(feature = "gateway")]
+        panels,
         summary,
-        primary: primary_json,
         banner,
         decisions: &envelope.decisions,
-        requests: envelope
-            .requests
-            .iter()
-            .map(|r| rows::build_request_row(r, primary.is_some_and(|p| p.id == r.id)))
-            .collect(),
         events: &envelope.events,
         session_summary: &envelope.summary,
         transcript: &envelope.transcript,
-        // Why: the log this page is reached from. `/admin/governance` was the
-        // old answer and is still mounted, but a reader who clicked a request
-        // row expects the row list back, not the policy console.
-        back_url: "/admin/requests",
+        back_url: BACK_URL,
     };
 
     Ok(crate::handlers::ssr::render_typed_page(
@@ -175,21 +153,19 @@ pub(crate) async fn governance_audit_detail_page(
     ))
 }
 
-fn pick_primary<'a>(env: &'a ChainEnvelope, id: &str) -> Option<&'a AiRequestSummary> {
-    env.requests
-        .iter()
-        .find(|r| r.id == id || r.request_id == id)
-        .or_else(|| env.requests.first())
-}
+// Why: the log this page is reached from. A reader who clicked a request row
+// expects the request list back; without the gateway member the page is only
+// reached from the governance decision log.
+#[cfg(feature = "gateway")]
+const BACK_URL: &str = "/admin/requests";
+#[cfg(feature = "gateway")]
+const BACK_LABEL: &str = "Requests";
+#[cfg(not(feature = "gateway"))]
+const BACK_URL: &str = "/admin/governance";
+#[cfg(not(feature = "gateway"))]
+const BACK_LABEL: &str = "Governance";
 
 fn build_summary(env: &ChainEnvelope) -> Summary {
-    let total_latency = env
-        .requests
-        .iter()
-        .filter_map(|r| r.latency_ms)
-        .map(i64::from)
-        .sum::<i64>();
-    let cost_usd = env.totals.total_cost_microdollars as f64 / 1_000_000.0;
     Summary {
         session_id: env.session_id.clone(),
         session_id_short: short_id(env.session_id.as_str()),
@@ -203,45 +179,19 @@ fn build_summary(env: &ChainEnvelope) -> Summary {
         ),
         agent_id: env.identity.agent_id.clone(),
         agent_scope: env.identity.agent_scope.clone(),
-        decision_count: env.totals.decision_count,
-        deny_count: env.totals.deny_count,
-        request_count: env.totals.request_count,
-        input_tokens: env.totals.total_input_tokens,
-        output_tokens: env.totals.total_output_tokens,
-        cost_usd: format!("{cost_usd:.4}"),
-        cost_microdollars: env.totals.total_cost_microdollars,
-        latency_ms: total_latency,
+        decision_count: env.totals.decisions,
+        deny_count: env.totals.denials,
+        #[cfg(feature = "gateway")]
+        usage: request::build_usage(env),
     }
 }
 
-fn is_failed_status(status: &str) -> bool {
+pub(super) fn is_failed_status(status: &str) -> bool {
     matches!(status, "failed" | "error" | "denied")
 }
 
-fn build_primary_json(r: &AiRequestSummary) -> PrimaryRequest {
-    PrimaryRequest {
-        id: r.id.clone(),
-        request_id: r.request_id.clone(),
-        model: r.model.clone().unwrap_or_else(|| "—".to_owned()),
-        provider: r.provider.clone().unwrap_or_else(|| "—".to_owned()),
-        status: r.status.clone(),
-        is_failed: is_failed_status(&r.status),
-        error_message: r.error_message.clone(),
-        input_tokens: r.input_tokens,
-        output_tokens: r.output_tokens,
-        latency_ms: r.latency_ms,
-        cost_microdollars: r.cost_microdollars,
-        created_at_local: r
-            .created_at
-            .with_timezone(&chrono::Local)
-            .format("%Y-%m-%d %H:%M:%S")
-            .to_string(),
-    }
-}
-
-fn build_banner(primary: Option<&AiRequestSummary>, env: &ChainEnvelope) -> Option<Banner> {
-    let status = primary.map(|r| r.status.clone());
-    let error_message = primary.and_then(|r| r.error_message.clone());
+fn build_banner(failure: Option<(String, Option<String>)>, env: &ChainEnvelope) -> Option<Banner> {
+    let (status, error_message) = failure.map_or((None, None), |(s, e)| (Some(s), e));
     let failed = status.as_deref().is_some_and(is_failed_status);
     let denial = env
         .decisions

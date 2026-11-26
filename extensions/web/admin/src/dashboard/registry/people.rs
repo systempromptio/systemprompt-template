@@ -31,7 +31,7 @@ pub(super) const ITEMS: &[NavItemDef] = &[
         external: false,
         attention: false,
         needs: None,
-        compiled: true,
+        compiled: cfg!(feature = "gateway"),
         icon: r#"<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="6" r="2"/><circle cx="11" cy="6" r="2"/><path d="M1.5 13c0-2 1.6-3.5 3.5-3.5S8.5 11 8.5 13M7.5 13c0-2 1.6-3.5 3.5-3.5s3.5 1.5 3.5 3.5"/></svg>"#,
     },
     NavItemDef {
@@ -46,7 +46,7 @@ pub(super) const ITEMS: &[NavItemDef] = &[
         external: false,
         attention: false,
         needs: None,
-        compiled: true,
+        compiled: cfg!(feature = "mcp"),
         icon: r#"<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z" stroke-linejoin="round"/></svg>"#,
     },
     NavItemDef {

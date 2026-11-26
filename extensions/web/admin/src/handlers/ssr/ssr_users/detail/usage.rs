@@ -6,13 +6,21 @@
 
 use systemprompt::identifiers::UserId;
 
+#[cfg(feature = "agents")]
 use crate::repositories::analytics::conversation_rows::ConversationRow;
 
-use super::context::{CommitRowView, LatestConversationView, UsageTabView, UserModelRowView};
+use super::context::{CommitRowView, UsageTabView, UserModelRowView};
+#[cfg(feature = "agents")]
+use super::context::{LatestConversationView, UsageConversationsView};
+#[cfg(feature = "agents")]
+use super::load::ConversationUsage;
 use super::load::UsageData;
 use super::view::stamp;
+#[cfg(feature = "agents")]
 use crate::handlers::ssr::entity_urls::context_detail_url;
-use crate::handlers::ssr::format::{format_cost, format_token_total, relative_time};
+#[cfg(feature = "agents")]
+use crate::handlers::ssr::format::relative_time;
+use crate::handlers::ssr::format::{format_cost, format_token_total};
 use crate::repositories::users::enrolment::UserCommitRow;
 
 pub(super) fn usage_tab(data: UsageData, user_id: &UserId) -> UsageTabView {
@@ -20,17 +28,13 @@ pub(super) fn usage_tab(data: UsageData, user_id: &UserId) -> UsageTabView {
     UsageTabView {
         window_label: "Gateway traffic through /v1/messages, all time.".to_owned(),
         requests: data.summary.requests,
-        conversations: data.totals.conversations,
-        turns: data.totals.turns,
-        tool_calls: data.totals.tool_calls,
-        side_calls: data.totals.side_calls,
-        side_call_cost_display: format_cost(data.totals.side_call_cost_microdollars),
+        #[cfg(feature = "agents")]
+        conversations: conversations_view(&data.conversations, &encoded),
         failed: data.summary.failed,
         tokens_display: format_token_total(data.summary.tokens),
         cost_display: format_cost(data.summary.cost_microdollars),
         first_request_at: stamp(data.summary.first_request_at),
         last_request_at: stamp(data.summary.last_request_at),
-        latest: data.latest.as_ref().map(latest_conversation),
         has_models: !data.models.is_empty(),
         models: data
             .models
@@ -42,13 +46,26 @@ pub(super) fn usage_tab(data: UsageData, user_id: &UserId) -> UsageTabView {
                 cost_display: format_cost(share.cost_microdollars),
             })
             .collect(),
-        conversations_url: format!("/admin/users/{encoded}?tab=conversations"),
         log_url: format!("/admin/requests?user_id={encoded}"),
         has_commits: !data.commits.is_empty(),
         commits: data.commits.into_iter().map(commit_row).collect(),
     }
 }
 
+#[cfg(feature = "agents")]
+fn conversations_view(c: &ConversationUsage, encoded: &str) -> UsageConversationsView {
+    UsageConversationsView {
+        conversations: c.totals.conversations,
+        turns: c.totals.turns,
+        tool_calls: c.totals.tool_calls,
+        side_calls: c.totals.side_calls,
+        side_call_cost_display: format_cost(c.totals.side_call_cost_microdollars),
+        latest: c.latest.as_ref().map(latest_conversation),
+        conversations_url: format!("/admin/users/{encoded}?tab=conversations"),
+    }
+}
+
+#[cfg(feature = "agents")]
 fn latest_conversation(c: &ConversationRow) -> LatestConversationView {
     LatestConversationView {
         conversation_title: c.title.clone(),

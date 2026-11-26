@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            g.id AS \"id!: GroupId\",\n            g.name AS \"name!\",\n            g.description,\n            g.is_system AS \"is_system!\",\n            COALESCE(m.member_count, 0)::BIGINT AS \"member_count!\",\n            COALESCE(pc.project_count, 0)::BIGINT AS \"project_count!\"\n        FROM groups g\n        LEFT JOIN (\n            SELECT group_id, COUNT(DISTINCT user_id) AS member_count\n            FROM user_groups GROUP BY group_id\n        ) m ON m.group_id = g.id\n        LEFT JOIN (\n            SELECT ug.group_id, COUNT(DISTINCT pm.project_id) AS project_count\n            FROM user_groups ug\n            JOIN user_projects pm ON pm.user_id = ug.user_id\n            GROUP BY ug.group_id\n        ) pc ON pc.group_id = g.id\n        ORDER BY g.is_system, g.name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: GroupId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "is_system!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "is_system"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "member_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "project_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "1ee3194eddcaa13ab743f777f9451a18b29d56f444d41cfe42bb2c8d47c22ffe"
+}

@@ -17,6 +17,7 @@ pub(super) async fn resolve_session_id(
         return Ok(Some(row.session_id));
     }
 
+    #[cfg(feature = "gateway")]
     if let Some(row) = sqlx::query!(
         r#"SELECT session_id as "session_id: SessionId" FROM ai_requests
           WHERE id = $1 OR request_id = $1 OR trace_id = $1
@@ -54,6 +55,7 @@ pub(super) async fn resolve_session_id(
         return Ok(Some(row.session_id));
     }
 
+    #[cfg(feature = "gateway")]
     if let Some(row) = sqlx::query!(
         r#"SELECT session_id as "session_id: SessionId" FROM ai_requests
            WHERE session_id = $1 LIMIT 1"#,

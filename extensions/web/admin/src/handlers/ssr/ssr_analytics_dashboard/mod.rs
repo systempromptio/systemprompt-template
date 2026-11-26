@@ -52,7 +52,9 @@ mod tab_models;
 // so a prefix shortened here is shortened the same one click deeper.
 pub(crate) use tab_models::{ms, qualifier, short_name};
 mod tab_sessions;
+#[cfg(feature = "mcp")]
 mod tab_skills;
+#[cfg(feature = "mcp")]
 mod tab_tools;
 mod urls;
 mod urls_controls;

@@ -2,9 +2,13 @@
 //! chain DTOs defined in the parent module.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, AiRequestId, PluginId, SessionId, TraceId, UserId};
+use systemprompt::identifiers::{AgentId, PluginId, SessionId, UserId};
+#[cfg(feature = "gateway")]
+use systemprompt::identifiers::{AiRequestId, TraceId};
 
-use super::{AiRequestSummary, ChainUsageEvent, DecisionStage, SessionSummary, TranscriptEnvelope};
+#[cfg(feature = "gateway")]
+use super::AiRequestSummary;
+use super::{ChainUsageEvent, DecisionStage, SessionSummary, TranscriptEnvelope};
 
 #[derive(Debug)]
 pub(super) struct DecisionUserSlots {
@@ -74,6 +78,7 @@ pub(super) async fn list_decisions(
     Ok((stages, slots))
 }
 
+#[cfg(feature = "gateway")]
 pub(super) async fn list_requests(
     pool: &PgPool,
     session_id: &SessionId,

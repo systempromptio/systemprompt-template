@@ -11,9 +11,9 @@
 #[cfg(feature = "agents")]
 use serde::Serialize;
 
-pub(crate) use systemprompt_web_shared::format::{
-    format_cost, format_duration_ms, short_id, short_num,
-};
+pub(crate) use systemprompt_web_shared::format::short_num;
+#[cfg(any(feature = "gateway", feature = "mcp"))]
+pub(crate) use systemprompt_web_shared::format::{format_cost, format_duration_ms, short_id};
 
 pub(crate) fn format_token_total(total: i64) -> String {
     if total <= 0 {
@@ -113,4 +113,19 @@ pub(crate) fn format_bytes(bytes: i64) -> String {
         return format!("{kib} KiB");
     }
     format!("{} MiB", short_num(kib / 1024))
+}
+
+// Why: the window inside which a membership counts as "expiring soon" on the
+// member tables and the access-control ledger — one working week, long enough
+// to renew before the sweep acts.
+pub(crate) const EXPIRING_SOON_DAYS: i64 = 7;
+
+#[must_use]
+pub(crate) fn expires_soon(
+    valid_until: Option<chrono::DateTime<chrono::Utc>>,
+    now: chrono::DateTime<chrono::Utc>,
+) -> bool {
+    valid_until.is_some_and(|until| {
+        until > now && until <= now + chrono::Duration::days(EXPIRING_SOON_DAYS)
+    })
 }

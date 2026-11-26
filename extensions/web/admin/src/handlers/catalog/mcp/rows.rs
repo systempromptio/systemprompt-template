@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use crate::handlers::catalog::sorting::apply_direction;
 use crate::handlers::ssr::format::format_duration_ms;
-use crate::repositories::mcp::runtime::{McpProxyIdentityCount, McpServerActivity};
+use crate::repositories::mcp::runtime::{McpServerActivity, McpSessionPrincipalCount};
 use crate::repositories::overview::liveness::{
     HEARTBEAT_INTERVAL_SECS, McpHeartbeatRow, liveness_state,
 };
@@ -24,18 +24,18 @@ pub(super) const WINDOW_HOURS: i64 = 24;
 
 // Why: the runtime facts for one server, keyed by the name the runtime used.
 // Three sources, deliberately separate: the heartbeat comes from the overview
-// repository the dashboard also reads, the identities from the MCP repository,
+// repository the dashboard also reads, the principals from the MCP repository,
 // and the traffic from the executions table.
 pub(super) struct Runtime {
     pub heartbeat: HashMap<String, McpHeartbeatRow>,
-    pub identities: HashMap<String, McpProxyIdentityCount>,
+    pub principals: HashMap<String, McpSessionPrincipalCount>,
     pub activity: HashMap<String, McpServerActivity>,
 }
 
 impl Runtime {
     pub(super) fn new(
         heartbeat: Vec<McpHeartbeatRow>,
-        identities: Vec<McpProxyIdentityCount>,
+        principals: Vec<McpSessionPrincipalCount>,
         activity: Vec<McpServerActivity>,
     ) -> Self {
         Self {
@@ -43,7 +43,7 @@ impl Runtime {
                 .into_iter()
                 .map(|h| (h.server_id.as_str().to_owned(), h))
                 .collect(),
-            identities: identities
+            principals: principals
                 .into_iter()
                 .map(|i| (i.server_id.as_str().to_owned(), i))
                 .collect(),
@@ -60,7 +60,7 @@ impl Runtime {
         let mut out: Vec<String> = self
             .heartbeat
             .keys()
-            .chain(self.identities.keys())
+            .chain(self.principals.keys())
             .chain(self.activity.keys())
             .cloned()
             .collect();
@@ -190,7 +190,7 @@ pub(super) struct RowInputs<'a> {
 
 pub(super) fn build_row(input: &RowInputs<'_>) -> McpServerRow {
     let heartbeat = input.runtime.heartbeat.get(input.id);
-    let identities = input.runtime.identities.get(input.id);
+    let principals = input.runtime.principals.get(input.id);
     let activity = input.runtime.activity.get(input.id);
     let configured = input.server.is_some();
     let enabled = input.server.is_some_and(|s| s.enabled);
@@ -229,7 +229,7 @@ pub(super) fn build_row(input: &RowInputs<'_>) -> McpServerRow {
         alive: liveness_state(chrono::Utc::now(), last_heartbeat, HEARTBEAT_INTERVAL_SECS)
             .is_alive(),
         last_heartbeat_display: when_display(last_heartbeat),
-        proxy_identities: identities.map_or(0, |i| i.identities),
+        bound_sessions: principals.map_or(0, |p| p.bound_sessions),
         calls,
         errors,
         error_rate_display,
@@ -251,11 +251,7 @@ pub(super) fn sort_rows(rows: &mut [McpServerRow], key: &str, dir: &str) {
             a.alive.cmp(&b.alive).then_with(|| a.id.cmp(&b.id))
         }),
         "sessions" => apply_direction(rows, dir, |a, b| a.sessions_open.cmp(&b.sessions_open)),
-        "identities" => {
-            apply_direction(rows, dir, |a, b| {
-                a.proxy_identities.cmp(&b.proxy_identities)
-            });
-        },
+        "bound" => apply_direction(rows, dir, |a, b| a.bound_sessions.cmp(&b.bound_sessions)),
         "errors" => apply_direction(rows, dir, |a, b| a.errors.cmp(&b.errors)),
         "last" => apply_direction(rows, dir, |a, b| {
             a.last_call_display.cmp(&b.last_call_display)

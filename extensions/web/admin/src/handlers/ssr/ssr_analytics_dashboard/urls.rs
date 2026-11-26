@@ -72,10 +72,12 @@ pub(super) fn tab_links(
     active: DashboardTab,
     query: &AnalyticsDashboardQuery,
 ) -> Vec<DashboardTabLink> {
-    const TABS: [(DashboardTab, &str); 6] = [
+    const TABS: &[(DashboardTab, &str)] = &[
         (DashboardTab::Overview, "Overview"),
         (DashboardTab::Models, "Models"),
+        #[cfg(feature = "mcp")]
         (DashboardTab::Skills, "Skills"),
+        #[cfg(feature = "mcp")]
         (DashboardTab::Tools, "Tools"),
         (DashboardTab::Sessions, "Sessions"),
         (DashboardTab::Cost, "Cost"),

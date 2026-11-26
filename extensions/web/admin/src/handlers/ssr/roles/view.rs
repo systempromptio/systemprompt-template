@@ -52,9 +52,17 @@ pub(crate) struct RoleHolderView {
     pub is_active: bool,
     pub status: &'static str,
     pub status_tone: &'static str,
+    #[cfg(feature = "gateway")]
+    pub spend: RoleHolderSpendView,
+    pub href: String,
+}
+
+// Why: the two thirty-day figures the gateway member's request log supplies.
+#[cfg(feature = "gateway")]
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct RoleHolderSpendView {
     pub requests_30d: i64,
     pub cost_30d_microdollars: i64,
-    pub href: String,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -10,6 +10,7 @@ use serde::Deserialize;
 
 use crate::error::AdminResult;
 use crate::export::model::{Cell, CellKind, Column, DataSet, ExportContext, Table, Window};
+#[cfg(feature = "gateway")]
 use crate::repositories::groups::usage::{GroupUsageRow, list_groups_with_usage};
 use crate::repositories::scope::ScopeRequest;
 use crate::repositories::scope::membership::get_subject_scope;
@@ -18,6 +19,7 @@ use crate::repositories::users::roster::{
 };
 
 pub(crate) struct Users;
+#[cfg(feature = "gateway")]
 pub(crate) struct Groups;
 
 #[derive(Debug, Default, Deserialize)]
@@ -46,8 +48,11 @@ const USER_COLUMNS: &[Column] = &[
     Column::new("last_active_source", "Seen via", CellKind::Text)
         .group("Activity")
         .optional(),
+    #[cfg(feature = "gateway")]
     Column::new("requests", "Requests (30d)", CellKind::Integer).group("Usage"),
+    #[cfg(feature = "gateway")]
     Column::new("tokens", "Tokens (30d)", CellKind::Integer).group("Usage"),
+    #[cfg(feature = "gateway")]
     Column::new("cost", "Cost (30d)", CellKind::Money).group("Usage"),
 ];
 
@@ -63,8 +68,11 @@ fn user_row(r: &RosterRow) -> Vec<Cell> {
         r.created_at.into(),
         Cell::opt_time(r.last_active),
         Cell::opt_text(r.last_active_source.as_deref()),
+        #[cfg(feature = "gateway")]
         r.requests.into(),
+        #[cfg(feature = "gateway")]
         r.tokens.into(),
+        #[cfg(feature = "gateway")]
         Cell::Money(r.cost_microdollars),
     ]
 }
@@ -112,6 +120,7 @@ impl DataSet for Users {
     }
 }
 
+#[cfg(feature = "gateway")]
 const GROUP_COLUMNS: &[Column] = &[
     Column::new("id", "Group id", CellKind::Text).group("Identity"),
     Column::new("name", "Name", CellKind::Text).group("Identity"),
@@ -135,6 +144,7 @@ const GROUP_COLUMNS: &[Column] = &[
     .group("Usage"),
 ];
 
+#[cfg(feature = "gateway")]
 fn group_row(g: &GroupUsageRow) -> Vec<Cell> {
     vec![
         g.id.as_str().into(),
@@ -153,6 +163,7 @@ fn group_row(g: &GroupUsageRow) -> Vec<Cell> {
     ]
 }
 
+#[cfg(feature = "gateway")]
 #[async_trait]
 impl DataSet for Groups {
     fn id(&self) -> &'static str {

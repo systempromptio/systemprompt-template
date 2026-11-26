@@ -21,6 +21,18 @@ pub use super::traffic::{
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DashboardData {
     pub timeline: Vec<activity::ActivityTimelineEvent>,
+    #[cfg(feature = "mcp")]
+    #[serde(flatten)]
+    pub tools: DashboardToolActivity,
+    #[cfg(feature = "content")]
+    #[serde(flatten)]
+    pub site: DashboardSiteTraffic,
+}
+
+/// The dashboard figures the MCP member's tool-execution log supplies.
+#[cfg(feature = "mcp")]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DashboardToolActivity {
     pub top_users: Vec<TopUser>,
     pub popular_skills: Vec<SkillCount>,
     pub hourly_activity: Vec<HourlyActivity>,
@@ -28,8 +40,14 @@ pub struct DashboardData {
     pub usage_timeseries: Vec<TimeSeriesBucket>,
     pub active_users_24h: i64,
     pub tool_success_rates: Vec<ToolSuccessRate>,
-    pub traffic: Option<TrafficData>,
     pub recent_mcp_errors: Vec<RecentMcpError>,
+}
+
+/// The dashboard figures the content member's traffic tables supply.
+#[cfg(feature = "content")]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DashboardSiteTraffic {
+    pub traffic: Option<TrafficData>,
     pub top_pages_today: Vec<TrafficTopPage>,
     pub realtime_pulse: Option<RealtimePulse>,
     pub content_performance: Vec<ContentPerformanceRow>,

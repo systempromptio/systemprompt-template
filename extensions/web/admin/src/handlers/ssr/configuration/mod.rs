@@ -29,7 +29,6 @@ use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::ssr_sync::{DOCS_URL, EXPORT_ZIP_URL};
 use crate::handlers::ssr::sync_plane::HashView;
 use crate::handlers::ssr::types::{BreadcrumbView, TabLinkView};
-use crate::repositories::gateway_policies::declared::services_root;
 use crate::repositories::sync::sources::build_sources;
 
 pub(crate) const BASE_URL: &str = "/admin/configuration";
@@ -113,7 +112,7 @@ pub(crate) async fn configuration_page(
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
     let sources = build_sources(&env);
-    let active_root = services_root(&env);
+    let active_root = env.active_services_root();
     let baked_root = env.baked_services_root();
     let all = rows::build_rows(&env, &pool, &active_root, &baked_root, &[]).await?;
     let ai_history_days = env.services().ai.history.retention_days;

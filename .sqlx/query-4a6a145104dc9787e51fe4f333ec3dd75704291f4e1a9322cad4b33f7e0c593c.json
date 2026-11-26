@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT user_id AS \"user_id!\", COUNT(*)::BIGINT AS \"requests!\",\n                  COALESCE(SUM(cost_microdollars), 0)::BIGINT AS \"cost!\"\n           FROM ai_requests\n           WHERE user_id = ANY($1) AND created_at >= NOW() - INTERVAL '30 days'\n           GROUP BY user_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "4a6a145104dc9787e51fe4f333ec3dd75704291f4e1a9322cad4b33f7e0c593c"
+}

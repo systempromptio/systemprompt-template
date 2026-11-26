@@ -10,6 +10,7 @@
 //! route projection cannot read.
 
 use super::access_control::AccessControlPlane;
+#[cfg(feature = "gateway")]
 use super::gateway_policies::GatewayPoliciesPlane;
 use super::governance::GovernancePlane;
 use super::groups::GroupsPlane;
@@ -20,6 +21,7 @@ pub fn planes() -> Vec<Box<dyn SyncPlane>> {
     vec![
         Box::new(AccessControlPlane),
         Box::new(GroupsPlane),
+        #[cfg(feature = "gateway")]
         Box::new(GatewayPoliciesPlane),
         Box::new(GovernancePlane),
     ]

@@ -14,6 +14,7 @@ pub mod roles;
 pub mod roster;
 pub mod sessions;
 pub mod share_token;
+#[cfg(feature = "gateway")]
 pub mod usage;
 pub mod user_settings;
 

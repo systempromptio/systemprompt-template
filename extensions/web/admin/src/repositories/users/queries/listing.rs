@@ -8,12 +8,13 @@ use crate::types::UserSummary;
 
 // Why: The scope is a parameter rather than a filter the caller applies
 // afterwards, so a non-console caller can never be handed the every-user
-// listing.
+// listing. The gateway and MCP members' activity is merged in by
+// `member_activity` in the builds that link them.
 pub async fn list_users(
     pool: &PgPool,
     scope: &SubjectScope,
 ) -> Result<Vec<UserSummary>, sqlx::Error> {
-    sqlx::query_as!(
+    let rows = sqlx::query_as!(
         UserSummary,
         r#"SELECT
                 u.id AS "user_id!: UserId",
@@ -28,13 +29,8 @@ pub async fn list_users(
                 -- population REQ-005's wasted-seat reporting is about. Postgres
                 -- GREATEST ignores NULLs and yields NULL only when every input
                 -- is NULL, which is precisely "never active".
-                GREATEST(
-                    MAX(p.created_at),
-                    ua.last_ua,
-                    mcp.last_mcp,
-                    air.last_request
-                ) AS "last_active?",
-                (COALESCE(COUNT(DISTINCT p.id), 0) + COALESCE(air.request_count, 0))::BIGINT AS "total_events!",
+                GREATEST(MAX(p.created_at), ua.last_ua) AS "last_active?",
+                COALESCE(COUNT(DISTINCT p.id), 0)::BIGINT AS "total_events!",
                 (SELECT tool_name FROM plugin_usage_events p2
                  WHERE p2.user_id = u.id
                  ORDER BY created_at DESC LIMIT 1) AS last_tool,
@@ -57,27 +53,24 @@ pub async fn list_users(
                        MAX(created_at) AS last_ua
                 FROM user_activity GROUP BY user_id
             ) ua ON ua.user_id = u.id
-            LEFT JOIN (
-                SELECT user_id, MAX(created_at) AS last_mcp
-                FROM mcp_tool_executions WHERE user_id IS NOT NULL
-                GROUP BY user_id
-            ) mcp ON mcp.user_id = u.id
-            LEFT JOIN (
-                SELECT user_id, MAX(created_at) AS last_request, COUNT(*)::BIGINT AS request_count
-                FROM ai_requests GROUP BY user_id
-            ) air ON air.user_id = u.id
             WHERE NOT ('anonymous' = ANY(u.roles))
               AND u.email NOT LIKE '%@anonymous.local'
               AND ($1::TEXT[] IS NULL OR u.id = ANY($1))
             GROUP BY u.id, u.created_at, u.name, u.display_name, u.full_name, u.email,
                      u.roles, u.status, bytes.total_bytes,
-                     ua.logins, ua.last_ua, mcp.last_mcp, air.last_request,
-                     air.request_count
+                     ua.logins, ua.last_ua
             ORDER BY 5 DESC NULLS LAST"#,
         scope.as_sql(),
     )
     .fetch_all(pool)
-    .await
+    .await?;
+    #[cfg(any(feature = "gateway", feature = "mcp"))]
+    let rows = {
+        let mut rows = rows;
+        super::member_activity::merge_member_activity(pool, &mut rows).await?;
+        rows
+    };
+    Ok(rows)
 }
 
 pub async fn list_distinct_roles(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {

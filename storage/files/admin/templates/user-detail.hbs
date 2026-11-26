@@ -20,9 +20,11 @@
 
     <div class="sp-kpi-grid">
         {{> components/kpi label="Status" value=header.status_label tone=header.status_tone note="account state"}}
-        {{> components/kpi label="Requests" value=kpis.requests_display note="all time"}}
-        {{> components/kpi label="Cost" value=kpis.cost_display note="all time"}}
-        {{> components/kpi label="Tokens" value=kpis.tokens_display note="all time"}}
+        {{#with kpis.spend}}
+        {{> components/kpi label="Requests" value=requests note="all time"}}
+        {{> components/kpi label="Cost" value=cost note="all time"}}
+        {{> components/kpi label="Tokens" value=tokens note="all time"}}
+        {{/with}}
         {{> components/kpi label="Groups" value=kpis.groups note=header.primary_group hint="Primary group decides exclusive attribution"}}
         {{> components/kpi label="Projects" value=kpis.projects note=header.primary_project hint="Primary project decides exclusive attribution"}}
     </div>
@@ -272,9 +274,11 @@
         {{/components/section}}
         <div class="sp-kpi-grid">
             {{> components/kpi label="Requests" value=usage.requests}}
+            {{#if usage.conversations_url}}
             {{> components/kpi label="Conversations" value=usage.conversations}}
             {{> components/kpi label="Turns" value=usage.turns note=(concat usage.tool_calls " tool calls")}}
             {{> components/kpi label="Side calls" value=usage.side_calls note=usage.side_call_cost_display hint="Cache-warm probes and utility calls such as title generation"}}
+            {{/if}}
             {{> components/kpi label="Failed" value=usage.failed tone="err"}}
             {{> components/kpi label="Tokens" value=usage.tokens_display}}
             {{> components/kpi label="Cost" value=usage.cost_display}}
@@ -300,9 +304,11 @@
         </div>
         {{/if}}
 
+        {{#if usage.conversations_url}}
         {{#> components/section title="Recent conversations"}}
             {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{usage.conversations_url}}">All conversations</a>{{/inline}}
         {{/components/section}}
+        {{/if}}
         {{#if usage.has_conversations}}
         {{#> components/table caption="Recent conversations for this account"}}
             <thead><tr>

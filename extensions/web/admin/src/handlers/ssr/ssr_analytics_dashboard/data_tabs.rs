@@ -16,9 +16,11 @@ use crate::repositories::analytics::site::models::{
 use crate::repositories::analytics::site::sessions::{
     SessionCostRow, SessionRatingStats, get_session_rating_stats, list_session_costs_paged,
 };
+#[cfg(feature = "mcp")]
 use crate::repositories::analytics::site::skills::{
     SkillStatsRow, SkillTotals, get_skill_totals, list_skill_stats,
 };
+#[cfg(feature = "mcp")]
 use crate::repositories::analytics::site::tools::{
     ToolServerRow, ToolStatsRow, list_tool_servers, list_tool_stats,
 };
@@ -31,11 +33,17 @@ use super::data::unwrap_or_empty;
 pub(super) struct TabData {
     pub models: Vec<ModelStatsRow>,
     pub redirects: Vec<ModelRedirectRow>,
+    #[cfg(feature = "mcp")]
     pub skills: Vec<SkillStatsRow>,
+    #[cfg(feature = "mcp")]
     pub skills_total: i64,
+    #[cfg(feature = "mcp")]
     pub skill_totals: SkillTotals,
+    #[cfg(feature = "mcp")]
     pub tool_servers: Vec<ToolServerRow>,
+    #[cfg(feature = "mcp")]
     pub tools: Vec<ToolStatsRow>,
+    #[cfg(feature = "mcp")]
     pub tools_total: i64,
     pub sessions: Vec<SessionCostRow>,
     pub sessions_total: i64,
@@ -66,6 +74,7 @@ pub(super) async fn load_models(pool: &PgPool, plan: &TabPlan<'_>) -> TabData {
     }
 }
 
+#[cfg(feature = "mcp")]
 pub(super) async fn load_skills(pool: &PgPool, plan: &TabPlan<'_>) -> TabData {
     let (paged, totals) = tokio::join!(
         list_skill_stats(pool, plan.range, plan.scope, plan.limit, plan.offset),
@@ -83,6 +92,7 @@ pub(super) async fn load_skills(pool: &PgPool, plan: &TabPlan<'_>) -> TabData {
     }
 }
 
+#[cfg(feature = "mcp")]
 pub(super) async fn load_tools(pool: &PgPool, plan: &TabPlan<'_>) -> TabData {
     let (servers, paged) = tokio::join!(
         list_tool_servers(pool, plan.range, plan.scope),

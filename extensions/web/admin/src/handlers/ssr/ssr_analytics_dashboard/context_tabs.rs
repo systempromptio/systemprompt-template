@@ -58,6 +58,7 @@ pub(super) struct RedirectRowView {
 }
 
 #[derive(Debug, Default, Serialize)]
+#[cfg(feature = "mcp")]
 pub(super) struct SkillsTabView {
     pub kpis: Vec<KpiTile>,
     pub skill_count: i64,
@@ -68,6 +69,7 @@ pub(super) struct SkillsTabView {
 }
 
 #[derive(Debug, Serialize)]
+#[cfg(feature = "mcp")]
 pub(super) struct SkillRowView {
     pub skill: String,
     // Why: no qualifier field. The full `plugin:skill` is already on the
@@ -89,6 +91,7 @@ pub(super) struct SkillRowView {
 }
 
 #[derive(Debug, Default, Serialize)]
+#[cfg(feature = "mcp")]
 pub(super) struct ToolsTabView {
     pub kpis: Vec<KpiTile>,
     pub server_count: usize,
@@ -101,6 +104,7 @@ pub(super) struct ToolsTabView {
 }
 
 #[derive(Debug, Serialize)]
+#[cfg(feature = "mcp")]
 pub(super) struct ToolServerRowView {
     pub server_name: String,
     pub executions: i64,
@@ -112,6 +116,7 @@ pub(super) struct ToolServerRowView {
 }
 
 #[derive(Debug, Serialize)]
+#[cfg(feature = "mcp")]
 pub(super) struct ToolRowView {
     pub tool_name: String,
     pub server_name: String,

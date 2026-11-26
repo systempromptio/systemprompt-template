@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH base AS (\n               SELECT u.id, u.roles, (u.status = 'active') AS is_active\n                 FROM users u\n                WHERE NOT ('anonymous' = ANY(u.roles))\n                  AND u.email NOT LIKE '%@anonymous.local'\n                  AND ($1::TEXT[] IS NULL OR u.id = ANY($1))\n           ), marked AS (\n               SELECT b.id, b.is_active,\n                      cardinality(array_remove(array_remove(b.roles, 'user'), 'anonymous')) = 0 AS no_role,\n                      NOT EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id = b.id) AS unassigned,\n                      GREATEST(\n                        (SELECT MAX(us.last_activity_at) FROM user_sessions us WHERE us.user_id = b.id),\n                        (SELECT MAX(ua.created_at) FROM user_activity ua WHERE ua.user_id = b.id)\n                      ) AS last_active\n                 FROM base b\n           )\n           SELECT COUNT(*)::BIGINT AS \"total!\",\n                  COUNT(*) FILTER (WHERE m.is_active)::BIGINT AS \"active!\",\n                  COUNT(*) FILTER (WHERE m.unassigned)::BIGINT AS \"unassigned!\",\n                  COUNT(*) FILTER (WHERE m.no_role)::BIGINT AS \"no_role!\",\n                  COUNT(*) FILTER (\n                      WHERE m.last_active IS NULL\n                         OR m.last_active < NOW() - INTERVAL '30 days'\n                  )::BIGINT AS \"inactive_30d!\"\n             FROM marked m",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "active!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "unassigned!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "no_role!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "inactive_30d!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "952a03d8ad3449e5f07cfaf554d750cb43fea1900a8459e4c94f9f85a996ec31"
+}

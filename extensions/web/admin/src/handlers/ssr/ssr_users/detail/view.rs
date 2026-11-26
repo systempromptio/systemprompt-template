@@ -24,6 +24,7 @@ use super::load::UserConversationsData;
 use super::load::{IdentityData, MembershipData};
 use crate::types::UserContext;
 
+#[cfg(feature = "gateway")]
 pub(super) use super::usage::usage_tab;
 
 const SLACK_ISSUER: &str = "https://slack.com";

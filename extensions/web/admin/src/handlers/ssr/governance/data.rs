@@ -15,6 +15,7 @@ use crate::repositories::governance::decision_log::{
     DecisionFilter, DecisionSort, DecisionStats, PolicyCount, get_decision_stats,
     list_decision_policies, list_decision_policy_counts,
 };
+#[cfg(feature = "gateway")]
 use crate::repositories::governance::findings::{
     FindingFilter, SafetyFindingLogRow, SafetyStats, get_safety_stats, list_finding_categories,
     list_safety_findings_paged,
@@ -41,14 +42,18 @@ const ATTENTION_LIMIT: i64 = 10;
 // Why: What one render of the page needs from the database.
 pub(super) struct GovernanceData {
     pub(super) stats: DecisionStats,
+    #[cfg(feature = "gateway")]
     pub(super) safety: SafetyStats,
     pub(super) policies: Vec<String>,
+    #[cfg(feature = "gateway")]
     pub(super) categories: Vec<String>,
     pub(super) decisions: Vec<DecisionCallRow>,
     pub(super) attention: Vec<DecisionCallRow>,
     pub(super) policy_counts: Vec<PolicyCount>,
     pub(super) decision_total: i64,
+    #[cfg(feature = "gateway")]
     pub(super) findings: Vec<SafetyFindingLogRow>,
+    #[cfg(feature = "gateway")]
     pub(super) finding_total: i64,
     pub(super) hooks: Vec<RecentHookEvent>,
     pub(super) pretool_24h: i64,
@@ -63,6 +68,7 @@ pub(super) struct GovernanceRead<'a> {
     pub(super) range: TimeRange,
     pub(super) scope: &'a SubjectScope,
     pub(super) decision_filter: &'a DecisionFilter,
+    #[cfg(feature = "gateway")]
     pub(super) finding_filter: &'a FindingFilter,
     pub(super) sort: DecisionSort,
     pub(super) page_size: i64,
@@ -118,16 +124,43 @@ async fn load_attention(
     }
 }
 
+async fn load_decisions(
+    pool: &PgPool,
+    read: &GovernanceRead<'_>,
+    calls: i64,
+) -> (Vec<DecisionCallRow>, i64) {
+    if read.tab != GovernanceTab::Decisions {
+        return (Vec::new(), calls);
+    }
+    list_decision_calls_paged(
+        pool,
+        read.range,
+        read.scope,
+        read.decision_filter,
+        DecisionPage {
+            sort: read.sort,
+            slice: read.slice(),
+        },
+    )
+    .await
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "governance decision log failed");
+        (Vec::new(), 0)
+    })
+}
+
 pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> GovernanceData {
     let stats = get_decision_stats(pool, read.range, read.scope)
         .await
         .unwrap_or_else(|e| warn_default("governance decision stats", &e));
+    #[cfg(feature = "gateway")]
     let safety = get_safety_stats(pool, read.range, read.scope)
         .await
         .unwrap_or_else(|e| warn_default("safety finding stats", &e));
     let policies = list_decision_policies(pool, read.range, read.scope)
         .await
         .unwrap_or_else(|e| warn_default("decision policies", &e));
+    #[cfg(feature = "gateway")]
     let categories = list_finding_categories(pool, read.range, read.scope)
         .await
         .unwrap_or_else(|e| warn_default("finding categories", &e));
@@ -135,26 +168,9 @@ pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> GovernanceD
         .await
         .unwrap_or_else(|e| warn_default("decision policy counts", &e));
 
-    let (decisions, decision_total) = if read.tab == GovernanceTab::Decisions {
-        list_decision_calls_paged(
-            pool,
-            read.range,
-            read.scope,
-            read.decision_filter,
-            DecisionPage {
-                sort: read.sort,
-                slice: read.slice(),
-            },
-        )
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "governance decision log failed");
-            (Vec::new(), 0)
-        })
-    } else {
-        (Vec::new(), stats.calls)
-    };
+    let (decisions, decision_total) = load_decisions(pool, &read, stats.calls).await;
 
+    #[cfg(feature = "gateway")]
     let (findings, finding_total) = if read.tab == GovernanceTab::Safety {
         list_safety_findings_paged(
             pool,
@@ -179,14 +195,18 @@ pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> GovernanceD
 
     GovernanceData {
         stats,
+        #[cfg(feature = "gateway")]
         safety,
         policies,
         policy_counts,
         attention,
+        #[cfg(feature = "gateway")]
         categories,
         decisions,
         decision_total,
+        #[cfg(feature = "gateway")]
         findings,
+        #[cfg(feature = "gateway")]
         finding_total,
         hooks: hooks.events,
         pretool_24h: hooks.pretool_24h,

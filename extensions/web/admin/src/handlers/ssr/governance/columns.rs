@@ -29,6 +29,7 @@ pub(super) fn columns(
             ColumnHeader::plain("Chain", "sp-col-text"),
             ColumnHeader::plain("Trace", "sp-col-trace"),
         ],
+        #[cfg(feature = "gateway")]
         GovernanceTab::Safety => vec![
             ColumnHeader::plain("When", "sp-col-date"),
             ColumnHeader::plain("Category", "sp-col-text"),

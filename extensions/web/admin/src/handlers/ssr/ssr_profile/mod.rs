@@ -7,13 +7,16 @@ use axum::extract::{Extension, State};
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
+#[cfg(feature = "agents")]
 use systemprompt::identifiers::ContextId;
 
 use crate::env::AdminEnv;
 use crate::error::{AdminError, AdminHtmlResult, AdminResult};
+#[cfg(feature = "agents")]
 use crate::handlers::ssr::format::{format_cost, relative_time};
 use crate::handlers::ssr::ssr_helpers::render_typed_page;
 use crate::handlers::ssr::types::BreadcrumbView;
+#[cfg(feature = "agents")]
 use crate::repositories::users::usage::{ConversationSummary, RecentConversation};
 use crate::services::bridge_profile::{self, BridgeProfilePageData};
 use crate::templates::AdminTemplateEngine;
@@ -29,7 +32,16 @@ struct ProfilePageView {
     breadcrumbs: Vec<BreadcrumbView>,
     // Why: handlebars-rust has no `.length`, so every count a section header
     // shows has to be counted here rather than in the template.
+    #[cfg(feature = "gateway")]
     models_count: usize,
+    #[cfg(feature = "agents")]
+    #[serde(flatten)]
+    conversations: ProfileConversationsView,
+}
+
+#[cfg(feature = "agents")]
+#[derive(Debug, Serialize)]
+struct ProfileConversationsView {
     latest_conversation: Option<ProfileConversationView>,
     recent_conversations: Vec<ProfileConversationView>,
     recent_count: usize,
@@ -38,6 +50,7 @@ struct ProfilePageView {
     side_call_note: Option<String>,
 }
 
+#[cfg(feature = "agents")]
 #[derive(Debug, Serialize)]
 struct ProfileConversationView {
     conversation_title: String,
@@ -50,6 +63,7 @@ struct ProfileConversationView {
     last_at: String,
 }
 
+#[cfg(feature = "agents")]
 fn conversation_view(c: &RecentConversation) -> ProfileConversationView {
     ProfileConversationView {
         conversation_title: c.title.clone(),
@@ -66,6 +80,7 @@ fn conversation_view(c: &RecentConversation) -> ProfileConversationView {
     }
 }
 
+#[cfg(feature = "agents")]
 fn side_call_note(summary: &ConversationSummary) -> Option<String> {
     (summary.side_call_count > 0).then(|| {
         format!(
@@ -73,6 +88,18 @@ fn side_call_note(summary: &ConversationSummary) -> Option<String> {
             summary.side_call_count, summary.window_days
         )
     })
+}
+
+#[cfg(feature = "agents")]
+fn conversations_view(conversations: &ConversationSummary) -> ProfileConversationsView {
+    let recent_conversations: Vec<_> = conversations.recent.iter().map(conversation_view).collect();
+    ProfileConversationsView {
+        latest_conversation: conversations.latest.as_ref().map(conversation_view),
+        recent_count: recent_conversations.len(),
+        has_recent: !recent_conversations.is_empty(),
+        side_call_note: side_call_note(conversations),
+        recent_conversations,
+    }
 }
 
 pub(crate) async fn profile_page(
@@ -83,15 +110,11 @@ pub(crate) async fn profile_page(
     State(pool): State<Arc<PgPool>>,
 ) -> AdminHtmlResult<Response> {
     let data = bridge_profile::build_bridge_profile_data(&env, pool, &user_ctx).await?;
-    let conversations = &data.usage.conversations;
-    let recent_conversations: Vec<_> = conversations.recent.iter().map(conversation_view).collect();
     let view = ProfilePageView {
+        #[cfg(feature = "gateway")]
         models_count: data.usage.top_models.len(),
-        latest_conversation: conversations.latest.as_ref().map(conversation_view),
-        recent_count: recent_conversations.len(),
-        has_recent: !recent_conversations.is_empty(),
-        side_call_note: side_call_note(conversations),
-        recent_conversations,
+        #[cfg(feature = "agents")]
+        conversations: conversations_view(&data.usage.conversations),
         data,
         breadcrumbs: vec![
             BreadcrumbView::link("Account", "/admin/profile"),

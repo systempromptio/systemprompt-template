@@ -73,3 +73,6 @@ smoke:
     - "/admin/sessions"
     - "/admin/history"
     - "/admin/requests"
+    - "/admin/analytics"
+    - "/admin/groups"
+    - "/admin/projects"

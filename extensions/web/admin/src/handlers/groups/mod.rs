@@ -11,6 +11,7 @@
 pub(crate) mod mappings;
 pub(crate) mod marketplaces;
 pub(crate) mod members;
+#[cfg(feature = "gateway")]
 pub(crate) mod usage;
 
 use std::sync::Arc;

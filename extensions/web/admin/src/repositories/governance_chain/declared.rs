@@ -126,5 +126,5 @@ pub fn load_declared_chain(services_path: &Path) -> AdminResult<DeclaredChain> {
 }
 
 pub fn declared_chain_now(env: &AdminEnv) -> AdminResult<DeclaredChain> {
-    load_declared_chain(&crate::repositories::gateway_policies::declared::services_root(env))
+    load_declared_chain(&env.active_services_root())
 }

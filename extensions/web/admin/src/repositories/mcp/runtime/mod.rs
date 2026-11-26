@@ -1,9 +1,9 @@
 //! Runtime state for the MCP servers declared in `services/mcp/*.yaml`.
 //!
 //! The YAML says what a server *is*; these queries say what it has been
-//! *doing*. Three tables carry that: `mcp_sessions` (a client attached, and
-//! when it last spoke), `mcp_proxy_identities` (the identity a live session is
-//! acting as), and `mcp_tool_executions` (every tool call, with its outcome).
+//! *doing*. Two tables carry that: `mcp_sessions` (a client attached, the
+//! principal it is bound to, and when it last spoke) and `mcp_tool_executions`
+//! (every tool call, with its outcome).
 //!
 //! Neither the heartbeat nor the rule that reads it lives here:
 //! `repositories::overview::liveness` owns both, because the dashboard shows
@@ -22,6 +22,6 @@ pub use executions::{
     list_mcp_server_activity, list_mcp_tool_stats,
 };
 pub use liveness::{
-    McpProxyIdentityCount, McpSessionRow, list_mcp_proxy_identity_counts,
+    McpSessionPrincipalCount, McpSessionRow, list_mcp_session_principal_counts,
     list_mcp_sessions_for_server,
 };

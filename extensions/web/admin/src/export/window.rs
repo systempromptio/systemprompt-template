@@ -6,15 +6,17 @@
 //! did not pick. A range wider than the contract allows is narrowed and
 //! flagged `clamped`, so the preview can say the file covers less.
 
-use chrono::{DateTime, Duration, NaiveTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use serde::Deserialize;
 
 use super::model::{ExportContext, ExportWindow, Window};
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::ssr::analysis::time;
+#[cfg(feature = "gateway")]
 use crate::util::month_range::{MonthQuery, parse_month_range};
 use crate::util::time_range::{TimeRange, TimeRangePreset};
 
+#[cfg(any(feature = "gateway", feature = "agents"))]
 pub(crate) const RETAINED_DAYS: [u32; 5] = [1, 7, 30, 90, 365];
 #[cfg(feature = "agents")]
 const MAX_RETAINED_DAYS: i64 = 366;
@@ -31,11 +33,13 @@ pub(crate) struct WindowQuery {
     preset: Option<String>,
     from: Option<String>,
     to: Option<String>,
+    #[cfg(feature = "gateway")]
     days: Option<u32>,
     #[cfg(feature = "agents")]
     start: Option<String>,
     #[cfg(feature = "agents")]
     end: Option<String>,
+    #[cfg(feature = "gateway")]
     month: Option<String>,
 }
 
@@ -43,9 +47,11 @@ pub(crate) fn resolve(kind: Window, query: &WindowQuery) -> AdminResult<Option<E
     match kind {
         Window::None => Ok(None),
         Window::Live => live(query).map(Some),
+        #[cfg(feature = "gateway")]
         Window::Days => days_only(query).map(Some),
         #[cfg(feature = "agents")]
         Window::Retained => retained(query).map(Some),
+        #[cfg(feature = "gateway")]
         Window::Month => Ok(Some(month(query))),
     }
 }
@@ -123,12 +129,14 @@ fn clamp(from: DateTime<Utc>, to: DateTime<Utc>, max: Duration) -> ExportWindow 
 // Why: the snapshot pipeline buckets facts under UTC days and the current day
 // is still filling, so a day window ends at the next midnight — the same
 // boundary the analysis pages use.
+#[cfg(any(feature = "gateway", feature = "agents"))]
 pub(crate) fn next_midnight() -> DateTime<Utc> {
     (Utc::now().date_naive() + Duration::days(1))
-        .and_time(NaiveTime::MIN)
+        .and_time(chrono::NaiveTime::MIN)
         .and_utc()
 }
 
+#[cfg(feature = "gateway")]
 fn days_only(query: &WindowQuery) -> AdminResult<ExportWindow> {
     let days = query.days.unwrap_or(30);
     if !RETAINED_DAYS.contains(&days) {
@@ -169,6 +177,7 @@ fn retained(query: &WindowQuery) -> AdminResult<ExportWindow> {
 
 // Why: the reports' own month rule — absent or unparseable is the last
 // complete month — so the dialog and the report page agree on the default.
+#[cfg(feature = "gateway")]
 fn month(query: &WindowQuery) -> ExportWindow {
     let range = parse_month_range(&MonthQuery {
         month: query.month.clone(),

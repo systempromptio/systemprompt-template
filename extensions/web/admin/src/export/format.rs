@@ -9,7 +9,7 @@
 use axum::http::header;
 use axum::response::Response;
 
-use super::model::{Cell, CellKind, Column, Table};
+use super::model::{Cell, Column, Table};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -83,6 +83,7 @@ impl Format {
 // Why: integer formatting, not f64 — these files feed finance spreadsheets,
 // and the microdollar ledger must survive the export exactly. Six decimals is
 // the full stored precision.
+#[cfg(feature = "gateway")]
 pub(crate) fn usd(microdollars: i64) -> String {
     let sign = if microdollars < 0 { "-" } else { "" };
     let abs = microdollars.unsigned_abs();
@@ -94,7 +95,9 @@ fn plain(cell: &Cell) -> String {
         Cell::Empty => String::new(),
         Cell::Text(s) => s.clone(),
         Cell::Integer(n) => n.to_string(),
+        #[cfg(feature = "gateway")]
         Cell::Decimal(f) => format!("{f:.3}"),
+        #[cfg(feature = "gateway")]
         Cell::Money(m) => usd(*m),
         Cell::Timestamp(t) => t.to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
         Cell::Bool(b) => b.to_string(),
@@ -134,7 +137,9 @@ fn json_value(cell: &Cell) -> serde_json::Value {
         Cell::Empty => serde_json::Value::Null,
         Cell::Text(s) => serde_json::Value::from(s.as_str()),
         Cell::Integer(n) => serde_json::Value::from(*n),
+        #[cfg(feature = "gateway")]
         Cell::Decimal(f) => serde_json::Value::from(*f),
+        #[cfg(feature = "gateway")]
         Cell::Money(m) => serde_json::Value::from(usd(*m)),
         Cell::Timestamp(t) => {
             serde_json::Value::from(t.to_rfc3339_opts(chrono::SecondsFormat::Millis, true))
@@ -186,9 +191,10 @@ fn markdown(columns: &[Column], table: &Table) -> String {
     }
     out.push_str("\n|");
     for c in columns {
-        out.push_str(match c.kind {
-            CellKind::Integer | CellKind::Decimal | CellKind::Money => " ---: |",
-            _ => " --- |",
+        out.push_str(if c.kind.is_numeric() {
+            " ---: |"
+        } else {
+            " --- |"
         });
     }
     out.push('\n');

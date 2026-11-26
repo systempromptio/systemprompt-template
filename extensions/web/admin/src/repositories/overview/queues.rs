@@ -7,11 +7,13 @@
 
 use sqlx::PgPool;
 
+#[cfg(feature = "gateway")]
 pub use crate::repositories::analytics::site::anomalies::UsageAnomalyRow;
 
 // Why: `usage_anomalies` has no resolved flag — the detector writes a row per
 // metric per hourly window and nothing closes it — so "open" is a recency rule
 // stated here rather than a column read from the table.
+#[cfg(feature = "gateway")]
 pub const ANOMALY_OPEN_HOURS: i64 = 24;
 
 // Why: expired holds are excluded. The call one was holding has already
@@ -28,6 +30,7 @@ pub async fn count_pending_approvals(pool: &PgPool) -> Result<i64, sqlx::Error> 
     Ok(count)
 }
 
+#[cfg(feature = "gateway")]
 pub async fn list_open_anomalies(
     pool: &PgPool,
     limit: i64,
@@ -64,6 +67,7 @@ pub async fn list_open_anomalies(
 // with no baseline at all is new traffic rather than a spike, and reads as a
 // caution rather than a failure.
 #[must_use]
+#[cfg(feature = "gateway")]
 pub fn anomaly_tone(observed: i64, baseline: i64) -> &'static str {
     if baseline <= 0 {
         return "warn";

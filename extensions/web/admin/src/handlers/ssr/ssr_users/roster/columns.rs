@@ -67,6 +67,7 @@ pub(super) fn build_sort_headers(url: &RosterUrlState, sort: RosterSort) -> Vec<
     let prefix = url.link_prefix(&["sort", "dir", "page"]);
     COLUMNS
         .into_iter()
+        .filter(|(key, ..)| RosterSort::COLUMNS.contains(key))
         .map(|(key, label, class, hint)| {
             let active = key == sort.column;
             // Why: an active column toggles; an inactive one opens largest-first

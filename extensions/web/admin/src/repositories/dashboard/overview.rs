@@ -4,29 +4,60 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Email, PluginId, SessionId, UserId};
 
 use crate::activity::queries::list_timeline;
+#[cfg(feature = "mcp")]
 use crate::repositories::dashboard::aggregates::{
     get_active_users_24h, get_activity_stats, list_usage_timeseries,
 };
+#[cfg(feature = "mcp")]
 use crate::repositories::dashboard::queries::{
     list_hourly_activity, list_popular_skills, list_recent_mcp_errors, list_tool_success_rates,
     list_top_users,
 };
+#[cfg(feature = "content")]
 use crate::repositories::dashboard::traffic;
 use crate::repositories::scope::SubjectScope;
-use crate::types::{
-    ContentPerformanceRow, DashboardData, EventFeedRow, EventsQuery, EventsResponse, RealtimePulse,
-    RecentMcpError, TrafficData, TrafficTopPage,
-};
+#[cfg(feature = "content")]
+use crate::types::DashboardSiteTraffic;
+#[cfg(feature = "mcp")]
+use crate::types::DashboardToolActivity;
+use crate::types::{DashboardData, EventFeedRow, EventsQuery, EventsResponse};
+
+/// The windows the dashboard's charts and traffic panels read.
+#[derive(Debug, Clone, Copy)]
+pub struct DashboardWindows<'a> {
+    pub chart_interval: &'a str,
+    pub chart_bucket: &'a str,
+    pub traffic_range: &'a str,
+    pub content_range: &'a str,
+}
 
 pub async fn get_dashboard_data(
     pool: &PgPool,
+    #[cfg_attr(
+        not(any(feature = "mcp", feature = "content")),
+        expect(
+            unused_variables,
+            reason = "the windows size panels this build does not compile"
+        )
+    )]
+    windows: DashboardWindows<'_>,
+) -> Result<DashboardData, sqlx::Error> {
+    Ok(DashboardData {
+        timeline: list_timeline(pool, &SubjectScope::All).await?,
+        #[cfg(feature = "mcp")]
+        tools: get_tool_activity(pool, windows.chart_interval, windows.chart_bucket).await?,
+        #[cfg(feature = "content")]
+        site: get_site_traffic(pool, windows.traffic_range, windows.content_range).await,
+    })
+}
+
+#[cfg(feature = "mcp")]
+async fn get_tool_activity(
+    pool: &PgPool,
     chart_interval: &str,
     chart_bucket: &str,
-    traffic_range: &str,
-    content_range: &str,
-) -> Result<DashboardData, sqlx::Error> {
+) -> Result<DashboardToolActivity, sqlx::Error> {
     let (
-        timeline,
         top_users,
         popular_skills,
         hourly_activity,
@@ -35,7 +66,6 @@ pub async fn get_dashboard_data(
         active_users_24h,
         tool_success_rates,
     ) = tokio::try_join!(
-        list_timeline(pool, &SubjectScope::All),
         list_top_users(pool),
         list_popular_skills(pool),
         list_hourly_activity(pool),
@@ -44,12 +74,11 @@ pub async fn get_dashboard_data(
         get_active_users_24h(pool),
         list_tool_success_rates(pool),
     )?;
-
-    let (traffic, recent_mcp_errors, top_pages_today, realtime_pulse, content_performance) =
-        get_traffic_section(pool, traffic_range, content_range).await;
-
-    Ok(DashboardData {
-        timeline,
+    let recent_mcp_errors = list_recent_mcp_errors(pool).await.unwrap_or_else(|e| {
+        tracing::error!(error = %e, "Failed to fetch recent MCP errors");
+        vec![]
+    });
+    Ok(DashboardToolActivity {
         top_users,
         popular_skills,
         hourly_activity,
@@ -57,28 +86,17 @@ pub async fn get_dashboard_data(
         usage_timeseries,
         active_users_24h,
         tool_success_rates,
-        traffic,
         recent_mcp_errors,
-        top_pages_today,
-        realtime_pulse,
-        content_performance,
     })
 }
 
-type TrafficSectionResult = (
-    Option<TrafficData>,
-    Vec<RecentMcpError>,
-    Vec<TrafficTopPage>,
-    Option<RealtimePulse>,
-    Vec<ContentPerformanceRow>,
-);
-
-async fn get_traffic_section(
+#[cfg(feature = "content")]
+async fn get_site_traffic(
     pool: &PgPool,
     traffic_range: &str,
     content_range: &str,
-) -> TrafficSectionResult {
-    tokio::join!(
+) -> DashboardSiteTraffic {
+    let (traffic, top_pages_today, realtime_pulse, content_performance) = tokio::join!(
         async {
             traffic::get_traffic_data(pool, traffic_range)
                 .await
@@ -87,12 +105,6 @@ async fn get_traffic_section(
                     e
                 })
                 .ok()
-        },
-        async {
-            list_recent_mcp_errors(pool).await.unwrap_or_else(|e| {
-                tracing::error!(error = %e, "Failed to fetch recent MCP errors");
-                vec![]
-            })
         },
         async {
             traffic::list_top_pages_today(pool)
@@ -119,7 +131,13 @@ async fn get_traffic_section(
                     vec![]
                 })
         },
-    )
+    );
+    DashboardSiteTraffic {
+        traffic,
+        top_pages_today,
+        realtime_pulse,
+        content_performance,
+    }
 }
 
 // Why: lint-ok: repository-naming — EventsResponse is a page of rows plus its

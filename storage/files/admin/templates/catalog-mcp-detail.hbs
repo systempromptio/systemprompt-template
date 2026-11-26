@@ -95,7 +95,6 @@
             <th aria-sort="none">Session</th>
             <th aria-sort="none">User</th>
             <th aria-sort="none">State</th>
-            <th aria-sort="none">Identity</th>
             <th class="sp-table__cell--date" aria-sort="none">Last beat</th>
             <th class="sp-table__cell--date" aria-sort="none">Expires</th>
         </tr></thead>
@@ -105,7 +104,6 @@
             <td class="sp-table__cell--mono">{{short_id}}</td>
             <td>{{#if user_url}}<a class="sp-table__link" href="{{user_url}}">{{caller}}</a>{{else}}—{{/if}}</td>
             <td>{{> components/badge tone=status_tone text=status}}</td>
-            <td class="sp-table__cell--mono">{{identity_label}}</td>
             <td class="sp-table__cell--date">{{last_activity_display}}</td>
             <td class="sp-table__cell--date">{{expires_display}}</td>
         </tr>

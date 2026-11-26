@@ -16,9 +16,11 @@ use systemprompt::identifiers::{MarketplaceId, TenantId, UserId};
 
 use crate::types::UserContext;
 
+#[cfg(feature = "gateway")]
+use assemble::load_usage;
 use assemble::{
-    build_agents_block, build_bridge_profile_block, build_marketplaces, build_usage,
-    load_usage_sections, read_tenant_id,
+    build_agents_block, build_bridge_profile_block, build_marketplaces, load_bridge_user,
+    read_tenant_id,
 };
 // Why: re-exported because the profile page's on-demand connect-code endpoint
 // needs the gateway URL, which lives one module over.
@@ -37,14 +39,19 @@ pub(crate) struct ProfileIdentity {
     pub is_admin: bool,
 }
 
-pub(crate) use crate::repositories::users::usage::{ConversationSummary, ModelShare, UsageWindow};
+#[cfg(feature = "agents")]
+pub(crate) use crate::repositories::users::usage::ConversationSummary;
+#[cfg(feature = "gateway")]
+pub(crate) use crate::repositories::users::usage::{ModelShare, UsageWindow};
 
+#[cfg(feature = "gateway")]
 #[derive(Debug, Clone, Default, Serialize)]
 pub(crate) struct ProfileUsage {
     pub d1: UsageWindow,
     pub d7: UsageWindow,
     pub d30: UsageWindow,
     pub top_models: Vec<ModelShare>,
+    #[cfg(feature = "agents")]
     pub conversations: ConversationSummary,
 }
 
@@ -124,6 +131,7 @@ pub(crate) struct BridgeProfilePageData {
     // issue a connect code. The code itself is never part of page data.
     pub bridge_connect_available: bool,
     pub bridge_profile: Option<BridgeProfileBlock>,
+    #[cfg(feature = "gateway")]
     pub usage: ProfileUsage,
     pub agents: AgentsBlock,
     pub marketplaces: Vec<ProfileMarketplaceView>,
@@ -186,11 +194,9 @@ pub(crate) async fn build_bridge_profile_data(
 ) -> crate::error::AdminResult<BridgeProfilePageData> {
     let user_id = user_ctx.user_id.clone();
 
-    let sections = load_usage_sections(&pool, &user_id).await;
-    let display_name = sections
-        .bridge_user
-        .as_ref()
-        .and_then(|u| u.display_name.clone());
+    let display_name = load_bridge_user(&pool, &user_id)
+        .await
+        .and_then(|u| u.display_name);
 
     // Why: the field existed and was always `None`, so the profile page said
     // nothing about how the account authenticates. A federated mapping is the
@@ -220,7 +226,8 @@ pub(crate) async fn build_bridge_profile_data(
         is_admin: user_ctx.is_admin,
     };
 
-    let usage = build_usage(sections);
+    #[cfg(feature = "gateway")]
+    let usage = load_usage(&pool, &user_id).await;
     let mut agents = build_agents_block(env);
     let access = crate::authz::catalog::CatalogAccess::load(env, &pool, &user_id).await?;
     let ids = agents
@@ -250,6 +257,7 @@ pub(crate) async fn build_bridge_profile_data(
         identity,
         bridge_connect_available,
         bridge_profile,
+        #[cfg(feature = "gateway")]
         usage,
         agents,
     })

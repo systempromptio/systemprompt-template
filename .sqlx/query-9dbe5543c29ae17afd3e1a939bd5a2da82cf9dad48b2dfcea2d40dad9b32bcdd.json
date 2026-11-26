@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT l.intent_id AS \"intent_id!\", l.mcp_execution_id,\n                  l.artifact_id AS \"artifact_id: ArtifactId\",\n                  l.state AS \"state!\", l.execution_status,\n                  COALESCE(l.is_structured, FALSE) AS \"is_structured!\"\n           FROM tool_call_ledger l\n           WHERE l.intent_id = ANY($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "intent_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_call_ledger",
+            "name": "intent_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "mcp_execution_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_call_ledger",
+            "name": "mcp_execution_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "artifact_id: ArtifactId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_call_ledger",
+            "name": "artifact_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "state!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tool_call_ledger",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "execution_status",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "tool_call_ledger",
+            "name": "execution_status"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "is_structured!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "9dbe5543c29ae17afd3e1a939bd5a2da82cf9dad48b2dfcea2d40dad9b32bcdd"
+}

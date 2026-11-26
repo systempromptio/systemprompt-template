@@ -18,8 +18,10 @@
         {{> components/kpi label="Unassigned" value=kpis.unassigned note="no group" tone="warn" href=kpis.unassigned_url active=kpis.unassigned_active}}
         {{> components/kpi label="No role" value=kpis.no_role note="no grant beyond user" tone="warn" href=kpis.no_role_url active=kpis.no_role_active}}
         {{> components/kpi label="Idle 30d" value=kpis.inactive note="no traffic" tone="err" href=kpis.inactive_url active=kpis.inactive_active}}
-        {{> components/kpi label="30d cost" value=kpis.cost_display delta=kpis.cost_delta delta_dir=kpis.cost_delta_dir note="gateway spend"}}
-        {{> components/kpi label="30d requests" value=kpis.requests_display delta=kpis.requests_delta delta_dir=kpis.requests_delta_dir note="through /v1/messages"}}
+        {{#with kpis.spend}}
+        {{> components/kpi label="30d cost" value=cost_display delta=cost_delta delta_dir=cost_delta_dir note="gateway spend"}}
+        {{> components/kpi label="30d requests" value=requests_display delta=requests_delta delta_dir=requests_delta_dir note="through /v1/messages"}}
+        {{/with}}
     </div>
 
     {{!-- The row count is rendered inside the slot rather than passed as the
@@ -76,8 +78,10 @@
                 <td class="sp-p-users__cell sp-p-users__chips-cell sp-col-roles" title="{{this.roles_title}}">{{#if this.has_roles}}{{#each this.roles}}{{> components/badge tone="muted" text=this}}{{/each}}{{else}}<span class="sp-badge sp-badge--warn">none</span>{{/if}}</td>
                 <td class="sp-p-users__cell sp-p-users__chips-cell sp-col-scope">{{#if this.has_scope}}{{#each this.scope}}<a class="sp-badge sp-badge--{{this.tone}}" href="{{this.href}}" title="{{this.label}}">{{this.label}}</a>{{/each}}{{else}}&mdash;{{/if}}</td>
                 <td class="sp-table__cell--date" title="{{this.last_active_title}}">{{#if this.last_active}}{{#if this.last_active_url}}<a href="{{this.last_active_url}}">{{this.last_active}}</a>{{else}}{{this.last_active}}{{/if}}{{else}}Never{{/if}}</td>
-                <td class="sp-table__cell--num sp-u-num sp-u-mono">{{this.cost_display}}</td>
-                <td class="sp-table__cell--num sp-u-num">{{this.requests_display}}</td>
+                {{#with this.spend}}
+                <td class="sp-table__cell--num sp-u-num sp-u-mono">{{cost}}</td>
+                <td class="sp-table__cell--num sp-u-num">{{requests}}</td>
+                {{/with}}
                 <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status_label}}</td>
                 <td class="sp-table__cell--actions">
                     <a class="sp-p-users__action" href="{{this.detail_url}}?tab=usage">Usage</a>

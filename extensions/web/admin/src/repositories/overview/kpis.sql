@@ -42,6 +42,6 @@ SELECT
         AND r.status = 'rejected')::BIGINT
         AS "prev_denied!"
 FROM ai_requests r
-WHERE NOT r.synthetic
+WHERE r.traffic = 'production'
   AND r.created_at >= $3
   AND r.created_at < $2

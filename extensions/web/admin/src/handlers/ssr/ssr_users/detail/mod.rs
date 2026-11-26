@@ -13,6 +13,7 @@ mod access_view;
 mod context;
 mod fill;
 mod load;
+#[cfg(feature = "gateway")]
 mod usage;
 mod view;
 
@@ -45,6 +46,7 @@ const TABS: &[(&str, &str)] = &[
     ("access", "Access & connections"),
     ("devices", "Devices"),
     ("sessions", "Sessions"),
+    #[cfg(feature = "gateway")]
     ("usage", "Usage"),
 ];
 
@@ -86,16 +88,14 @@ pub(crate) async fn user_detail_page(
     let tab = resolve_tab(query.tab.as_deref());
     let page = query.page.unwrap_or(0).max(0);
 
-    let load::Headline {
-        profile,
-        summary,
-        defaults,
-    } = load::load_headline(&pool, &user_id).await;
-    let group_ids = profile
+    let headline = load::load_headline(&pool, &user_id).await;
+    let group_ids = headline
+        .profile
         .as_ref()
         .map(|p| p.group_ids.clone())
         .unwrap_or_default();
-    let project_ids = profile
+    let project_ids = headline
+        .profile
         .as_ref()
         .map(|p| p.project_ids.clone())
         .unwrap_or_default();
@@ -109,8 +109,13 @@ pub(crate) async fn user_detail_page(
         ],
         tabs: tab_links(&user_id, tab),
         tab,
-        header: header_view(&detail, &group_ids, &project_ids, defaults.as_ref()),
-        kpis: kpis_view(&summary, &detail, group_ids.len(), project_ids.len()),
+        header: header_view(
+            &detail,
+            &group_ids,
+            &project_ids,
+            headline.defaults.as_ref(),
+        ),
+        kpis: kpis_view(&headline, &detail, group_ids.len(), project_ids.len()),
         can_write: user_ctx.is_admin,
         is_self: user_ctx.user_id.as_str() == user_id.as_str(),
         export: view::export(&user_id, &user_ctx),
@@ -121,6 +126,7 @@ pub(crate) async fn user_detail_page(
         access: None,
         devices: None,
         sessions: None,
+        #[cfg(feature = "gateway")]
         usage: None,
     };
 
@@ -149,19 +155,34 @@ pub(crate) async fn user_detail_page(
 }
 
 fn kpis_view(
-    summary: &repositories::users::usage::UserGatewayUsage,
+    #[cfg_attr(
+        not(feature = "gateway"),
+        expect(
+            unused_variables,
+            reason = "the headline's spend is the gateway member's"
+        )
+    )]
+    headline: &load::Headline,
     detail: &crate::types::UserDetail,
     groups: usize,
     projects: usize,
 ) -> DetailKpiView {
     DetailKpiView {
-        requests_display: crate::handlers::ssr::format::format_token_total(summary.requests),
-        cost_display: crate::handlers::ssr::format::format_cost(summary.cost_microdollars),
-        tokens_display: crate::handlers::ssr::format::format_token_total(summary.tokens),
+        #[cfg(feature = "gateway")]
+        spend: spend_kpis(&headline.summary),
         sessions: i64::try_from(detail.sessions.len()).unwrap_or(0),
         devices: 0,
         groups,
         projects,
+    }
+}
+
+#[cfg(feature = "gateway")]
+fn spend_kpis(summary: &repositories::users::usage::UserGatewayUsage) -> context::DetailSpendView {
+    context::DetailSpendView {
+        requests: crate::handlers::ssr::format::format_token_total(summary.requests),
+        cost: crate::handlers::ssr::format::format_cost(summary.cost_microdollars),
+        tokens: crate::handlers::ssr::format::format_token_total(summary.tokens),
     }
 }
 

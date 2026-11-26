@@ -16,6 +16,7 @@ use super::GovernanceQuery;
 use super::data::GovernanceData;
 use super::urls::filter_url;
 use crate::repositories::governance::decision_log::DecisionStats;
+#[cfg(feature = "gateway")]
 use crate::repositories::governance::findings::SafetyStats;
 
 // Why: One KPI tile, as `components/kpi` reads it. The supporting line is
@@ -34,11 +35,10 @@ pub(super) struct GovernanceKpiView {
 }
 
 pub(super) fn kpis(query: &GovernanceQuery, data: &GovernanceData) -> Vec<GovernanceKpiView> {
-    decision_tiles(data.stats)
-        .into_iter()
-        .chain(safety_tiles(data.safety))
-        .map(|t| tile(query, t))
-        .collect()
+    let tiles = decision_tiles(data.stats).into_iter();
+    #[cfg(feature = "gateway")]
+    let tiles = tiles.chain(safety_tiles(data.safety));
+    tiles.map(|t| tile(query, t)).collect()
 }
 
 fn decision_tiles(s: DecisionStats) -> Vec<Tile> {
@@ -87,6 +87,7 @@ fn decision_tiles(s: DecisionStats) -> Vec<Tile> {
     ]
 }
 
+#[cfg(feature = "gateway")]
 fn safety_tiles(f: SafetyStats) -> Vec<Tile> {
     vec![
         Tile {

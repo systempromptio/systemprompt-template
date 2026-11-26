@@ -1,8 +1,10 @@
 name: Flavours
 
-# Every flavour in flavours/index.yaml: the flavour lint, then per flavour a
-# clean and a cached image build with deploy metrics (scripts/flavour-metrics.sh
-# --image) and the image smoke (scripts/flavour-smoke.sh). Metrics JSON and the
+# Every flavour in flavours/index.yaml: the flavour lint, then per flavour the
+# query gate (scripts/check-flavour-queries.sh: every compile-checked query
+# against a database that flavour migrated), a clean and a cached image build
+# with deploy metrics (scripts/flavour-metrics.sh --image) and the image smoke
+# (scripts/flavour-smoke.sh). Metrics JSON and the
 # smoke results are uploaded; table.md is appended to the job summary.
 #
 # A runner has no sibling core checkout. While Cargo.toml carries the
@@ -43,6 +45,41 @@ jobs:
           else
             echo "buildable=true" >> "$GITHUB_OUTPUT"
           fi
+
+  queries:
+    name: Queries ${{ matrix.flavour }}
+    needs: plan
+    if: needs.plan.outputs.buildable == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        flavour: ${{ fromJSON(needs.plan.outputs.flavours) }}
+    env:
+      FLAVOUR_QUERIES_ADMIN_URL: postgres://queries:queries@localhost:5432/queries
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: queries
+          POSTGRES_PASSWORD: queries
+          POSTGRES_DB: queries
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U queries -d queries"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/reclaim-disk
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang mold libpq-dev libssl-dev pkg-config postgresql-client python3 python3-yaml
+        timeout-minutes: 5
+      - run: rustup show
+        timeout-minutes: 5
+      - run: bash scripts/check-flavour-queries.sh "${{ matrix.flavour }}"
+        timeout-minutes: 80
 
   flavour:
     name: ${{ matrix.flavour }}

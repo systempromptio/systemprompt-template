@@ -12,13 +12,17 @@ use crate::util::time_range::TimeRange;
 
 use super::context::{
     AnalyticsDashboardContext, CostTabView, Crumb, DashboardTab, FiltersView, ModelsTabView,
-    SessionsTabView, SkillsTabView, ToolsTabView,
+    SessionsTabView,
 };
+#[cfg(feature = "mcp")]
+use super::context::{SkillsTabView, ToolsTabView};
 use super::data::AnalyticsDashboardData;
 use super::{
-    AnalyticsDashboardQuery, BASE_URL, context, tab_cost, tab_models, tab_sessions, tab_skills,
-    tab_tools, urls, view, view_code, view_models, view_spend, view_tables,
+    AnalyticsDashboardQuery, BASE_URL, context, tab_cost, tab_models, tab_sessions, urls, view,
+    view_code, view_models, view_spend, view_tables,
 };
+#[cfg(feature = "mcp")]
+use super::{tab_skills, tab_tools};
 
 pub(super) fn sort_links(query: &AnalyticsDashboardQuery) -> Vec<context::SortLinkView> {
     [
@@ -50,7 +54,9 @@ pub(super) struct PageInput<'a> {
 
 struct TabViews {
     models: ModelsTabView,
+    #[cfg(feature = "mcp")]
     skills: SkillsTabView,
+    #[cfg(feature = "mcp")]
     tools: ToolsTabView,
     sessions: SessionsTabView,
     cost: CostTabView,
@@ -63,6 +69,7 @@ fn tab_views(
 ) -> TabViews {
     TabViews {
         models: tab_models::models_tab(&fetched.tabs.models, &fetched.tabs.redirects, query),
+        #[cfg(feature = "mcp")]
         skills: tab_skills::skills_tab(
             &tab_skills::SkillsInput {
                 rows: &fetched.tabs.skills,
@@ -72,6 +79,7 @@ fn tab_views(
             },
             query,
         ),
+        #[cfg(feature = "mcp")]
         tools: tab_tools::tools_tab(
             &fetched.tabs.tool_servers,
             &fetched.tabs.tools,
@@ -99,6 +107,15 @@ fn tab_views(
             query,
         ),
     }
+}
+
+fn toolbar_count(fetched: &AnalyticsDashboardData) -> String {
+    format!(
+        "{} requests · {} · {} active people",
+        fetched.kpis.total_requests,
+        format_cost(fetched.kpis.total_cost_microdollars),
+        fetched.kpis.active_users
+    )
 }
 
 pub(super) fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
@@ -129,16 +146,13 @@ pub(super) fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         ),
         time_range: view::time_range_view(query, &range),
         tabs: urls::tab_links(tab, query),
-        toolbar_count: format!(
-            "{} requests · {} · {} active people",
-            fetched.kpis.total_requests,
-            format_cost(fetched.kpis.total_cost_microdollars),
-            fetched.kpis.active_users
-        ),
+        toolbar_count: toolbar_count(fetched),
         breadcrumbs: breadcrumbs(tab),
         is_overview: tab == DashboardTab::Overview,
         is_models: tab == DashboardTab::Models,
+        #[cfg(feature = "mcp")]
         is_skills: tab == DashboardTab::Skills,
+        #[cfg(feature = "mcp")]
         is_tools: tab == DashboardTab::Tools,
         is_sessions: tab == DashboardTab::Sessions,
         is_cost: tab == DashboardTab::Cost,
@@ -180,7 +194,9 @@ pub(super) fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         code_frames: view_code::code_frames(&fetched.code_totals),
 
         models: tabs.models,
+        #[cfg(feature = "mcp")]
         skills: tabs.skills,
+        #[cfg(feature = "mcp")]
         tools: tabs.tools,
         sessions: tabs.sessions,
         cost: tabs.cost,
@@ -214,7 +230,9 @@ const fn tab_label(tab: DashboardTab) -> &'static str {
     match tab {
         DashboardTab::Overview => "Overview",
         DashboardTab::Models => "Models",
+        #[cfg(feature = "mcp")]
         DashboardTab::Skills => "Skills",
+        #[cfg(feature = "mcp")]
         DashboardTab::Tools => "Tools",
         DashboardTab::Sessions => "Sessions",
         DashboardTab::Cost => "Cost",
@@ -226,7 +244,9 @@ const fn tab_label(tab: DashboardTab) -> &'static str {
 const fn export_datasets(tab: DashboardTab) -> &'static [&'static str] {
     match tab {
         DashboardTab::Overview | DashboardTab::Models => &["analytics-models"],
+        #[cfg(feature = "mcp")]
         DashboardTab::Skills => &["analytics-skills"],
+        #[cfg(feature = "mcp")]
         DashboardTab::Tools => &["analytics-tools", "analytics-tool-servers"],
         DashboardTab::Sessions => &["analytics-sessions"],
         DashboardTab::Cost => &[

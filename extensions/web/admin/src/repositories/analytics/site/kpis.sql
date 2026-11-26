@@ -41,7 +41,7 @@ SELECT
                   AND r.created_at < NOW() - INTERVAL '7 days')::BIGINT
         AS "prev_weekly_active_users!"
 FROM ai_requests r
-WHERE NOT r.synthetic
+WHERE r.traffic = 'production'
   AND (r.created_at >= $5 OR r.created_at >= NOW() - INTERVAL '14 days')
   AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
   AND ($4::TEXT IS NULL OR r.user_id = $4)

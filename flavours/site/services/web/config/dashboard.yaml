@@ -7,22 +7,19 @@ home:
   - item: docs
     title: "Content"
     note: "The published site and its documentation."
-  - item: analytics
-    title: "Traffic"
-    note: "Who reads what, and from where."
   - item: configuration
     title: "Publishing"
     note: "The configuration the site is published from."
 nav:
   - id: activity
-    title: "Traffic"
-    items: [overview, analytics]
+    title: "Overview"
+    items: [overview]
   - id: governance
     title: "Governance"
     items: [governance, approvals, secrets]
   - id: people
     title: "People & access"
-    items: [users, groups, projects, roles, access_control, devices]
+    items: [users, roles, access_control, devices]
   - id: platform
     title: "Platform"
     items: [sync, configuration, lifecycle, observability]

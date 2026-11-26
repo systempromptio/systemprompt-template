@@ -13,6 +13,7 @@ pub mod dashboard;
 pub(crate) mod dashboard_read;
 pub mod devices;
 pub mod external_agents;
+#[cfg(feature = "gateway")]
 pub mod gateway_policies;
 pub mod gateway_routes;
 pub mod governance;
@@ -26,10 +27,12 @@ pub mod observability;
 pub mod overview;
 pub mod people_usage;
 pub mod projects;
+#[cfg(feature = "gateway")]
 pub mod reports;
 pub mod roles;
 pub mod scope;
 pub mod secrets;
 pub mod sync;
+#[cfg(feature = "gateway")]
 pub mod traces;
 pub mod users;

@@ -14,8 +14,11 @@ pub(super) use super::context_overview::{
 };
 pub(super) use super::context_tabs::{
     ContainerRowView, CostTabView, ModelUsageRowView, ModelsTabView, RedirectRowView,
-    SessionCostRowView, SessionsTabView, SkillRowView, SkillsTabView, SupplierRowView, ToolRowView,
-    ToolServerRowView, ToolsTabView,
+    SessionCostRowView, SessionsTabView, SupplierRowView,
+};
+#[cfg(feature = "mcp")]
+pub(super) use super::context_tabs::{
+    SkillRowView, SkillsTabView, ToolRowView, ToolServerRowView, ToolsTabView,
 };
 
 // Why: each tab is its own GET so it can be bookmarked, and so only the
@@ -24,7 +27,9 @@ pub(super) use super::context_tabs::{
 pub(super) enum DashboardTab {
     Overview,
     Models,
+    #[cfg(feature = "mcp")]
     Skills,
+    #[cfg(feature = "mcp")]
     Tools,
     Sessions,
     Cost,
@@ -36,7 +41,9 @@ impl DashboardTab {
     pub(super) fn from_query(raw: Option<&str>) -> Self {
         match raw {
             Some("models") => Self::Models,
+            #[cfg(feature = "mcp")]
             Some("skills") => Self::Skills,
+            #[cfg(feature = "mcp")]
             Some("tools") => Self::Tools,
             Some("sessions") => Self::Sessions,
             Some("cost") => Self::Cost,
@@ -48,7 +55,9 @@ impl DashboardTab {
         match self {
             Self::Overview => "overview",
             Self::Models => "models",
+            #[cfg(feature = "mcp")]
             Self::Skills => "skills",
+            #[cfg(feature = "mcp")]
             Self::Tools => "tools",
             Self::Sessions => "sessions",
             Self::Cost => "cost",
@@ -76,7 +85,9 @@ pub(super) struct AnalyticsDashboardContext {
     pub breadcrumbs: Vec<Crumb>,
     pub is_overview: bool,
     pub is_models: bool,
+    #[cfg(feature = "mcp")]
     pub is_skills: bool,
+    #[cfg(feature = "mcp")]
     pub is_tools: bool,
     pub is_sessions: bool,
     pub is_cost: bool,
@@ -116,7 +127,9 @@ pub(super) struct AnalyticsDashboardContext {
     pub code_frames: Vec<CodeFrameView>,
 
     pub models: ModelsTabView,
+    #[cfg(feature = "mcp")]
     pub skills: SkillsTabView,
+    #[cfg(feature = "mcp")]
     pub tools: ToolsTabView,
     pub sessions: SessionsTabView,
     pub cost: CostTabView,

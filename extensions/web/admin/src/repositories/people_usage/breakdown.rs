@@ -12,6 +12,7 @@ use sqlx::PgPool;
 
 use crate::repositories::scope::ScopeQuery;
 
+#[cfg(feature = "gateway")]
 /// One row of the model mix: the request and token split for one model.
 #[derive(Debug, Clone, Serialize)]
 pub struct ModelUsageRow {
@@ -31,6 +32,7 @@ pub struct SkillUsageRow {
     pub users: i64,
 }
 
+#[cfg(feature = "mcp")]
 /// One MCP tool, named by its server, and how much of the window it took.
 #[derive(Debug, Clone, Serialize)]
 pub struct ToolUsageRow {
@@ -50,6 +52,7 @@ pub struct LinkedScopeRow {
     pub member_count: i64,
 }
 
+#[cfg(feature = "gateway")]
 pub async fn list_scope_top_models(
     pool: &PgPool,
     q: &ScopeQuery<'_>,
@@ -125,6 +128,7 @@ pub async fn list_scope_top_skills(
         .collect())
 }
 
+#[cfg(feature = "mcp")]
 pub async fn list_scope_top_tools(
     pool: &PgPool,
     q: &ScopeQuery<'_>,

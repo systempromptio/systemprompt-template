@@ -4,7 +4,6 @@
 //! declares through the same door, and hashed on the parsed content so a
 //! comment or a whitespace edit is not a drift.
 
-use crate::env::AdminEnv;
 
 use sha2::{Digest, Sha256};
 use systemprompt::gateway::{GATEWAY_POLICIES_FILE, GatewayPolicyConfig, GatewayPolicyEntry};
@@ -59,8 +58,4 @@ pub fn parse_declared_policies(yaml: &str) -> Result<DeclaredPolicies, String> {
             })
             .collect(),
     })
-}
-
-pub fn services_root(env: &AdminEnv) -> std::path::PathBuf {
-    env.active_services_root()
 }

@@ -9,6 +9,7 @@ use sqlx::PgPool;
 
 use crate::repositories::scope::SubjectScope;
 
+#[cfg(feature = "gateway")]
 use super::WINDOW_DAYS;
 
 /// The five numbers the KPI row states, each one also a filter chip's count.
@@ -19,6 +20,14 @@ pub struct RosterStats {
     pub unassigned: i64,
     pub no_role: i64,
     pub inactive_30d: i64,
+    #[cfg(feature = "gateway")]
+    pub spend: RosterSpend,
+}
+
+/// The gateway spend the roster's two money KPIs state.
+#[cfg(feature = "gateway")]
+#[derive(Debug, Clone, Copy, Default, Serialize)]
+pub struct RosterSpend {
     pub requests: i64,
     pub cost_microdollars: i64,
     // Why: the previous window, so the two spend KPIs can carry a delta rather
@@ -27,6 +36,7 @@ pub struct RosterStats {
     pub prior_requests: i64,
 }
 
+#[cfg(feature = "gateway")]
 pub async fn get_roster_stats(
     pool: &PgPool,
     scope: &SubjectScope,
@@ -89,15 +99,63 @@ pub async fn get_roster_stats(
         unassigned: row.unassigned,
         no_role: row.no_role,
         inactive_30d: row.inactive_30d,
-        requests: row.requests,
-        cost_microdollars: row.cost,
-        prior_cost_microdollars: row.prior_cost,
-        prior_requests: row.prior_requests,
+        spend: RosterSpend {
+            requests: row.requests,
+            cost_microdollars: row.cost,
+            prior_cost_microdollars: row.prior_cost,
+            prior_requests: row.prior_requests,
+        },
+    })
+}
+
+#[cfg(not(feature = "gateway"))]
+pub async fn get_roster_stats(
+    pool: &PgPool,
+    scope: &SubjectScope,
+) -> Result<RosterStats, sqlx::Error> {
+    let row = sqlx::query!(
+        r#"WITH base AS (
+               SELECT u.id, u.roles, (u.status = 'active') AS is_active
+                 FROM users u
+                WHERE NOT ('anonymous' = ANY(u.roles))
+                  AND u.email NOT LIKE '%@anonymous.local'
+                  AND ($1::TEXT[] IS NULL OR u.id = ANY($1))
+           ), marked AS (
+               SELECT b.id, b.is_active,
+                      cardinality(array_remove(array_remove(b.roles, 'user'), 'anonymous')) = 0 AS no_role,
+                      NOT EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id = b.id) AS unassigned,
+                      GREATEST(
+                        (SELECT MAX(us.last_activity_at) FROM user_sessions us WHERE us.user_id = b.id),
+                        (SELECT MAX(ua.created_at) FROM user_activity ua WHERE ua.user_id = b.id)
+                      ) AS last_active
+                 FROM base b
+           )
+           SELECT COUNT(*)::BIGINT AS "total!",
+                  COUNT(*) FILTER (WHERE m.is_active)::BIGINT AS "active!",
+                  COUNT(*) FILTER (WHERE m.unassigned)::BIGINT AS "unassigned!",
+                  COUNT(*) FILTER (WHERE m.no_role)::BIGINT AS "no_role!",
+                  COUNT(*) FILTER (
+                      WHERE m.last_active IS NULL
+                         OR m.last_active < NOW() - INTERVAL '30 days'
+                  )::BIGINT AS "inactive_30d!"
+             FROM marked m"#,
+        scope.as_sql(),
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(RosterStats {
+        total: row.total,
+        active: row.active,
+        unassigned: row.unassigned,
+        no_role: row.no_role,
+        inactive_30d: row.inactive_30d,
     })
 }
 
 // Why: empty deep pages still need the filtered total, without spending/row
 // enrichment.
+#[cfg(feature = "gateway")]
 pub(super) async fn count_filtered_users(
     pool: &PgPool,
     scope: &SubjectScope,
@@ -117,6 +175,31 @@ pub(super) async fn count_filtered_users(
             WHEN 'inactive-30d' THEN
                 NOT EXISTS (SELECT 1 FROM ai_requests ar WHERE ar.user_id = u.id AND ar.created_at >= NOW() - INTERVAL '30 days')
                 AND NOT EXISTS (SELECT 1 FROM user_sessions us WHERE us.user_id = u.id AND us.last_activity_at >= NOW() - INTERVAL '30 days')
+                AND NOT EXISTS (SELECT 1 FROM user_activity ua WHERE ua.user_id = u.id AND ua.created_at >= NOW() - INTERVAL '30 days')
+            ELSE TRUE END
+    "#, scope.as_sql(), query.role.as_deref(), query.search.as_deref(), query.filter.as_str())
+    .fetch_one(pool).await
+}
+
+#[cfg(not(feature = "gateway"))]
+pub(super) async fn count_filtered_users(
+    pool: &PgPool,
+    scope: &SubjectScope,
+    query: &super::RosterQuery,
+) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar!(r#"
+        SELECT COUNT(*)::bigint AS "count!" FROM users u
+        WHERE NOT ('anonymous' = ANY(u.roles)) AND u.email NOT LIKE '%@anonymous.local'
+          AND ($1::text[] IS NULL OR u.id = ANY($1))
+          AND ($2::text IS NULL OR $2 = ANY(u.roles))
+          AND ($3::text IS NULL OR position(lower($3) in lower(
+              COALESCE(u.display_name, u.full_name, u.name, '') || ' ' || COALESCE(u.email, '') || ' ' || u.id)) > 0)
+          AND CASE $4::text
+            WHEN 'unassigned' THEN NOT EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id = u.id)
+                OR EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id = u.id AND gm.group_id = 'unassigned')
+            WHEN 'no-role' THEN cardinality(array_remove(array_remove(u.roles, 'user'), 'anonymous')) = 0
+            WHEN 'inactive-30d' THEN
+                NOT EXISTS (SELECT 1 FROM user_sessions us WHERE us.user_id = u.id AND us.last_activity_at >= NOW() - INTERVAL '30 days')
                 AND NOT EXISTS (SELECT 1 FROM user_activity ua WHERE ua.user_id = u.id AND ua.created_at >= NOW() - INTERVAL '30 days')
             ELSE TRUE END
     "#, scope.as_sql(), query.role.as_deref(), query.search.as_deref(), query.filter.as_str())

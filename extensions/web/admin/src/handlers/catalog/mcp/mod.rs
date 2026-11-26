@@ -73,15 +73,15 @@ async fn load_runtime(pool: &PgPool) -> Runtime {
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "mcp: heartbeat read failed"))
         .unwrap_or_default();
-    let identities = runtime::list_mcp_proxy_identity_counts(pool)
+    let principals = runtime::list_mcp_session_principal_counts(pool)
         .await
-        .inspect_err(|e| tracing::warn!(error = %e, "mcp: identity read failed"))
+        .inspect_err(|e| tracing::warn!(error = %e, "mcp: principal read failed"))
         .unwrap_or_default();
     let activity = runtime::list_mcp_server_activity(pool, WINDOW_HOURS)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "mcp: activity read failed"))
         .unwrap_or_default();
-    Runtime::new(heartbeat, identities, activity)
+    Runtime::new(heartbeat, principals, activity)
 }
 
 pub(crate) async fn mcp_servers_page(
@@ -193,7 +193,7 @@ pub(crate) async fn mcp_detail_page(
     let server = catalog.mcp.iter().find(|s| s.id == mcp_id);
     let rt = load_runtime(&pool).await;
     let known_at_runtime = rt.heartbeat.contains_key(mcp_id.as_str())
-        || rt.identities.contains_key(mcp_id.as_str())
+        || rt.principals.contains_key(mcp_id.as_str())
         || rt.activity.contains_key(mcp_id.as_str());
 
     // Why: a server the catalog does not declare but the runtime has served is
