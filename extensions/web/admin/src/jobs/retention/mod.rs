@@ -52,13 +52,20 @@ const fn managed(
 
 // Why: raw tables are bounded by age and archived weekly before they expire.
 pub(crate) const RAW_TABLES: &[ManagedTable] = &[
+    #[cfg(feature = "gateway")]
     managed("ai_requests", "created_at", Some(90)),
+    #[cfg(feature = "gateway")]
     managed("ai_request_messages", "created_at", Some(30)),
+    #[cfg(feature = "gateway")]
     managed("ai_request_payloads", "created_at", Some(7)),
+    #[cfg(feature = "gateway")]
     managed("ai_request_tool_calls", "created_at", Some(90)),
+    #[cfg(feature = "gateway")]
     managed("ai_request_scopes", "resolved_at", Some(90)),
+    #[cfg(feature = "gateway")]
     managed("ai_safety_findings", "created_at", Some(90)),
     managed("governance_decisions", "created_at", Some(180)),
+    #[cfg(feature = "mcp")]
     managed("mcp_tool_executions", "started_at", Some(180)),
     managed("plugin_usage_events", "created_at", Some(90)),
     managed("user_sessions", "started_at", Some(180)),
@@ -72,7 +79,9 @@ pub(crate) const RAW_TABLES: &[ManagedTable] = &[
 pub(crate) const ROLLUP_TABLES: &[ManagedTable] = &[
     managed("admin_usage_daily_rollups", "date", None),
     managed("plugin_usage_daily", "date", None),
+    #[cfg(feature = "agents")]
     managed("conversation_facts", "last_at", None),
+    #[cfg(feature = "agents")]
     managed("conversation_skill_facts", "first_invoked_at", None),
     managed("usage_anomalies", "detected_at", None),
     managed("content_performance_metrics", "updated_at", None),
@@ -82,6 +91,7 @@ pub(crate) const ROLLUP_TABLES: &[ManagedTable] = &[
 // Why: queues and buckets are measured for growth, never archived.
 pub(crate) const TRANSIENT_TABLES: &[ManagedTable] = &[
     managed("event_outbox", "created_at", None),
+    #[cfg(feature = "gateway")]
     managed("ai_quota_buckets", "window_start", None),
     managed("user_rate_limit_buckets", "window_start", None),
 ];

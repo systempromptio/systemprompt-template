@@ -64,8 +64,15 @@ to_bytes() {
 }
 core_rev() {
     if [ "$(bash scripts/core-patch.sh status)" = live ]; then
-        local rel; rel="$(sed -n 's|^systemprompt = { path = "\(.*\)/systemprompt" }$|\1|p' Cargo.toml | head -1)"
-        git -C "${CORE_PATH:-$FLAVOUR_ROOT/$rel}" rev-parse HEAD 2>/dev/null || echo unknown
+        local rel core; rel="$(sed -n 's|^systemprompt = { path = "\(.*\)/systemprompt" }$|\1|p' Cargo.toml | head -1)"
+        core="${CORE_PATH:-$FLAVOUR_ROOT/$rel}"
+        # Why: the image is built from the checkout's working tree, so a
+        # modified tree is not the commit its HEAD names.
+        if git -C "$core" diff --quiet HEAD 2>/dev/null; then
+            git -C "$core" rev-parse HEAD 2>/dev/null || echo unknown
+        else
+            echo "$(git -C "$core" rev-parse HEAD 2>/dev/null || echo unknown)+modified"
+        fi
     else
         tr -d '[:space:]' < bridge/CORE_REF
     fi

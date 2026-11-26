@@ -44,10 +44,10 @@ def merge(target, overlay):
             target[key] = value
 
 
-def configure(profile_path, env):
+def configure(profile_path, env, overlay_dir=Path('/app/profile-overlay')):
     profile = yaml.safe_load(profile_path.read_text())
     for overlay in ('profile.base.yaml', 'profile.overlay.yaml'):
-        merge(profile, yaml.safe_load((Path('/app/profile-overlay') / overlay).read_text()) or {})
+        merge(profile, yaml.safe_load((overlay_dir / overlay).read_text()) or {})
     security = profile.setdefault('security', {})
     security['allow_registration'] = env.get('ALLOW_REGISTRATION', 'false').lower() == 'true'
     server = profile.setdefault('server', {})
@@ -55,9 +55,12 @@ def configure(profile_path, env):
     server['port'] = int(env.get('PORT', '8080'))
     external = env.get('EXTERNAL_URL') or env.get('RENDER_EXTERNAL_URL')
     if external:
-        server['api_external_url'] = external.rstrip('/')
-        server['cors_allowed_origins'] = [external.rstrip('/')]
-        security['jwt_issuer'] = external.rstrip('/')
+        # Core derives the API URLs, CORS origin and JWT issuer from
+        # external_url and refuses a profile that states them.
+        for derived in ('api_external_url', 'cors_allowed_origins'):
+            server.pop(derived, None)
+        security.pop('jwt_issuer', None)
+        server['external_url'] = external.rstrip('/')
     profile.setdefault('rate_limits', {})['disabled'] = False
     # Existing file-backed signing keys must move with the persistent profile.
     key_path = Path(security.get('signing_key_path', '/app/signing_key.pem'))

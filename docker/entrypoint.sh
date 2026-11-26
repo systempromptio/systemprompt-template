@@ -188,12 +188,6 @@ print(unquote(u.password or ""))' "$DATABASE_URL")"
         jq --arg db "$DATABASE_URL" '.database_url = $db' "$SECRETS_FILE" \
             > "$SECRETS_FILE.tmp" && mv "$SECRETS_FILE.tmp" "$SECRETS_FILE"
         chmod 600 "$SECRETS_FILE"
-        # 3. Advertise the public URL when the platform provides one
-        #    (EXTERNAL_URL, or RENDER_EXTERNAL_URL via the fallback above).
-        if [ -n "${EXTERNAL_URL:-}" ]; then
-            sed -i "s|^  api_external_url: .*|  api_external_url: ${EXTERNAL_URL}|" "$PROFILE_FILE"
-            sed -i "/^  cors_allowed_origins:/a\\  - ${EXTERNAL_URL}" "$PROFILE_FILE"
-        fi
     fi
 fi
 

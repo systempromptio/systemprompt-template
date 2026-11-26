@@ -18,7 +18,7 @@ ignored = ["systemprompt-extension"]
 # console page group and the member contributions that need it.
 [features]
 gateway = ["systemprompt/ai", "systemprompt-web-admin/gateway"]
-mcp = ["systemprompt/mcp-servers", "systemprompt/marketplace", "systemprompt-web-admin/mcp"]
+mcp = ["gateway", "systemprompt/mcp-servers", "systemprompt/marketplace", "systemprompt-web-admin/mcp"]
 agents = ["mcp", "systemprompt/agents", "systemprompt-web-admin/agents"]
 content = [
     "systemprompt/content",

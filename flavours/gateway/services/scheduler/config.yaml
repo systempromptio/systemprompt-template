@@ -88,11 +88,6 @@ scheduler:
       owner: admin
       enabled: true
 
-    - name: plugin_usage_retention
-      extension: web
-      owner: admin
-      enabled: true
-
     - name: retention_daily_report
       extension: web
       owner: admin
@@ -117,11 +112,6 @@ scheduler:
       enabled: true
 
     - name: quota_month_window
-      extension: web
-      owner: admin
-      enabled: true
-
-    - name: conversation_rollup
       extension: web
       owner: admin
       enabled: true

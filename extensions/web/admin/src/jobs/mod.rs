@@ -14,6 +14,7 @@ mod access_expiry;
 mod content_analytics;
 #[cfg(feature = "agents")]
 mod conversation_judge;
+#[cfg(feature = "agents")]
 mod conversation_rollup;
 mod governance_bootstrap;
 #[cfg(feature = "gateway")]
@@ -21,7 +22,9 @@ mod quota_month_window;
 mod retention;
 mod scope_defaults;
 mod secret_migration;
+#[cfg(feature = "gateway")]
 mod usage_anomaly;
+#[cfg(feature = "mcp")]
 mod usage_retention;
 mod usage_rollup;
 
@@ -34,6 +37,7 @@ pub use access_expiry::{AccessExpiryJob, ExpirySweep, lost_manage_role};
 pub use content_analytics::ContentAnalyticsAggregationJob;
 #[cfg(feature = "agents")]
 pub use conversation_judge::ConversationJudgeJob;
+#[cfg(feature = "agents")]
 pub use conversation_rollup::ConversationRollupJob;
 pub use governance_bootstrap::GovernanceBootstrapJob;
 #[cfg(feature = "gateway")]
@@ -41,9 +45,11 @@ pub use quota_month_window::QuotaMonthWindowJob;
 pub use retention::{RetentionDailyReportJob, RetentionExportMonthlyJob, RetentionExportWeeklyJob};
 pub use scope_defaults::ScopeDefaultsJob;
 pub use secret_migration::SecretMigrationJob;
+#[cfg(feature = "mcp")]
 pub use usage_retention::PluginUsageRetentionJob;
 pub use usage_rollup::UsageDailyRollupJob;
 
+#[cfg(feature = "gateway")]
 use usage_anomaly::UsageAnomalyJob;
 
 pub fn contribute_jobs(c: &mut Contributions<'_>) {
@@ -52,17 +58,18 @@ pub fn contribute_jobs(c: &mut Contributions<'_>) {
     #[cfg(feature = "content")]
     c.job(ContentAnalyticsAggregationJob);
     #[cfg(feature = "gateway")]
-    c.job(QuotaMonthWindowJob);
+    c.job(QuotaMonthWindowJob).job(UsageAnomalyJob);
+    #[cfg(feature = "mcp")]
+    c.job(PluginUsageRetentionJob);
+    #[cfg(feature = "agents")]
+    c.job(ConversationRollupJob);
     c.job(AccessExpiryJob)
-        .job(ConversationRollupJob)
         .job(GovernanceBootstrapJob)
-        .job(PluginUsageRetentionJob)
         .job(RetentionDailyReportJob)
         .job(RetentionExportMonthlyJob)
         .job(RetentionExportWeeklyJob)
         .job(ScopeDefaultsJob)
         .job(SecretMigrationJob)
-        .job(UsageAnomalyJob)
         .job(UsageDailyRollupJob);
 }
 
@@ -81,5 +88,6 @@ pub mod internals {
     pub use super::governance_bootstrap::{
         GovernanceStatus, check_governance_config, check_judge_config,
     };
+    #[cfg(feature = "gateway")]
     pub use super::usage_anomaly::{Finding, evaluate};
 }
