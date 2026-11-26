@@ -1368,16 +1368,6 @@ dependencies = [
 
 [[package]]
 name = "darling"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25ae13da2f202d56bd7f91c25fba009e7717a1e4a1cc98a76d844b65ae912e9d"
-dependencies = [
- "darling_core 0.23.0",
- "darling_macro 0.23.0",
-]
-
-[[package]]
-name = "darling"
 version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed17f5901b6630b993ca003def43f2f8ef4014fc13b047b57aad617ff32bc2ec"
@@ -1393,19 +1383,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d00b9596d185e565c2207a0b01f8bd1a135483d02d9b7b0a54b11da8d53412e"
 dependencies = [
  "fnv",
- "ident_case",
- "proc-macro2",
- "quote",
- "strsim",
- "syn 2.0.119",
-]
-
-[[package]]
-name = "darling_core"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9865a50f7c335f53564bb694ef660825eb8610e0a53d3e11bf1b0d3df31e03b0"
-dependencies = [
  "ident_case",
  "proc-macro2",
  "quote",
@@ -1433,17 +1410,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc34b93ccb385b40dc71c6fceac4b2ad23662c7eeb248cf10d529b7e055b6ead"
 dependencies = [
  "darling_core 0.20.11",
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
-name = "darling_macro"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac3984ec7bd6cfa798e62b4a642426a5be0e68f9401cfc2a01e3fa9ea2fcdb8d"
-dependencies = [
- "darling_core 0.23.0",
  "quote",
  "syn 2.0.119",
 ]
@@ -4741,28 +4707,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "proc-macro-error-attr3"
-version = "3.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e564d14133360e1ae169ffde5da25881b5fa47261665b8e5713c212c27799da"
-dependencies = [
- "proc-macro2",
- "quote",
-]
-
-[[package]]
-name = "proc-macro-error3"
-version = "3.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f0d4471b3436c22106b21913b1dda531558918ae9b7ec55d58aa84b43552233"
-dependencies = [
- "proc-macro-error-attr3",
- "proc-macro2",
- "quote",
- "syn 3.0.6",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6575,6 +6519,7 @@ dependencies = [
 [[package]]
 name = "systemprompt"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "axum",
  "rmcp",
@@ -6628,7 +6573,6 @@ dependencies = [
  "systemprompt-slack",
  "systemprompt-slack-entry",
  "systemprompt-storage",
- "systemprompt-teams",
  "systemprompt-teams-entry",
  "systemprompt-template-provider",
  "systemprompt-traits",
@@ -6640,6 +6584,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-agent"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -6675,6 +6620,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-agent-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6717,6 +6663,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-agent-runs"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -6749,6 +6696,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-agent-runs-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-stream",
  "axum",
@@ -6771,6 +6719,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-ai"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -6805,6 +6754,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-analytics"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -6821,7 +6771,6 @@ dependencies = [
  "systemprompt-models",
  "systemprompt-traits",
  "thiserror 2.0.21",
- "tokio",
  "tracing",
  "url",
  "uuid",
@@ -6830,6 +6779,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-analytics-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "axum",
@@ -6853,6 +6803,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-api"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -6875,10 +6826,8 @@ dependencies = [
  "sqlx",
  "systemprompt-config",
  "systemprompt-database",
- "systemprompt-documents",
  "systemprompt-events",
  "systemprompt-extension",
- "systemprompt-gateway",
  "systemprompt-governance",
  "systemprompt-identifiers",
  "systemprompt-loader",
@@ -6905,6 +6854,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-brain"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -6935,6 +6885,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-brain-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "axum",
  "chrono",
@@ -6953,6 +6904,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-cli"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -6975,7 +6927,6 @@ dependencies = [
  "sqlx",
  "systemprompt-api",
  "systemprompt-client",
- "systemprompt-cloud",
  "systemprompt-config",
  "systemprompt-database",
  "systemprompt-extension",
@@ -7003,6 +6954,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-client"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "chrono",
  "futures",
@@ -7021,6 +6973,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-cloud"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "axum",
  "base64 0.23.1",
@@ -7029,12 +6982,9 @@ dependencies = [
  "dirs",
  "ipnet",
  "open",
- "rand 0.10.3",
  "reqwest",
- "schemars 1.2.2",
  "serde",
  "serde_json",
- "serde_yaml_ng",
  "sha2 0.11.0",
  "systemprompt-config",
  "systemprompt-extension",
@@ -7043,19 +6993,18 @@ dependencies = [
  "systemprompt-logging",
  "systemprompt-manifest",
  "systemprompt-models",
- "systemprompt-security",
- "systemprompt-wire",
  "thiserror 2.0.21",
  "tokio",
  "tracing",
+ "url",
  "urlencoding",
  "uuid",
- "validator",
 ]
 
 [[package]]
 name = "systemprompt-cloud-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -7094,6 +7043,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-config"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7123,6 +7073,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-content"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7150,6 +7101,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-content-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "axum",
@@ -7177,6 +7129,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-database"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7203,6 +7156,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-documents"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "axum",
@@ -7224,6 +7178,7 @@ dependencies = [
  "systemprompt-identifiers",
  "systemprompt-loader",
  "systemprompt-manifest",
+ "systemprompt-mcp-host",
  "systemprompt-models",
  "systemprompt-oauth-issuance",
  "systemprompt-provider-contracts",
@@ -7238,6 +7193,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-events"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "axum",
  "chrono",
@@ -7259,6 +7215,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-extension"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "axum",
@@ -7288,6 +7245,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-files"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "ammonia",
  "async-trait",
@@ -7343,6 +7301,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-files-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -7377,6 +7336,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-gateway"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "axum",
@@ -7422,6 +7382,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-gateway-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "axum",
@@ -7461,6 +7422,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-generator"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7491,6 +7453,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-governance"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7522,6 +7485,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-identifiers"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "chrono",
  "schemars 1.2.2",
@@ -7535,6 +7499,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-identity-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "axum",
@@ -7569,15 +7534,16 @@ dependencies = [
  "url",
  "urlencoding",
  "uuid",
- "validator",
  "webauthn-rs",
 ]
 
 [[package]]
 name = "systemprompt-issues"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
+ "async-trait",
  "chrono",
  "clap",
  "rmcp",
@@ -7588,6 +7554,7 @@ dependencies = [
  "systemprompt-extension",
  "systemprompt-files",
  "systemprompt-identifiers",
+ "systemprompt-mcp-host",
  "systemprompt-models",
  "thiserror 2.0.21",
  "tracing",
@@ -7609,15 +7576,19 @@ dependencies = [
 [[package]]
 name = "systemprompt-loader"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
  "chrono",
+ "dirs",
  "flate2",
  "hex",
  "libc",
  "nix",
+ "rand 0.10.3",
  "reqwest",
+ "schemars 1.2.2",
  "serde",
  "serde_json",
  "serde_yaml_ng",
@@ -7625,6 +7596,7 @@ dependencies = [
  "systemprompt-config",
  "systemprompt-extension",
  "systemprompt-identifiers",
+ "systemprompt-logging",
  "systemprompt-manifest",
  "systemprompt-models",
  "systemprompt-security",
@@ -7641,6 +7613,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-logging"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7672,6 +7645,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-manifest"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "base64 0.23.1",
  "chrono",
@@ -7699,6 +7673,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-marketplace"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7731,6 +7706,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-marketplace-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "axum",
@@ -7756,6 +7732,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-mcp"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "bytes",
@@ -7813,6 +7790,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-mcp-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -7844,6 +7822,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-mcp-host"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "axum",
@@ -7853,11 +7832,9 @@ dependencies = [
  "serde_json",
  "systemprompt-config",
  "systemprompt-database",
- "systemprompt-documents",
  "systemprompt-extension",
  "systemprompt-governance",
  "systemprompt-identifiers",
- "systemprompt-issues",
  "systemprompt-loader",
  "systemprompt-logging",
  "systemprompt-manifest",
@@ -7884,6 +7861,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-models"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7915,6 +7893,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-notifications"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7941,6 +7920,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-notifications-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "axum",
  "serde",
@@ -7955,6 +7935,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-oauth"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7985,13 +7966,13 @@ dependencies = [
  "tracing",
  "url",
  "uuid",
- "validator",
  "webauthn-rs",
 ]
 
 [[package]]
 name = "systemprompt-oauth-issuance"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "axum",
@@ -8025,6 +8006,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-provider-contracts"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -8042,6 +8024,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-runtime"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -8052,7 +8035,6 @@ dependencies = [
  "serde_json",
  "serde_yaml_ng",
  "sqlx",
- "systemprompt-agent-runs",
  "systemprompt-config",
  "systemprompt-database",
  "systemprompt-events",
@@ -8076,6 +8058,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-scheduler"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -8109,6 +8092,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-security"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "axum",
@@ -8145,6 +8129,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-slack"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "hex",
  "hmac 0.13.0",
@@ -8162,6 +8147,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-slack-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "axum",
  "chrono",
@@ -8183,6 +8169,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-storage"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -8210,6 +8197,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-teams"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "jsonwebtoken",
  "reqwest",
@@ -8226,6 +8214,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-teams-entry"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "axum",
  "chrono",
@@ -8256,6 +8245,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-template-provider"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "systemprompt-provider-contracts",
@@ -8266,6 +8256,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-templates"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "handlebars",
  "serde",
@@ -8280,6 +8271,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-traits"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -8305,6 +8297,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-users"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "async-trait",
  "chrono",
@@ -8338,6 +8331,8 @@ dependencies = [
  "base64 0.22.1",
  "chacha20poly1305 0.10.1",
  "chrono",
+ "flate2",
+ "futures-util",
  "handlebars",
  "hex",
  "jsonwebtoken",
@@ -8352,8 +8347,6 @@ dependencies = [
  "sha2 0.10.9",
  "sqlx",
  "systemprompt",
- "systemprompt-mcp-shared",
- "systemprompt-security",
  "systemprompt-web-shared",
  "thiserror 2.0.21",
  "tokio",
@@ -8390,6 +8383,7 @@ name = "systemprompt-web-extension"
 version = "0.70.0"
 dependencies = [
  "axum",
+ "clap",
  "systemprompt",
  "systemprompt-extension",
  "systemprompt-web-admin",
@@ -8407,30 +8401,21 @@ name = "systemprompt-web-jobs"
 version = "0.70.0"
 dependencies = [
  "async-trait",
- "chrono",
- "flate2",
- "futures-util",
- "hex",
- "serde",
- "serde_json",
  "serde_yaml_ng",
- "sha2 0.10.9",
  "sqlx",
  "systemprompt",
- "systemprompt-web-admin",
  "systemprompt-web-content",
  "systemprompt-web-shared",
- "systemprompt-web-site",
  "thiserror 2.0.21",
  "tokio",
  "tracing",
- "uuid",
 ]
 
 [[package]]
 name = "systemprompt-web-shared"
 version = "0.70.0"
 dependencies = [
+ "async-trait",
  "axum",
  "chrono",
  "serde",
@@ -8439,6 +8424,7 @@ dependencies = [
  "sqlx",
  "systemprompt",
  "thiserror 2.0.21",
+ "tokio",
  "tracing",
  "url",
  "urlencoding",
@@ -8455,7 +8441,6 @@ dependencies = [
  "serde_yaml_ng",
  "sqlx",
  "systemprompt",
- "systemprompt-web-admin",
  "systemprompt-web-shared",
  "thiserror 2.0.21",
  "tracing",
@@ -8464,6 +8449,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-wire"
 version = "0.87.0"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=f61601289d76c8a0baabbce2f1b2540dc21c8513#f61601289d76c8a0baabbce2f1b2540dc21c8513"
 dependencies = [
  "bytes",
  "futures-util",
@@ -9123,34 +9109,6 @@ checksum = "23b082222b4f6619906941c17eb2297fff4c2fb96cb60164170522942a200bd8"
 dependencies = [
  "outref",
  "vsimd",
-]
-
-[[package]]
-name = "validator"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3d68c6633c483df6780cc5277a417c7c2d1bceee2649d06c8ab6b0fd2dd3c81"
-dependencies = [
- "idna",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "url",
- "validator_derive",
-]
-
-[[package]]
-name = "validator_derive"
-version = "0.20.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "240e4b81c20a1d6d50d1d7265c658dfbd204e8b9ac4d80f3c931f39462196335"
-dependencies = [
- "darling 0.23.0",
- "proc-macro-error3",
- "proc-macro2",
- "quote",
- "syn 2.0.119",
 ]
 
 [[package]]

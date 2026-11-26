@@ -497,7 +497,7 @@ schema-baseline VERSION="":
     git diff --stat -- "$fixture" | tail -1
     bash scripts/check-schema-baseline.sh
 
-# Point git at the tracked hooks (pre-commit patch-marker guard + fast gates).
+# Point git at the tracked hooks (pre-commit core-pin guard + fast gates).
 # There is deliberately NO pre-push hook: pushes to next are gated by CI
 # (gates.yml). Run once per clone.
 init-hooks:
@@ -1270,7 +1270,7 @@ flake-check:
 # migrate` follows the active CLI session, which can be a cloud profile. A
 # failed migrate stops the bump (no `|| true`).
 core-bump version:
-    @! grep -q '^\[patch\.crates-io\]' Cargo.toml || (echo "ERROR: [patch.crates-io] is active — publish core and re-comment it first" && exit 1)
+    @! grep -qF 'git = "https://github.com/systempromptio/systemprompt-core"' Cargo.toml tests/Cargo.toml || (echo "ERROR: core is pinned by git rev — drop the git and rev keys from every core entry in both manifests to adopt a published core" && exit 1)
     scripts/sync-release-version.sh {{version}}
     scripts/sync-core-version.sh {{version}}
     cargo update -w
@@ -1281,18 +1281,11 @@ core-bump version:
     just clippy
     @echo "core-bump {{version}} complete — then: just schema-baseline, CHANGELOG, just verify, push next, just release {{version}}"
 
-# Pin bridge/CORE_REF to a core `next` commit while [patch.crates-io] is
-# active (the sibling checkout's HEAD by default). CI checks that ref out.
-core-pin REF="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    ref="{{REF}}"
-    core="${CORE_REPO:-../systemprompt-core}"
-    [ -n "$ref" ] || ref="$(git -C "$core" rev-parse HEAD)"
-    # check-core-ref.sh accepts only a vX.Y.Z tag or a full 40-char SHA, so expand abbreviations.
-    case "$ref" in v[0-9]*) ;; *) ref="$(git -C "$core" rev-parse --verify "${ref}^{commit}")" ;; esac
-    printf '%s\n' "$ref" > bridge/CORE_REF
-    echo "bridge/CORE_REF = $ref"
+# Move the core pin: bridge/CORE_REF, every core git dependency in both
+# workspaces and both lockfiles (scripts/core-pin.sh). REF is a full SHA, or a
+# branch or tag of the public core repository resolved to one.
+core-pin REF:
+    bash scripts/core-pin.sh "{{REF}}"
 
 # Pin a kit's services bundle in a profile (default: the production profile)
 # to a GHCR digest, or to the kit's channel tag (e.g. `stable`) so every
@@ -1321,27 +1314,17 @@ kit-export MARKETPLACE DIR:
     fi
     exec "$BIN" "{{MARKETPLACE}}" "{{DIR}}" --services "{{justfile_directory()}}/services"
 
-# What "build next and next together" means in practice: while
-# [patch.crates-io] is active the server compiles against ../systemprompt-core
-# in place, so the only way a deploy can ship exactly the core CI gates is if
-# that checkout is clean and sits at bridge/CORE_REF. Refuses otherwise; with
-# the patch inactive there is nothing to check.
+# A deploy ships the committed core pin, never a local override: refuses while
+# scripts/core-patch.sh has the manifests pointing at a checkout, and checks
+# the pin against bridge/CORE_REF otherwise.
 core-guard:
     #!/usr/bin/env bash
     set -euo pipefail
-    grep -qE '^\[patch\.crates-io\]' Cargo.toml || { echo "core-guard: patch inactive; building against the published core"; exit 0; }
-    core="${CORE_REPO:-../systemprompt-core}"
-    # -e, not -d: a worktree's .git is a file, and a detached worktree is the sanctioned clean checkout.
-    [ -e "$core/.git" ] || { echo "core-guard: no core checkout at $core" >&2; exit 1; }
-    expected="$(tr -d '[:space:]' < bridge/CORE_REF)"
-    head="$(git -C "$core" rev-parse HEAD)"
-    [ "$head" = "$expected" ] || { echo "core-guard: $core is at ${head:0:12}, bridge/CORE_REF pins ${expected:0:12}; commit and 'just core-pin' first" >&2; exit 1; }
-    dirty="$(git -C "$core" status --porcelain --untracked-files=all)"
-    [ -z "$dirty" ] || { echo "core-guard: $core has uncommitted changes; commit them on core next (or set them aside) before deploying:" >&2; echo "$dirty" >&2; exit 1; }
-    echo "core-guard: $core clean at ${head:0:12} == bridge/CORE_REF"
+    [ "$(bash scripts/core-patch.sh status)" = pin ] || { echo "core-guard: a local core override is on; scripts/core-patch.sh off before deploying" >&2; exit 1; }
+    bash scripts/check-core-ref.sh
 
-# Clone systemprompt-core beside this repo when absent (the patch-active build
-# and core's contract gates need it), leave local work alone, and compare a
+# Clone systemprompt-core beside this repo when absent (core's contract gates
+# and a local override need it), leave local work alone, and compare a
 # clean checkout with bridge/CORE_REF: a mismatch is fatal by default and a
 # warning with MISMATCH=warn. It never moves the checkout — updating here
 # could mix a server built from one core with gates run against another.

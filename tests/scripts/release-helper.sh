@@ -50,15 +50,15 @@ mock_gh() {
 }
 git() { mock_git "$@"; }
 gh() { mock_gh "$@"; }
-# `next` normally carries active sibling-core patches, while release.sh quite
+# `next` normally pins core by git rev, while release.sh quite
 # correctly accepts only the published-core candidate produced at the release
 # boundary. This harness mocks that frozen candidate's git/GitHub state; mock
 # only the patch-presence probe as well, rather than requiring the live branch
 # under test to be in main's published-core shape.
 grep() {
     if [ "$#" -eq 4 ] \
-        && [ "$1" = -q ] \
-        && [ "$2" = '^\[patch\.crates-io\]' ] \
+        && [ "$1" = -qE ] \
+        && [ "$2" = '^\[patch[.]|git = "https://github.com/systempromptio/systemprompt-core"' ] \
         && [ "$3" = Cargo.toml ] \
         && [ "$4" = tests/Cargo.toml ]; then
         return 1

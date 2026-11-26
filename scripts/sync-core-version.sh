@@ -17,7 +17,7 @@
 #                              -marketplace/-extension/-api/-evaluation
 #   tests/Cargo.toml           the same set (separate workspace)
 #   any other systemprompt* pin in a Cargo.toml (residual sweep)
-#   bridge/CORE_REF            v<version>, when [patch.crates-io] is inactive
+#   bridge/CORE_REF            v<version>, when core is not pinned by git rev
 #
 # macOS + Linux compatible (no GNU-only sed flags).
 set -eu
@@ -57,7 +57,7 @@ check_or_apply() { # $1=file $2=sed-expr $3=expect-regex $4=label
 # Table-form pins, in both workspaces. `systemprompt` itself is required in
 # each; the others are moved wherever they are declared. tests/ is excluded
 # from the root workspace and carries its own copies — nothing else rewrites
-# them, and a stale pin there silently disables that workspace's patch.
+# them, and a stale pin there resolves a different core than the root.
 CRATES="systemprompt systemprompt-security systemprompt-users systemprompt-content systemprompt-marketplace systemprompt-extension systemprompt-api systemprompt-evaluation"
 for manifest in Cargo.toml tests/Cargo.toml; do
     for crate in $CRATES; do
@@ -90,9 +90,9 @@ if [ -n "$stale" ]; then
     [ "$MODE" = "--check" ] || exit 1
 fi
 
-# bridge/CORE_REF names the core CI checks out beside this repo. With patches
-# active it is a core SHA (just core-pin); published-core mode needs the tag.
-if ! grep -qE '^\[patch\.crates-io\]' Cargo.toml; then
+# bridge/CORE_REF names the core CI checks out beside this repo. With core
+# pinned by git rev it is that SHA (just core-pin); published-core mode needs the tag.
+if ! grep -qF 'git = "https://github.com/systempromptio/systemprompt-core"' Cargo.toml; then
     if [ "$MODE" = "--check" ]; then
         [ "$(tr -d '[:space:]' < bridge/CORE_REF)" = "v$VERSION" ] || {
             echo "DRIFT: bridge/CORE_REF is $(tr -d '[:space:]' < bridge/CORE_REF), expected v$VERSION"

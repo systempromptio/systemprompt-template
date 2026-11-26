@@ -22,7 +22,7 @@ divergence.
 just core-bump X.Y.Z
 ```
 
-This refuses to run with a live `[patch.crates-io]` override, then runs
+This refuses to run while core is pinned by git rev, then runs
 `scripts/sync-release-version.sh X.Y.Z` (workspace version, Chart.yaml
 appVersion + chart version + artifacthub annotation/changelog, the exact-pin
 deploy files — CasaOS compose, DigitalOcean compose + Packer default — and

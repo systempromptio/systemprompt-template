@@ -40,12 +40,12 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.87.0", default-features = false, features = ["core"] }
-systemprompt-security = { version = "0.87.0" }
-systemprompt-users = { version = "0.87.0" }
-systemprompt-content = { version = "0.87.0" }
-systemprompt-marketplace = { version = "0.87.0" }
-systemprompt-extension = { version = "0.87.0" }
+systemprompt = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513", default-features = false, features = ["core"] }
+systemprompt-security = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
+systemprompt-users = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
+systemprompt-content = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
+systemprompt-marketplace = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
+systemprompt-extension = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -293,68 +293,3 @@ flavour-full = [
 
 [lints]
 workspace = true
-
-
-
-# The override set for building against an unreleased systemprompt-core. It is
-# inert here; `scripts/core-patch.sh on` renames the table to [patch.crates-io]
-# in the working tree and hides the manifests from git.
-[workspace.metadata.unreleased-core-patch]
-systemprompt-provider-contracts = { path = "../core-f-compose/crates/shared/provider-contracts" }
-systemprompt-identifiers = { path = "../core-f-compose/crates/shared/identifiers" }
-systemprompt-traits = { path = "../core-f-compose/crates/shared/traits" }
-systemprompt-models = { path = "../core-f-compose/crates/shared/models" }
-systemprompt-wire = { path = "../core-f-compose/crates/shared/wire" }
-systemprompt-manifest = { path = "../core-f-compose/crates/shared/manifest" }
-systemprompt-client = { path = "../core-f-compose/crates/shared/client" }
-systemprompt-extension = { path = "../core-f-compose/crates/shared/extension" }
-systemprompt-template-provider = { path = "../core-f-compose/crates/shared/template-provider" }
-systemprompt-database = { path = "../core-f-compose/crates/infra/database" }
-systemprompt-storage = { path = "../core-f-compose/crates/infra/storage" }
-systemprompt-logging = { path = "../core-f-compose/crates/infra/logging" }
-systemprompt-config = { path = "../core-f-compose/crates/infra/config" }
-systemprompt-events = { path = "../core-f-compose/crates/infra/events" }
-systemprompt-security = { path = "../core-f-compose/crates/infra/security" }
-systemprompt-governance = { path = "../core-f-compose/crates/infra/governance" }
-systemprompt-cloud = { path = "../core-f-compose/crates/infra/cloud" }
-systemprompt-loader = { path = "../core-f-compose/crates/infra/loader" }
-systemprompt-users = { path = "../core-f-compose/crates/domain/users" }
-systemprompt-oauth = { path = "../core-f-compose/crates/domain/oauth" }
-systemprompt-files = { path = "../core-f-compose/crates/domain/files" }
-systemprompt-analytics = { path = "../core-f-compose/crates/domain/analytics" }
-systemprompt-content = { path = "../core-f-compose/crates/domain/content" }
-systemprompt-mcp = { path = "../core-f-compose/crates/domain/mcp" }
-systemprompt-ai = { path = "../core-f-compose/crates/domain/ai" }
-systemprompt-agent = { path = "../core-f-compose/crates/domain/agent" }
-systemprompt-templates = { path = "../core-f-compose/crates/domain/templates" }
-systemprompt-marketplace = { path = "../core-f-compose/crates/domain/marketplace" }
-systemprompt-slack = { path = "../core-f-compose/crates/domain/slack" }
-systemprompt-teams = { path = "../core-f-compose/crates/domain/teams" }
-systemprompt-notifications = { path = "../core-f-compose/crates/domain/notifications" }
-systemprompt-brain = { path = "../core-f-compose/crates/domain/brain" }
-systemprompt-runtime = { path = "../core-f-compose/crates/app/runtime" }
-systemprompt-agent-runs = { path = "../core-f-compose/crates/app/agent-runs" }
-systemprompt-mcp-host = { path = "../core-f-compose/crates/app/mcp-host" }
-systemprompt-documents = { path = "../core-f-compose/crates/app/documents" }
-systemprompt-oauth-issuance = { path = "../core-f-compose/crates/app/oauth-issuance" }
-systemprompt-issues = { path = "../core-f-compose/crates/app/issues" }
-systemprompt-scheduler = { path = "../core-f-compose/crates/app/scheduler" }
-systemprompt-generator = { path = "../core-f-compose/crates/app/generator" }
-systemprompt-gateway = { path = "../core-f-compose/crates/app/gateway" }
-systemprompt-api = { path = "../core-f-compose/crates/entry/api" }
-systemprompt-cli = { path = "../core-f-compose/crates/entry/cli" }
-systemprompt-slack-entry = { path = "../core-f-compose/crates/entry/slack" }
-systemprompt-teams-entry = { path = "../core-f-compose/crates/entry/teams" }
-systemprompt-agent-runs-entry = { path = "../core-f-compose/crates/entry/agent-runs" }
-systemprompt-notifications-entry = { path = "../core-f-compose/crates/entry/notifications" }
-systemprompt-cloud-entry = { path = "../core-f-compose/crates/entry/cloud" }
-systemprompt-analytics-entry = { path = "../core-f-compose/crates/entry/analytics" }
-systemprompt-content-entry = { path = "../core-f-compose/crates/entry/content" }
-systemprompt-marketplace-entry = { path = "../core-f-compose/crates/entry/marketplace" }
-systemprompt-files-entry = { path = "../core-f-compose/crates/entry/files" }
-systemprompt-mcp-entry = { path = "../core-f-compose/crates/entry/mcp" }
-systemprompt-agent-entry = { path = "../core-f-compose/crates/entry/agent" }
-systemprompt-brain-entry = { path = "../core-f-compose/crates/entry/brain" }
-systemprompt-gateway-entry = { path = "../core-f-compose/crates/entry/gateway" }
-systemprompt-identity-entry = { path = "../core-f-compose/crates/entry/identity" }
-systemprompt = { path = "../core-f-compose/systemprompt" }
