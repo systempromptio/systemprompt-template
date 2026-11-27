@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Every systemprompt-* crate must resolve to ONE version across the three
-# lockfiles (root, tests/ and extensions/harness/). Each is its own workspace,
+# Every systemprompt-* crate must resolve to ONE version across the four
+# lockfiles (root, tests/, extensions/harness/ and extensions/mobile/core/).
+# Each is its own workspace,
 # so a `cargo update -w` in the root alone leaves the others on the previous
 # core: two copies of the same
 # crate at different versions then surface as an unrelated compile error
@@ -11,7 +12,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 lockfiles=()
-for lf in Cargo.lock tests/Cargo.lock extensions/harness/Cargo.lock bridge/Cargo.lock; do
+for lf in Cargo.lock tests/Cargo.lock extensions/harness/Cargo.lock extensions/mobile/core/Cargo.lock bridge/Cargo.lock; do
     [ -f "$lf" ] && lockfiles+=("$lf")
 done
 [ "${#lockfiles[@]}" -gt 0 ] || { echo "check-core-crate-versions: no lockfiles found" >&2; exit 1; }
@@ -38,7 +39,7 @@ drift="$(
 if [ -n "$drift" ]; then
     echo "check-core-crate-versions: systemprompt crates resolve to more than one version:" >&2
     printf '%s\n' "$drift" | awk '{ printf "  %-40s %-10s in%s\n", $1, $2, substr($0, length($1 $2) + 3) }' >&2
-    echo "fix: cargo update -w for the root, tests/Cargo.toml and extensions/harness/Cargo.toml manifests (see just core-bump)" >&2
+    echo "fix: cargo update -w for the root, tests/Cargo.toml, extensions/harness/Cargo.toml and extensions/mobile/core/Cargo.toml manifests (see just core-bump)" >&2
     exit 1
 fi
 

@@ -10,17 +10,17 @@ set -euo pipefail
 # (scripts/core-pin.sh). A local override (scripts/core-patch.sh on) adds a
 # [patch."<core repo>"] table of path entries into a checkout; a path patch of
 # either form ([patch.crates-io] or [patch."<url>"]) never enters a commit.
-# tests/ is a separate cargo workspace, so both manifests are guarded, and the
-# staged revs must match bridge/CORE_REF.
+# tests/ and extensions/mobile/core are separate cargo workspaces, so every
+# manifest is guarded, and the staged revs must match bridge/CORE_REF.
 violations=()
-for manifest in Cargo.toml tests/Cargo.toml; do
+for manifest in Cargo.toml tests/Cargo.toml extensions/mobile/core/Cargo.toml; do
   git diff --cached --name-only | grep -qx "$manifest" || continue
   if git show ":$manifest" 2>/dev/null \
      | awk '/^\[/ { live = ($0 ~ /^\[patch[.]/); next } live && /path = / { found = 1 } END { exit !found }'; then
     violations+=("$manifest stages a [patch] path entry (a local core override)")
   fi
 done
-if git diff --cached --name-only | grep -qxE 'Cargo\.toml|tests/Cargo\.toml|Cargo\.lock|tests/Cargo\.lock|bridge/CORE_REF' \
+if git diff --cached --name-only | grep -qxE '((tests|extensions/mobile/core)/)?Cargo\.(toml|lock)|bridge/CORE_REF' \
    && [ "${#violations[@]}" -eq 0 ] && ! bash scripts/core-pin.sh --check >/dev/null 2>&1; then
   violations+=("the core pin disagrees with bridge/CORE_REF (bash scripts/core-pin.sh --check)")
 fi
@@ -32,11 +32,12 @@ if (( ${#violations[@]} > 0 )); then
   exit 1
 fi
 
-# ── Formatting (whole-tree fmt check is still fast), both workspaces.
+# ── Formatting (whole-tree fmt check is still fast), every workspace.
 if git diff --cached --name-only | grep -q '\.rs$'; then
   if ! cargo fmt --all -- --check >/dev/null 2>&1 \
-     || ! cargo fmt --manifest-path tests/Cargo.toml --all -- --check >/dev/null 2>&1; then
-    echo "✗ pre-commit blocked: cargo fmt --check fails. Run 'cargo fmt --all' (and with --manifest-path tests/Cargo.toml)." >&2
+     || ! cargo fmt --manifest-path tests/Cargo.toml --all -- --check >/dev/null 2>&1 \
+     || ! cargo fmt --manifest-path extensions/mobile/core/Cargo.toml --all -- --check >/dev/null 2>&1; then
+    echo "✗ pre-commit blocked: cargo fmt --check fails. Run 'cargo fmt --all' (and with --manifest-path tests/Cargo.toml and extensions/mobile/core/Cargo.toml)." >&2
     exit 1
   fi
 fi

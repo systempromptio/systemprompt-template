@@ -40,14 +40,14 @@ table), so core's inter-crate dependencies resolve inside that one git source
 and each lockfile holds exactly one copy of every `systemprompt-*` crate. Both
 lockfiles are committed resolved against it, so a fresh clone builds with no
 sibling checkout. Moving the pin is one command: `just core-pin <sha|branch>`
-(`scripts/core-pin.sh`: writes CORE_REF, rewrites every entry, re-resolves
-both locks). `scripts/core-pin.sh --check` (inside `scripts/check-core-ref.sh`,
+(`scripts/core-pin.sh`: writes CORE_REF, rewrites every entry in the root,
+`tests/` and `extensions/mobile/core` manifests, re-resolves their locks). `scripts/core-pin.sh --check` (inside `scripts/check-core-ref.sh`,
 a lint gate) fails on another rev, a registry or duplicate core crate in a
 lock, or a `[patch]` table. Push the core commit before pinning it.
 
 **Local core override.** `scripts/core-patch.sh on <core checkout>` appends a
 `[patch."<core url>"]` table of path entries (one per core crate each lockfile
-resolves) to both manifests and hides the four
+resolves) to the three manifests and hides the six
 manifests/locks from git (skip-worktree); `scripts/core-patch.sh off` restores
 the committed pin; `status` prints `pin` or `path`. While it is on,
 `scripts/flavour-build.sh` passes the checkout as the `core` BuildKit context
@@ -292,35 +292,52 @@ systemprompt core skills show --help
 
 ## Mobile
 
-The phone apps are the `mobile` flavour (`artefact: mobile`). They are not
-Rust and not part of any cargo workspace; `just build`, `just clippy` and the
-server image never touch them.
+The phone apps are the `mobile` flavour (`artefact: mobile`). The apps are
+Kotlin and Swift over one Rust binding library, `extensions/mobile/core`: a
+cargo workspace of its own (its own `Cargo.lock`, the root lint table
+copied), excluded from the root workspace. `just build`, `just clippy` and
+the server image never touch any of it. Build that crate with
+`CARGO_TARGET_DIR` inside `extensions/mobile/core/target`, as the scripts do.
 
 ```
 extensions/mobile/android/   Gradle project (Kotlin DSL, wrapper committed), :app, Jetpack Compose
 extensions/mobile/ios/       Mobile.xcodeproj (scheme Mobile), SwiftUI
-extensions/mobile/shared/    toolchain.env (every pin), build-android.sh, build-ios.sh, screens.yaml
+extensions/mobile/core/      the binding crate: links core's systemprompt-mobile at bridge/CORE_REF, adds the fork's own exports
+extensions/mobile/shared/    toolchain.env (every pin), env.sh (the Rust library step), build-android.sh, build-ios.sh, stub-instance.py, screens.yaml
 flavours/mobile/             the flavour entry
 packaging/mobile/            signing templates only; no key is ever tracked
-scripts/mobile/              toolchain.sh, android-sdk.sh (shared by mobile.just and the Mobile workflow)
+scripts/mobile/              toolchain.sh, android-sdk.sh, rust-targets.sh, android-emulator.sh, ios-tools.sh
 ```
 
 ```bash
 just mobile-toolchain         # pins, what this machine has, pin drift
-just mobile-android-check     # Android lint, ktlint, detekt, JVM unit tests (warnings are errors)
+just mobile-android-library   # cargo ndk for three ABIs into jniLibs, then the generated Kotlin
+just mobile-android-check     # rustfmt + clippy on core/; Android lint, ktlint, detekt, JVM unit tests (warnings are errors)
 just mobile-android           # debug APK
 just mobile-android-install   # adb install + launch on the connected device or emulator
+just mobile-android-emulator  # headless emulator from the pinned image (stop: ... stop)
+just mobile-android-test      # instrumented tests against shared/stub-instance.py
 just mobile-ios               # simulator build, unsigned
 just mobile-ios-check         # SwiftLint + swift-format
 ```
 
+The generated Kotlin (`android/app/build/generated/uniffi/`) and the `.so`
+files (`android/app/src/main/jniLibs/`) are build output, never committed;
+the Android app does not compile until `build-android.sh` has made them. The
+core rev the library links moves with `just core-pin`, never by hand. On
+Android the library must be given the application context before its first
+HTTPS request (`MobileApplication` → `NativeLibrary.initialisePlatform`,
+exported by `core/src/android.rs` under that class's name: rename both
+together). The iOS app does not link the library yet.
+
 **iOS builds only on macOS**; elsewhere the two iOS recipes refuse. Android
-needs JDK 17 and `ANDROID_HOME` (or the SDK in its default place). The two
+needs JDK 17, `ANDROID_HOME` (or the SDK in its default place) with the
+pinned NDK, the three Android Rust targets and cargo-ndk. The two
 apps mirror each other's structure and names: make a change in both. A
 version moves in `shared/toolchain.env` and the file `toolchain.sh` names
 together. Every user-visible string comes from the string catalogue
 (`strings.xml`, `Localizable.xcstrings`), and the app does no networking of
-its own. The reference app id is `io.systemprompt.mobile`.
+its own: a view model calls the generated API. The reference app id is `io.systemprompt.mobile`.
 
 ---
 

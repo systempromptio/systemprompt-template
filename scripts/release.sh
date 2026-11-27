@@ -41,7 +41,7 @@ push_tag() {
 [ -z "$(git status --porcelain)" ] || die 'working tree is not clean'
 branch="$(git branch --show-current)"
 [ -z "$branch" ] || [ "$branch" = next ] || die 'use next or a detached release worktree'
-! grep -qE '^\[patch[.]|git = "https://github.com/systempromptio/systemprompt-core"' Cargo.toml tests/Cargo.toml || die 'published releases cannot pin core by git rev or patch it'
+! grep -qE '^\[patch[.]|git = "https://github.com/systempromptio/systemprompt-core"' Cargo.toml tests/Cargo.toml extensions/mobile/core/Cargo.toml || die 'published releases cannot pin core by git rev or patch it'
 scripts/sync-release-version.sh "$version" --check
 scripts/sync-core-version.sh --check
 bash scripts/check-core-ref.sh

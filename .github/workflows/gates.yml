@@ -302,7 +302,7 @@ jobs:
         timeout-minutes: 10
         run: |
           set -uo pipefail
-          for w in . tests; do
+          for w in . tests extensions/mobile/core; do
             for attempt in 1 2 3; do
               cargo deny --manifest-path "$w/Cargo.toml" fetch && continue 2
               echo "::warning::cargo deny fetch for $w failed (attempt $attempt); retrying"
@@ -314,7 +314,7 @@ jobs:
         timeout-minutes: 10
         run: |
           set -euo pipefail
-          for w in . tests; do
+          for w in . tests extensions/mobile/core; do
             echo "==> cargo deny: $w"
             cargo deny --offline --manifest-path "$w/Cargo.toml" check
           done

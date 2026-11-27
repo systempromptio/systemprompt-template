@@ -1,12 +1,3 @@
-- `scripts/flavour-build.sh`, `flavour-smoke.sh`, `flavour-metrics.sh` and
-  `flavour-setup.sh` exit early for every flavour that is not an image, not
-  only for `desktop`, through one `flavour_not_image` helper in
-  `scripts/lib/flavour.sh`; a mobile flavour is told the phone apps are built
-  by the `mobile-*` recipes. Before, a new artefact kind would have fallen
-  through to the image build.
-- The `Harness` workflow's pull-request path filter is `packaging/harness/**`
-  instead of `packaging/**`, so a change to `packaging/mobile/` no longer
-  starts the desktop jobs.
 # Changelog
 
 All notable changes to this repository are recorded here, newest first.
@@ -488,7 +479,65 @@ Conventions (strict — hold every entry to them):
   `mobile-android-install`, `mobile-ios` and `mobile-ios-check`; the iOS
   recipes refuse anywhere but macOS.
 
+- **The Android app calls the shared Rust library.** `extensions/mobile/core`
+  is a new cargo workspace of one crate, excluded from the root workspace like
+  `tests/` and `extensions/harness`, that links core's `systemprompt-mobile`
+  crate at the rev in `bridge/CORE_REF`, adds the fork's own annotated
+  namespace and builds the one library a phone loads (a shared library per
+  Android ABI, a static library for iOS). `shared/build-android.sh` compiles
+  it with cargo-ndk for arm64-v8a, armeabi-v7a and x86_64 into the app's
+  `jniLibs`, then generates the Kotlin from that library with the crate's own
+  `uniffi-bindgen` binary into the app's build directory; neither is tracked.
+  The app's first real screen, "enter an instance" under `feature/sign-in`,
+  takes an address, calls `Instances.discover` through the generated code and
+  shows the instance's display name, its sign-in hint and where it offers each
+  platform's app, or one message per error the library can return, with the
+  library's and core's versions from `diagnostics()` beneath. The Kotlin does
+  no networking: a view model calls the generated API through a small
+  interface a unit test fakes. The application class loads the library and
+  hands it the application context once, which the library's certificate
+  verifier needs on Android before the first HTTPS request. The app now asks
+  for the `INTERNET` permission; plain HTTP is permitted in the debug build
+  only, for a development instance on a loopback or private address. The iOS
+  app does not link the library yet.
+- **An instrumented discovery test, a stub instance and an emulator recipe.**
+  `extensions/mobile/shared/stub-instance.py` serves the discovery document
+  and nothing else. `just mobile-android-emulator` creates and starts a
+  headless emulator from the pinned system image, `just mobile-android-test`
+  runs the instrumented tests against the stub (the app shows the core
+  version, then discovers the stub from `http://10.0.2.2:8765`), and
+  `just mobile-stub-instance`, `mobile-android-library` and
+  `mobile-rust-targets` do what they say. No workflow runs the emulator.
+
 ### Changed
+- The core pin covers three workspaces. `scripts/core-pin.sh` writes and
+  checks the binding crate's manifest and lockfile
+  (`extensions/mobile/core`) with the root's and `tests/`, and
+  `scripts/core-patch.sh` switches it to a local checkout with them. The same
+  manifest and lockfile are covered by `scripts/check-core-crate-versions.sh`,
+  `scripts/check-msrv.sh` (the declared number only),
+  `scripts/sync-release-version.sh`, `.githooks/pre-commit`,
+  `scripts/release.sh` and `scripts/validate-release.sh`; `just machete`,
+  `just deny`, `just audit` and the cargo-deny steps in `gates.yml` scan it;
+  and `just preflight-static` checks its formatting.
+- The `Mobile` workflow's Linux job installs the NDK, the Android Rust
+  targets and a pinned cargo-ndk, builds the shared library for every Android
+  ABI from the pinned core, lints the binding crate (rustfmt, clippy with
+  warnings as errors) and then lints, unit-tests and builds the app against
+  the generated Kotlin. `scripts/mobile/toolchain.sh` also fails when the
+  NDK, JNA, coroutines, UniFFI or cargo-ndk pins disagree, or when the binding
+  crate's lockfile does not resolve core at `bridge/CORE_REF`.
+- `scripts/core-pin.sh` edits the manifests through a copy instead of
+  `sed -i`, which takes different arguments on macOS and Linux.
+- `scripts/flavour-build.sh`, `flavour-smoke.sh`, `flavour-metrics.sh` and
+  `flavour-setup.sh` exit early for every flavour that is not an image, not
+  only for `desktop`, through one `flavour_not_image` helper in
+  `scripts/lib/flavour.sh`; a mobile flavour is told the phone apps are built
+  by the `mobile-*` recipes. Before, a new artefact kind would have fallen
+  through to the image build.
+- The `Harness` workflow's pull-request path filter is `packaging/harness/**`
+  instead of `packaging/**`, so a change to `packaging/mobile/` no longer
+  starts the desktop jobs.
 - The web extension's schema is a feature-gated contribution: a schema file
   reading an optional member's table is declared in
   `extensions/web/src/schemas.rs` only under the feature that links that

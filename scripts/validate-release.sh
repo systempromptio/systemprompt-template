@@ -10,8 +10,9 @@ bash scripts/sync-release-version.sh "${tag#v}" --check
 # A core git dependency (the git-rev pin), a [patch] table (a local
 # override), or a ../systemprompt-core path resolves core from somewhere other
 # than crates.io.
-if grep -qE '^\[patch[.]|^[^#]*git = "https://github.com/systempromptio/systemprompt-core"|^[^#]*path.*(\.\./)+systemprompt-core' Cargo.toml tests/Cargo.toml; then
+if grep -qE '^\[patch[.]|^[^#]*git = "https://github.com/systempromptio/systemprompt-core"|^[^#]*path.*(\.\./)+systemprompt-core' Cargo.toml tests/Cargo.toml extensions/mobile/core/Cargo.toml; then
     echo "Release must resolve core from crates.io" >&2; exit 1
 fi
 cargo metadata --locked --no-deps --format-version 1 >/dev/null
 cargo metadata --manifest-path tests/Cargo.toml --locked --no-deps --format-version 1 >/dev/null
+cargo metadata --manifest-path extensions/mobile/core/Cargo.toml --locked --no-deps --format-version 1 >/dev/null

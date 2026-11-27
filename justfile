@@ -330,6 +330,7 @@ preflight-static:
     version="$(sed -n 's/^version = "\([0-9.]*\)"/\1/p' Cargo.toml | head -1)"
     check "fmt (root)" cargo fmt --all -- --check
     check "fmt (tests)" cargo fmt --manifest-path tests/Cargo.toml --all -- --check
+    check "fmt (mobile)" cargo fmt --manifest-path extensions/mobile/core/Cargo.toml --all -- --check
     check "sqlx cache" bash scripts/check-sqlx-cache.sh
     check "release version pins" bash scripts/sync-release-version.sh "$version" --check
     check "core version pins" bash scripts/sync-core-version.sh --check
@@ -537,10 +538,11 @@ file-size:
 lint-repo-hygiene:
     bash scripts/lint-repo-hygiene.sh
 
-# Every Cargo workspace in the repo. `tests/` is excluded from the root
-# workspace, so a bare root-level scan silently skips its lockfile. Keep in
-# sync with `git ls-files '*Cargo.lock'`.
-workspaces := ". tests"
+# Every Cargo workspace the supply-chain recipes scan. `tests/` and the phone
+# apps' binding library (`extensions/mobile/core`) are excluded from the root
+# workspace, so a bare root-level scan silently skips their lockfiles. The
+# desktop shell (`extensions/harness`) has its own workflow.
+workspaces := ". tests extensions/mobile/core"
 
 # Detect unused dependencies across every workspace
 machete:
@@ -1293,8 +1295,9 @@ core-bump version:
     just clippy
     @echo "core-bump {{version}} complete — then: just schema-baseline, CHANGELOG, just verify, push next, just release {{version}}"
 
-# Move the core pin: bridge/CORE_REF, every core git dependency in both
-# workspaces and both lockfiles (scripts/core-pin.sh). REF is a full SHA, or a
+# Move the core pin: bridge/CORE_REF, every core git dependency in the root,
+# tests/ and extensions/mobile/core workspaces and their lockfiles
+# (scripts/core-pin.sh). REF is a full SHA, or a
 # branch or tag of the public core repository resolved to one.
 core-pin REF:
     bash scripts/core-pin.sh "{{REF}}"

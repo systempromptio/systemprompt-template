@@ -3,9 +3,14 @@ name: Mobile
 # The phone apps (extensions/mobile) on the two systems that build them: the
 # Android app on Linux and the iOS app on macOS. Each job prints the pinned
 # toolchain and fails on pin drift, runs the formatter and linters with every
-# warning an error, and builds the blank app: a debug APK, and a simulator
-# build. Android also runs its JVM unit tests. Both builds are unsigned, no
-# job reads a secret, and no artefact is stored.
+# warning an error, and builds the app: a debug APK, and a simulator build.
+# The Android job first builds the shared Rust library (extensions/mobile/core)
+# for every Android ABI from the pinned core and generates its Kotlin, so a
+# binding surface the app no longer compiles against fails here; it also
+# lints that crate and runs the JVM unit tests. The instrumented tests need an
+# emulator and run locally (just mobile-android-test), not here. The iOS app
+# does not link the library yet. Both builds are unsigned, no job reads a
+# secret, and no artefact is stored.
 
 on:
   push:
@@ -17,6 +22,7 @@ on:
       - "packaging/mobile/**"
       - "scripts/mobile/**"
       - "mobile.just"
+      - "bridge/CORE_REF"
       - ".github/workflows/mobile.yml"
   workflow_dispatch:
 
@@ -27,11 +33,17 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  CARGO_TERM_COLOR: always
+  # Tool pin: extensions/mobile/shared/toolchain.env holds the same number
+  # (MOBILE_CARGO_NDK) and scripts/mobile/toolchain.sh fails when they differ.
+  CARGO_NDK_VERSION: "4.1.2"
+
 jobs:
   android:
-    name: Android (lint, unit tests, debug APK)
+    name: Android (Rust library, lint, unit tests, debug APK)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -40,14 +52,27 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Install the pinned Android platform and build tools
-        run: bash scripts/mobile/android-sdk.sh
+      - name: Install the pinned Android platform, build tools and NDK
+        run: bash scripts/mobile/android-sdk.sh --ndk
+        timeout-minutes: 15
+      - name: Add the Android Rust targets to the pinned toolchain
+        run: bash scripts/mobile/rust-targets.sh android
         timeout-minutes: 10
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        with:
+          tool: cargo-ndk@${{ env.CARGO_NDK_VERSION }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: |
+            extensions/mobile/core -> target
       - run: bash scripts/mobile/toolchain.sh
         timeout-minutes: 5
+      - name: Rust library for every Android ABI, and its Kotlin
+        run: bash extensions/mobile/shared/build-android.sh library
+        timeout-minutes: 30
       - name: Lint and unit tests
         run: bash extensions/mobile/shared/build-android.sh check
-        timeout-minutes: 20
+        timeout-minutes: 30
       - name: Debug APK
         run: bash extensions/mobile/shared/build-android.sh assemble
         timeout-minutes: 15

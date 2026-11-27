@@ -5,8 +5,9 @@ the one flavour that produces neither a server image nor desktop installers,
 which `artefact: mobile` in `flavour.yaml` says.
 
 It is built from `extensions/mobile`, which holds an Xcode project
-(`ios/`), a Gradle project (`android/`) and the scripts they share
-(`shared/`). None of it is part of a cargo workspace. It names no root cargo
+(`ios/`), a Gradle project (`android/`), the Rust binding library both load
+(`core/`, a cargo workspace of its own) and the scripts they share
+(`shared/`). None of it is part of the root cargo workspace. It names no root cargo
 feature, ships no `services/` subtree and has no profile overlay:
 `flavour.yaml` holds `name`, `description`, `artefact` and `workspace`,
 and `scripts/flavour.py check` refuses the image keys here and requires the
@@ -14,8 +15,11 @@ two projects to exist.
 
 ## What works today
 
-Each app is a blank, themed screen showing the app name. The Android app
-builds, lints and passes its unit tests on Linux. The iOS project has never
+The Android app calls the shared Rust library through generated Kotlin: it
+shows the library's diagnostics and discovers an instance from an address
+typed into its one screen. It builds, lints and passes its unit tests on
+Linux. The iOS app is a blank, themed screen showing the app name and does
+not link the library yet. The iOS project has never
 been opened or built on a Mac; the `Mobile` workflow's macOS job is its first
 build.
 

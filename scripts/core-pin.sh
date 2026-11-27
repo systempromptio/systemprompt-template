@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Pins systemprompt-core by git rev. bridge/CORE_REF holds the one rev; every
-# core crate the root and tests/ manifests name (tests/ is a separate
-# workspace) is a git dependency on that rev, so core's own inter-crate
-# dependencies resolve inside the same git source and each lockfile carries
-# exactly one copy of every systemprompt-* crate.
-#   scripts/core-pin.sh <rev>    write CORE_REF and every entry, re-resolve both locks
+# core crate the root, tests/ and extensions/mobile/core manifests name (each
+# is a separate workspace) is a git dependency on that rev, so core's own
+# inter-crate dependencies resolve inside the same git source and each
+# lockfile carries exactly one copy of every systemprompt-* crate.
+#   scripts/core-pin.sh <rev>    write CORE_REF and every entry, re-resolve every lock
 #   scripts/core-pin.sh --check  fail on another rev, a registry or duplicate core crate, or an override
 set -euo pipefail
 cd "$(dirname "$0")/.."
 url=https://github.com/systempromptio/systemprompt-core
 ref_file=bridge/CORE_REF
-manifests=(Cargo.toml tests/Cargo.toml)
-locks=(Cargo.lock tests/Cargo.lock)
+manifests=(Cargo.toml tests/Cargo.toml extensions/mobile/core/Cargo.toml)
+locks=(Cargo.lock tests/Cargo.lock extensions/mobile/core/Cargo.lock)
 
 core_entries() {
     grep -E '^systemprompt[a-z-]* = \{' "$1" | grep -vE 'path = |workspace = true' || true
@@ -46,7 +46,7 @@ check() {
         [ -n "$(lock_sources "$l")" ] || { echo "core-pin: $l resolves no core crate from $ref" >&2; fail=1; }
     done
     [ "$fail" -eq 0 ] || exit 1
-    echo "core-pin: both workspaces resolve one copy of each core crate from $url at $ref"
+    echo "core-pin: every workspace (${manifests[*]}) resolves one copy of each core crate from $url at $ref"
 }
 
 case "${1:?usage: scripts/core-pin.sh <rev> | --check}" in
@@ -60,10 +60,15 @@ case "${1:?usage: scripts/core-pin.sh <rev> | --check}" in
         fi
         printf '%s\n' "$ref" > "$ref_file"
         for m in "${manifests[@]}"; do
-            sed -i -E "/^systemprompt[a-z-]* = \{.*git = \"$(printf '%s' "$url" | sed 's|[.]|[.]|g')\"/ s|rev = \"[0-9a-f]{40}\"|rev = \"$ref\"|" "$m"
+            # Why: the address is delimited with "#" because the URL holds
+            # slashes, and the edit goes through a copy because `sed -i` takes
+            # different arguments on macOS and Linux.
+            sed -E "\\#^systemprompt[a-z-]* = \{.*git = \"$(printf '%s' "$url" | sed 's|[.]|[.]|g')\"# s|rev = \"[0-9a-f]{40}\"|rev = \"$ref\"|" "$m" > "$m.pin"
+            mv "$m.pin" "$m"
         done
-        cargo metadata --format-version 1 >/dev/null
-        cargo metadata --manifest-path tests/Cargo.toml --format-version 1 >/dev/null
+        for m in "${manifests[@]}"; do
+            cargo metadata --manifest-path "$m" --format-version 1 >/dev/null
+        done
         check
         ;;
 esac

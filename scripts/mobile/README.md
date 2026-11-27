@@ -7,12 +7,16 @@ inline in `mobile.just`.
 
 | Script | Does |
 |---|---|
-| `toolchain.sh` | prints the pins in `extensions/mobile/shared/toolchain.env` and what this machine has (JDK, Android SDK packages, Xcode); fails when the Gradle wrapper, the version catalog, the Xcode project or the workflow disagree with the pins |
+| `toolchain.sh` | prints the pins in `extensions/mobile/shared/toolchain.env` and what this machine has (JDK, Android SDK packages, Rust targets, cargo-ndk, Xcode); fails when the Gradle wrapper, the version catalog, the binding crate's manifest, the Xcode project or the workflow disagree with the pins, or when the binding crate's lockfile does not resolve core at `bridge/CORE_REF` |
 | `android-sdk.sh` | installs the pinned Android platform and build tools with `sdkmanager`, and the NDK with `--ndk` |
+| `rust-targets.sh` | adds the pinned Rust targets for `android` or `ios` to the toolchain `rust-toolchain.toml` names |
+| `android-emulator.sh` | creates the AVD from the pinned system image when it is missing and starts it headless (`start`, `run`, `wait`, `stop`); local only, no workflow runs it |
 | `ios-tools.sh` | installs the pinned SwiftLint binary, checked against its pinned sha256, into `extensions/mobile/ios/build/tools` (macOS only) |
 
 The build scripts themselves are part of the extension a fork takes with it:
-`extensions/mobile/shared/build-android.sh` and `build-ios.sh`.
+`extensions/mobile/shared/build-android.sh` and `build-ios.sh`, with the
+Rust library step in `env.sh` and the stub instance the instrumented test
+reads (`stub-instance.py`).
 
 Every script here runs on macOS and Linux: no GNU-only flags.
 

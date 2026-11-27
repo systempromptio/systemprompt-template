@@ -36,7 +36,9 @@
 #   tests/Cargo.toml      systemprompt/-security pins (separate workspace)
 #   extensions/harness/Cargo.toml  workspace version (separate workspace)
 #   extensions/mobile/    the phone apps' version: shared/toolchain.env,
-#                         the Android version catalog, the Xcode project
+#                         the Android version catalog, the Xcode project,
+#                         and the binding workspace (core/Cargo.toml and
+#                         its own package's entry in core/Cargo.lock)
 #   helm/gateway/Chart.yaml  appVersion + artifacthub images annotation
 #                            (chart `version:` is bumped separately on apply)
 #   deploy/casaos/docker-compose.yml                exact image tag
@@ -111,8 +113,19 @@ check_or_apply extensions/harness/Cargo.toml \
     "^version = \"$VERSION\"" \
     "shell workspace version"
 
-# The phone apps are not cargo packages; their version is written in three
-# places that scripts/mobile/toolchain.sh holds to each other.
+# The phone apps' binding library is a separate workspace too. Its lockfile
+# names its own package's version, so that entry moves with the manifest.
+check_or_apply extensions/mobile/core/Cargo.toml \
+    "s|^version = \"[0-9.]*\"|version = \"$VERSION\"|" \
+    "^version = \"$VERSION\"" \
+    "mobile binding workspace version"
+check_or_apply extensions/mobile/core/Cargo.lock \
+    "/^name = \"systemprompt-mobile-app\"$/{n;s|^version = \"[0-9.]*\"|version = \"$VERSION\"|;}" \
+    "^version = \"$VERSION\"" \
+    "mobile binding workspace lockfile entry"
+
+# The phone apps themselves are not cargo packages; their version is written
+# in three places that scripts/mobile/toolchain.sh holds to each other.
 check_or_apply extensions/mobile/shared/toolchain.env \
     "s|^MOBILE_APP_VERSION=[0-9.]*|MOBILE_APP_VERSION=$VERSION|" \
     "^MOBILE_APP_VERSION=$VERSION\$" \

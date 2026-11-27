@@ -3,12 +3,15 @@
 # local core checkout. `on` appends a [patch."<core repo>"] table of path
 # entries to both workspaces (the root and the separate tests/), one per core
 # crate that workspace's lockfile resolves, and hides the manifests and locks
-# from git; `off` restores the committed pin.
+# from git; `off` restores the committed pin. The phone apps' binding
+# workspace (extensions/mobile/core) is switched with them, so the library a
+# phone loads is built from the same checkout.
 #   scripts/core-patch.sh on <core checkout> | off | status
 set -euo pipefail
 cd "$(dirname "$0")/.."
 url=https://github.com/systempromptio/systemprompt-core
-files=(Cargo.toml Cargo.lock tests/Cargo.toml tests/Cargo.lock)
+mobile=extensions/mobile/core
+files=(Cargo.toml Cargo.lock tests/Cargo.toml tests/Cargo.lock "$mobile/Cargo.toml" "$mobile/Cargo.lock")
 
 status() {
     if grep -qxF "[patch.\"$url\"]" Cargo.toml; then echo path; else echo pin; fi
@@ -42,10 +45,12 @@ case "${1:-status}" in
     [ "$(status)" = pin ] || { echo "a local core override is already on; run scripts/core-patch.sh off first" >&2; exit 1; }
     root_table="$(patch_table Cargo.toml Cargo.lock "$core")"
     tests_table="$(patch_table tests/Cargo.toml tests/Cargo.lock "$core")"
+    mobile_table="$(patch_table "$mobile/Cargo.toml" "$mobile/Cargo.lock" "$core")"
     git update-index --skip-worktree "${files[@]}"
     printf '%s\n' "$root_table" >> Cargo.toml
     printf '%s\n' "$tests_table" >> tests/Cargo.toml
-    echo "core override on: $core; the root and tests/ manifests and locks are hidden from git"
+    printf '%s\n' "$mobile_table" >> "$mobile/Cargo.toml"
+    echo "core override on: $core; the root, tests/ and $mobile manifests and locks are hidden from git"
     ;;
   off)
     git update-index --no-skip-worktree "${files[@]}"

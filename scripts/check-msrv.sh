@@ -39,6 +39,17 @@ if [ "$root_msrv" != "$harness_msrv" ]; then
     echo "  extensions/harness/Cargo.toml: ${harness_msrv:-none}" >&2
     exit 1
 fi
+# Why: the phone apps' binding library is a separate workspace built by the
+# same toolchain file, so its declared MSRV must be the root's. Only the
+# number is compared: the crate is built for the phone targets by the Mobile
+# workflow, not here.
+mobile_msrv=$(read_msrv extensions/mobile/core/Cargo.toml)
+if [ "$root_msrv" != "$mobile_msrv" ]; then
+    echo "error: the root and mobile binding workspaces declare different MSRVs — they must agree:" >&2
+    echo "  Cargo.toml:                        $root_msrv" >&2
+    echo "  extensions/mobile/core/Cargo.toml: ${mobile_msrv:-none}" >&2
+    exit 1
+fi
 if [ -n "$bridge_msrv" ] && [ "$root_msrv" != "$bridge_msrv" ]; then
     echo "error: the two workspaces declare different MSRVs — they must agree:" >&2
     echo "  Cargo.toml:        $root_msrv" >&2
