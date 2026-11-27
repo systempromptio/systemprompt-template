@@ -3,9 +3,9 @@
 #   dist/<scheme>-<version>-windows-x64-setup.exe   the installer (packaging/harness/windows/harness.nsi)
 #   dist/SHA256SUMS                                 its SHA-256, in sha256sum format
 #
-# The identity table below is the packaging side of extensions/harness/brand/src/identity.rs (sp-brand): display name,
-# vendor, app id and URL scheme per brand and channel. The two change together; the version is read from sp-brand
-# itself. The cargo build turns on the matching sp-brand features, so the binary and its installer always carry the
+# The identity table below is the packaging side of extensions/harness/brand/src/identity.rs (systemprompt-harness-brand): display name,
+# vendor, app id and URL scheme per brand and channel. The two change together; the version is read from systemprompt-harness-brand
+# itself. The cargo build turns on the matching systemprompt-harness-brand features, so the binary and its installer always carry the
 # same identity.
 #
 # NSIS: -Nsis <dir>, else makensis on PATH, else NSIS's default install folder, else a pinned portable NSIS that is
@@ -116,8 +116,8 @@ function Write-Utf8NoBom([string]$Path, [string]$Text) {
 }
 
 if (-not $SkipBuild) {
-    $features = @($b.Feature, $c.Feature) | Where-Object { $_ } | ForEach-Object { "sp-brand/$_" }
-    $cargoArgs = @("build", "--release", "-p", "harness-desktop")
+    $features = @($b.Feature, $c.Feature) | Where-Object { $_ } | ForEach-Object { "systemprompt-harness-brand/$_" }
+    $cargoArgs = @("build", "--release", "-p", "systemprompt-harness-shell")
     if ($features) { $cargoArgs += @("--features", ($features -join ",")) }
     Write-Host "cargo $($cargoArgs -join ' ')"
     Push-Location $workspace

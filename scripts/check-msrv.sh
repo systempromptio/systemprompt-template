@@ -29,16 +29,21 @@ if [ -z "$root_msrv" ]; then
     echo "error: no rust-version in Cargo.toml" >&2
     exit 1
 fi
-# Why: the desktop shell is a separate workspace built by the same toolchain
-# file, so its declared MSRV must be the root's. Only the number is compared:
-# the workspace has no member to check until its first crate lands.
+# Why: the desktop shell is a separate workspace with its own toolchain file
+# (extensions/harness/rust-toolchain.toml): the window toolkit it pins does not
+# build on the root's nightly. Its declared MSRV must match the channel that
+# file pins, not the root's; the Harness workflow builds it.
 harness_msrv=$(read_msrv extensions/harness/Cargo.toml)
-if [ "$root_msrv" != "$harness_msrv" ]; then
-    echo "error: the root and shell workspaces declare different MSRVs — they must agree:" >&2
-    echo "  Cargo.toml:                    $root_msrv" >&2
-    echo "  extensions/harness/Cargo.toml: ${harness_msrv:-none}" >&2
-    exit 1
-fi
+harness_channel=$(grep -m1 '^channel = ' extensions/harness/rust-toolchain.toml | sed 's/.*"\(.*\)".*/\1/')
+case "$harness_channel" in
+    "${harness_msrv:-none}" | "${harness_msrv:-none}."*) ;;
+    *)
+        echo "error: the shell workspace's MSRV and its toolchain file disagree:" >&2
+        echo "  extensions/harness/Cargo.toml rust-version: ${harness_msrv:-none}" >&2
+        echo "  extensions/harness/rust-toolchain.toml:     ${harness_channel:-none}" >&2
+        exit 1
+        ;;
+esac
 # Why: the phone apps' binding library is a separate workspace built by the
 # same toolchain file, so its declared MSRV must be the root's. Only the
 # number is compared: the crate is built for the phone targets by the Mobile
