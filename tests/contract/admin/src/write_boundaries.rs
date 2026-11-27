@@ -23,7 +23,11 @@ async fn console_reader_cannot_revoke_sessions_or_post_to_admin_pages() {
     let (read, _) = app
         .call(Call::get(&sessions, Principal::ProjectManager))
         .await;
-    assert_eq!(read, StatusCode::OK, "console readers may inspect sessions");
+    assert_eq!(
+        read,
+        StatusCode::FORBIDDEN,
+        "a user's sessions are listed on the manage tier, not to console readers"
+    );
     let (write, _) = app
         .call(Call::json(
             "delete",
@@ -61,8 +65,24 @@ async fn console_reader_cannot_revoke_sessions_or_post_to_admin_pages() {
         StatusCode::FORBIDDEN,
         "console access must not authorize administrative mutations"
     );
+    // A conversation outside the caller's view answers exactly as a missing
+    // one does, so the URL is no oracle for other people's context ids.
+    let (evidence, body) = app
+        .call(Call::get(
+            "/admin/contexts/00000000-0000-4000-8000-000000000000",
+            Principal::ProjectManager,
+        ))
+        .await;
+    assert_eq!(
+        evidence,
+        StatusCode::NOT_FOUND,
+        "a context outside the view is indistinguishable from a missing one"
+    );
+    assert!(
+        body.contains("No conversation, AI request, or message rows match that context id."),
+        "the refusal is the not-found answer: {body}"
+    );
     for path in [
-        "/admin/contexts/00000000-0000-4000-8000-000000000000",
         "/admin/requests/unknown",
         "/admin/api/chain/unknown",
         "/admin/api/conversations/unknown/raw",

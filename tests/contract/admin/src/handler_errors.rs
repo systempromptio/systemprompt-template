@@ -147,7 +147,7 @@ const UNPROCESSABLE: StatusCode = StatusCode::UNPROCESSABLE_ENTITY;
 // Each owes a 404 whose body names what was not found. A 500 here is the
 // classic "the query returned no rows and the handler unwrapped it"; a 200
 // with a blank page is worse, because it asserts the record was deleted.
-const UNKNOWN_ID: [Case; 8] = [
+const UNKNOWN_ID: [Case; 7] = [
     get(
         "/admin/contexts/no-such-context",
         Expect::Status(NOT_FOUND),
@@ -167,11 +167,6 @@ const UNKNOWN_ID: [Case; 8] = [
         "/admin/traces/no-such-trace",
         Expect::Status(NOT_FOUND),
         Some("No spans found for that session or trace id."),
-    ),
-    get(
-        "/admin/departments/no-such-department",
-        Expect::Status(NOT_FOUND),
-        Some("Department not found"),
     ),
     get(
         "/api/public/admin/users/no-such-user/detail",
@@ -197,7 +192,7 @@ const UNKNOWN_ID: [Case; 8] = [
 // unparseable JSON is a 400, well-formed JSON of the wrong shape is a 422, and
 // a body with no `content-type` is a 415. Everything below them is the
 // handler's own validation, whose message is the marker.
-const MALFORMED: [Case; 17] = [
+const MALFORMED: [Case; 13] = [
     json(
         "post",
         "/api/public/admin/users",
@@ -219,35 +214,7 @@ const MALFORMED: [Case; 17] = [
         Expect::Status(BAD_REQUEST),
         None,
     ),
-    json(
-        "post",
-        "/api/public/admin/management/departments",
-        "{",
-        Expect::Status(BAD_REQUEST),
-        None,
-    ),
-    json(
-        "post",
-        "/api/public/admin/management/departments",
-        r#"{"description": "no name"}"#,
-        Expect::Status(UNPROCESSABLE),
-        None,
-    ),
     // Present but blank is the handler's business, not the extractor's.
-    json(
-        "post",
-        "/api/public/admin/management/departments",
-        r#"{"name": "   "}"#,
-        Expect::Status(BAD_REQUEST),
-        Some("name must not be empty"),
-    ),
-    json(
-        "put",
-        "/api/public/admin/management/departments/no-such-department",
-        r#"{"name": "Renamed"}"#,
-        Expect::Status(NOT_FOUND),
-        Some("Department not found"),
-    ),
     json(
         "post",
         "/api/public/admin/gateway/routes",
@@ -376,39 +343,27 @@ const HOOKS: [Case; 6] = [
 // The two planes refuse differently on purpose — the API answers 401/403 to a
 // caller that expects JSON, the SSR pages redirect a browser to sign in — so
 // the case demands refusal rather than a particular code.
-const UNAUTHENTICATED: [Case; 12] = [
+const UNAUTHENTICATED: [Case; 9] = [
     anon("post", "/api/public/admin/users", "{}"),
     anon("put", "/api/public/admin/users/someone", "{}"),
     anon("delete", "/api/public/admin/users/someone", "{}"),
     anon("patch", "/api/public/admin/gateway", "{}"),
     anon("post", "/api/public/admin/gateway/routes", "{}"),
     anon("put", "/api/public/admin/access-control/bulk", "{}"),
-    anon("post", "/api/public/admin/management/departments", "{}"),
-    anon("post", "/api/public/admin/users/someone/pats", "{}"),
-    anon("post", "/admin/tokens/pats", "{}"),
+    anon("post", "/admin/devices/pats", "{}"),
     non_admin("post", "/api/public/admin/users", "{}"),
-    non_admin("post", "/api/public/admin/management/departments", "{}"),
-    non_admin("post", "/admin/tokens/pats", "{}"),
+    non_admin("post", "/admin/devices/pats", "{}"),
 ];
 
 // A body with no `content-type` at all. `Json` refuses it rather than
 // guessing, which is a 415 — a distinct outcome from "the JSON was bad".
-const NO_CONTENT_TYPE: [Case; 3] = [
+const NO_CONTENT_TYPE: [Case; 2] = [
     Case {
         method: "post",
         path: "/api/public/admin/users",
         principal: Principal::Admin,
         content_type: None,
         body: Some("{}"),
-        expect: Expect::Status(UNSUPPORTED_MEDIA),
-        marker: None,
-    },
-    Case {
-        method: "post",
-        path: "/api/public/admin/management/departments",
-        principal: Principal::Admin,
-        content_type: None,
-        body: Some(r#"{"name": "Ops"}"#),
         expect: Expect::Status(UNSUPPORTED_MEDIA),
         marker: None,
     },

@@ -59,8 +59,8 @@ async fn an_admin_reads_the_two_halves_of_a_role_set() {
     );
     assert_eq!(
         json["directory_roles"],
-        serde_json::json!([]),
-        "local roles are not inferred to belong to a directory"
+        serde_json::json!(["user"]),
+        "a role with no manual grant behind it is the directory half"
     );
     db.cleanup().await;
 }
@@ -91,16 +91,14 @@ async fn an_admin_may_grant_an_ordinary_role() {
     assert_eq!(json["roles"], serde_json::json!(["developer", "user"]));
     assert_eq!(
         json["manual_roles"],
-        serde_json::json!(["developer", "user"]),
-        "local grants are recorded as manual roles"
+        serde_json::json!(["developer"]),
+        "only the difference from the directory half is recorded as a manual grant"
     );
     db.cleanup().await;
 }
 
-// Why: the template admin role retains its existing account-management
-// authority.
 #[tokio::test]
-async fn an_admin_retains_authority_to_grant_platform_admin() {
+async fn only_a_platform_admin_may_grant_platform_admin() {
     if !globals::init() {
         return;
     }
@@ -110,17 +108,32 @@ async fn an_admin_retains_authority_to_grant_platform_admin() {
     let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     let target = seed_user(&db.pool, "escalating", &["user"]).await;
+    let path = format!("/api/public/admin/users/{target}/roles");
+    let body = r#"{"roles":["user","platform_admin"]}"#;
 
-    let (status, body) = app
-        .call(Call::json(
-            "put",
-            &format!("/api/public/admin/users/{target}/roles"),
-            Principal::Admin,
-            r#"{"roles":["user","platform_admin"]}"#,
-        ))
+    let (status, refused) = app
+        .call(Call::json("put", &path, Principal::Admin, body))
         .await;
+    assert_eq!(status, StatusCode::FORBIDDEN, "body: {refused}");
+    assert!(
+        refused.contains("Only a platform admin may grant or revoke platform_admin"),
+        "the refusal names the rule: {refused}"
+    );
+    let roles: Vec<String> = sqlx::query_scalar("SELECT roles FROM users WHERE id = $1")
+        .bind(&target)
+        .fetch_one(&*db.pool)
+        .await
+        .expect("read back");
+    assert_eq!(
+        roles,
+        vec!["user".to_owned()],
+        "the refused grant wrote nothing"
+    );
 
-    assert_eq!(status, StatusCode::OK, "body: {body}");
+    let (status, granted) = app
+        .call(Call::json("put", &path, Principal::PlatformAdmin, body))
+        .await;
+    assert_eq!(status, StatusCode::OK, "body: {granted}");
     let roles: Vec<String> = sqlx::query_scalar("SELECT roles FROM users WHERE id = $1")
         .bind(&target)
         .fetch_one(&*db.pool)
@@ -129,15 +142,13 @@ async fn an_admin_retains_authority_to_grant_platform_admin() {
     assert_eq!(
         roles,
         vec!["platform_admin".to_owned(), "user".to_owned()],
-        "the grant persisted"
+        "the platform admin's grant persisted"
     );
     db.cleanup().await;
 }
 
-// Why: configured entitlements use free-text roles beyond the built-in console
-// tiers.
 #[tokio::test]
-async fn a_custom_role_is_persisted() {
+async fn an_unknown_role_is_refused() {
     if !globals::init() {
         return;
     }
@@ -157,10 +168,20 @@ async fn a_custom_role_is_persisted() {
         ))
         .await;
 
-    assert_eq!(status, StatusCode::OK, "body: {body}");
+    assert_eq!(status, StatusCode::FORBIDDEN, "body: {body}");
     assert!(
-        body.contains("supervisor"),
-        "the saved account retains the custom role: {body}"
+        body.contains("Unknown role 'supervisor'"),
+        "the refusal names the role: {body}"
+    );
+    let roles: Vec<String> = sqlx::query_scalar("SELECT roles FROM users WHERE id = $1")
+        .bind(&target)
+        .fetch_one(&*db.pool)
+        .await
+        .expect("read back");
+    assert_eq!(
+        roles,
+        vec!["user".to_owned()],
+        "the refused role was not stored"
     );
     db.cleanup().await;
 }

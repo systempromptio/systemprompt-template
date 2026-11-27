@@ -34,7 +34,7 @@ async fn bulk_judge_requeues_only_selected_contexts_in_the_requested_scope() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let inside_user = credentials.non_admin_user_id.clone();
     let admin_user_id = credentials.admin_user_id.clone();
     let inside = uuid::Uuid::new_v4().to_string();

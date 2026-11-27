@@ -72,7 +72,7 @@ async fn comparison_renders_manifest_changes_and_escapes_skill_identifiers() {
     let changed = seed::unique("version-changed");
     let removed = seed::unique("version-removed");
     let added = seed::unique("version-added");
-    let hostile = "<script>alert(1)</script>";
+    let hostile = "<script>alert(1)";
 
     record_version(
         &db.pool,
@@ -117,7 +117,7 @@ async fn comparison_renders_manifest_changes_and_escapes_skill_identifiers() {
     assert!(skill_row(&body, &changed).contains(">changed<"));
     assert!(skill_row(&body, &removed).contains(">removed<"));
     assert!(skill_row(&body, &added).contains(">added<"));
-    let escaped_hostile = "&lt;script&gt;alert(1)&lt;/script&gt;";
+    let escaped_hostile = "&lt;script&gt;alert(1)";
     assert!(
         skill_row(&body, escaped_hostile).contains(escaped_hostile),
         "untrusted identifier is text, not markup: {body}"

@@ -20,7 +20,7 @@ async fn login_redirects_existing_sessions_to_their_landing_page() {
         return;
     };
 
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (anonymous_status, _) = app.call(Call::get(LOGIN, Principal::Anonymous)).await;
@@ -33,7 +33,7 @@ async fn login_redirects_existing_sessions_to_their_landing_page() {
     ] {
         let (status, target) = app.redirect_of(Call::get(LOGIN, principal)).await;
         assert_eq!(status, StatusCode::SEE_OTHER, "{principal:?}");
-        assert_eq!(target, "/admin/", "{principal:?}");
+        assert_eq!(target, "/admin", "{principal:?}");
     }
 
     for principal in [

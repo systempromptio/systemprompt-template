@@ -176,14 +176,17 @@ async fn catalog_reads_and_detector_writes_reject_unprivileged_users() {
     let credentials = principal::provision(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
-    // Catalog reads require console access; detection writes audit events and
-    // requires a management role. An ordinary user cannot invoke either.
+    // Both sit on the console read tier, so an ordinary user is refused there;
+    // detection writes audit events and is narrowed to admins in its handler.
     for (path, message) in [
         (
             catalog_path(&seed::unique("someone-else")),
             "Role required: platform_admin, admin, project_manager",
         ),
-        (DETECT.to_owned(), "Role required: platform_admin, admin"),
+        (
+            DETECT.to_owned(),
+            "Role required: platform_admin, admin, project_manager",
+        ),
     ] {
         let (status, body) = app.call(Call::get(&path, Principal::NonAdmin)).await;
         assert_eq!(status, StatusCode::FORBIDDEN, "non-admin {path}: {body}");

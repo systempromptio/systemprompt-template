@@ -195,8 +195,8 @@ async fn govern_answers_two_hundred_with_a_decision_either_way() {
         failures.push("  a tool input carrying a credential produced no decision".to_owned());
     }
 
-    // The `plugin_id` query binding and an `agent_id` in the envelope are both
-    // carried into the audit row rather than rejected.
+    // A `plugin_id` query binding and an `agent_id` in the envelope are
+    // governed rather than rejected.
     let with_agent = format!(
         r#"{{"session_id":"{session}","cwd":"/tmp/contract","hook_event_name":"PreToolUse","agent_id":"contract-agent","agent_type":"Explore","tool_name":"Grep","tool_input":{{"pattern":"fn main"}},"tool_use_id":"tu-2"}}"#
     );
@@ -214,9 +214,9 @@ async fn govern_answers_two_hundred_with_a_decision_either_way() {
         status,
     );
 
-    // The envelope's agent id is a self-report: it must reach the audit blob
-    // as a claim and never the `agent_id` identity column, and it must not
-    // raise the scope the call is governed under.
+    // The envelope's agent id is a self-report: it must never reach the
+    // `agent_id` identity column, and core's audit snapshot records verified
+    // identity only, so it is not carried into the blob either.
     //
     // The audit row is written off the request path, so poll for the row
     // itself rather than for the claim. Polling for the claim would report a
@@ -250,9 +250,9 @@ async fn govern_answers_two_hundred_with_a_decision_either_way() {
                     "  a self-reported agent id landed in the identity column: {agent_id:?}"
                 ));
             }
-            if claimed_id.as_deref() != Some("contract-agent") {
+            if claimed_id.is_some() {
                 failures.push(format!(
-                    "  the self-reported id was not kept as a claim: {claimed_id:?}"
+                    "  the self-reported id was recorded in the audit blob: {claimed_id:?}"
                 ));
             }
         },

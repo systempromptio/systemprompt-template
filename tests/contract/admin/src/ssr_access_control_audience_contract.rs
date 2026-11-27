@@ -8,7 +8,7 @@ use crate::principal::Principal;
 use crate::{globals, principal, seed};
 use template_test_common::TempDb;
 
-const MARKETPLACE: &str = "enterprise-demo";
+const MARKETPLACE: &str = "acme-admin";
 
 async fn seed_developer_deny(db: &TempDb, reason: &str) {
     sqlx::query(
@@ -100,7 +100,7 @@ async fn audience_grid_groups_axes_and_marks_decisions() {
 
     let (status, body) = app
         .call(Call::get(
-            "/admin/access-control?tab=audience&entity=marketplace%2Fenterprise-demo",
+            "/admin/access-control?tab=audience&entity=marketplace%2Facme-admin",
             Principal::Admin,
         ))
         .await;

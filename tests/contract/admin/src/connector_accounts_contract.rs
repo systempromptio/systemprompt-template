@@ -2,13 +2,12 @@
 //! can be read or written.
 
 use axum::http::StatusCode;
-use base64::Engine;
 use systemprompt_web_admin::connector_oauth::{self, Grant, Provider};
 use systemprompt_web_admin::repositories::users::connector_credentials;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::{globals, principal};
+use crate::{globals, principal, tokens};
 use template_test_common::TempDb;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -56,35 +55,16 @@ async fn connector_consent_callbacks_enforce_owner_binding_and_single_use() {
     // The contract principal token carries a session id; materialise that
     // session so the connector's live-login guard reaches the consumed-state
     // checks instead of stopping at authentication.
-    let payload = admin_token.split('.').nth(1).expect("jwt payload");
-    let claims: serde_json::Value = serde_json::from_slice(
-        &base64::engine::general_purpose::URL_SAFE_NO_PAD
-            .decode(payload)
-            .expect("decode jwt payload"),
-    )
-    .expect("claims json");
-    let session = claims["session_id"].as_str().expect("session claim");
+    let session = tokens::session_of(&admin_token);
     sqlx::query("INSERT INTO user_sessions (session_id, user_id) VALUES ($1, $2)")
-        .bind(session)
+        .bind(session.as_str())
         .bind(admin_user.as_str())
         .execute(db.pool.as_ref())
         .await
         .expect("insert live connector session");
-    let other_payload = non_admin_token
-        .split('.')
-        .nth(1)
-        .expect("other jwt payload");
-    let other_claims: serde_json::Value = serde_json::from_slice(
-        &base64::engine::general_purpose::URL_SAFE_NO_PAD
-            .decode(other_payload)
-            .expect("decode other jwt payload"),
-    )
-    .expect("other claims json");
-    let other_session = other_claims["session_id"]
-        .as_str()
-        .expect("other session claim");
+    let other_session = tokens::session_of(&non_admin_token);
     sqlx::query("INSERT INTO user_sessions (session_id, user_id) VALUES ($1, $2)")
-        .bind(other_session)
+        .bind(other_session.as_str())
         .bind(non_admin_user.as_str())
         .execute(db.pool.as_ref())
         .await
@@ -104,7 +84,7 @@ async fn connector_consent_callbacks_enforce_owner_binding_and_single_use() {
         expires_at: 0,
         token_endpoint: String::new(),
         generation: 0,
-        session: Some(session.to_owned()),
+        session: Some(session.as_str().to_owned()),
         auth_method: String::new(),
         account_id: String::new(),
         account_name: String::new(),

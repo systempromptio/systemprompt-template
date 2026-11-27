@@ -354,7 +354,7 @@ async fn the_admin_plane_revokes_a_credential_it_does_not_own() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (_, key) = insert_stranger_key(&db.pool, "fleet-owner").await;

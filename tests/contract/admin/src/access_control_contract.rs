@@ -1,5 +1,5 @@
-//! The access-control JSON API: the generic entity surface, the older
-//! entity-type-specific one, and the department API behind them.
+//! The access-control JSON API: the generic entity surface and the older
+//! entity-type-specific one.
 //!
 //! Access rules live in the database while the entities they name come from
 //! the on-disk profile, so both halves have to be driven: a rule written
@@ -288,20 +288,38 @@ async fn access_control_api_replaces_rules_and_projects_a_matrix() {
     }
 
     // The entity-type allowlist on this endpoint is narrower than the generic
-    // one; a kind outside it is refused rather than written.
-    let (status, _) = app
-        .call(Call::json(
-            "put",
-            &api("/access-control/entity/skill/anything"),
-            Principal::Admin,
-            r#"{"rules":[]}"#,
-        ))
-        .await;
-    if status != StatusCode::BAD_REQUEST {
-        failures.push(format!(
-            "  replacing rules on an unsupported entity type -> {} (expected 400)",
-            status.as_u16()
-        ));
+    // one: a kind the vocabulary knows but this editor does not own, and a
+    // string that is no kind at all, are both refused and nothing is written.
+    for (label, entity_type) in [
+        ("a kind outside the editable set", "hook"),
+        ("an unrecognised entity type", "not-a-kind"),
+    ] {
+        let (status, _) = app
+            .call(Call::json(
+                "put",
+                &api(&format!("/access-control/entity/{entity_type}/anything")),
+                Principal::Admin,
+                r#"{"rules":[{"rule_type":"role","rule_value":"admin","access":"allow","justification":"contract fixture"}]}"#,
+            ))
+            .await;
+        if status != StatusCode::BAD_REQUEST {
+            failures.push(format!(
+                "  replacing rules on {label} -> {} (expected 400)",
+                status.as_u16()
+            ));
+        }
+        let written: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM access_control_rules WHERE entity_type = $1 AND entity_id = 'anything'",
+        )
+        .bind(entity_type)
+        .fetch_one(&*db.pool)
+        .await
+        .expect("count refused rules");
+        if written != 0 {
+            failures.push(format!(
+                "  replacing rules on {label} wrote {written} row(s)"
+            ));
+        }
     }
 
     // The bulk assign writes the same rule set across several entities at once.
@@ -326,7 +344,7 @@ async fn access_control_api_replaces_rules_and_projects_a_matrix() {
     }
 
     // Reads: the whole rule table, one entity's slice of it, the per-user
-    // matrix, the department projection, and the YAML snapshot.
+    // matrix, and the YAML snapshot.
     // The matrix is projected per user, so a user id in no table is a miss
     // rather than an empty matrix that reads as "this person has no access".
     let (status, _) = app
@@ -342,7 +360,7 @@ async fn access_control_api_replaces_rules_and_projects_a_matrix() {
         ));
     }
 
-    let reads: [(&str, String); 5] = [
+    let reads: [(&str, String); 4] = [
         ("every rule", api("/access-control")),
         (
             "one entity's rules",
@@ -357,10 +375,6 @@ async fn access_control_api_replaces_rules_and_projects_a_matrix() {
         (
             "the per-user matrix",
             api(&format!("/access-control/users/{user_id}/matrix")),
-        ),
-        (
-            "the department projection",
-            api("/access-control/departments"),
         ),
     ];
     for (label, path) in reads {
@@ -412,174 +426,6 @@ async fn access_control_api_replaces_rules_and_projects_a_matrix() {
     assert!(
         failures.is_empty(),
         "{} access-control API case(s) failed:\n{}",
-        failures.len(),
-        failures.join("\n")
-    );
-}
-
-// The department API's validation and read paths.
-//
-// The create/rename/delete round trip is *not* driven here:
-// `create_department` inserts without `org_id`, which migration `022` made
-// `NOT NULL` with no default, so every create answers `500`. Pinning that
-// would turn a defect into a contract; the cases below cover the paths that
-// behave, and the validation ladder that runs before the broken insert is
-// reached.
-#[tokio::test(flavor = "multi_thread")]
-async fn department_api_validates_before_it_writes() {
-    if !globals::init() {
-        return;
-    }
-    let Some(db) = TempDb::create().await else {
-        return;
-    };
-
-    let credentials = principal::provision(&db.pool).await;
-    let app = App::new(&db.pool, credentials);
-    let user_id = seed::unique("dept-user");
-    seed::insert_user(&db.pool, &user_id, &format!("{user_id}@contract.test")).await;
-
-    let mut failures = Vec::new();
-
-    // A blank name is refused before it reaches the column, where it used to
-    // become an empty string every read path had to coalesce away.
-    for blank in [r#"{"name":""}"#, r#"{"name":"   "}"#, r#"{"name":"\t"}"#] {
-        let (status, _) = app
-            .call(Call::json(
-                "post",
-                &api("/management/departments"),
-                Principal::Admin,
-                blank,
-            ))
-            .await;
-        if status != StatusCode::BAD_REQUEST {
-            failures.push(format!(
-                "  creating a department named {blank} -> {} (expected 400)",
-                status.as_u16()
-            ));
-        }
-    }
-
-    // A body with no `name` at all is the extractor's problem, not the
-    // handler's.
-    let (status, _) = app
-        .call(Call::json(
-            "post",
-            &api("/management/departments"),
-            Principal::Admin,
-            r#"{"description":"nameless"}"#,
-        ))
-        .await;
-    if !status.is_client_error() {
-        failures.push(format!(
-            "  creating a department with no name field -> {} (expected a 4xx)",
-            status.as_u16()
-        ));
-    }
-
-    // The same validation runs ahead of the update, so a blank rename is
-    // refused rather than reaching the row.
-    let (status, _) = app
-        .call(Call::json(
-            "put",
-            &api("/management/departments/whatever"),
-            Principal::Admin,
-            r#"{"name":"  "}"#,
-        ))
-        .await;
-    if status != StatusCode::BAD_REQUEST {
-        failures.push(format!(
-            "  renaming a department to blank -> {} (expected 400)",
-            status.as_u16()
-        ));
-    }
-
-    // Renaming or deleting something that never existed is a miss, not a
-    // create.
-    for (label, method) in [("renaming", "put"), ("deleting", "delete")] {
-        let (status, _) = app
-            .call(Call::json(
-                method,
-                &api("/management/departments/no-such-department"),
-                Principal::Admin,
-                r#"{"name":"Ghost"}"#,
-            ))
-            .await;
-        if status != StatusCode::NOT_FOUND {
-            failures.push(format!(
-                "  {label} a department that does not exist -> {} (expected 404)",
-                status.as_u16()
-            ));
-        }
-    }
-
-    // The listing renders the department migration `009` seeds.
-    let (status, body) = app
-        .call(Call::get(&api("/management/departments"), Principal::Admin))
-        .await;
-    if status != StatusCode::OK {
-        failures.push(format!("  listing departments -> {}", status.as_u16()));
-    } else if !body.contains("Default") {
-        failures.push("  the listing did not include the seeded Default department".to_owned());
-    }
-
-    // Membership assignment against the seeded department, and the clearing
-    // form of the same call.
-    let assign = api(&format!("/management/users/{user_id}/department"));
-    for body in [
-        r#"{"department_name":"Default"}"#,
-        r#"{"department_name":""}"#,
-    ] {
-        let (status, response) = app
-            .call(Call::json("post", &assign, Principal::Admin, body))
-            .await;
-        if status.is_server_error() {
-            failures.push(format!(
-                "  assigning a department with {body} faulted: {}",
-                response.chars().take(200).collect::<String>()
-            ));
-        }
-    }
-
-    // Assigning a user who does not exist must not silently succeed.
-    let (status, _) = app
-        .call(Call::json(
-            "post",
-            &api("/management/users/no-such-user/department"),
-            Principal::Admin,
-            r#"{"department_name":"Default"}"#,
-        ))
-        .await;
-    if status.is_server_error() {
-        failures.push("  assigning a department to an unknown user faulted".to_owned());
-    }
-
-    // Every one of these is admin-only.
-    for (method, path) in [
-        ("post", api("/management/departments")),
-        ("put", api("/management/departments/whatever")),
-        ("delete", api("/management/departments/whatever")),
-    ] {
-        let (status, _) = app
-            .call(Call::json(
-                method,
-                &path,
-                Principal::NonAdmin,
-                r#"{"name":"Nope"}"#,
-            ))
-            .await;
-        if !(status == StatusCode::FORBIDDEN || status == StatusCode::UNAUTHORIZED) {
-            failures.push(format!(
-                "  {method} {path} as a non-admin -> {} (expected a refusal)",
-                status.as_u16()
-            ));
-        }
-    }
-
-    db.cleanup().await;
-    assert!(
-        failures.is_empty(),
-        "{} department API case(s) failed:\n{}",
         failures.len(),
         failures.join("\n")
     );

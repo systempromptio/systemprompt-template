@@ -32,19 +32,25 @@ fn known_5xx(key: &str) -> bool {
     KNOWN_5XX.iter().any(|(route, _)| *route == key)
 }
 
+// Routes on the platform tier: an AD mapping decides what the directory grants
+// everyone in that AD group, so writing one is above an ordinary admin
+// (`admin_groups::group_platform_routes` / `project_platform_routes`). For
+// these the no-rejection invariant is held by the platform admin, and an
+// ordinary admin must be refused.
+fn is_platform_tier(key: &str) -> bool {
+    const PLATFORM: [&str; 4] = [
+        "POST /api/public/admin/groups/{group_id}/ad-mappings",
+        "DELETE /api/public/admin/groups/{group_id}/ad-mappings/{ad_group}",
+        "POST /api/public/admin/projects/{project_id}/ad-mappings",
+        "DELETE /api/public/admin/projects/{project_id}/ad-mappings/{ad_group}",
+    ];
+    PLATFORM.contains(&key)
+}
+
 // Routes served before authentication, by design. Everything else must
 // refuse an anonymous caller.
 fn is_public(template: &str) -> bool {
-    const PUBLIC: [&str; 7] = [
-        "/admin/login",
-        "/admin/register",
-        "/admin/add-passkey",
-        "/admin/verify-pending",
-        "/admin/api/magic-link/request",
-        "/admin/api/magic-link/validate",
-        "/admin/api/register",
-    ];
-    PUBLIC.contains(&template)
+    template == "/admin/login"
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -57,7 +63,7 @@ async fn admin_routes_honour_their_http_contract() {
         return;
     };
 
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let routes = mounted_routes();
@@ -141,10 +147,18 @@ fn check(
         fail("anonymous callers must not be served a success response");
     }
 
-    // An authenticated admin must never be turned away by the auth layers.
-    if principal == Principal::Admin
-        && matches!(status, StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN)
-    {
+    // An authenticated admin must never be turned away by the auth layers,
+    // except on the platform tier, where the platform admin holds that place
+    // and an ordinary admin must be refused.
+    let rejected = matches!(status, StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN);
+    let platform = is_platform_tier(&route.key());
+    if principal == Principal::Admin && rejected && !platform {
         fail("an admin must not be rejected by authentication or authorisation");
+    }
+    if principal == Principal::Admin && platform && status != StatusCode::FORBIDDEN {
+        fail("an ordinary admin must be refused a platform-tier write");
+    }
+    if principal == Principal::PlatformAdmin && rejected && platform {
+        fail("a platform admin must not be rejected on the platform tier");
     }
 }

@@ -41,21 +41,6 @@ async fn catalog_pages_render_entities_from_the_profile() {
     let app = App::new(&db.pool, credentials);
 
     let mut failures = Vec::new();
-    // The catalog root redirects onto the plugins listing and the singular
-    // marketplace alias onto the marketplaces page, so a bookmark from either
-    // survives.
-    for (path, expected) in [
-        ("/admin/catalog", "/admin/plugins"),
-        ("/admin/catalog/marketplace", "/admin/marketplaces"),
-    ] {
-        let (status, target) = app.redirect_of(Call::get(path, Principal::Admin)).await;
-        if status != StatusCode::PERMANENT_REDIRECT {
-            failures.push(format!("  {path} -> {} (expected 308)", status.as_u16()));
-        } else if target != expected {
-            failures.push(format!("  {path} redirected to {target:?}, not {expected}"));
-        }
-    }
-
     let listings: [(&str, &str); 3] = [
         (
             "/admin/plugins",

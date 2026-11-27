@@ -144,29 +144,18 @@ const CONTEXTS: [Variant; 9] = [
     v("/admin/contexts?view=all&page=100000", CONTEXTS_EMPTY),
 ];
 
-// The roster, the per-user page, and the pages this product ships in place of
-// a catalog: the model screen, the access-token page, and the access matrix.
+// The roster, the access matrix and the governance summary.
 //
 // The roster is the one list with rows: the suite seeds two principals, so it
 // renders the table rather than the empty state, and the seeded address is the
 // marker that proves a row reached the template.
-const PAGES: [Variant; 7] = [
+const PAGES: [Variant; 4] = [
     v("/admin/users", "contract-admin@contract.test"),
     v("/admin/users?unknown_param=1&page=99", "No users match"),
     v(
-        "/admin/models",
-        "No user selected — the table shows the routes as configured.",
+        "/admin/access-control",
+        r#"aria-label="Access-control totals""#,
     ),
-    // `has_selection` is `user_id.is_some()`, not "the id resolved", so an id
-    // naming nobody still renders the selected-user column — with a blank
-    // label. The marker is the echoed id, which proves the query reached the
-    // template rather than being dropped on the way.
-    v(
-        "/admin/models?user_id=no-such-user",
-        r#"data-user-id="no-such-user""#,
-    ),
-    v("/admin/access-tokens", "No tokens match"),
-    v("/admin/access-control", "Rule ledger"),
     v("/admin/governance", "Governance summary"),
 ];
 
@@ -229,7 +218,7 @@ fn snippet(body: &str) -> String {
     format!("\n      body: {head}")
 }
 
-// The two paths that only exist to send a browser somewhere else.
+// The path that only exists to send a browser somewhere else.
 //
 // A redirect is the whole contract here, so the assertion is the `Location`
 // header rather than the body — a 200 with a rendered page would mean a
@@ -248,28 +237,11 @@ async fn the_redirect_aliases_land_on_the_pages_they_name() {
 
     let mut failures = Vec::new();
     // Legacy bookmarks retain their query when sent to the canonical page.
-    for (path, want_status, want_target) in [
-        (
-            "/admin/entities/requests?tab=log",
-            StatusCode::PERMANENT_REDIRECT,
-            "/admin/requests?tab=log",
-        ),
-        (
-            "/admin/access/user?id=no-such-user",
-            StatusCode::PERMANENT_REDIRECT,
-            "/admin/user?id=no-such-user",
-        ),
-        (
-            "/admin/user?id=no-such-user",
-            StatusCode::PERMANENT_REDIRECT,
-            "/admin/users/no-such-user",
-        ),
-        (
-            "/admin/access/devices",
-            StatusCode::PERMANENT_REDIRECT,
-            "/admin/access-tokens",
-        ),
-    ] {
+    for (path, want_status, want_target) in [(
+        "/admin/user?id=no-such-user",
+        StatusCode::PERMANENT_REDIRECT,
+        "/admin/users/no-such-user",
+    )] {
         let (status, target) = app.redirect_of(Call::get(path, Principal::Admin)).await;
         if status != want_status {
             failures.push(format!(

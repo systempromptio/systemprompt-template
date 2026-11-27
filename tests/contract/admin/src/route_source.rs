@@ -4,9 +4,11 @@
 //! Axum exposes no way to enumerate a built `Router`, so the method/path pairs
 //! are read back from the source that declares them — pulled in with
 //! `include_str!`, so the suite and the router can never disagree about what
-//! exists. Deriving the table rather than hand-writing it is what makes
-//! coverage exhaustive by construction: a new `.route(...)` is picked up and
-//! exercised on the next run, and shows up as a baseline addition.
+//! exists. Every file that declares a mounted route is listed, including the
+//! ones split out of `ssr.rs` and `admin/mod.rs` on size. Deriving the table
+//! rather than hand-writing it is what makes coverage exhaustive by
+//! construction: a new `.route(...)` is picked up and exercised on the next
+//! run, and shows up as a baseline addition.
 
 use crate::app::{ADMIN_API_PREFIX, SSR_PREFIX};
 
@@ -16,7 +18,17 @@ const ADMIN_API_READ_SRC: &str =
     include_str!("../../../../extensions/web/admin/src/routes/admin/read.rs");
 const ADMIN_GROUPS_SRC: &str =
     include_str!("../../../../extensions/web/admin/src/routes/admin_groups.rs");
+const MANAGED_RESOURCES_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/managed_resources.rs");
 const SSR_SRC: &str = include_str!("../../../../extensions/web/admin/src/routes/ssr.rs");
+const SSR_ANALYSIS_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/ssr_analysis.rs");
+const SSR_GOVERNANCE_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/ssr_governance.rs");
+const SSR_PLATFORM_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/ssr_platform.rs");
+const SSR_EXPORT_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/ssr_export.rs");
 
 const METHODS: [&str; 5] = ["get", "post", "put", "patch", "delete"];
 
@@ -63,7 +75,12 @@ pub fn mounted_routes() -> Vec<MountedRoute> {
         (ADMIN_API_SRC, ADMIN_API_PREFIX),
         (ADMIN_API_READ_SRC, ADMIN_API_PREFIX),
         (ADMIN_GROUPS_SRC, ADMIN_API_PREFIX),
+        (MANAGED_RESOURCES_SRC, ADMIN_API_PREFIX),
         (SSR_SRC, SSR_PREFIX),
+        (SSR_ANALYSIS_SRC, SSR_PREFIX),
+        (SSR_GOVERNANCE_SRC, SSR_PREFIX),
+        (SSR_PLATFORM_SRC, SSR_PREFIX),
+        (SSR_EXPORT_SRC, SSR_PREFIX),
     ] {
         parse(src, prefix, &mut routes);
     }

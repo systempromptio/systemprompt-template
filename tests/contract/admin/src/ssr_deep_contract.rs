@@ -374,75 +374,6 @@ async fn seeded_list_pages_render_rows_rather_than_the_empty_state() {
     );
 }
 
-// The department pages, whose content comes from the org tables rather than
-// the activity spine.
-#[tokio::test(flavor = "multi_thread")]
-async fn department_pages_render_the_seeded_department() {
-    if !globals::init() {
-        return;
-    }
-    let Some(db) = TempDb::create().await else {
-        return;
-    };
-
-    let credentials = principal::provision(&db.pool).await;
-    let app = App::new(&db.pool, credentials);
-
-    let mut failures = Vec::new();
-
-    // Migration `009` seeds the `Default` department, so the management pages
-    // have a row without the fixture writing one.
-    let dept: Option<String> = sqlx::query_scalar("SELECT id FROM departments LIMIT 1")
-        .fetch_optional(&*db.pool)
-        .await
-        .expect("read a seeded department");
-
-    let (status, body) = app
-        .call(Call::get("/admin/departments", Principal::Admin))
-        .await;
-    if status != StatusCode::OK {
-        failures.push(format!("  the departments page -> {}", status.as_u16()));
-    } else if !body.contains("Departments") {
-        failures.push("  the departments page rendered without its heading".to_owned());
-    }
-
-    if let Some(id) = dept {
-        let path = format!("/admin/departments/{id}");
-        let (status, body) = app.call(Call::get(&path, Principal::Admin)).await;
-        if status != StatusCode::OK {
-            failures.push(format!(
-                "  {path} -> {} (expected 200): {}",
-                status.as_u16(),
-                body.chars().take(200).collect::<String>()
-            ));
-        } else if !body.contains("Members") {
-            failures.push(format!("  {path} rendered without the members panel"));
-        }
-    }
-
-    // A department id in no table is a miss, not a rendered shell.
-    let (status, _) = app
-        .call(Call::get(
-            "/admin/departments/no-such-department",
-            Principal::Admin,
-        ))
-        .await;
-    if status != StatusCode::NOT_FOUND {
-        failures.push(format!(
-            "  an unknown department id -> {} (expected 404)",
-            status.as_u16()
-        ));
-    }
-
-    db.cleanup().await;
-    assert!(
-        failures.is_empty(),
-        "{} department page case(s) failed:\n{}",
-        failures.len(),
-        failures.join("\n")
-    );
-}
-
 // The analytics pages, driven over a window that contains the seeded trail.
 #[tokio::test(flavor = "multi_thread")]
 async fn analytics_pages_aggregate_the_seeded_trail() {
@@ -482,11 +413,11 @@ async fn analytics_pages_aggregate_the_seeded_trail() {
         ("the outcome mix", "/admin/requests?tab=status".to_owned()),
         (
             "the governance decisions log",
-            "/admin/governance/decisions".to_owned(),
+            "/admin/governance?tab=decisions".to_owned(),
         ),
         (
             "the governance hook activity page",
-            "/admin/governance/hooks".to_owned(),
+            "/admin/governance?tab=hooks".to_owned(),
         ),
     ];
     for (label, path) in paths {

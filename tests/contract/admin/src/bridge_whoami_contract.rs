@@ -74,7 +74,7 @@ async fn a_plain_user_with_no_sso_mapping_still_gets_a_complete_body() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (status, body) = app.call(Call::get(PATH, Principal::NonAdmin)).await;

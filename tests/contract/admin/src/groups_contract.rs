@@ -139,7 +139,7 @@ async fn the_system_group_refuses_every_write() {
 // Why: a mapping decides what the directory grants everyone holding that AD
 // group, so it sits a tier above an ordinary admin write.
 #[tokio::test]
-async fn an_admin_retains_authority_to_manage_ad_mappings() {
+async fn only_a_platform_admin_manages_ad_mappings() {
     if !globals::init() {
         return;
     }
@@ -162,7 +162,7 @@ async fn an_admin_retains_authority_to_manage_ad_mappings() {
             Principal::Admin,
         ))
         .await;
-    let (write, body) = app
+    let (refused, body) = app
         .call(Call::json(
             "post",
             "/api/public/admin/groups/contract-made/ad-mappings",
@@ -170,12 +170,29 @@ async fn an_admin_retains_authority_to_manage_ad_mappings() {
             r#"{"ad_group":"AD-Contract"}"#,
         ))
         .await;
-
     assert_eq!(read, StatusCode::OK, "reading is a console act");
+    assert_eq!(
+        refused,
+        StatusCode::FORBIDDEN,
+        "an ordinary admin may not configure a mapping: {body}"
+    );
+    assert!(
+        body.contains("Role required: platform_admin"),
+        "the refusal names the tier: {body}"
+    );
+
+    let (write, body) = app
+        .call(Call::json(
+            "post",
+            "/api/public/admin/groups/contract-made/ad-mappings",
+            Principal::PlatformAdmin,
+            r#"{"ad_group":"AD-Contract"}"#,
+        ))
+        .await;
     assert_eq!(
         write,
         StatusCode::CREATED,
-        "an admin can configure a mapping: {body}"
+        "a platform admin configures the mapping: {body}"
     );
     db.cleanup().await;
 }

@@ -80,6 +80,15 @@ pub fn issue(grant: &Grant<'_>) -> String {
     token
 }
 
+pub fn session_of(token: &str) -> SessionId {
+    registry()
+        .lock()
+        .expect("the token registry is not poisoned")
+        .get(token)
+        .map(|issued| issued.context.session_id.clone())
+        .expect("the token was issued by this suite")
+}
+
 fn refused(token: &JwtToken) -> ContextExtractionError {
     ContextExtractionError::InvalidToken(format!("{} was not issued", token.as_str()).into())
 }

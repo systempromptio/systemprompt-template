@@ -11,10 +11,11 @@
 //!
 //! Two properties are asserted:
 //!
-//! - **Every event kind is accepted.** The endpoint answers `200` for each of
-//!   the eighteen typed events, for an unrecognised name, and for a payload
-//!   whose variant body is malformed — parsing is lenient by design, because a
-//!   hook cannot retry and a dropped event is a hole in the audit trail.
+//! - **Every event kind is accepted, and nothing else is.** The endpoint
+//!   answers `200` for each of the eighteen typed events. An unrecognised name,
+//!   or a recognised name whose body does not match its shape, is a `400` that
+//!   writes no row: ingestion is retry-safe, so a refusal is reported to the
+//!   client rather than stored as an `Unknown` event.
 //! - **A recognised event leaves rows behind.** A `200` proves the handler did
 //!   not fault; the row in `plugin_usage_events` proves it did the work. The
 //!   assertions read the database rather than the response, because the
@@ -64,6 +65,29 @@ fn common(session: &str, event: &str) -> String {
     format!(
         r#""session_id":"{session}","event_id":"{session}-{event}","cwd":"/tmp/contract","permission_mode":"default","transcript_path":"/tmp/contract/t.jsonl","hook_event_name":"{event}""#
     )
+}
+
+// Payloads the ingestion boundary refuses, each with the event name a stored
+// row would have carried.
+fn refused(session: &str) -> [(&'static str, String, &'static str); 2] {
+    [
+        (
+            "unrecognised event name",
+            format!(
+                r#"{{{},"whatever":true}}"#,
+                common(session, "SomeFutureEvent")
+            ),
+            "SomeFutureEvent",
+        ),
+        (
+            "recognised name with a malformed body",
+            format!(
+                "{{{},\"stop_hook_active\":\"not-a-bool\"}}",
+                common(session, "Stop")
+            ),
+            "Stop",
+        ),
+    ]
 }
 
 fn cases(session: &str) -> Vec<EventCase> {
@@ -189,25 +213,6 @@ fn cases(session: &str) -> Vec<EventCase> {
             r#""file_path":"/tmp/CLAUDE.md","memory_type":"project","load_reason":"startup","globs":["**/*.rs"],"trigger_file_path":null,"parent_file_path":null"#,
             "InstructionsLoaded",
         ),
-        // An event name no version of Claude Code has emitted yet is recorded
-        // under its own name rather than rejected: the schema is the client's,
-        // and a 400 would lose the row for good.
-        ev(
-            "unrecognised event name",
-            "SomeFutureEvent",
-            r#""whatever":true"#,
-            "SomeFutureEvent",
-        ),
-        // A recognised name whose body does not match its shape degrades to
-        // `Unknown(name)` with a warning rather than failing the request.
-        EventCase {
-            label: "recognised name with a malformed body",
-            body: format!(
-                "{{{},\"stop_hook_active\":\"not-a-bool\"}}",
-                common(session, "Stop")
-            ),
-            recorded_as: "Stop",
-        },
     ]
 }
 
@@ -262,10 +267,28 @@ async fn hook_track_accepts_and_records_every_event_kind() {
         }
     }
 
+    let refused_session = seed::unique("hook-refused");
+    for (label, body, event_type) in refused(&refused_session) {
+        let (call, tok) = hook_call(&token, &body);
+        let (status, response) = app.call_with_bearer(call, tok).await;
+        if status != StatusCode::BAD_REQUEST
+            || !response.contains("Unsupported or malformed hook event")
+        {
+            failures.push(format!(
+                "  {label} -> {} (expected 400 naming the refusal): {}",
+                status.as_u16(),
+                response.chars().take(200).collect::<String>()
+            ));
+        }
+        if count_events(&db.pool, &refused_session, event_type).await != 0 {
+            failures.push(format!("  {label} was refused but still left a row"));
+        }
+    }
+
     db.cleanup().await;
     assert!(
         failures.is_empty(),
-        "{} hook event(s) were not ingested:\n{}",
+        "{} hook event(s) were not ingested as the contract says:\n{}",
         failures.len(),
         failures.join("\n")
     );
@@ -296,37 +319,37 @@ async fn hook_track_links_events_to_the_entity_they_name() {
     let expectations: [(&str, String, &str, &str); 6] = [
         (
             "skill invocation",
-            r#""tool_name":"Skill","tool_input":{"skill":"development:rust-dev-guide"},"tool_response":{}"#.to_owned(),
+            r#""tool_name":"Skill","tool_use_id":"toolu_contract_1","tool_input":{"skill":"development:rust-dev-guide"},"tool_response":{}"#.to_owned(),
             "skill",
             "development:rust-dev-guide",
         ),
         (
             "mcp tool",
-            r#""tool_name":"mcp__systemprompt__list_skills","tool_input":{},"tool_response":{}"#.to_owned(),
+            r#""tool_name":"mcp__systemprompt__list_skills","tool_use_id":"toolu_contract_2","tool_input":{},"tool_response":{}"#.to_owned(),
             "mcp_tool",
             "systemprompt",
         ),
         (
             "agent by subagent_type",
-            r#""tool_name":"Agent","tool_input":{"subagent_type":"Explore"},"tool_response":{}"#.to_owned(),
+            r#""tool_name":"Agent","tool_use_id":"toolu_contract_3","tool_input":{"subagent_type":"Explore"},"tool_response":{}"#.to_owned(),
             "agent",
             "Explore",
         ),
         (
             "agent falling back to description",
-            r#""tool_name":"Agent","tool_input":{"description":"sweep the handlers"},"tool_response":{}"#.to_owned(),
+            r#""tool_name":"Agent","tool_use_id":"toolu_contract_4","tool_input":{"description":"sweep the handlers"},"tool_response":{}"#.to_owned(),
             "agent",
             "sweep the handlers",
         ),
         (
             "agent with neither hint",
-            r#""tool_name":"Agent","tool_input":{},"tool_response":{}"#.to_owned(),
+            r#""tool_name":"Agent","tool_use_id":"toolu_contract_5","tool_input":{},"tool_response":{}"#.to_owned(),
             "agent",
             "subagent",
         ),
         (
             "a plain tool links nothing",
-            r#""tool_name":"Bash","tool_input":{"command":"ls"},"tool_response":{}"#.to_owned(),
+            r#""tool_name":"Bash","tool_use_id":"toolu_contract_6","tool_input":{"command":"ls"},"tool_response":{}"#.to_owned(),
             "",
             "",
         ),

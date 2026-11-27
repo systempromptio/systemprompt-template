@@ -1,6 +1,5 @@
-//! Public signup cannot choose privileged roles.
-
-use axum::http::StatusCode;
+//! The console has no public signup: an anonymous registration request is not
+//! served and creates no account, whatever role it asks for.
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
@@ -8,7 +7,7 @@ use crate::{globals, principal};
 use template_test_common::TempDb;
 
 #[tokio::test(flavor = "multi_thread")]
-async fn public_registration_never_grants_admin() {
+async fn public_registration_creates_no_account() {
     if !globals::init() {
         return;
     }
@@ -28,12 +27,16 @@ async fn public_registration_never_grants_admin() {
             &body,
         ))
         .await;
-    assert_eq!(status, StatusCode::OK, "{response}");
-    let roles: Vec<String> = sqlx::query_scalar("SELECT roles FROM users WHERE email = $1")
+    assert!(
+        !status.is_success() && !status.is_server_error(),
+        "an anonymous registration is refused, not served: {} {response}",
+        status.as_u16()
+    );
+    let accounts: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM users WHERE email = $1")
         .bind(email)
         .fetch_one(db.pool.as_ref())
         .await
-        .expect("registered user");
-    assert_eq!(roles, vec!["user"]);
+        .expect("count accounts");
+    assert_eq!(accounts, 0, "no account was created");
     db.cleanup().await;
 }

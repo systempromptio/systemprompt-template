@@ -111,7 +111,10 @@ impl App {
             .merge(Router::new().nest(
                 "/api/public",
                 admin::bridge_identity_router(Arc::clone(pool)),
-            ));
+            ))
+            .merge(
+                Router::new().nest("/api/public", admin::connector_api_router(Arc::clone(pool))),
+            );
 
         let router = Router::new()
             .nest_service(SSR_PREFIX, ssr)
@@ -148,6 +151,11 @@ impl App {
         if let Some(token) = self.credentials.token_for(principal) {
             builder = builder.header("authorization", format!("Bearer {token}"));
         }
+        // The console is a same-origin browser client, so every request carries
+        // the Origin a browser would send. Without it the same-origin guard on
+        // the browser write routes answers 403 before the route is reached,
+        // and the table would record the guard instead of the route.
+        builder = builder.header("origin", same_origin());
         // Every write route takes JSON; an empty object is the most benign
         // well-formed body, and a 4xx from validation is a legitimate contract
         // outcome. What must not happen is a 500.
@@ -316,3 +324,11 @@ impl<'a> Call<'a> {
 }
 
 mod response_headers;
+
+fn same_origin() -> String {
+    let profile = template_test_common::env::fixture_profile();
+    url::Url::parse(&profile.server.api_external_url)
+        .expect("the fixture profile names a valid external URL")
+        .origin()
+        .ascii_serialization()
+}

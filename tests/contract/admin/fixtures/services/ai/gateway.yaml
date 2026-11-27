@@ -2,7 +2,8 @@
 # routes. It is deliberately not the repository's services/ai tree, so the
 # catalog and ACL contracts assert against a controlled two-route gateway
 # rather than whatever this deployment ships. Nothing is reachable: the suite
-# issues no inference and gateway.enabled is false.
+# issues no inference and gateway.enabled is false. The one marketplace is the
+# entity the access matrix contracts grant against.
 gateway:
   enabled: false
   routes:
@@ -94,3 +95,13 @@ providers:
       api:
         wire: anthropic
         url: https://api.anthropic.com/v1
+marketplaces:
+  acme-admin:
+    id: acme-admin
+    name: Acme admin
+    description: The contract fixture's one marketplace.
+    version: 1.0.0
+    author:
+      name: Contract
+      email: contract@contract.test
+    license: proprietary
