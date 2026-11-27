@@ -22,7 +22,9 @@ pub(crate) async fn chain_envelope(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> AdminResult<Response> {
-    if !user_ctx.is_console {
+    // Why: raw evidence is read by id with no owner scope; the
+    // write_boundaries contract covers the console reader's refusal.
+    if !crate::types::roles_grant_evidence(&user_ctx.roles) {
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
 

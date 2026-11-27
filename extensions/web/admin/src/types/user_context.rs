@@ -106,6 +106,14 @@ pub fn roles_grant_console(roles: &[String]) -> bool {
     has_any(roles, ROLES_CONSOLE)
 }
 
+// Why: raw evidence — a decision chain, a request's audit detail, a stored
+// transcript — is read by id with no owner scope, so it is narrower than the
+// console: an admin or an auditor, never a console reader.
+#[must_use]
+pub fn roles_grant_evidence(roles: &[String]) -> bool {
+    roles_grant_manage(roles) || roles.iter().any(|r| r.eq_ignore_ascii_case("auditor"))
+}
+
 #[must_use]
 pub fn roles_grant_manage(roles: &[String]) -> bool {
     has_any(roles, ROLES_MANAGE)

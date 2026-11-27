@@ -97,7 +97,9 @@ pub(crate) async fn governance_audit_detail_page(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> AdminHtmlResult<Response> {
-    if !shell.user.is_console {
+    // Why: raw evidence is read by id with no owner scope; the
+    // write_boundaries contract covers the console reader's refusal.
+    if !crate::types::roles_grant_evidence(&shell.user.roles) {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
     let Some(envelope) = find_decision_chain(&pool, &id).await? else {

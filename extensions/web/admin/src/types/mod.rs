@@ -63,8 +63,8 @@ pub use role::{
     has_any, parse_roles,
 };
 pub use user_context::{
-    NotSignedIn, UserContext, roles_grant_console, roles_grant_developer, roles_grant_manage,
-    roles_grant_platform,
+    NotSignedIn, UserContext, roles_grant_console, roles_grant_developer, roles_grant_evidence,
+    roles_grant_manage, roles_grant_platform,
 };
 
 #[derive(Debug, Default, Clone, serde::Deserialize)]

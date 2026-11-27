@@ -29,12 +29,9 @@ pub(crate) async fn conversations_raw(
     Path(session_id): Path<String>,
 ) -> AdminResult<Response> {
     let session_id = SessionId::new(session_id);
-    let allowed = user_ctx.is_console
-        || user_ctx
-            .roles
-            .iter()
-            .any(|r| r.eq_ignore_ascii_case("auditor"));
-    if !allowed {
+    // Why: raw evidence is read by id with no owner scope; the
+    // write_boundaries contract covers the console reader's refusal.
+    if !crate::types::roles_grant_evidence(&user_ctx.roles) {
         return Err(AdminError::Forbidden(
             "Admin or auditor role required".to_owned(),
         ));
