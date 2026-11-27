@@ -1,0 +1,36 @@
+# detekt, on top of its default rule set (buildUponDefaultConfig). Any finding
+# fails the build. Formatting is ktlint's job (../../.editorconfig), so the
+# detekt formatting rule set is not loaded.
+config:
+  validation: true
+  warningsAsErrors: true
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated:
+      - Composable
+
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+  UnusedPrivateMember:
+    ignoreAnnotated:
+      - Preview
+  # No behaviour in the app: networking, token handling and cursor arithmetic
+  # belong to the shared Rust core, reached through the generated bindings.
+  ForbiddenImport:
+    active: true
+    imports:
+      - value: 'java.net.*'
+        reason: 'The app does no networking of its own; call the shared core.'
+      - value: 'javax.net.*'
+        reason: 'The app does no networking of its own; call the shared core.'
+      - value: 'android.net.http.*'
+        reason: 'The app does no networking of its own; call the shared core.'
+      - value: 'okhttp3.*'
+        reason: 'The app does no networking of its own; call the shared core.'
+      - value: 'retrofit2.*'
+        reason: 'The app does no networking of its own; call the shared core.'
+      - value: 'io.ktor.*'
+        reason: 'The app does no networking of its own; call the shared core.'

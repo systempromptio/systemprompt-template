@@ -9,8 +9,8 @@
 # A bare re-run keeps the ports chosen at first setup. ADMIN_EMAIL defaults to
 # `git config user.email`. --no-build uses binaries already in
 # target/flavour-<flavour>/ (release, else debug). --dry-run prints each step.
-# A desktop flavour (artefact: desktop) installs no server: its build arrives
-# in stage S1 of the harness programme, and until then this says so and exits 0.
+# A flavour that is not an image (artefact: desktop or mobile) installs no
+# server: this says where that artefact is built and exits 0.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
 usage() { sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
@@ -18,10 +18,7 @@ flavour="${1:-}"
 [ -n "$flavour" ] && [ "${flavour#-}" = "$flavour" ] || usage
 shift
 flavour_require "$flavour"
-if [ "$(flavour_get "$flavour" artefact)" = desktop ]; then
-    echo "flavour $flavour is a desktop artefact, not an image: the desktop build arrives in stage S1 of the harness programme, so there is nothing to set up yet"
-    exit 0
-fi
+if flavour_not_image "$flavour" "set up"; then exit 0; fi
 anthropic_key="" openai_key="" gemini_key="" http_port="" pg_port="" admin_email=""
 build=true dry_run=false repoint=false
 while [ $# -gt 0 ]; do

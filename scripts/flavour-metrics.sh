@@ -24,8 +24,8 @@
 #          systemprompt binary bytes of two built images, before and after
 # Writes target/flavour-metrics/<flavour>.json and target/flavour-metrics/table.md.
 # Every number here is an image flavour's. `all` is the image flavours; a
-# desktop flavour (artefact: desktop) named alone has nothing to measure until
-# its build arrives in stage S1 of the harness programme, so this says so and
+# flavour that is not an image (artefact: desktop or mobile) named alone has
+# nothing to measure here, so this says where that artefact is built and
 # exits 0.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
@@ -75,10 +75,7 @@ if [ "$selection" = all ]; then
 else
     flavour_require "$selection"
     flavour="$selection"
-    if [ "$(flavour_get "$flavour" artefact)" = desktop ]; then
-        echo "flavour $flavour is a desktop artefact, not an image: the desktop build arrives in stage S1 of the harness programme, so there is nothing to measure yet"
-        exit 0
-    fi
+    if flavour_not_image "$flavour" "measure"; then exit 0; fi
     flavours=("$selection")
 fi
 jobs=()

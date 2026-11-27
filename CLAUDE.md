@@ -290,6 +290,40 @@ systemprompt core skills show --help
 
 ---
 
+## Mobile
+
+The phone apps are the `mobile` flavour (`artefact: mobile`). They are not
+Rust and not part of any cargo workspace; `just build`, `just clippy` and the
+server image never touch them.
+
+```
+extensions/mobile/android/   Gradle project (Kotlin DSL, wrapper committed), :app, Jetpack Compose
+extensions/mobile/ios/       Mobile.xcodeproj (scheme Mobile), SwiftUI
+extensions/mobile/shared/    toolchain.env (every pin), build-android.sh, build-ios.sh, screens.yaml
+flavours/mobile/             the flavour entry
+packaging/mobile/            signing templates only; no key is ever tracked
+scripts/mobile/              toolchain.sh, android-sdk.sh (shared by mobile.just and the Mobile workflow)
+```
+
+```bash
+just mobile-toolchain         # pins, what this machine has, pin drift
+just mobile-android-check     # Android lint, ktlint, detekt, JVM unit tests (warnings are errors)
+just mobile-android           # debug APK
+just mobile-android-install   # adb install + launch on the connected device or emulator
+just mobile-ios               # simulator build, unsigned
+just mobile-ios-check         # SwiftLint + swift-format
+```
+
+**iOS builds only on macOS**; elsewhere the two iOS recipes refuse. Android
+needs JDK 17 and `ANDROID_HOME` (or the SDK in its default place). The two
+apps mirror each other's structure and names: make a change in both. A
+version moves in `shared/toolchain.env` and the file `toolchain.sh` names
+together. Every user-visible string comes from the string catalogue
+(`strings.xml`, `Localizable.xcstrings`), and the app does no networking of
+its own. The reference app id is `io.systemprompt.mobile`.
+
+---
+
 ## Debugging & Troubleshooting
 
 ```bash

@@ -1,0 +1,21 @@
+# Gradle and Android build output
+.gradle/
+.kotlin/
+build/
+**/build/
+.cxx/
+captures/
+*.apk
+*.aab
+
+# Machine-local: the SDK path
+local.properties
+
+# Signing: never tracked. Templates live in packaging/mobile/android/.
+keystore.properties
+*.jks
+*.keystore
+
+# IDE
+.idea/
+*.iml

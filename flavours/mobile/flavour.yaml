@@ -1,0 +1,8 @@
+# mobile: the phone apps, built from an Xcode project and a Gradle project
+# Read by scripts/flavour.py (the only reader); docs/flavours/README.md
+# describes every key. A mobile flavour produces an iOS app and an Android
+# app, not an image, so it sets none of the keys an image flavour needs.
+name: mobile
+description: "The phone apps for iOS and Android: built from extensions/mobile, not an image"
+artefact: mobile
+workspace: extensions/mobile

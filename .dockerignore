@@ -46,6 +46,14 @@ signing_key.pem
 # Never ship a key into an image, even from a local build that has one on disk.
 *.pem
 **/*.pem
+# The desktop shell and the phone apps are never part of a server image: each
+# is built by its own toolchain, outside the Docker context.
+extensions/harness/
+extensions/mobile/
+**/.gradle/
+**/.kotlin/
+**/DerivedData/
+**/xcuserdata/
 # Build residue outside target/ (coverage runs, local packaging, CI's core checkout)
 dist/
 coverage-report/

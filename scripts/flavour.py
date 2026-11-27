@@ -15,9 +15,10 @@
                                       {"flavour", "artefact"} objects (CI matrices)
   flavour.py check                    index, directories, features and services agree
 
-A flavour's artefact is what it produces: image (a server image, the default)
-or desktop (installers built from a cargo workspace of its own). KIND keeps
-only the flavours of that artefact.
+A flavour's artefact is what it produces: image (a server image, the default),
+desktop (installers built from a cargo workspace of its own) or mobile (phone
+apps built from an Xcode project and a Gradle project). KIND keeps only the
+flavours of that artefact.
 """
 import json
 import re
@@ -28,7 +29,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 FLAVOURS = ROOT / "flavours"
-ARTEFACTS = ("image", "desktop")
+ARTEFACTS = ("image", "desktop", "mobile")
 COMMON = {
     "name": str,
     "description": str,
@@ -59,6 +60,13 @@ OPTIONAL_SMOKE = {
 RUNTIMES = ("slim", "full")
 DESKTOP = {
     "workspace": str,
+}
+MOBILE = {
+    "workspace": str,
+}
+MOBILE_PROJECTS = {
+    "android": "settings.gradle.kts",
+    "ios": "*.xcodeproj",
 }
 IMAGE_FILES = ("profile.overlay.yaml", "services")
 
@@ -165,20 +173,40 @@ def check_image(name, base, data, features_declared, problems):
         problems.append(f"flavours/{name}/services/ is empty; delete it")
 
 
-def check_desktop(name, base, data, problems):
-    """A desktop flavour names its workspace and nothing a server image reads."""
-    for key, kind in DESKTOP.items():
+def check_not_image(name, base, data, keys, problems):
+    """A flavour that is not an image sets its own keys and nothing an image reads."""
+    artefact = data["artefact"]
+    for key, kind in keys.items():
         if not isinstance(data.get(key), kind):
             problems.append(f"flavours/{name}: '{key}' must be a {kind.__name__}")
     for key in (*IMAGE, "smoke"):
         if key in data:
-            problems.append(f"flavours/{name}: '{key}' is read for image flavours only; a desktop flavour does not set it")
+            problems.append(f"flavours/{name}: '{key}' is read for image flavours only; a {artefact} flavour does not set it")
     for leftover in IMAGE_FILES:
         if (base / leftover).exists():
             problems.append(f"flavours/{name}/{leftover} is read for image flavours only; delete it")
+
+
+def check_desktop(name, base, data, problems):
+    """A desktop flavour names its workspace and nothing a server image reads."""
+    check_not_image(name, base, data, DESKTOP, problems)
     workspace = data.get("workspace")
     if isinstance(workspace, str) and not (ROOT / workspace / "Cargo.toml").is_file():
         problems.append(f"flavours/{name}: workspace '{workspace}' has no Cargo.toml")
+
+
+def check_mobile(name, base, data, problems):
+    """A mobile flavour names the directory holding its Android and iOS projects."""
+    check_not_image(name, base, data, MOBILE, problems)
+    workspace = data.get("workspace")
+    if not isinstance(workspace, str):
+        return
+    if not (ROOT / workspace).is_dir():
+        problems.append(f"flavours/{name}: workspace '{workspace}' does not exist")
+        return
+    for project, marker in MOBILE_PROJECTS.items():
+        if not any((ROOT / workspace / project).glob(marker)):
+            problems.append(f"flavours/{name}: workspace '{workspace}' has no {project}/ project ({project}/{marker})")
 
 
 def check():
@@ -210,6 +238,8 @@ def check():
             check_image(name, base, data, features_declared, problems)
         elif artefact == "desktop":
             check_desktop(name, base, data, problems)
+        elif artefact == "mobile":
+            check_mobile(name, base, data, problems)
         else:
             problems.append(f"flavours/{name}: artefact must be one of {ARTEFACTS}")
     for problem in problems:

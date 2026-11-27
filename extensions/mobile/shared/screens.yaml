@@ -1,0 +1,165 @@
+# The screens and states both apps draw: one list, so the iOS and the Android
+# app cannot quietly diverge. Each app's navigation table is checked against
+# it, and the screenshot tour captures every state that carries a tour number
+# on both platforms, side by side.
+#
+# Nothing reads this file yet: the scaffold has one blank screen and no
+# navigation table. The check lands with the first feature module.
+#
+#   features   the opt-in slices. A build includes only the features its
+#              composition names; sign_in is always present. shell is not a
+#              feature: it holds what the app assembles around the features
+#              (home, and the states that belong to no single feature).
+#   screens    id is <feature>.<screen>, the name both navigation tables use.
+#   states     id is unique within its screen. tour is the state's number in
+#              the screenshot tour and themes the themes it is captured in;
+#              a state with neither is drawn by both apps but not captured.
+version: 1
+
+features:
+  - id: sign_in
+    title: Sign-in
+    opt_in: false
+  - id: chat
+    title: Chat
+    opt_in: true
+  - id: runs
+    title: Runs
+    opt_in: true
+  - id: approvals
+    title: Approvals
+    opt_in: true
+  - id: inbox
+    title: Inbox
+    opt_in: true
+  - id: documents
+    title: Documents
+    opt_in: true
+  - id: preferences
+    title: Preferences
+    opt_in: true
+
+screens:
+  - id: sign_in.instance
+    feature: sign_in
+    title: Choose or enter an instance
+    states:
+      - { id: empty, title: Enter an instance, tour: 1, themes: [light, dark] }
+      - { id: below_minimum_version, title: Below minimum version, tour: 17, themes: [light] }
+  - id: sign_in.options
+    feature: sign_in
+    title: Sign in (browser sheet, passkey)
+    states:
+      - { id: options, title: Sign-in options, tour: 2, themes: [light] }
+      - { id: refused_credential, title: Signed out by a refused credential, tour: 18, themes: [light] }
+  - id: sign_in.pairing
+    feature: sign_in
+    title: Scan a pairing code
+    states:
+      - { id: scanning, title: Pairing-code scanner, tour: 3, themes: [light] }
+  - id: sign_in.key_trust
+    feature: sign_in
+    title: Key-trust prompt
+    states:
+      - { id: prompt, title: Key trust prompt, tour: 4, themes: [light] }
+      - { id: changed_key, title: Changed-key state, tour: 15, themes: [light] }
+  - id: sign_in.sync
+    feature: sign_in
+    title: Sync state
+    states:
+      - { id: syncing, title: Syncing }
+      - { id: error, title: Sync error, tour: 15, themes: [light] }
+
+  - id: shell.home
+    feature: shell
+    title: Home, assembled from the features present
+    states:
+      - { id: populated, title: "Home: agents, active runs, a pending approval", tour: 5, themes: [light, dark] }
+      - { id: empty, title: Nothing active }
+      - { id: large_text, title: Large text size, tour: 19, themes: [light] }
+      - { id: second_brand, title: A second brand and theme, tour: 20, themes: [light, dark] }
+  - id: shell.feature_disabled
+    feature: shell
+    title: A feature the instance has disabled
+    states:
+      - { id: disabled, title: Feature disabled by the instance, tour: 16, themes: [light] }
+
+  - id: chat.agents
+    feature: chat
+    title: Agents
+    states:
+      - { id: list, title: Agents }
+  - id: chat.conversation
+    feature: chat
+    title: A conversation with streamed text and tool activity
+    states:
+      - { id: streaming, title: Chat with streamed reply and tool activity, tour: 6, themes: [light, dark] }
+  - id: chat.composer
+    feature: chat
+    title: The composer, with dictation, camera, photo and file attachments
+    states:
+      - { id: attachments, title: Composer with a photo and a file attached, tour: 21, themes: [light] }
+      - { id: dictating, title: Dictation in progress, tour: 22, themes: [light] }
+
+  - id: runs.list
+    feature: runs
+    title: Run list with filters
+    states:
+      - { id: filtered, title: "Run list, filtered", tour: 7, themes: [light] }
+  - id: runs.events
+    feature: runs
+    title: A run's live events
+    states:
+      - { id: live, title: A run's live events, tour: 8, themes: [light, dark] }
+  - id: runs.outputs
+    feature: runs
+    title: A run's outputs
+    states:
+      - { id: outputs, title: Run outputs, tour: 9, themes: [light] }
+  - id: runs.start
+    feature: runs
+    title: Start or cancel a run
+    states:
+      - { id: start, title: Start a run }
+      - { id: cancel, title: Cancel a run }
+  - id: runs.schedules
+    feature: runs
+    title: Schedules (create, pause, run now)
+    states:
+      - { id: list, title: Schedules, tour: 23, themes: [light] }
+
+  - id: approvals.request
+    feature: approvals
+    title: A request with the tool and a redacted summary; allow or deny with feedback
+    states:
+      - { id: pending, title: Approval request, tour: 10, themes: [light, dark] }
+      - { id: decided_elsewhere, title: Approval decided elsewhere, tour: 11, themes: [light] }
+      - { id: timed_out, title: Approval timed out, tour: 11, themes: [light] }
+  - id: approvals.recent
+    feature: approvals
+    title: Recent decisions
+    states:
+      - { id: list, title: Recent decisions }
+
+  - id: inbox.feed
+    feature: inbox
+    title: The notification feed
+    states:
+      - { id: list, title: Notification feed, tour: 12, themes: [light] }
+
+  - id: documents.list
+    feature: documents
+    title: Documents
+    states:
+      - { id: list, title: Documents }
+  - id: documents.document
+    feature: documents
+    title: A document with comments
+    states:
+      - { id: with_comments, title: A document with comments, tour: 13, themes: [light] }
+
+  - id: preferences.settings
+    feature: preferences
+    title: Appearance, notification preferences, sign out, diagnostics
+    states:
+      - { id: overview, title: "Settings: instances, devices, notifications, appearance", tour: 14, themes: [light, dark] }

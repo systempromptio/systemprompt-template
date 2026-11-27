@@ -10,18 +10,14 @@
 # target/flavour-smoke/<flavour>.log. --release adds the release checks: an
 # optional in-place upgrade from an older image, users, audit rows and identity
 # surviving recreation, the version string and the registration denial.
-# A desktop flavour (artefact: desktop) has no image to boot: its build and
-# smoke arrive in stage S1 of the harness programme, and until then this says
-# so and exits 0.
+# A flavour that is not an image (artefact: desktop or mobile) has none to
+# boot: this says where that artefact is built and exits 0.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
 flavour="${1:?usage: flavour-smoke.sh FLAVOUR [--no-build] [--image IMAGE] [--release ...]}"
 shift
 flavour_require "$flavour"
-if [ "$(flavour_get "$flavour" artefact)" = desktop ]; then
-    echo "flavour $flavour is a desktop artefact, not an image: the desktop build arrives in stage S1 of the harness programme, so there is nothing to smoke yet"
-    exit 0
-fi
+if flavour_not_image "$flavour" "smoke"; then exit 0; fi
 build=true image="" release=false version="" upgrade_from=""
 compose_file="$FLAVOUR_ROOT/docker-compose.yml"
 app_service=app

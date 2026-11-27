@@ -1,0 +1,70 @@
+name: Mobile
+
+# The phone apps (extensions/mobile) on the two systems that build them: the
+# Android app on Linux and the iOS app on macOS. Each job prints the pinned
+# toolchain and fails on pin drift, runs the formatter and linters with every
+# warning an error, and builds the blank app: a debug APK, and a simulator
+# build. Android also runs its JVM unit tests. Both builds are unsigned, no
+# job reads a secret, and no artefact is stored.
+
+on:
+  push:
+    branches: [future]
+  pull_request:
+    paths:
+      - "extensions/mobile/**"
+      - "flavours/mobile/**"
+      - "packaging/mobile/**"
+      - "scripts/mobile/**"
+      - "mobile.just"
+      - ".github/workflows/mobile.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Android (lint, unit tests, debug APK)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install the pinned Android platform and build tools
+        run: bash scripts/mobile/android-sdk.sh
+        timeout-minutes: 10
+      - run: bash scripts/mobile/toolchain.sh
+        timeout-minutes: 5
+      - name: Lint and unit tests
+        run: bash extensions/mobile/shared/build-android.sh check
+        timeout-minutes: 20
+      - name: Debug APK
+        run: bash extensions/mobile/shared/build-android.sh assemble
+        timeout-minutes: 15
+
+  ios:
+    name: iOS (lint, simulator build)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash scripts/mobile/toolchain.sh
+        timeout-minutes: 5
+      - name: Lint
+        run: bash extensions/mobile/shared/build-ios.sh check
+        timeout-minutes: 10
+      - name: Simulator build
+        run: bash extensions/mobile/shared/build-ios.sh build
+        timeout-minutes: 20

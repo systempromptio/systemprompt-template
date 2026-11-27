@@ -5,6 +5,7 @@ set dotenv-load
 set positional-arguments
 
 import 'harness.just'
+import 'mobile.just'
 
 # The flavour every build, run and test recipe targets (flavours/index.yaml;
 # `just flavours` lists them). Each flavour builds into its own target dir and
@@ -70,7 +71,8 @@ _db-url:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Guard: build, check and clippy compile the root package, which only an image
-# flavour names; for a desktop flavour flavour.py's message is the whole answer.
+# flavour names; for a desktop or mobile flavour flavour.py's message is the
+# whole answer.
 _image-flavour:
     @python3 scripts/flavour.py features {{FLAVOUR}}
 

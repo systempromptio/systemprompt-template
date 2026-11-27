@@ -3,7 +3,7 @@
 A flavour is a named build of this template. Its `artefact` says what the
 build produces:
 
-- `image` (the default, and every flavour but one): a server image. One cargo
+- `image` (the default, and every flavour but two): a server image. One cargo
   feature on the root crate (`flavour-<name>`), the binaries it ships, the
   parts of `services/` it loads, and what its image and local install do at
   boot. Every image flavour is a real feature subset: a capability a flavour
@@ -12,6 +12,9 @@ build produces:
 - `desktop`: installers for Windows, macOS and Linux, built from a cargo
   workspace of its own. `harness` is the one desktop flavour; see
   [The desktop flavour](#the-desktop-flavour).
+- `mobile`: an iOS app and an Android app, built from an Xcode project and a
+  Gradle project. `mobile` is the one mobile flavour; see
+  [The mobile flavour](#the-mobile-flavour).
 
 `flavours/index.yaml` lists the flavours in order. Each image flavour has a
 directory:
@@ -28,8 +31,9 @@ directory:
 recipe and workflow asks it. It runs on any `python3` with PyYAML
 (`python3-yaml`), which the setup scripts already need.
 
-`get <name> artefact` prints `image` or `desktop` for every flavour.
-`list` and `matrix` take `--artefact image|desktop` to keep one kind, and
+`get <name> artefact` prints `image`, `desktop` or `mobile` for every
+flavour. `list` and `matrix` take `--artefact image|desktop|mobile` to keep
+one kind, and
 `matrix` prints `{"flavour", "artefact"}` objects, so a workflow builds its
 matrix from the kind it can build: the `Flavours` workflow asks for
 `--artefact image`. `features <name>` answers for image flavours only.
@@ -47,11 +51,32 @@ desktop flavour, every key and file an image reads: `cargo_feature`,
 For image flavours `check` is as strict as before.
 
 `scripts/flavour-build.sh`, `flavour-smoke.sh`, `flavour-metrics.sh` and
-`flavour-setup.sh` branch on `artefact`. The workspace has no members yet,
-so for a desktop flavour each prints that the desktop build arrives in stage
-S1 of the harness programme and exits 0; `metrics all` measures the image
-flavours. The `Harness` workflow runs the desktop flavour's jobs on the three
-systems. Everything below this section describes image flavours.
+`flavour-setup.sh` exit early for any flavour that is not an image
+(`flavour_not_image` in `scripts/lib/flavour.sh`). The workspace has no
+members yet, so for a desktop flavour each prints that the desktop build
+arrives in stage S1 of the harness programme and exits 0; `metrics all`
+measures the image flavours. The `Harness` workflow runs the desktop
+flavour's jobs on the three systems.
+
+## The mobile flavour
+
+`flavours/mobile/` holds `flavour.yaml` and `README.md`, nothing else. Its
+`flavour.yaml` sets `name`, `description`, `artefact: mobile` and
+`workspace`, the directory holding the two app projects
+(`extensions/mobile`: a Gradle project in `android/`, an Xcode project in
+`ios/`, shared scripts in `shared/`; no cargo workspace). `check` requires
+that directory, an `android/settings.gradle.kts` and an `ios/*.xcodeproj`
+in it, and refuses the same image keys and files it refuses on a desktop
+flavour.
+
+The four flavour scripts print, for a mobile flavour, that the phone apps are
+built by `just mobile-android` and `just mobile-ios`, and exit 0. Those
+recipes are in `mobile.just`; `extensions/mobile/README.md` describes the
+projects, the pinned toolchain (`extensions/mobile/shared/toolchain.env`)
+and how to build. The iOS app builds only on macOS. The `Mobile` workflow
+builds the Android app on Linux and the iOS app for the simulator on macOS,
+unsigned, and stores nothing. Everything below this section describes image
+flavours.
 
 ## The flavours
 

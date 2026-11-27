@@ -1,0 +1,45 @@
+# The version catalog, and the dependency allowlist: a library or plugin the
+# app may use is listed here, and nothing is declared anywhere else. Adding an
+# entry is a reviewed change. The toolchain pins (agp, kotlin, the SDK levels,
+# build tools, the app version) are repeated in ../../shared/toolchain.env for
+# the scripts and the workflow; scripts/mobile/toolchain.sh fails when the two
+# disagree.
+
+[versions]
+agp = "9.5.3"
+kotlin = "2.4.21"
+compileSdk = "36"
+targetSdk = "36"
+minSdk = "26"
+buildTools = "36.0.0"
+appVersionName = "0.70.0"
+appVersionCode = "1"
+
+# The newest Compose BOM whose libraries compile against API 36; later ones
+# need compileSdk 37. Move it together with compileSdk.
+composeBom = "2026.06.01"
+activityCompose = "1.13.0"
+
+junit = "4.13.2"
+androidxTestExtJunit = "1.3.0"
+
+detekt = "1.23.8"
+ktlintGradle = "14.2.0"
+ktlint = "1.8.0"
+
+[libraries]
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintGradle" }

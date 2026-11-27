@@ -5,17 +5,14 @@
 # core override is on (scripts/core-patch.sh status = path), that checkout is
 # passed as the `core` BuildKit context and mounted at the path the override
 # names (CORE_PATH overrides where it is read from).
-# A desktop flavour (artefact: desktop) has no image: its build arrives in
-# stage S1 of the harness programme, and until then this says so and exits 0.
+# A flavour that is not an image (artefact: desktop or mobile) has none to
+# build: this says where that artefact is built and exits 0.
 set -euo pipefail
 source "$(dirname "$0")/lib/flavour.sh"
 flavour="${1:?usage: flavour-build.sh FLAVOUR [--tag T] [--target STAGE] [-- ARGS...]}"
 shift
 flavour_require "$flavour"
-if [ "$(flavour_get "$flavour" artefact)" = desktop ]; then
-    echo "flavour $flavour is a desktop artefact, not an image: the desktop build arrives in stage S1 of the harness programme, so there is nothing to build yet"
-    exit 0
-fi
+if flavour_not_image "$flavour" "build"; then exit 0; fi
 tag="systemprompt-template:$flavour"
 target=""
 dry_run=false

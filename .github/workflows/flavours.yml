@@ -6,8 +6,8 @@ name: Flavours
 # with deploy metrics (scripts/flavour-metrics.sh --image) and the image smoke
 # (scripts/flavour-smoke.sh). Metrics JSON and the
 # smoke results are uploaded; table.md is appended to the job summary. A
-# desktop flavour (artefact: desktop) is linted here and built by its own
-# workflow, never by this matrix. Core resolves from the git-rev pin in
+# desktop or mobile flavour (artefact: desktop, mobile) is linted here and
+# built by its own workflow, never by this matrix. Core resolves from the git-rev pin in
 # Cargo.toml (scripts/core-pin.sh), so no core checkout is needed.
 
 on:

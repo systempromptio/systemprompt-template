@@ -1,3 +1,12 @@
+- `scripts/flavour-build.sh`, `flavour-smoke.sh`, `flavour-metrics.sh` and
+  `flavour-setup.sh` exit early for every flavour that is not an image, not
+  only for `desktop`, through one `flavour_not_image` helper in
+  `scripts/lib/flavour.sh`; a mobile flavour is told the phone apps are built
+  by the `mobile-*` recipes. Before, a new artefact kind would have fallen
+  through to the image build.
+- The `Harness` workflow's pull-request path filter is `packaging/harness/**`
+  instead of `packaging/**`, so a change to `packaging/mobile/` no longer
+  starts the desktop jobs.
 # Changelog
 
 All notable changes to this repository are recorded here, newest first.
@@ -448,6 +457,36 @@ Conventions (strict — hold every entry to them):
   macOS and Linux jobs. For now each checks out and prints the toolchain
   `extensions/harness` resolves; it builds nothing and stores no artefact.
   `harness.just` adds `just harness-toolchain` and `just harness-resolve`.
+- **A `mobile` flavour and blank phone apps.** `extensions/mobile/` holds an
+  Android app (`android/`: Gradle with the wrapper committed, Kotlin DSL, a
+  version catalog that is the dependency allowlist, Jetpack Compose, minSdk
+  26) and an iOS app (`ios/`: `Mobile.xcodeproj` with file-system-synchronised
+  groups and a shared scheme, SwiftUI, iOS 17). Each shows one themed screen
+  with the app name from its string catalogue, under the identifier
+  `io.systemprompt.mobile`, and carries its formatter and linter
+  configuration (ktlint, detekt and Android lint; swift-format and SwiftLint)
+  with every warning an error, one unit test and one launch test. Neither is
+  part of a cargo workspace, and `.dockerignore` keeps both, and
+  `extensions/harness`, out of the image context. `shared/toolchain.env` pins
+  every version, `shared/screens.yaml` lists the screens and states both apps
+  will draw, and `shared/build-android.sh` and `build-ios.sh` build the apps;
+  their Rust library step is a stub that says the binding library arrives
+  with core's `systemprompt-mobile` crate. The iOS project was written
+  without Xcode and has not been built on a Mac yet. `packaging/mobile/` holds
+  signing templates with placeholders and no key. The apps' version moves
+  with the release: `scripts/sync-release-version.sh` sets and checks it in
+  `shared/toolchain.env`, the Android version catalog and the Xcode project.
+- **Flavours have a third `artefact`, `mobile`.** `flavours/mobile/` names
+  `extensions/mobile` as its `workspace`; `scripts/flavour.py check` requires
+  the Android and iOS projects to exist there and refuses the image keys, and
+  `list` and `matrix` take `--artefact mobile`.
+- **A `Mobile` workflow** (`.github/workflows/mobile.yml`): a Linux job that
+  lints, unit-tests and builds the Android debug APK, and a macOS job that
+  lints and builds the iOS app for the simulator. Both are unsigned and store
+  no artefact. `mobile.just` adds `just mobile-toolchain`,
+  `mobile-android-sdk`, `mobile-android`, `mobile-android-check`,
+  `mobile-android-install`, `mobile-ios` and `mobile-ios-check`; the iOS
+  recipes refuse anywhere but macOS.
 
 ### Changed
 - The web extension's schema is a feature-gated contribution: a schema file

@@ -35,6 +35,8 @@
 #                         core pins (extensions/web inherits -extension)
 #   tests/Cargo.toml      systemprompt/-security pins (separate workspace)
 #   extensions/harness/Cargo.toml  workspace version (separate workspace)
+#   extensions/mobile/    the phone apps' version: shared/toolchain.env,
+#                         the Android version catalog, the Xcode project
 #   helm/gateway/Chart.yaml  appVersion + artifacthub images annotation
 #                            (chart `version:` is bumped separately on apply)
 #   deploy/casaos/docker-compose.yml                exact image tag
@@ -108,6 +110,21 @@ check_or_apply extensions/harness/Cargo.toml \
     "s|^version = \"[0-9.]*\"|version = \"$VERSION\"|" \
     "^version = \"$VERSION\"" \
     "shell workspace version"
+
+# The phone apps are not cargo packages; their version is written in three
+# places that scripts/mobile/toolchain.sh holds to each other.
+check_or_apply extensions/mobile/shared/toolchain.env \
+    "s|^MOBILE_APP_VERSION=[0-9.]*|MOBILE_APP_VERSION=$VERSION|" \
+    "^MOBILE_APP_VERSION=$VERSION\$" \
+    "mobile app version"
+check_or_apply extensions/mobile/android/gradle/libs.versions.toml \
+    "s|^appVersionName = \"[0-9.]*\"|appVersionName = \"$VERSION\"|" \
+    "^appVersionName = \"$VERSION\"" \
+    "Android app versionName"
+check_or_apply extensions/mobile/ios/Mobile.xcodeproj/project.pbxproj \
+    "s|MARKETING_VERSION = [0-9.]*;|MARKETING_VERSION = $VERSION;|" \
+    "MARKETING_VERSION = $VERSION;" \
+    "iOS app marketing version"
 
 # Cargo.toml — core crate pins.
 check_or_apply Cargo.toml \

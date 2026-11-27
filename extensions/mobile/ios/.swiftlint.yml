@@ -1,0 +1,36 @@
+# SwiftLint, run with --strict so every warning fails (shared/build-ios.sh check).
+# Formatting is swift-format's job (.swift-format); the rules it owns are off here.
+included:
+  - App
+  - Design
+  - Features
+  - Tests
+  - UITests
+
+disabled_rules:
+  - trailing_comma
+  - opening_brace
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - redundant_nil_coalescing
+
+line_length:
+  warning: 120
+  error: 120
+
+# No behaviour in the app: networking, token handling and cursor arithmetic
+# belong to the shared Rust core, reached through the generated bindings.
+custom_rules:
+  no_direct_networking:
+    name: "No direct networking"
+    regex: '\b(URLSession|URLRequest|NWConnection|CFNetwork)\b'
+    match_kinds:
+      - identifier
+      - typeidentifier
+    message: "The app does no networking of its own; call the shared core."
+    severity: error

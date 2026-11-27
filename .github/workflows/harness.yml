@@ -14,7 +14,7 @@ on:
       - "extensions/harness/**"
       - "flavours/harness/**"
       - "scripts/harness/**"
-      - "packaging/**"
+      - "packaging/harness/**"
       - "harness.just"
       - ".github/workflows/harness.yml"
   workflow_dispatch:

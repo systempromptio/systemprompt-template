@@ -1,0 +1,10 @@
+# Only the templates are tracked. The filled-in copies and every key stay out.
+keystore.properties
+ExportOptions.plist
+*.jks
+*.keystore
+*.p12
+*.p8
+*.cer
+*.mobileprovision
+*.provisionprofile

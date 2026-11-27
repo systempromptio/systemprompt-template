@@ -1,0 +1,17 @@
+# Xcode build output and per-user state
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcresult
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Signing: never tracked. Templates live in packaging/mobile/ios/.
+*.p12
+*.p8
+*.cer
+*.mobileprovision
+*.provisionprofile
+ExportOptions.plist
