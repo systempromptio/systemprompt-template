@@ -15,10 +15,6 @@ use jni::objects::{JClass, JObject};
     unsafe_code,
     reason = "the JVM binds a native method by its unmangled symbol name"
 )]
-#[expect(
-    non_snake_case,
-    reason = "the symbol name is the Java class and method the JVM looks up"
-)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_io_systemprompt_mobile_NativeLibrary_initialisePlatform<'local>(
     mut env: EnvUnowned<'local>,
