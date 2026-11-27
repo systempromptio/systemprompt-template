@@ -15,7 +15,20 @@
 # template's: rustup, rustfmt, clippy and cargo-deny each find them by walking
 # up from this directory, the same way the tests/ workspace does.
 [workspace]
-members = []
+members = [
+    "brand",
+    "theme",
+    "shared",
+    "views",
+    "shell",
+    "tests/harness-brain-ui-tests",
+    "tests/harness-desktop-tests",
+    "tests/harness-drive-ui-tests",
+    "tests/harness-notifications-ui-tests",
+    "tests/harness-shell-tests",
+    "tests/harness-ui-tests",
+    "tests/sp-brand-tests",
+]
 resolver = "2"
 
 [workspace.package]
