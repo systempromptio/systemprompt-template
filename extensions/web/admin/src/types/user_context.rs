@@ -10,7 +10,7 @@ use crate::repositories::users::queries::UserAccessProfile;
 
 /// The signed-in console principal, built only by the verifying middleware.
 ///
-/// Its fields are crate-private and [`UserContext::signed_in`] takes a
+/// Its fields are crate-private and `UserContext::signed_in` takes a
 /// [`CookieSession`] that only core-verified credentials produce.
 #[derive(Debug, Clone, Serialize)]
 pub struct UserContext {
@@ -41,7 +41,7 @@ pub struct UserContext {
 /// core hands every first-time visitor verifies too, and its account row
 /// carries the `anonymous` role, which is outside the console's closed role
 /// set. Every console gate reads [`UserContext`], and a `UserContext` exists
-/// only for a caller that passes [`UserContext::signed_in`].
+/// only for a caller that passes `UserContext::signed_in`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum NotSignedIn {
     #[error("the credential is an anonymous session")]
