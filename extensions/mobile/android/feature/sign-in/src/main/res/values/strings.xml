@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sign_in_instance_prompt">Enter the address of your instance.</string>
+    <string name="sign_in_instance_address_label">Instance address</string>
+    <string name="sign_in_instance_address_placeholder">https://demo.systemprompt.io</string>
+    <string name="sign_in_instance_discover">Find instance</string>
+    <string name="sign_in_instance_discovering">Looking for the instance.</string>
+    <string name="sign_in_instance_unnamed">This instance has no display name</string>
+    <string name="sign_in_instance_android_app">Android app: %1$s</string>
+    <string name="sign_in_instance_android_app_none">This instance offers no Android app.</string>
+    <string name="sign_in_instance_ios_app">iOS app: %1$s</string>
+    <string name="sign_in_instance_ios_app_none">This instance offers no iOS app.</string>
+    <string name="sign_in_instance_app_min_version">Oldest supported version: %1$s</string>
+    <string name="sign_in_instance_error_invalid_address">That is not the address of an instance. Enter its origin, such as https://demo.systemprompt.io.</string>
+    <string name="sign_in_instance_error_network">The instance could not be reached.</string>
+    <string name="sign_in_instance_error_not_found">There is no instance at that address.</string>
+    <string name="sign_in_instance_error_refused">The instance refused the request (status %1$s).</string>
+    <string name="sign_in_instance_error_version_too_old">This app is too old for the instance. Update it and try again.</string>
+    <string name="sign_in_instance_error_internal">Something went wrong. Quote this reference to support: %1$s</string>
+    <string name="sign_in_instance_library_version_label">Binding library</string>
+    <string name="sign_in_instance_core_version_label">Core</string>
+</resources>

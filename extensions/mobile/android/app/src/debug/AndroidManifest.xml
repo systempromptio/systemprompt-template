@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Debug builds only: plain HTTP, for a development instance on the loopback
+         or a private network. The shared core admits plain HTTP for those hosts
+         alone; the release build permits none. -->
+    <application android:networkSecurityConfig="@xml/network_security_config" />
+
+</manifest>

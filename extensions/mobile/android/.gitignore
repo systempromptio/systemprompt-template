@@ -8,6 +8,10 @@ captures/
 *.apk
 *.aab
 
+# The shared Rust library, built per ABI by ../shared/build-android.sh. The
+# Kotlin generated from it is under app/build/.
+app/src/main/jniLibs/
+
 # Machine-local: the SDK path
 local.properties
 

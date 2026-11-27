@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Build the iOS app. macOS only: Xcode does not run anywhere else.
 #   build-ios.sh [build|check]
-# build (the default): the Rust library step, then `xcodebuild build` of the
-#   Mobile scheme for the simulator, unsigned.
+# build (the default): `xcodebuild build` of the Mobile scheme for the
+#   simulator, unsigned.
 # check: SwiftLint (--strict) and swift-format (lint --strict) over the
 #   sources, every warning an error.
-# The Rust library step is a stub (shared/env.sh); the app build is real.
+# The iOS app does not link the binding library yet: its Rust library step
+# (shared/env.sh) builds nothing and says so. The app build is real.
 # Needs Xcode $MOBILE_XCODE_MIN or later.
 set -euo pipefail
 source "$(dirname "$0")/env.sh"
@@ -17,7 +18,7 @@ fi
 cd "$MOBILE_ROOT/ios"
 case "$mode" in
     build)
-        mobile_rust_library iOS "$MOBILE_RUST_TARGETS_IOS"
+        mobile_rust_library_ios
         xcodebuild \
             -project Mobile.xcodeproj \
             -scheme Mobile \

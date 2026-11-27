@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only (src/debug). A development instance is reached over plain
+     HTTP at a loopback or private address, which no domain list can name, so
+     the base configuration permits it; the shared core refuses plain HTTP for
+     every other host. -->
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <base-config
+        cleartextTrafficPermitted="true"
+        tools:ignore="InsecureBaseConfiguration" />
+</network-security-config>
