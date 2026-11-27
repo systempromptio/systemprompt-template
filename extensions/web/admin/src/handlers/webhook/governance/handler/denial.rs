@@ -71,15 +71,8 @@ pub(super) fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             origin: AuditOrigin::Governed,
             decision: deny_for_auth_failure(&reason),
             // Why: authentication is what failed, so nothing about this caller
-            // was verified — no scope, no client, and the agent id it sent
-            // stays a claim.
-            principal: principal_snapshot(
-                user_id,
-                session_id.clone(),
-                AccessScope::Unknown,
-                None,
-                None,
-            ),
+            // was verified — no scope and no client.
+            principal: principal_snapshot(user_id, session_id.clone(), AccessScope::Unknown, None),
             target: AuditTarget {
                 tool_name: systemprompt::identifiers::McpToolName::new(tool_name),
                 plugin_id,

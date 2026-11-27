@@ -36,15 +36,13 @@ use governed::{governed_input, governed_target};
 
 
 // Why: the hook payload's agent id is asserted by the caller, not verified
-// from the credential, so it lands in `claimed`. Core writes `agent_id` to the
-// verified identity column and keeps `claimed` in the audit blob only, where
-// it is never an input to a decision.
-pub(super) fn principal_snapshot(
+// from the credential, so it is never recorded: core's audit snapshot carries
+// verified identity only, and `agent_id` stays empty for a hook call.
+pub(super) const fn principal_snapshot(
     user_id: UserId,
     session_id: SessionId,
     agent_scope: AccessScope,
     client_id: Option<ClientId>,
-    _claimed: Option<String>,
 ) -> PrincipalSnapshot {
     PrincipalSnapshot {
         user_id,
@@ -94,7 +92,6 @@ struct Governed<'a> {
     client_id: Option<ClientId>,
     access_scope: AccessScope,
     roles: Vec<String>,
-    _claimed: Option<String>,
     plugin_id: Option<&'a PluginId>,
 }
 
@@ -130,7 +127,6 @@ async fn evaluate_and_record(
             governed.session_id.clone(),
             governed.access_scope,
             governed.client_id,
-            None,
         ),
         target: AuditTarget {
             tool_name: systemprompt::identifiers::McpToolName::new(governed.target.as_str()),
@@ -179,10 +175,6 @@ pub(crate) async fn govern_tool_use(
     // a `PreToolUse` envelope it would have to ignore.
     let response_event = response_event(&payload);
     let session_id = SessionId::new(payload.session_id());
-    // Why: the hook body's agent id is a self-report — a Claude Code subagent
-    // id, never a platform agent. It is kept for display and never becomes an
-    // identity or a scope input.
-    let claimed = payload.common.agent_id.as_ref().map(ToString::to_string);
     let plugin_id = query.plugin_id.as_ref();
     let denial_params = AuthDenialParams {
         pool: &pool,
@@ -223,7 +215,6 @@ pub(crate) async fn govern_tool_use(
         client_id: principal.client_id,
         access_scope: standing.scope,
         roles: standing.roles,
-        _claimed: claimed,
         plugin_id,
     };
     let engine = governance.get();
