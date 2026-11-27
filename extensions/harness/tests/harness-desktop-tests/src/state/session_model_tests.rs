@@ -8,10 +8,10 @@ use super::session_model_fixtures::{loaded, text_of, text_part};
 
 #[test]
 fn a_streamed_turn_builds_the_transcript_in_order() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
-    let user = UserMessage::new(id.clone(), "build", "m");
-    let assistant = AssistantMessage::new(id.clone(), user.id.clone(), "build", "m");
+    let user = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
+    let assistant = AssistantMessage::new(&crate::IDS, id.clone(), user.id.clone(), "build", "m");
     let prompt = text_part(&id, &user.id, "run the tests");
     let reply = text_part(&id, &assistant.id, "");
 
@@ -47,10 +47,10 @@ fn a_streamed_turn_builds_the_transcript_in_order() {
 
 #[test]
 fn changes_for_other_sessions_are_ignored() {
-    let id = SessionId::mint();
-    let other = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
+    let other = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
-    let message = UserMessage::new(other.clone(), "build", "m");
+    let message = UserMessage::new(&crate::IDS, other.clone(), "build", "m");
     let revision = model.revision;
     assert_eq!(
         model.apply_change(&Change::MessageUpdated(message.into())),
@@ -68,9 +68,9 @@ fn changes_for_other_sessions_are_ignored() {
 
 #[test]
 fn a_part_for_an_unknown_message_asks_for_a_reload() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
-    let part = text_part(&id, &MessageId::mint(), "orphan");
+    let part = text_part(&id, &MessageId::mint(&crate::IDS), "orphan");
     assert_eq!(
         model.apply_change(&Change::PartUpdated(part)),
         ModelEffect::Reload
@@ -79,9 +79,9 @@ fn a_part_for_an_unknown_message_asks_for_a_reload() {
 
 #[test]
 fn a_delta_for_an_unknown_part_marks_the_model_stale_until_idle() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
-    let user = UserMessage::new(id.clone(), "build", "m");
+    let user = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
     model.apply_change(&Change::MessageUpdated(user.clone().into()));
     model.apply_event(&EngineEvent::Status {
         session: id.clone(),
@@ -90,7 +90,7 @@ fn a_delta_for_an_unknown_part_marks_the_model_stale_until_idle() {
     let lost = Change::PartDelta {
         session_id: id.clone(),
         message_id: user.id,
-        part_id: PartId::mint(),
+        part_id: PartId::mint(&crate::IDS),
         delta: "x".to_owned(),
     };
     assert_eq!(model.apply_change(&lost), ModelEffect::Unchanged);
@@ -106,9 +106,9 @@ fn a_delta_for_an_unknown_part_marks_the_model_stale_until_idle() {
 
 #[test]
 fn an_older_part_update_does_not_overwrite_a_newer_one() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
-    let user = UserMessage::new(id.clone(), "build", "m");
+    let user = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
     model.apply_change(&Change::MessageUpdated(user.clone().into()));
     let mut newer = text_part(&id, &user.id, "abc");
     newer.updated_at = 20;
@@ -127,9 +127,9 @@ fn an_older_part_update_does_not_overwrite_a_newer_one() {
 
 #[test]
 fn removals_take_messages_and_parts_out() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
-    let user = UserMessage::new(id.clone(), "build", "m");
+    let user = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
     let part = text_part(&id, &user.id, "hi");
     model.apply_change(&Change::MessageUpdated(user.clone().into()));
     model.apply_change(&Change::PartUpdated(part.clone()));

@@ -1,17 +1,26 @@
 #!/usr/bin/env bash
 # Switches core between the committed git-rev pin (scripts/core-pin.sh) and a
 # local core checkout. `on` appends a [patch."<core repo>"] table of path
-# entries to both workspaces (the root and the separate tests/), one per core
+# entries to every workspace manifest that names core, one entry per core
 # crate that workspace's lockfile resolves, and hides the manifests and locks
-# from git; `off` restores the committed pin. The phone apps' binding
-# workspace (extensions/mobile/core) is switched with them, so the library a
-# phone loads is built from the same checkout.
+# from git; `off` restores the committed pin. The workspaces are the root, the
+# separate tests/, the phone apps' binding workspace (extensions/mobile/core),
+# so the library a phone loads is built from the same checkout, and the
+# desktop shell with its tests workspace (extensions/harness,
+# extensions/harness/tests), so the shell is built from it too. The checkout
+# must hold every crate a lockfile names: one without core's device crates
+# cannot be switched on while the shell depends on them, and `on` names the
+# missing crate before it changes anything.
 #   scripts/core-patch.sh on <core checkout> | off | status
 set -euo pipefail
 cd "$(dirname "$0")/.."
 url=https://github.com/systempromptio/systemprompt-core
-mobile=extensions/mobile/core
-files=(Cargo.toml Cargo.lock tests/Cargo.toml tests/Cargo.lock "$mobile/Cargo.toml" "$mobile/Cargo.lock")
+workspaces=(. tests extensions/mobile/core extensions/harness extensions/harness/tests)
+files=()
+for w in "${workspaces[@]}"; do
+    files+=("$w/Cargo.toml" "$w/Cargo.lock")
+done
+files=("${files[@]#./}")
 
 status() {
     if grep -qxF "[patch.\"$url\"]" Cargo.toml; then echo path; else echo pin; fi
@@ -19,7 +28,8 @@ status() {
 
 patch_table() {
     local manifest="$1" lock="$2" core="$3" rel
-    rel="$(realpath --relative-to="$(dirname "$manifest")" "$core")"
+    # Why: `realpath --relative-to` is GNU-only; macOS's realpath has no such flag.
+    rel="$(python3 -c 'import os, sys; print(os.path.relpath(sys.argv[1], os.path.dirname(os.path.abspath(sys.argv[2]))))' "$core" "$manifest")"
     printf '\n[patch."%s"]\n' "$url"
     awk -v rel="$rel" -v url="$url" '
         FNR == NR {
@@ -40,22 +50,25 @@ patch_table() {
 
 case "${1:-status}" in
   on)
-    core="$(realpath "${2:?usage: scripts/core-patch.sh on <core checkout>}")"
+    core="$(cd "${2:?usage: scripts/core-patch.sh on <core checkout>}" && pwd -P)"
     [ -f "$core/systemprompt/Cargo.toml" ] || { echo "no systemprompt-core checkout at $core" >&2; exit 1; }
     [ "$(status)" = pin ] || { echo "a local core override is already on; run scripts/core-patch.sh off first" >&2; exit 1; }
-    root_table="$(patch_table Cargo.toml Cargo.lock "$core")"
-    tests_table="$(patch_table tests/Cargo.toml tests/Cargo.lock "$core")"
-    mobile_table="$(patch_table "$mobile/Cargo.toml" "$mobile/Cargo.lock" "$core")"
+    tables=()
+    for w in "${workspaces[@]}"; do
+        tables+=("$(patch_table "$w/Cargo.toml" "$w/Cargo.lock" "$core")")
+    done
     git update-index --skip-worktree "${files[@]}"
-    printf '%s\n' "$root_table" >> Cargo.toml
-    printf '%s\n' "$tests_table" >> tests/Cargo.toml
-    printf '%s\n' "$mobile_table" >> "$mobile/Cargo.toml"
-    echo "core override on: $core; the root, tests/ and $mobile manifests and locks are hidden from git"
+    i=0
+    for w in "${workspaces[@]}"; do
+        printf '%s\n' "${tables[$i]}" >> "$w/Cargo.toml"
+        i=$((i + 1))
+    done
+    echo "core override on: $core; the manifests and locks of ${workspaces[*]} are hidden from git"
     ;;
   off)
     git update-index --no-skip-worktree "${files[@]}"
     git checkout -- "${files[@]}"
-    echo "core override off: the committed pin (bridge/CORE_REF) is back"
+    echo "core override off: the committed pin (bridge/CORE_REF, and the shell's own rev while it is apart) is back"
     ;;
   status) status ;;
   *) echo "usage: scripts/core-patch.sh on <core checkout> | off | status" >&2; exit 2 ;;

@@ -1,0 +1,69 @@
+# Test workspace for the desktop shell.
+#
+# Kept as a SEPARATE workspace (extensions/harness/Cargo.toml lists it under
+# `exclude`), the way the root workspace keeps tests/: it has its own
+# Cargo.lock and its own lint table, so test code may assert by panicking
+# while the five shell crates stay under the production table. The seven
+# crates test the shell crates through their public API.
+#
+# Run:  bash scripts/harness/cargo.sh test   (shell workspace, then this one)
+#
+# Core is named exactly as the shell manifest names it, one rev for both;
+# scripts/core-pin.sh moves the two together. The toolchain is the shell's
+# (../rust-toolchain.toml, found by rustup walking up from here), and both
+# workspaces build into extensions/harness/target (scripts/harness/cargo.sh).
+[workspace]
+members = [
+    "harness-brain-ui-tests",
+    "harness-desktop-tests",
+    "harness-drive-ui-tests",
+    "harness-notifications-ui-tests",
+    "harness-shell-tests",
+    "harness-ui-tests",
+    "sp-brand-tests",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.99"
+version = "0.0.0"
+authors = ["systemprompt.io <ed@systemprompt.io>"]
+license = "MIT"
+publish = false
+repository = "https://github.com/systempromptio/systemprompt-template"
+homepage = "https://systemprompt.io"
+
+# The template's tests lint table (tests/Cargo.toml), copied unchanged: test
+# code asserts by panicking and constructs fixtures liberally.
+[workspace.lints.clippy]
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+missing_panics_doc = "allow"
+missing_errors_doc = "allow"
+
+[workspace.dependencies]
+# The shell crates under test (paths relative to this directory).
+systemprompt-harness-brand = { path = "../brand" }
+systemprompt-harness-theme = { path = "../theme" }
+systemprompt-harness-shared = { path = "../shared" }
+systemprompt-harness-views = { path = "../views" }
+systemprompt-harness-shell = { path = "../shell" }
+
+systemprompt-device = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-drive = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-engine = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-harness = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-identifiers = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-models = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-traits = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+
+# Each of these is the shell manifest's entry, so a test links the versions
+# and features the shell does.
+gpui-kit = { version = "=0.9.1", features = ["syntect"] }
+async-trait = "0.1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+serde_json = { version = "1", features = ["preserve_order", "raw_value"] }
+tempfile = "3.27"
+tokio = { version = "1.54", features = ["rt-multi-thread", "net", "io-util", "time", "sync", "macros", "fs"] }

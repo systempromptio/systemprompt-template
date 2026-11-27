@@ -14,7 +14,7 @@ fn draft(text: &str) -> Draft {
 #[test]
 fn drafts_come_back_per_session() {
     let mut drafts = Drafts::default();
-    let session = SessionId::mint();
+    let session = SessionId::mint(&crate::IDS);
     drafts.keep(Some(session.clone()), draft("half written"));
     drafts.keep(None, draft("new session"));
     assert_eq!(drafts.take(Some(&session)).text, "half written");
@@ -25,7 +25,7 @@ fn drafts_come_back_per_session() {
 #[test]
 fn empty_drafts_are_dropped() {
     let mut drafts = Drafts::default();
-    let session = SessionId::mint();
+    let session = SessionId::mint(&crate::IDS);
     drafts.keep(Some(session.clone()), draft("x"));
     drafts.keep(Some(session.clone()), draft("   "));
     assert!(drafts.take(Some(&session)).is_empty());

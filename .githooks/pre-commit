@@ -10,25 +10,29 @@ set -euo pipefail
 # (scripts/core-pin.sh). A local override (scripts/core-patch.sh on) adds a
 # [patch."<core repo>"] table of path entries into a checkout; a path patch of
 # either form ([patch.crates-io] or [patch."<url>"]) never enters a commit.
-# tests/ and extensions/mobile/core are separate cargo workspaces, so every
-# manifest is guarded, and the staged revs must match bridge/CORE_REF.
+# tests/, extensions/mobile/core, extensions/harness and
+# extensions/harness/tests are separate cargo workspaces, so every manifest is
+# guarded, and the staged revs must match bridge/CORE_REF (the desktop shell's
+# two must match each other, and core-pin.sh reports it while that one rev is
+# not CORE_REF's).
 violations=()
-for manifest in Cargo.toml tests/Cargo.toml extensions/mobile/core/Cargo.toml; do
+for manifest in Cargo.toml tests/Cargo.toml extensions/mobile/core/Cargo.toml \
+                extensions/harness/Cargo.toml extensions/harness/tests/Cargo.toml; do
   git diff --cached --name-only | grep -qx "$manifest" || continue
   if git show ":$manifest" 2>/dev/null \
      | awk '/^\[/ { live = ($0 ~ /^\[patch[.]/); next } live && /path = / { found = 1 } END { exit !found }'; then
     violations+=("$manifest stages a [patch] path entry (a local core override)")
   fi
 done
-if git diff --cached --name-only | grep -qxE '((tests|extensions/mobile/core)/)?Cargo\.(toml|lock)|bridge/CORE_REF' \
+if git diff --cached --name-only | grep -qxE '((tests|extensions/mobile/core|extensions/harness|extensions/harness/tests)/)?Cargo\.(toml|lock)|bridge/CORE_REF' \
    && [ "${#violations[@]}" -eq 0 ] && ! bash scripts/core-pin.sh --check >/dev/null 2>&1; then
-  violations+=("the core pin disagrees with bridge/CORE_REF (bash scripts/core-pin.sh --check)")
+  violations+=("the core pin disagrees with bridge/CORE_REF, or the desktop shell's with itself (bash scripts/core-pin.sh --check)")
 fi
 if (( ${#violations[@]} > 0 )); then
   echo "✗ pre-commit blocked: the core pin is not the committed git-rev form." >&2
   for v in "${violations[@]}"; do echo "  - $v" >&2; done
   echo "" >&2
-  echo "Run scripts/core-patch.sh off to restore the pin, or scripts/core-pin.sh <rev> to move it." >&2
+  echo "Run scripts/core-patch.sh off to restore the pin, or scripts/core-pin.sh <rev> to move it (--shell <rev> for the desktop shell alone)." >&2
   exit 1
 fi
 
@@ -38,6 +42,14 @@ if git diff --cached --name-only | grep -q '\.rs$'; then
      || ! cargo fmt --manifest-path tests/Cargo.toml --all -- --check >/dev/null 2>&1 \
      || ! cargo fmt --manifest-path extensions/mobile/core/Cargo.toml --all -- --check >/dev/null 2>&1; then
     echo "✗ pre-commit blocked: cargo fmt --check fails. Run 'cargo fmt --all' (and with --manifest-path tests/Cargo.toml and extensions/mobile/core/Cargo.toml)." >&2
+    exit 1
+  fi
+  # The desktop shell's two workspaces, only when one of their files is staged:
+  # they are formatted by the template's rustfmt but resolved from inside
+  # extensions/harness, which scripts/harness/cargo.sh does.
+  if git diff --cached --name-only | grep -q '^extensions/harness/.*\.rs$' \
+     && ! bash scripts/harness/cargo.sh fmt-check >/dev/null 2>&1; then
+    echo "✗ pre-commit blocked: the desktop shell is not formatted. Run: bash scripts/harness/cargo.sh fmt-check" >&2
     exit 1
   fi
 fi

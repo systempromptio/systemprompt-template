@@ -149,10 +149,10 @@ fn errors_reduce_to_what_the_person_can_act_on() {
 #[test]
 fn only_a_sessions_latest_reply_is_adorned() {
     let mut latest = LatestReplies::default();
-    let session = SessionId::mint();
-    let other = SessionId::mint();
-    let older = MessageId::mint();
-    let newer = MessageId::mint();
+    let session = SessionId::mint(&crate::fixtures::IDS);
+    let other = SessionId::mint(&crate::fixtures::IDS);
+    let older = MessageId::mint(&crate::fixtures::IDS);
+    let newer = MessageId::mint(&crate::fixtures::IDS);
     assert!(latest.observe(&session, &older));
     assert!(latest.observe(&session, &newer));
     assert!(!latest.observe(&session, &older));

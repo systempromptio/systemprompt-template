@@ -4,6 +4,25 @@ targets = []
 [advisories]
 # Transitive unmaintained crates (GTK3 bindings, ttf-parser under the bridge
 # GUI stack) are upstream's to replace; only direct dependencies error.
+#
+# The desktop shell (extensions/harness and extensions/harness/tests) is
+# scanned with this file too. Its window toolkit, `gpui-kit` =0.9.1, brings
+# nine unmaintained crates and none of them is a direct dependency of a shell
+# crate, so this setting is what admits them; no `ignore` entry is needed and
+# none is written (an entry cargo-deny never meets is a warning of its own).
+# They are listed here so the next toolkit bump re-reads them. No
+# vulnerability is reported against any of the nine:
+#   RUSTSEC-2024-0384  instant 0.1.13         <- gpui-base
+#   RUSTSEC-2024-0436  paste 1.0.15           <- gpui-component
+#   RUSTSEC-2025-0134  rustls-pemfile 2.2.0   <- gpui-pre-reqwest <- gpui-kit-assets
+#   RUSTSEC-2025-0141  bincode 1.3.3          <- syntect <- gpui-component
+#   RUSTSEC-2026-0192  ttf-parser 0.25.1      <- fontdb <- cosmic-text <- gpui-pre-wgpu (Linux)
+#   RUSTSEC-2026-0206  rustybuzz 0.20.1       <- usvg <- resvg <- gpui-component
+#   RUSTSEC-2026-0370  zvariant 5.15.1        <- accesskit_unix <- gpui-pre-linux (Linux)
+#   RUSTSEC-2026-0371  zbus_names 4.3.5       <- atspi-common <- accesskit_unix (Linux)
+#   RUSTSEC-2026-0372  zvariant_derive 5.15.1 <- zvariant (Linux)
+# Exit: re-run `cargo deny check advisories` with `unmaintained = "all"` when
+# the `gpui-kit` pin in extensions/harness/Cargo.toml moves, and correct the list.
 unmaintained = "workspace"
 ignore = [
     # rsa crate Marvin Attack - no patch available yet, used transitively by oauth2/webauthn-rs
@@ -35,6 +54,29 @@ allow = [
     "Unicode-DFS-2016",
 ]
 confidence-threshold = 0.8
+# Scoped per-crate allowances, each for one crate that only the desktop
+# shell's window toolkit (`gpui-kit` =0.9.1, extensions/harness) brings in.
+# They are exceptions and not entries of `allow` above so that neither licence
+# is admitted for the server workspaces, which meet neither today.
+exceptions = [
+    # 0BSD is a public-domain-equivalent permissive licence (OSI approved, no
+    # attribution clause). `enum-iterator` is a direct dependency of
+    # `gpui-component` 0.9.1; 2.3.0 is what the toolkit's requirement resolves.
+    # Exit: drop when the toolkit pin moves off it.
+    { crate = "enum-iterator", allow = ["0BSD"] },
+    # The derive macro of `enum-iterator`, same licence, same path; build-time only.
+    { crate = "enum-iterator-derive", allow = ["0BSD"] },
+    # CC0-1.0 is a public-domain dedication (FSF free; core's deny.toml allows
+    # it outright). `notify` 8.2.2, the file watcher `gpui-component` 0.9.1
+    # depends on, is licensed CC0-1.0 alone. Exit: drop when the toolkit pin
+    # moves off it.
+    { crate = "notify", allow = ["CC0-1.0"] },
+    # `tiny-keccak` 2.0.2 is CC0-1.0 alone. Reached through `const-random-macro`
+    # <- `const-random` <- `ahash` 0.8 <- `zed-xim` <- `gpui-pre-linux`, the
+    # toolkit's X11 input-method path: build-time only (it hashes a compile-time
+    # random seed) and resolved for Linux only. Exit: as `notify`.
+    { crate = "tiny-keccak", allow = ["CC0-1.0"] },
+]
 
 [bans]
 multiple-versions = "warn"

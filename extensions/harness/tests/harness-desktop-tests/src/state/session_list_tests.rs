@@ -9,8 +9,8 @@ const DAY_MS: i64 = 24 * 60 * 60 * 1000;
 
 fn session(title: &str, updated_at: i64, parent: Option<&SessionId>) -> Session {
     Session {
-        id: SessionId::mint(),
-        project_id: ProjectId::mint(),
+        id: SessionId::mint(&crate::IDS),
+        project_id: ProjectId::mint(&crate::IDS),
         parent_id: parent.cloned(),
         directory: PathBuf::from("/work"),
         title: title.to_owned(),

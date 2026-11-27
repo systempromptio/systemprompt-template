@@ -59,7 +59,7 @@ fn new_session_links_take_an_optional_directory_and_prompt() {
 
 #[test]
 fn session_links_need_a_valid_id() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     assert_eq!(
         parse(SCHEME, &format!("sp-harness://session?id={id}")),
         Ok(Link::OpenSession { session: id })

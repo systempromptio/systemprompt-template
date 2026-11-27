@@ -7,18 +7,21 @@
 # window toolkit.
 #
 # Members, in dependency order: brand, theme, shared, views, shell. `shell`
-# builds the `harness` binary; tests/ holds the seven crates that test them
-# through their public API. README.md says what each holds.
+# builds the `harness` binary. tests/ is a workspace of its own (listed under
+# `exclude` here, as the root lists this one): the seven crates that test
+# these five through their public API, under the tests lint table. README.md
+# says what each holds.
 #
 # Core is named the way the root manifest names it: git dependencies on one
 # rev of systemprompt-core, every entry on one line in the form
-# scripts/core-pin.sh rewrites. The rev here is core's `future` branch, which
-# carries the device crates (engine, device, drive, harness); bridge/CORE_REF
-# does not hold it yet, so this workspace is not under core-pin.sh --check.
+# scripts/core-pin.sh rewrites, and tests/Cargo.toml names the same rev. The
+# rev is on core's `future` branch, ahead of bridge/CORE_REF: while the two
+# differ core-pin.sh checks this workspace against its own rev and moves it
+# with `--shell <rev>`; once they are equal it moves with the root.
 #
-# rust-toolchain.toml, rustfmt.toml, clippy.toml and deny.toml are the
-# template's: rustup, rustfmt, clippy and cargo-deny each find them by walking
-# up from this directory, the same way the tests/ workspace does.
+# rustfmt.toml, clippy.toml and deny.toml are the template's: rustfmt, clippy
+# and cargo-deny each find them by walking up from this directory. The
+# toolchain is this directory's own rust-toolchain.toml.
 [workspace]
 members = [
     "brand",
@@ -26,14 +29,8 @@ members = [
     "shared",
     "views",
     "shell",
-    "tests/harness-brain-ui-tests",
-    "tests/harness-desktop-tests",
-    "tests/harness-drive-ui-tests",
-    "tests/harness-notifications-ui-tests",
-    "tests/harness-shell-tests",
-    "tests/harness-ui-tests",
-    "tests/sp-brand-tests",
 ]
+exclude = ["tests"]
 resolver = "2"
 
 [workspace.package]
@@ -54,13 +51,13 @@ systemprompt-harness-shared = { path = "shared" }
 systemprompt-harness-views = { path = "views" }
 systemprompt-harness-shell = { path = "shell" }
 
-systemprompt-device = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
-systemprompt-drive = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
-systemprompt-engine = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
-systemprompt-harness = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
-systemprompt-identifiers = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
-systemprompt-models = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
-systemprompt-traits = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
+systemprompt-device = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-drive = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-engine = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-harness = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-identifiers = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-models = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-traits = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
 
 # The window toolkit, pinned exactly: a bump is re-checked against every view.
 gpui-kit = { version = "=0.9.1", features = ["syntect"] }

@@ -2858,82 +2858,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "harness-brain-ui-tests"
-version = "0.70.0"
-dependencies = [
- "serde_json",
- "systemprompt-harness",
- "systemprompt-harness-views",
- "systemprompt-identifiers",
- "systemprompt-models",
-]
-
-[[package]]
-name = "harness-desktop-tests"
-version = "0.70.0"
-dependencies = [
- "async-trait",
- "chrono",
- "serde_json",
- "systemprompt-device",
- "systemprompt-engine",
- "systemprompt-harness",
- "systemprompt-harness-brand",
- "systemprompt-harness-shared",
- "systemprompt-harness-shell",
- "systemprompt-harness-views",
- "systemprompt-identifiers",
- "systemprompt-models",
- "systemprompt-traits",
- "tempfile",
- "tokio",
-]
-
-[[package]]
-name = "harness-drive-ui-tests"
-version = "0.70.0"
-dependencies = [
- "chrono",
- "systemprompt-device",
- "systemprompt-drive",
- "systemprompt-harness",
- "systemprompt-harness-shared",
- "systemprompt-harness-views",
- "systemprompt-identifiers",
- "systemprompt-models",
-]
-
-[[package]]
-name = "harness-notifications-ui-tests"
-version = "0.70.0"
-dependencies = [
- "chrono",
- "serde_json",
- "systemprompt-device",
- "systemprompt-harness",
- "systemprompt-harness-shared",
- "systemprompt-harness-views",
-]
-
-[[package]]
-name = "harness-shell-tests"
-version = "0.70.0"
-dependencies = [
- "gpui-kit",
- "systemprompt-harness",
- "systemprompt-harness-shared",
-]
-
-[[package]]
-name = "harness-ui-tests"
-version = "0.70.0"
-dependencies = [
- "gpui-kit",
- "systemprompt-harness-brand",
- "systemprompt-harness-shared",
-]
-
-[[package]]
 name = "hash32"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6492,13 +6416,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-brand-tests"
-version = "0.70.0"
-dependencies = [
- "systemprompt-harness-brand",
-]
-
-[[package]]
 name = "spin"
 version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6775,7 +6692,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-device"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=1ac0dc44fbd4829da338a37937f5507d9d3775e2#1ac0dc44fbd4829da338a37937f5507d9d3775e2"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
 dependencies = [
  "async-trait",
  "aws-lc-rs",
@@ -6808,9 +6725,8 @@ dependencies = [
 [[package]]
 name = "systemprompt-drive"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=1ac0dc44fbd4829da338a37937f5507d9d3775e2#1ac0dc44fbd4829da338a37937f5507d9d3775e2"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
 dependencies = [
- "async-trait",
  "bytes",
  "chrono",
  "hostname",
@@ -6835,7 +6751,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-engine"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=1ac0dc44fbd4829da338a37937f5507d9d3775e2#1ac0dc44fbd4829da338a37937f5507d9d3775e2"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -6874,7 +6790,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-harness"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=1ac0dc44fbd4829da338a37937f5507d9d3775e2#1ac0dc44fbd4829da338a37937f5507d9d3775e2"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -6986,7 +6902,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-identifiers"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=1ac0dc44fbd4829da338a37937f5507d9d3775e2#1ac0dc44fbd4829da338a37937f5507d9d3775e2"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
 dependencies = [
  "chrono",
  "schemars",
@@ -6999,7 +6915,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-models"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=1ac0dc44fbd4829da338a37937f5507d9d3775e2#1ac0dc44fbd4829da338a37937f5507d9d3775e2"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7029,7 +6945,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-provider-contracts"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=1ac0dc44fbd4829da338a37937f5507d9d3775e2#1ac0dc44fbd4829da338a37937f5507d9d3775e2"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7046,7 +6962,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-traits"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=1ac0dc44fbd4829da338a37937f5507d9d3775e2#1ac0dc44fbd4829da338a37937f5507d9d3775e2"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
 dependencies = [
  "arc-swap",
  "async-trait",

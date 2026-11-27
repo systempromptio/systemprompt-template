@@ -12,14 +12,19 @@ fn tool_part(session: &SessionId, finished: bool) -> Part {
         json!({ "type": "tool", "call_id": "call", "tool": "read", "state": state }),
     )
     .unwrap();
-    Part::new(session.clone(), MessageId::mint(), body)
+    Part::new(
+        &crate::IDS,
+        session.clone(),
+        MessageId::mint(&crate::IDS),
+        body,
+    )
 }
 
 #[test]
 fn only_watched_sessions_are_tracked() {
     let mut children = Children::default();
-    let child = SessionId::mint();
-    let other = SessionId::mint();
+    let child = SessionId::mint(&crate::IDS);
+    let other = SessionId::mint(&crate::IDS);
     assert!(children.watch(&child));
     assert!(!children.watch(&child));
     assert!(!children.apply(&Change::PartUpdated(tool_part(&other, false))));
@@ -29,7 +34,7 @@ fn only_watched_sessions_are_tracked() {
 #[test]
 fn progress_counts_steps_and_names_the_running_one() {
     let mut children = Children::default();
-    let child = SessionId::mint();
+    let child = SessionId::mint(&crate::IDS);
     assert!(children.watch(&child));
     let running = tool_part(&child, false);
     assert!(children.apply(&Change::PartUpdated(running.clone())));

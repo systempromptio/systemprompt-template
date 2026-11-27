@@ -11,7 +11,7 @@ use super::session_model_fixtures::{loaded, permission, session};
 
 #[test]
 fn status_permissions_and_questions_follow_the_engine() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
     assert_eq!(
         model.apply_event(&EngineEvent::Status {
@@ -31,7 +31,7 @@ fn status_permissions_and_questions_follow_the_engine() {
         model.apply_event(&EngineEvent::PermissionAsked(Box::new(ask))),
         ModelEffect::Unchanged
     );
-    let question_id = QuestionId::mint();
+    let question_id = QuestionId::mint(&crate::IDS);
     let question = QuestionAsk {
         id: question_id.clone(),
         session: id.clone(),
@@ -62,7 +62,7 @@ fn status_permissions_and_questions_follow_the_engine() {
 
 #[test]
 fn a_session_error_shows_until_the_next_run() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
     let error = SessionFailure {
         kind: ErrorKind::Model,
@@ -82,7 +82,7 @@ fn a_session_error_shows_until_the_next_run() {
 
 #[test]
 fn todos_and_session_updates_replace_their_values() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
     let todos = vec![Todo {
         content: "write tests".to_owned(),
@@ -110,10 +110,10 @@ fn todos_and_session_updates_replace_their_values() {
 
 #[test]
 fn a_revert_hides_messages_from_its_point_on() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
-    let first = UserMessage::new(id.clone(), "build", "m");
-    let second = UserMessage::new(id.clone(), "build", "m");
+    let first = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
+    let second = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
     model.apply_change(&Change::MessageUpdated(first.into()));
     model.apply_change(&Change::MessageUpdated(second.clone().into()));
     let mut reverted = session(&id);
@@ -131,12 +131,12 @@ fn a_revert_hides_messages_from_its_point_on() {
 
 #[test]
 fn deletion_clears_pending_work() {
-    let id = SessionId::mint();
+    let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
     model.apply_event(&EngineEvent::PermissionAsked(Box::new(permission(&id))));
     let deleted = Change::SessionDeleted {
         id,
-        project_id: ProjectId::mint(),
+        project_id: ProjectId::mint(&crate::IDS),
         parent_id: None,
     };
     assert_eq!(model.apply_change(&deleted), ModelEffect::Changed);
@@ -149,9 +149,9 @@ fn deletion_clears_pending_work() {
 
 #[test]
 fn load_sorts_and_filters_what_it_is_given() {
-    let id = SessionId::mint();
-    let first = UserMessage::new(id.clone(), "build", "m");
-    let second = UserMessage::new(id.clone(), "build", "m");
+    let id = SessionId::mint(&crate::IDS);
+    let first = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
+    let second = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
     let mut model = SessionModel::new(id.clone());
     model.load(Snapshot {
         session: Some(session(&id)),
@@ -166,7 +166,7 @@ fn load_sorts_and_filters_what_it_is_given() {
             },
         ],
         todos: Vec::new(),
-        permissions: vec![permission(&id), permission(&SessionId::mint())],
+        permissions: vec![permission(&id), permission(&SessionId::mint(&crate::IDS))],
         questions: Vec::new(),
         status: RunStatus::Busy,
     });

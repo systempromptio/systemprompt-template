@@ -4,10 +4,11 @@ use systemprompt_engine::store::{
 use systemprompt_harness_views::transcript::rows::{changed_range, plain_text, row_keys};
 
 fn user(session: &SessionId, text: &str, system: bool) -> MessageWithParts {
-    let mut message = UserMessage::new(session.clone(), "build", "model");
+    let mut message = UserMessage::new(&crate::IDS, session.clone(), "build", "model");
     message.system = system;
     let id = message.id.clone();
     let part = Part::new(
+        &crate::IDS,
         session.clone(),
         id,
         PartBody::Text {
@@ -22,11 +23,17 @@ fn user(session: &SessionId, text: &str, system: bool) -> MessageWithParts {
 }
 
 fn assistant(session: &SessionId, parent: &MessageId, body: Option<PartBody>) -> MessageWithParts {
-    let message = AssistantMessage::new(session.clone(), parent.clone(), "build", "model");
+    let message = AssistantMessage::new(
+        &crate::IDS,
+        session.clone(),
+        parent.clone(),
+        "build",
+        "model",
+    );
     let id = message.id.clone();
     let parts = body
         .into_iter()
-        .map(|body| Part::new(session.clone(), id.clone(), body))
+        .map(|body| Part::new(&crate::IDS, session.clone(), id.clone(), body))
         .collect();
     MessageWithParts {
         message: Message::Assistant(message),
@@ -36,7 +43,7 @@ fn assistant(session: &SessionId, parent: &MessageId, body: Option<PartBody>) ->
 
 #[test]
 fn system_prompts_and_empty_replies_are_hidden() {
-    let session = SessionId::mint();
+    let session = SessionId::mint(&crate::IDS);
     let first = user(&session, "hello", false);
     let parent = first.message.id().clone();
     let messages = vec![
@@ -55,7 +62,7 @@ fn system_prompts_and_empty_replies_are_hidden() {
 
 #[test]
 fn the_live_reply_is_shown_while_busy() {
-    let session = SessionId::mint();
+    let session = SessionId::mint(&crate::IDS);
     let first = user(&session, "hello", false);
     let parent = first.message.id().clone();
     let messages = vec![first, assistant(&session, &parent, None)];
@@ -65,7 +72,7 @@ fn the_live_reply_is_shown_while_busy() {
 
 #[test]
 fn growing_text_changes_only_the_last_row() {
-    let session = SessionId::mint();
+    let session = SessionId::mint(&crate::IDS);
     let first = user(&session, "hello", false);
     let parent = first.message.id().clone();
     let reply = assistant(
@@ -88,7 +95,7 @@ fn growing_text_changes_only_the_last_row() {
 
 #[test]
 fn appended_rows_splice_at_the_end() {
-    let session = SessionId::mint();
+    let session = SessionId::mint(&crate::IDS);
     let messages = vec![user(&session, "one", false), user(&session, "two", false)];
     let all = row_keys(&messages, false);
     assert_eq!(changed_range(&all[..1], &all), Some((1..1, 1)));
@@ -97,10 +104,11 @@ fn appended_rows_splice_at_the_end() {
 
 #[test]
 fn plain_text_skips_synthetic_parts() {
-    let session = SessionId::mint();
+    let session = SessionId::mint(&crate::IDS);
     let mut entry = user(&session, "visible", false);
     let id = entry.message.id().clone();
     entry.parts.push(Part::new(
+        &crate::IDS,
         session,
         id,
         PartBody::Text {

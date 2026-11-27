@@ -9,7 +9,7 @@ use systemprompt_harness_views::state::session_model::{SessionModel, Snapshot};
 pub(crate) fn session(id: &SessionId) -> Session {
     Session {
         id: id.clone(),
-        project_id: ProjectId::mint(),
+        project_id: ProjectId::mint(&crate::IDS),
         parent_id: None,
         directory: PathBuf::from("/work"),
         title: "Fix the build".to_owned(),
@@ -40,6 +40,7 @@ pub(crate) fn loaded(id: &SessionId) -> SessionModel {
 
 pub(crate) fn text_part(session: &SessionId, message: &MessageId, text: &str) -> Part {
     Part::new(
+        &crate::IDS,
         session.clone(),
         message.clone(),
         PartBody::Text {
@@ -51,7 +52,7 @@ pub(crate) fn text_part(session: &SessionId, message: &MessageId, text: &str) ->
 
 pub(crate) fn permission(session: &SessionId) -> PermissionAsk {
     PermissionAsk {
-        id: PermissionId::mint(),
+        id: PermissionId::mint(&crate::IDS),
         session: session.clone(),
         call_id: CallId::try_new("call").unwrap(),
         tool: "shell".to_owned(),

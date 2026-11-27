@@ -32,7 +32,7 @@ fn both_extensions_are_in_the_registration_list() {
     assert!(ids.contains(&NotificationsExtension::ID));
     assert!(ids.contains(&SlackExtension::ID));
 
-    let core: Vec<_> = systemprompt_harness::extension::REGISTERED
+    let core: Vec<_> = systemprompt_harness::members::REGISTERED
         .iter()
         .map(|member| member.id.clone())
         .collect();

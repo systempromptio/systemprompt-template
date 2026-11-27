@@ -12,7 +12,7 @@ fn a_round_trip_keeps_every_field() {
     let mut settings = UiSettings::default();
     settings.set_scheme(Scheme::Dark);
     settings.remember_project(Path::new("/work/a"));
-    settings.project_mut(Path::new("/work/a")).last_session = Some(SessionId::mint());
+    settings.project_mut(Path::new("/work/a")).last_session = Some(SessionId::mint(&crate::IDS));
     settings.window = Some(WindowGeometry {
         x: 10.0,
         y: 20.0,

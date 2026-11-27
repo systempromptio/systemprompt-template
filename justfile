@@ -538,11 +538,12 @@ file-size:
 lint-repo-hygiene:
     bash scripts/lint-repo-hygiene.sh
 
-# Every Cargo workspace the supply-chain recipes scan. `tests/` and the phone
-# apps' binding library (`extensions/mobile/core`) are excluded from the root
-# workspace, so a bare root-level scan silently skips their lockfiles. The
-# desktop shell (`extensions/harness`) has its own workflow.
-workspaces := ". tests extensions/mobile/core"
+# Every Cargo workspace the supply-chain recipes scan. `tests/`, the phone
+# apps' binding library (`extensions/mobile/core`), the desktop shell
+# (`extensions/harness`) and the shell's tests (`extensions/harness/tests`)
+# are excluded from the root workspace, so a bare root-level scan silently
+# skips their lockfiles.
+workspaces := ". tests extensions/mobile/core extensions/harness extensions/harness/tests"
 
 # Detect unused dependencies across every workspace
 machete:

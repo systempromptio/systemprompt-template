@@ -3,11 +3,11 @@
 //!
 //! The engine holds an `Arc<dyn Governor>` for life. The shell gives it a
 //! `GovernorSlot`, which delegates every call, the enabled extensions
-//! included, to whichever governor is installed: the engine's `NullGovernor`
-//! (no models, no extensions) until the composition root installs
-//! `systemprompt_harness::governance::Governance` before the engine is built.
-//! Installing bumps `Governor::generation`, so the engine re-reads models and
-//! MCP servers at once.
+//! included, to whichever governor is installed: `SignedOut` (no models, no
+//! extensions, every prompt refused as not signed in) until the composition
+//! root installs `systemprompt_harness::governance::Governance` before the
+//! engine is built. Installing bumps `Governor::generation`, so the engine
+//! re-reads models and MCP servers at once.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -15,11 +15,47 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use parking_lot::RwLock;
 use systemprompt_engine::run::extension::EnabledExtensions;
 use systemprompt_engine::run::{
-    Endpoint, GovernError, Governor, McpSpec, ModelCall, ModelSpec, NullGovernor, ResponseAction,
-    ToolCall, Usage, Verdict,
+    Endpoint, GovernError, Governor, McpSpec, ModelCall, ModelSpec, ResponseAction, ToolCall,
+    Usage, Verdict,
 };
 
 const EPOCH_SHIFT: u32 = 48;
+
+#[derive(Debug, Clone, Copy)]
+struct SignedOut;
+
+#[async_trait::async_trait]
+impl Governor for SignedOut {
+    fn models(&self) -> Vec<ModelSpec> {
+        Vec::new()
+    }
+
+    fn mcp_servers(&self) -> Vec<McpSpec> {
+        Vec::new()
+    }
+
+    async fn authorize(&self, _call: &ModelCall) -> Result<Endpoint, GovernError> {
+        Err(GovernError::NotSignedIn)
+    }
+
+    async fn response(&self, _call: &ModelCall, _status: u16, _attempt: u32) -> ResponseAction {
+        ResponseAction::Continue
+    }
+
+    async fn step_finished(&self, _call: &ModelCall, _usage: &Usage) {}
+
+    async fn tool_before(&self, _call: &ToolCall) -> Verdict {
+        Verdict::Allow
+    }
+
+    fn extensions(&self) -> Option<EnabledExtensions> {
+        None
+    }
+
+    fn generation(&self) -> u64 {
+        0
+    }
+}
 
 /// The governor the engine holds for life, delegating to whichever governor is
 /// installed.
@@ -38,7 +74,7 @@ impl std::fmt::Debug for GovernorSlot {
 
 impl Default for GovernorSlot {
     fn default() -> Self {
-        Self::with(Arc::new(NullGovernor))
+        Self::with(Arc::new(SignedOut))
     }
 }
 

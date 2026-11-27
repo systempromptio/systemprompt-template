@@ -1,10 +1,25 @@
 name: Harness
 
-# The desktop shell workspace (extensions/harness) on the three systems it
-# ships for. For now each job checks out and prints the toolchain the
-# workspace resolves, which proves the workflow itself and that the template's
-# rust-toolchain.toml is found from inside the workspace on every runner.
-# Nothing is built, and no artefact is stored.
+# The desktop shell (extensions/harness, and its tests workspace under
+# extensions/harness/tests) on the three systems it ships for. Every cargo
+# command goes through scripts/harness/cargo.sh, which runs cargo from inside
+# the workspaces so rustup resolves the toolchain the shell pins
+# (extensions/harness/rust-toolchain.toml), covers both workspaces and builds
+# them into extensions/harness/target.
+#
+#   Windows  check, tests, release build, the installer packed
+#            (packaging/harness/windows/package.ps1), a silent test install and
+#            uninstall, and the installer's version read back
+#   macOS    check, tests, release build
+#   Linux    formatting under the template's nightly, the template's source
+#            gates, the core pin, and supply chain (cargo-deny, both
+#            workspaces); and, as a second job, check and tests with the
+#            window toolkit's system libraries installed from Ubuntu's archive
+#
+# Core is a git dependency on the rev the shell's manifests name, fetched from
+# the public core repository. No job reads a secret, names an instance or a
+# model, or stores an artefact; the installer is built, exercised and dropped
+# with the runner.
 
 on:
   push:
@@ -15,6 +30,10 @@ on:
       - "flavours/harness/**"
       - "scripts/harness/**"
       - "packaging/harness/**"
+      - "scripts/core-pin.sh"
+      - "deny.toml"
+      - "rustfmt.toml"
+      - "clippy.toml"
       - "harness.just"
       - ".github/workflows/harness.yml"
   workflow_dispatch:
@@ -26,6 +45,16 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  CARGO_TERM_COLOR: always
+  # Tool pins, the same numbers as gates.yml: one place to bump, by hand.
+  JUST_VERSION: "1.42.4"
+  DENY_VERSION: "0.20.2"
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   toolchain:
     name: Toolchain (${{ matrix.os }})
@@ -35,9 +64,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,3 +73,158 @@ jobs:
         timeout-minutes: 10
       - run: bash scripts/harness/toolchain.sh
         timeout-minutes: 10
+
+  windows:
+    name: Windows (check, tests, release build, installer, test install)
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      # The template's .cargo/config.toml sets CC and CXX to clang for every
+      # cargo run under the repository, this workspace's included. The C
+      # sources the shell links are built with MSVC here, as the shell always
+      # was on Windows; the cc crate reads a target-specific variable before CC.
+      CC_x86_64_pc_windows_msvc: cl.exe
+      CXX_x86_64_pc_windows_msvc: cl.exe
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the toolchain the shell pins
+        run: rustup toolchain install || rustup show
+        working-directory: extensions/harness
+        timeout-minutes: 10
+      - run: bash scripts/harness/toolchain.sh
+      - name: Check (both workspaces, all targets)
+        run: bash scripts/harness/cargo.sh check
+        timeout-minutes: 45
+      - name: Tests
+        run: bash scripts/harness/cargo.sh test
+        timeout-minutes: 30
+      - name: Release build
+        run: bash scripts/harness/cargo.sh build-release
+        timeout-minutes: 45
+      - name: Pack the installer, install it silently, uninstall it
+        shell: pwsh
+        run: ./packaging/harness/windows/package.ps1 -SkipBuild -TestInstall
+        timeout-minutes: 10
+      # Why: the harness binary has no version resource and no version
+      # argument, so the version that can be read back from what was packed is
+      # the installer's own; it must be the one the brand crate declares.
+      - name: The installer reports the brand's version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $source = Get-Content extensions/harness/brand/src/lib.rs -Raw
+          if ($source -notmatch '(?m)^const VERSION: &str = "([^"]+)";') { throw "no 'const VERSION' in the brand crate" }
+          $expected = $Matches[1]
+          $installer = @(Get-ChildItem dist -Filter "*-windows-x64-setup.exe")
+          if ($installer.Count -ne 1) { throw "expected one installer in dist, found $($installer.Count)" }
+          $reported = $installer[0].VersionInfo.ProductVersion
+          Write-Host "$($installer[0].Name) reports version $reported; the brand crate declares $expected"
+          if ($reported -ne $expected) { throw "the installer reports $reported, not $expected" }
+          if ($installer[0].Name -notlike "*-$expected-windows-x64-setup.exe") { throw "the installer's name does not carry $expected" }
+
+  macos:
+    name: macOS (check, tests, release build)
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the toolchain the shell pins
+        run: rustup toolchain install || rustup show
+        working-directory: extensions/harness
+        timeout-minutes: 10
+      - run: bash scripts/harness/toolchain.sh
+      - name: Check (both workspaces, all targets)
+        run: bash scripts/harness/cargo.sh check
+        timeout-minutes: 30
+      - name: Tests
+        run: bash scripts/harness/cargo.sh test
+        timeout-minutes: 20
+      - name: Release build
+        run: bash scripts/harness/cargo.sh build-release
+        timeout-minutes: 30
+
+  # Every step after the checkout runs even when an earlier one failed, so a
+  # formatting slip does not hide a gate or an advisory.
+  linux:
+    name: Linux (formatting, gates, supply chain)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The sibling core is what two of the source gates scan with
+      # (check-fail-open, check-discarded-results), as in gates.yml.
+      - uses: ./.github/actions/core-checkout
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: ${{ env.JUST_VERSION }}
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        with:
+          tool: cargo-deny@${{ env.DENY_VERSION }}
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ripgrep jq python3 python3-yaml
+        timeout-minutes: 5
+      - name: Install the template's nightly (rustfmt) and the toolchain the shell pins
+        run: |
+          rustup toolchain install || rustup show
+          cd extensions/harness
+          rustup toolchain install || rustup show
+        timeout-minutes: 10
+      - run: bash scripts/harness/toolchain.sh
+      - name: Formatting (both workspaces, the template's rustfmt.toml and nightly)
+        if: ${{ !cancelled() }}
+        run: bash scripts/harness/cargo.sh fmt-check
+        timeout-minutes: 5
+      - name: Both manifests resolve against their lockfiles
+        if: ${{ !cancelled() }}
+        run: bash scripts/harness/cargo.sh resolve
+        timeout-minutes: 5
+      - name: Core pin (one rev per side, one copy of each core crate per lockfile)
+        if: ${{ !cancelled() }}
+        run: bash scripts/core-pin.sh --check
+      - name: The template's source gates
+        if: ${{ !cancelled() }}
+        run: just _lint-gates-uncoordinated
+        timeout-minutes: 10
+      - name: Supply chain (cargo-deny, both workspaces)
+        if: ${{ !cancelled() }}
+        run: bash scripts/harness/cargo.sh deny
+        timeout-minutes: 10
+
+  linux-build:
+    name: Linux (check, tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # clang is the linker and C compiler the template's .cargo/config.toml
+      # names; the rest is what the window toolkit's Linux back end links or
+      # probes with pkg-config: fontconfig and freetype (text), xcb, X11 and
+      # xkbcommon (X11 windows and keyboard), wayland (Wayland windows).
+      - name: Install the window toolkit's system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake pkg-config \
+            libfontconfig1-dev libfreetype-dev \
+            libxcb1-dev libx11-dev libx11-xcb-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev \
+            libwayland-dev
+        timeout-minutes: 10
+      - name: Install the toolchain the shell pins
+        run: rustup toolchain install || rustup show
+        working-directory: extensions/harness
+        timeout-minutes: 10
+      - run: bash scripts/harness/toolchain.sh
+      - name: Check (both workspaces, all targets)
+        run: bash scripts/harness/cargo.sh check
+        timeout-minutes: 45
+      - name: Tests
+        run: bash scripts/harness/cargo.sh test
+        timeout-minutes: 30
