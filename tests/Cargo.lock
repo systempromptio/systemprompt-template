@@ -18,7 +18,6 @@ dependencies = [
  "chrono",
  "http-body-util",
  "serde_json",
- "sha2 0.10.9",
  "sqlx",
  "systemprompt",
  "systemprompt-web-admin",
