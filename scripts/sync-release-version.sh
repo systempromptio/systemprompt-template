@@ -34,6 +34,7 @@
 #   Cargo.toml            workspace version + systemprompt/-extension
 #                         core pins (extensions/web inherits -extension)
 #   tests/Cargo.toml      systemprompt/-security pins (separate workspace)
+#   extensions/harness/Cargo.toml  workspace version (separate workspace)
 #   helm/gateway/Chart.yaml  appVersion + artifacthub images annotation
 #                            (chart `version:` is bumped separately on apply)
 #   deploy/casaos/docker-compose.yml                exact image tag
@@ -101,6 +102,12 @@ check_or_apply Cargo.toml \
     "s|^version = \"[0-9.]*\"|version = \"$VERSION\"|" \
     "^version = \"$VERSION\"" \
     "workspace version"
+
+# The desktop shell is a separate workspace and does not inherit the root version.
+check_or_apply extensions/harness/Cargo.toml \
+    "s|^version = \"[0-9.]*\"|version = \"$VERSION\"|" \
+    "^version = \"$VERSION\"" \
+    "shell workspace version"
 
 # Cargo.toml — core crate pins.
 check_or_apply Cargo.toml \

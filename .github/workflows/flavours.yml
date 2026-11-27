@@ -5,9 +5,10 @@ name: Flavours
 # against a database that flavour migrated), a clean and a cached image build
 # with deploy metrics (scripts/flavour-metrics.sh --image) and the image smoke
 # (scripts/flavour-smoke.sh). Metrics JSON and the
-# smoke results are uploaded; table.md is appended to the job summary. Core
-# resolves from the git-rev pin in Cargo.toml (scripts/core-pin.sh), so no
-# core checkout is needed.
+# smoke results are uploaded; table.md is appended to the job summary. A
+# desktop flavour (artefact: desktop) is linted here and built by its own
+# workflow, never by this matrix. Core resolves from the git-rev pin in
+# Cargo.toml (scripts/core-pin.sh), so no core checkout is needed.
 
 on:
   push:
@@ -34,7 +35,7 @@ jobs:
       - run: bash scripts/check-flavours.sh
       - run: bash scripts/core-pin.sh --check
       - id: plan
-        run: echo "flavours=$(python3 scripts/flavour.py matrix)" >> "$GITHUB_OUTPUT"
+        run: echo "flavours=$(python3 scripts/flavour.py matrix --artefact image)" >> "$GITHUB_OUTPUT"
 
   queries:
     name: Queries ${{ matrix.flavour }}
@@ -44,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavour: ${{ fromJSON(needs.plan.outputs.flavours) }}
+        include: ${{ fromJSON(needs.plan.outputs.flavours) }}
     env:
       FLAVOUR_QUERIES_ADMIN_URL: postgres://queries:queries@localhost:5432/queries
     services:
@@ -78,7 +79,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavour: ${{ fromJSON(needs.plan.outputs.flavours) }}
+        include: ${{ fromJSON(needs.plan.outputs.flavours) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/reclaim-disk

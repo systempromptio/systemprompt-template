@@ -22,7 +22,7 @@ admin_url="${FLAVOUR_QUERIES_ADMIN_URL:-postgres://postgres:postgres@localhost:5
 root="$FLAVOUR_ROOT"
 cd "$root"
 if [ "$target" = all ]; then
-    mapfile -t flavours < <(flavour_py list)
+    mapfile -t flavours < <(flavour_py list --artefact image)
 else
     flavour_require "$target"
     flavours=("$target")

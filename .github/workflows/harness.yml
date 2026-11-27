@@ -1,0 +1,49 @@
+name: Harness
+
+# The desktop shell workspace (extensions/harness) on the three systems it
+# ships for. For now each job checks out and prints the toolchain the
+# workspace resolves, which proves the workflow itself and that the template's
+# rust-toolchain.toml is found from inside the workspace on every runner.
+# Nothing is built, and no artefact is stored.
+
+on:
+  push:
+    branches: [future, future-harness]
+  pull_request:
+    paths:
+      - "extensions/harness/**"
+      - "flavours/harness/**"
+      - "scripts/harness/**"
+      - "packaging/**"
+      - "harness.just"
+      - ".github/workflows/harness.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: harness-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  toolchain:
+    name: Toolchain (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: rustup show
+        working-directory: extensions/harness
+        timeout-minutes: 10
+      - run: bash scripts/harness/toolchain.sh
+        timeout-minutes: 10

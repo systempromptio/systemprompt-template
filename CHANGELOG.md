@@ -110,6 +110,11 @@ Conventions (strict — hold every entry to them):
   their table from `?dimension=`. Migrate by reading the new headers, or by
   requesting `/admin/export/{dataset}?format=csv&columns=…` with the columns a
   consumer expects.
+- **Breaking:** `scripts/flavour.py matrix` prints an array of
+  `{"flavour", "artefact"}` objects, not an array of names, so a workflow can
+  filter by kind. Migrate by reading it as `matrix.include` (as
+  `flavours.yml` now does) and passing `--artefact image` where only images
+  can be built.
 
 ### Security
 - An anonymous session was treated as signed in by the console. Any visitor
@@ -423,6 +428,26 @@ Conventions (strict — hold every entry to them):
   lifecycle and the enterprise capability pages; operator docs for Docker
   Compose, required secrets, centralized MCP connections and recorded tech
   debt. The README carries a coverage badge rendered from `coverage/baseline.json`.
+- **A `harness` flavour and an empty desktop shell workspace.**
+  `extensions/harness/` is a cargo workspace separate from the root one (the
+  root manifest excludes it) with its own `Cargo.lock`, so the server images
+  never compile the window toolkit and the desktop build never compiles the
+  server closure. It has no members yet; the shell, views, theme and brand
+  crates land in it next. `flavours/harness/` describes it with
+  `artefact: desktop`.
+- **Flavours have an `artefact`.** `scripts/flavour.py` reads `artefact`
+  (`image`, the default, or `desktop`) from `flavour.yaml`.
+  `get <name> artefact` answers for every flavour, `list` and `matrix` take
+  `--artefact image|desktop`, and `check` holds a desktop flavour to its own
+  keys (`workspace`) while refusing the image keys on it.
+  `flavour-build.sh`, `flavour-smoke.sh`, `flavour-metrics.sh` and
+  `flavour-setup.sh` say that the desktop build is not there yet and exit 0
+  for a desktop flavour; `metrics all` and the `Flavours` workflow cover
+  image flavours only.
+- **A `Harness` workflow** (`.github/workflows/harness.yml`) with Windows,
+  macOS and Linux jobs. For now each checks out and prints the toolchain
+  `extensions/harness` resolves; it builds nothing and stores no artefact.
+  `harness.just` adds `just harness-toolchain` and `just harness-resolve`.
 
 ### Changed
 - The web extension's schema is a feature-gated contribution: a schema file
@@ -541,6 +566,10 @@ Conventions (strict — hold every entry to them):
   exist; `docs/gateway-routes.md` describes the services-YAML catalog, client
   attribution and `bridge_releases.token_secret`.
 - The admin report view's brand mark reads `systemprompt.io`.
+- `check-core-crate-versions.sh`, `check-msrv.sh` and `sync-release-version.sh`
+  cover the shell workspace's manifest and lockfile.
+- `FLAVOUR=<desktop flavour> just build|check|clippy` stops with
+  `flavour.py`'s message instead of running cargo on the root package.
 
 ### Fixed
 - Without the gateway, the access-control and roles pages no longer read the
