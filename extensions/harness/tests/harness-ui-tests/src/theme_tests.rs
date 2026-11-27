@@ -198,11 +198,6 @@ fn palettes_declare_their_appearance() {
 #[test]
 fn brands_map_to_their_themes() {
     assert_eq!(BrandTheme::for_brand(Brand::Systemprompt).id, "graphite");
-    assert_eq!(BrandTheme::for_brand(Brand::Astound).id, "astound");
-    let astound = BrandTheme::for_brand(Brand::Astound);
-    assert_eq!(astound.dark.surface.app.rgb(), 0x00_00_00);
-    assert_eq!(astound.dark.text.primary.rgb(), 0xFF_FF_FF);
-    assert_eq!(astound.light.accent.base.rgb(), 0x17_17_17);
 }
 
 #[test]

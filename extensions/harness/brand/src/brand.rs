@@ -1,26 +1,20 @@
-//! The product line a build ships as, chosen by the `brand-astound` cargo
-//! feature.
+//! The product line a build ships as.
 
 /// The product line a build ships as.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Brand {
     Systemprompt,
-    Astound,
 }
 
 impl Brand {
-    pub const ALL: [Self; 2] = [Self::Systemprompt, Self::Astound];
+    pub const ALL: [Self; 1] = [Self::Systemprompt];
 
-    #[cfg(not(feature = "brand-astound"))]
     pub const CURRENT: Self = Self::Systemprompt;
-    #[cfg(feature = "brand-astound")]
-    pub const CURRENT: Self = Self::Astound;
 
     #[must_use]
     pub const fn key(self) -> &'static str {
         match self {
             Self::Systemprompt => "systemprompt",
-            Self::Astound => "astound",
         }
     }
 
@@ -28,7 +22,6 @@ impl Brand {
     pub const fn product(self) -> &'static str {
         match self {
             Self::Systemprompt => "systemprompt Harness",
-            Self::Astound => "Astound Work",
         }
     }
 
@@ -36,7 +29,6 @@ impl Brand {
     pub const fn vendor(self) -> &'static str {
         match self {
             Self::Systemprompt => "systemprompt",
-            Self::Astound => "Astound Digital",
         }
     }
 
@@ -44,21 +36,19 @@ impl Brand {
     pub const fn default_instance(self) -> &'static str {
         match self {
             Self::Systemprompt => "https://systemprompt.io",
-            Self::Astound => "https://systemprompt.astound.digital",
         }
     }
 
     #[must_use]
     pub const fn governance_label(self) -> &'static str {
         match self {
-            Self::Systemprompt | Self::Astound => "Governance",
+            Self::Systemprompt => "Governance",
         }
     }
 
     pub(crate) const fn index(self) -> usize {
         match self {
             Self::Systemprompt => 0,
-            Self::Astound => 1,
         }
     }
 }

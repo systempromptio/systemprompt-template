@@ -24,22 +24,14 @@ fn brand_tables_hold_the_agreed_values() {
     assert_eq!(sp.vendor(), "systemprompt");
     assert_eq!(sp.scheme(), "sp-harness");
     assert_eq!(sp.default_instance(), "https://systemprompt.io");
-    let astound = Identity::of(Brand::Astound, Channel::Internal);
-    assert_eq!(astound.display_name(), "Astound Work");
-    assert_eq!(astound.vendor(), "Astound Digital");
-    assert_eq!(astound.scheme(), "astound-work");
-    assert_eq!(astound.app_id(), "com.astounddigital.work");
-    assert_eq!(
-        astound.default_instance(),
-        "https://systemprompt.astound.digital"
-    );
+    assert_eq!(sp.app_id(), "io.systemprompt.harness");
 }
 
 #[test]
 fn data_root_is_vendor_then_display_name() {
-    let id = Identity::of(Brand::Astound, Channel::Canary);
+    let id = Identity::of(Brand::Systemprompt, Channel::Canary);
     let root = id.data_root();
-    assert!(root.ends_with(PathBuf::from("Astound Digital").join("Astound Work Canary")));
+    assert!(root.ends_with(PathBuf::from("systemprompt").join("systemprompt Harness Canary")));
 }
 
 #[test]

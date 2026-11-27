@@ -1,11 +1,10 @@
 //! Compile-time product identity per brand and channel.
 //!
-//! A build is one brand and one channel, both chosen by cargo features: the
-//! brand by `brand-astound` (default `systemprompt`), the channel by
-//! `channel-canary` or `channel-dev` (default `internal`). Every channel of
-//! every brand has its own app id, URL scheme, data root and display name, so
-//! any number of them install side by side and never read each other's
-//! accounts, sessions or settings.
+//! A build is one brand and one channel. The brand is `systemprompt`; the
+//! channel is chosen by the cargo features `channel-canary` or `channel-dev`
+//! (default `internal`). Every channel of every brand has its own app id, URL
+//! scheme, data root and display name, so any number of them install side by
+//! side and never read each other's accounts, sessions or settings.
 //!
 //! [`identity()`] is the identity this binary was built as; [`Identity::of`]
 //! and [`Identity::ALL`] expose the whole table so tooling can check that no

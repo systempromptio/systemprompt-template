@@ -1,10 +1,7 @@
-//! The built-in palettes: a neutral graphite with a blue accent, and the
-//! Astound brand.
+//! The built-in palette: a neutral graphite with a blue accent.
 
-mod astound;
 mod graphite;
 
-pub(super) use astound::{ASTOUND_DARK, ASTOUND_LIGHT};
 pub(super) use graphite::{GRAPHITE_DARK, GRAPHITE_LIGHT};
 
 use super::color::Color;

@@ -47,18 +47,12 @@ macro_rules! brand_rows {
     };
 }
 
-static TABLE: [[Identity; 3]; 2] = [
+static TABLE: [[Identity; 3]; 1] = [
     brand_rows!(
         Systemprompt,
         "systemprompt Harness",
         "io.systemprompt.harness",
         "sp-harness"
-    ),
-    brand_rows!(
-        Astound,
-        "Astound Work",
-        "com.astounddigital.work",
-        "astound-work"
     ),
 ];
 
@@ -68,13 +62,10 @@ pub fn identity() -> &'static Identity {
 }
 
 impl Identity {
-    pub const ALL: [(Brand, Channel); 6] = [
+    pub const ALL: [(Brand, Channel); 3] = [
         (Brand::Systemprompt, Channel::Internal),
         (Brand::Systemprompt, Channel::Canary),
         (Brand::Systemprompt, Channel::Dev),
-        (Brand::Astound, Channel::Internal),
-        (Brand::Astound, Channel::Canary),
-        (Brand::Astound, Channel::Dev),
     ];
 
     #[must_use]

@@ -1,23 +1,25 @@
 # package.ps1: builds and packs the per-user Windows installer of one (brand, channel) build of the harness.
 #
-#   dist/<scheme>-<version>-windows-x64-setup.exe   the installer (packaging/windows/harness.nsi)
+#   dist/<scheme>-<version>-windows-x64-setup.exe   the installer (packaging/harness/windows/harness.nsi)
 #   dist/SHA256SUMS                                 its SHA-256, in sha256sum format
 #
-# The identity table below is the packaging side of crates/app/brand/src/lib.rs (sp-brand): display name, vendor, app
-# id and URL scheme per brand and channel. The two change together; the version is read from sp-brand itself. The
-# cargo build turns on the matching sp-brand features, so the binary and its installer always carry the same identity.
+# The identity table below is the packaging side of extensions/harness/brand/src/identity.rs (sp-brand): display name,
+# vendor, app id and URL scheme per brand and channel. The two change together; the version is read from sp-brand
+# itself. The cargo build turns on the matching sp-brand features, so the binary and its installer always carry the
+# same identity.
 #
 # NSIS: -Nsis <dir>, else makensis on PATH, else NSIS's default install folder, else a pinned portable NSIS that is
-# downloaded, checked against its SHA-256 and kept in target\tools (never installed system-wide). Nothing is signed.
+# downloaded, checked against its SHA-256 and kept in extensions\harness\target\tools (never installed system-wide).
+# Nothing is signed.
 #
 # -TestInstall installs the result silently with /FILESONLY into a fresh temporary directory, compares the payload
 # with the build, uninstalls the same way and checks that only the uninstaller is left.
 #
 # Usage:
-#   pwsh -File packaging\windows\package.ps1 [-Brand systemprompt|astound] [-Channel internal|canary|dev]
+#   pwsh -File packaging\harness\windows\package.ps1 [-Brand systemprompt] [-Channel internal|canary|dev]
 #        [-Version X.Y.Z] [-SkipBuild] [-Nsis DIR] [-TestInstall]
 param(
-    [ValidateSet("systemprompt", "astound")]
+    [ValidateSet("systemprompt")]
     [string]$Brand = "systemprompt",
     [ValidateSet("internal", "canary", "dev")]
     [string]$Channel = "internal",
@@ -30,17 +32,17 @@ param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 3
 
-$root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$root = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
+$workspace = Join-Path $root "extensions\harness"
 $dist = Join-Path $root "dist"
-$release = Join-Path $root "target\release"
+$release = Join-Path $workspace "target\release"
 $nsiScript = Join-Path $PSScriptRoot "harness.nsi"
-$iconDir = Join-Path $root "crates\app\desktop\assets\icons"
-$brandSource = Join-Path $root "crates\app\brand\src\lib.rs"
+$iconDir = Join-Path $workspace "shell\assets\icons"
+$brandSource = Join-Path $workspace "brand\src\lib.rs"
 $exe = "harness.exe"
 
 $brands = @{
     systemprompt = @{ Product = "systemprompt Harness"; Vendor = "systemprompt"; AppId = "io.systemprompt.harness"; Scheme = "sp-harness"; Feature = $null }
-    astound      = @{ Product = "Astound Work"; Vendor = "Astound Digital"; AppId = "com.astounddigital.work"; Scheme = "astound-work"; Feature = "brand-astound" }
 }
 $channels = @{
     internal = @{ Display = ""; AppId = ""; Scheme = ""; Feature = $null }
@@ -85,7 +87,7 @@ function Get-Makensis {
         if (Test-Path $candidate) { return $candidate }
     }
 
-    $tools = Join-Path $root "target\tools"
+    $tools = Join-Path $workspace "target\tools"
     $portable = Join-Path $tools "nsis-$nsisVersion"
     $candidate = Join-Path $portable "makensis.exe"
     if (Test-Path $candidate) { return $candidate }
@@ -118,7 +120,7 @@ if (-not $SkipBuild) {
     $cargoArgs = @("build", "--release", "-p", "harness-desktop")
     if ($features) { $cargoArgs += @("--features", ($features -join ",")) }
     Write-Host "cargo $($cargoArgs -join ' ')"
-    Push-Location $root
+    Push-Location $workspace
     try {
         & cargo @cargoArgs
         if ($LASTEXITCODE -ne 0) { throw "cargo build failed with exit code $LASTEXITCODE" }
@@ -135,7 +137,7 @@ if (-not (Test-Path $icon)) { $icon = Join-Path $iconDir "icon.ico" }
 $hasIcon = Test-Path $icon
 if (-not $hasIcon) { Write-Warning "no icon in $iconDir; the installer keeps the NSIS icon and installs no app.ico" }
 
-$stage = Join-Path $root "target\installer-stage\$Brand-$Channel"
+$stage = Join-Path $workspace "target\installer-stage\$Brand-$Channel"
 if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
 New-Item -ItemType Directory -Force $stage | Out-Null
 Copy-Item $built (Join-Path $stage $exe)

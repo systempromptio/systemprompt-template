@@ -1,8 +1,8 @@
 ; harness.nsi: the per-user Windows installer of the harness desktop app.
 ;
 ; One script serves every brand and channel; package.ps1 passes the identity of the build it packs, taken from the
-; same values as crates/app/brand (sp-brand), so each (brand, channel) installs into its own directory, under its own
-; uninstall entry, with its own Start menu shortcut and URL scheme, and never replaces another.
+; same values as extensions/harness/brand (sp-brand), so each (brand, channel) installs into its own directory, under
+; its own uninstall entry, with its own Start menu shortcut and URL scheme, and never replaces another.
 ;
 ; Required defines (makensis /D<name>=<value>):
 ;   STAGE        directory holding harness.exe (and the icon when APP_ICON is defined)
@@ -24,11 +24,12 @@
 ; User data is not under the install directory: it lives in %LOCALAPPDATA%\<vendor>\<product> (sp-brand
 ; data_root) and the uninstaller never touches it, so a reinstall finds the same accounts, sessions and settings.
 ;
-; Icon pipeline: app.ico, when present, is staged by package.ps1 from crates/app/desktop/assets/icons/icon.ico, the
-; same file the desktop crate embeds as icon resource 1 (window and taskbar). It should hold 16, 24, 32, 48, 64 and 256 px images;
-; to change it, export those sizes from the brand's square master SVG as PNG and join them into one .ico (for example
-; `magick icon-16.png icon-24.png icon-32.png icon-48.png icon-64.png icon-256.png icon.ico`). A per-brand or
-; per-channel tint goes in a sibling file (icon-<brand>-<channel>.ico) that package.ps1 prefers when it exists.
+; Icon pipeline: app.ico, when present, is staged by package.ps1 from extensions/harness/shell/assets/icons/icon.ico,
+; the same file the shell crate embeds as icon resource 1 (window and taskbar). It should hold 16, 24, 32, 48, 64 and
+; 256 px images; to change it, export those sizes from the brand's square master SVG as PNG and join them into one
+; .ico (for example `magick icon-16.png icon-24.png icon-32.png icon-48.png icon-64.png icon-256.png icon.ico`). A
+; per-brand or per-channel tint goes in a sibling file (icon-<brand>-<channel>.ico) that package.ps1 prefers when it
+; exists.
 
 Unicode true
 ManifestDPIAware true

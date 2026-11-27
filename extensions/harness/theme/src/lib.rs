@@ -1,4 +1,4 @@
-//! Semantic design tokens, the two brand themes, and the bridge onto the
+//! Semantic design tokens, the brand theme, and the bridge onto the
 //! toolkit's theme.
 //!
 //! Components never read raw toolkit colours: they call [`tokens`] and paint
@@ -75,18 +75,11 @@ pub static GRAPHITE: BrandTheme = BrandTheme {
     dark: palettes::GRAPHITE_DARK,
 };
 
-pub static ASTOUND: BrandTheme = BrandTheme {
-    id: "astound",
-    light: palettes::ASTOUND_LIGHT,
-    dark: palettes::ASTOUND_DARK,
-};
-
 impl BrandTheme {
     #[must_use]
     pub fn for_brand(brand: Brand) -> &'static Self {
         match brand {
             Brand::Systemprompt => &GRAPHITE,
-            Brand::Astound => &ASTOUND,
         }
     }
 
@@ -96,8 +89,8 @@ impl BrandTheme {
     }
 
     #[must_use]
-    pub fn all() -> [&'static Self; 2] {
-        [&GRAPHITE, &ASTOUND]
+    pub fn all() -> [&'static Self; 1] {
+        [&GRAPHITE]
     }
 
     #[must_use]
