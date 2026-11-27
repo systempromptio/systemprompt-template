@@ -55,11 +55,15 @@ case "$mode" in
             python3 "$stub" --probe --port "$MOBILE_STUB_PORT" \
                 || mobile_fail "the stub instance did not start on port $MOBILE_STUB_PORT"
         fi
-        # Why: 10.0.2.2 is this machine's loopback as an emulator sees it. A
-        # physical device needs MOBILE_STUB_ADDRESS set to an address it can
-        # reach and the stub bound there.
+        # Why: the stub's port is forwarded over adb, so the device reads it
+        # at its own loopback. That reaches an emulator with no guest network
+        # (one running without hardware acceleration has none) and a device on
+        # a cable alike; 10.0.2.2 reaches only an emulator whose network is up.
+        # MOBILE_STUB_ADDRESS names another address when the stub is elsewhere.
+        "$ANDROID_HOME/platform-tools/adb" reverse "tcp:$MOBILE_STUB_PORT" "tcp:$MOBILE_STUB_PORT" > /dev/null \
+            || mobile_fail "adb could not forward port $MOBILE_STUB_PORT to the device"
         ./gradlew --console=plain connectedDebugAndroidTest \
-            "-Pandroid.testInstrumentationRunnerArguments.stubInstance=${MOBILE_STUB_ADDRESS:-http://10.0.2.2:$MOBILE_STUB_PORT}"
+            "-Pandroid.testInstrumentationRunnerArguments.stubInstance=${MOBILE_STUB_ADDRESS:-http://127.0.0.1:$MOBILE_STUB_PORT}"
         ;;
     library) ;;
 esac
