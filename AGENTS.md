@@ -4,7 +4,7 @@ Clone-and-run evaluation template for [systemprompt.io](https://systemprompt.io)
 
 ## What this is
 
-An evaluation template, not a library. Clone, build, run. You get a self-hosted AI governance system with pre-configured agents, MCP servers, skills, scheduled jobs, and a static site. The binary is ~50 MB, needs only PostgreSQL, runs air-gapped.
+An evaluation template, not a library. Clone, build, run. You get a self-hosted AI governance system with pre-configured agents, MCP servers, skills, scheduled jobs, and a static site. It is one Rust binary that needs only PostgreSQL and runs air-gapped; it builds as one of five [flavours](docs/flavours/README.md).
 
 It wraps [`systemprompt-core`](https://github.com/systempromptio/systemprompt-core) — the Rust crate that does the governance — with production-ready configuration, demo scripts, and a compile-time extension system.
 
@@ -39,7 +39,7 @@ Every tool call passes through four synchronous stages before execution: **scope
 
 ## Key facts
 
-- Single Rust binary, ~50 MB; PostgreSQL is the only runtime dependency.
+- Single Rust binary in a distroless image; PostgreSQL is the only runtime dependency.
 - Provider-agnostic: Anthropic, OpenAI, Gemini, local models.
 - MCP-native — governance is the transport, not a proxy.
 - Identity: `users.roles` is a free-text `TEXT[]` array; `admin` is just a role string. System-originated work (scheduled jobs, hooks, MCP) runs under an explicit `owner:` declared per resource in `services/scheduler/config.yaml`. The owner is a real admin user — there is no separate "system" user. Every governance audit row carries `(user_id, actor_kind, actor_id)`: see `services/content/documentation/authentication.md`.
