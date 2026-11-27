@@ -144,7 +144,7 @@ jobs:
 
   test:
     if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
-    name: Test (unit, integration)
+    name: Test (unit, integration, contract)
     runs-on: ubuntu-latest
     # Integration is dominated by CREATE/DROP DATABASE round-trips, and a cold
     # cache (every core bump) adds the full compile on top; leave headroom so

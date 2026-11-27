@@ -206,7 +206,7 @@ test:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=()
-    for tier in test-unit test-integration; do
+    for tier in test-unit test-integration test-contract; do
         echo "==> $tier"
         {{just_executable()}} "$tier" || failed+=("$tier")
     done

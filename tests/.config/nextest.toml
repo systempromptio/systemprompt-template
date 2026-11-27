@@ -3,14 +3,16 @@
 # The DB-backed suites (mcp-integration-tests, admin-contract-tests) create
 # and drop throwaway databases on the shared maintenance server; running them
 # interleaved risks connection-pool exhaustion and cross-suite interference,
-# so each is serialised into its own single-threaded group. Pure-logic unit
-# crates keep full parallelism.
+# so each runs in its own bounded group. The contract suite gives every test
+# its own database and holds a small pool, so four run at once; the
+# integration suites stay single-threaded. Pure-logic unit crates keep full
+# parallelism.
 
 [test-groups.db-integration]
 max-threads = 1
 
 [test-groups.db-contract]
-max-threads = 1
+max-threads = 4
 
 [[profile.default.overrides]]
 filter = "package(mcp-integration-tests)"
