@@ -6,7 +6,25 @@ Conventions (strict — hold every entry to them):
 
 - Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): an `## [Unreleased]`
   section at the top, then one `## [X.Y.Z] - YYYY-MM-DD` section per release, each with only the
-  categories it needs, in this order: `### Breaking
+  categories it needs, in this order: `### Breaking`, `### Security`, `### Added`, `### Changed`,
+  `### Fixed`, `### Removed`. Every breaking bullet leads with `**Breaking:**`, names the
+  affected symbol, and ends with `Migrate by …`.
+- The heading shape is load-bearing. `just release X.Y.Z` refuses a version with no
+  `## [X.Y.Z]` heading, and `scripts/check-release-tag.sh` (a lint gate) requires every version
+  heading older than the workspace version to have its `vX.Y.Z` tag — the versioned image only
+  exists if the tag was pushed. A version that shipped as a chart but never as an image says so
+  in its heading (`## [X.Y.Z] - never released (…)`) and is counted, not checked.
+- Entries are written for the reader who did not make the change: full sentences, what changed
+  and **why**, named files/commands/flags where the reader will need them. No bare "updated X".
+- Every user-visible or operator-visible change lands in `Unreleased` **in the same commit** as
+  the change itself. A release moves the `Unreleased` content under its version heading;
+  `Unreleased` is never deleted, only emptied.
+- Version numbers track the root workspace `version` in `Cargo.toml`, which is core's version
+  (lockstep; see `docs/BRANCHING.md`).
+
+## [Unreleased]
+
+### Breaking
 - **Breaking:** a supplied profile must carry `mcp_credential_broker_secret`
   in its secrets. Every flavour's composition installs the web member, which
   serves the connector token route (`/api/public/connectors/<server>/token`,
@@ -67,60 +85,7 @@ Conventions (strict — hold every entry to them):
   <sha|branch>` moves it, and `scripts/core-patch.sh on <checkout>` builds
   against a local core. Migrate a fork that patched `crates-io` or pointed at
   `../systemprompt-core` by using `scripts/core-patch.sh`.
-, `### Security`, `### Security
-- An anonymous session was treated as signed in by the console. Any visitor
-  holding the anonymous cookie core mints for every new visitor reached its
-  own profile, settings, setup and history pages, could mint a bridge
-  connect code and approve a bridge device link for that anonymous user, and
-  read `GET /api/public/admin/dashboard` (estate-wide activity, traffic and
-  content aggregates) and `GET /api/public/admin/agents/{id}`. Console-only
-  pages and the admin JSON tiers stayed refused. Both checkpoints now share
-  one type (`NotSignedIn`), and the principal's fields and constructor are
-  crate-private.
-- `GET /api/public/admin/agents/{agent_id}` returned any agent's full
-  configuration (system prompt, tools, MCP bindings) to any signed-in member.
-  It now applies the list's rule: an administrator sees every agent, anyone
-  else an enabled agent their catalog access grants, and an ungranted agent
-  answers 404 like an absent one.
-- `/admin/login?redirect=` accepted a backslash and other non-path forms,
-  which a browser can normalise to another origin. The server
-  (`systemprompt_web_shared::redirect::same_origin_path`) and the login script
-  now accept only a same-origin path.
-- `POST /api/public/auth/session` wrote the posted token into `Set-Cookie`
-  unescaped, so a caller could inject cookie attributes. The cookie is now
-  built from a verified token with the `cookie` crate.
 
-### Added`, `### Changed`,
-  `### Fixed`, `### Fixed
-- Without the gateway, the access-control and roles pages no longer read the
-  gateway route labels and log an error on every render.
-- A fresh `gateway` setup boots with every job clean: the flavour ships its
-  own `access-control/rules.yaml`, holding only gateway route and model rules.
-- `gateway`, `mcp` and `agents` no longer schedule `file_ingestion`, which
-  none of them compiles.
-- `just setup <flavour> --no-build` on a non-default port re-points the
-  profile after the overlay sets `paths.bin`.
-- `just stop` passes `--profile <flavour>`, so it finds the running stack when
-  several profiles exist.
-
-### Removed`. Every breaking bullet leads with `**Breaking:**`, names the
-  affected symbol, and ends with `Migrate by …`.
-- The heading shape is load-bearing. `just release X.Y.Z` refuses a version with no
-  `## [X.Y.Z]` heading, and `scripts/check-release-tag.sh` (a lint gate) requires every version
-  heading older than the workspace version to have its `vX.Y.Z` tag — the versioned image only
-  exists if the tag was pushed. A version that shipped as a chart but never as an image says so
-  in its heading (`## [X.Y.Z] - never released (…)`) and is counted, not checked.
-- Entries are written for the reader who did not make the change: full sentences, what changed
-  and **why**, named files/commands/flags where the reader will need them. No bare "updated X".
-- Every user-visible or operator-visible change lands in `Unreleased` **in the same commit** as
-  the change itself. A release moves the `Unreleased` content under its version heading;
-  `Unreleased` is never deleted, only emptied.
-- Version numbers track the root workspace `version` in `Cargo.toml`, which is core's version
-  (lockstep; see `docs/BRANCHING.md`).
-
-## [Unreleased]
-
-### Breaking
 - **Breaking:** ADFS `allowed_email_domains` defaults to an empty list (it
   named two invented domains). An enabled farm must list its own domains in
   `adfs.yaml`; until it does, no address is provisioned.
@@ -145,6 +110,32 @@ Conventions (strict — hold every entry to them):
   their table from `?dimension=`. Migrate by reading the new headers, or by
   requesting `/admin/export/{dataset}?format=csv&columns=…` with the columns a
   consumer expects.
+
+### Security
+- An anonymous session was treated as signed in by the console. Any visitor
+  holding the anonymous cookie core mints for every new visitor reached its
+  own profile, settings, setup and history pages, could mint a bridge
+  connect code and approve a bridge device link for that anonymous user, and
+  read `GET /api/public/admin/dashboard` (estate-wide activity, traffic and
+  content aggregates) and `GET /api/public/admin/agents/{id}`. Console-only
+  pages and the admin JSON tiers stayed refused. Both checkpoints now share
+  one type (`NotSignedIn`), and the principal's fields and constructor are
+  crate-private.
+- `GET /api/public/admin/agents/{agent_id}` returned any agent's full
+  configuration (system prompt, tools, MCP bindings) to any signed-in member.
+  It now applies the list's rule: an administrator sees every agent, anyone
+  else an enabled agent their catalog access grants, and an ungranted agent
+  answers 404 like an absent one.
+- `/admin/login?redirect=` accepted a backslash and other non-path forms,
+  which a browser can normalise to another origin. The server
+  (`systemprompt_web_shared::redirect::same_origin_path`) and the login script
+  now accept only a same-origin path.
+- `POST /api/public/auth/session` wrote the posted token into `Set-Cookie`
+  unescaped, so a caller could inject cookie attributes. The cookie is now
+  built from a verified token with the `cookie` crate.
+- A `project_manager` could open any user's raw transcript, decision chain and
+  request audit detail by id. Raw evidence is read by an administrator or an
+  auditor only.
 
 ### Added
 - Flavours: five builds of the template (`gateway`, `mcp`, `agents`, `site`,
@@ -550,6 +541,21 @@ Conventions (strict — hold every entry to them):
   exist; `docs/gateway-routes.md` describes the services-YAML catalog, client
   attribution and `bridge_releases.token_secret`.
 - The admin report view's brand mark reads `systemprompt.io`.
+
+### Fixed
+- Without the gateway, the access-control and roles pages no longer read the
+  gateway route labels and log an error on every render.
+- A fresh `gateway` setup boots with every job clean: the flavour ships its
+  own `access-control/rules.yaml`, holding only gateway route and model rules.
+- `gateway`, `mcp` and `agents` no longer schedule `file_ingestion`, which
+  none of them compiles.
+- `just setup <flavour> --no-build` on a non-default port re-points the
+  profile after the overlay sets `paths.bin`.
+- `just stop` passes `--profile <flavour>`, so it finds the running stack when
+  several profiles exist.
+- An analysis report request answered 500 on the `agents` and `full` flavours:
+  the router never supplied the AI service the handler extracts. A request is
+  now queued and recorded as failed with "no AI provider is configured".
 
 ### Removed
 - The marketplace detail page's per-group Assign table and resolved-audience
