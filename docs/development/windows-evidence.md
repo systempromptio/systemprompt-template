@@ -67,10 +67,16 @@ those are:
 ```bash
 just harness-toolchain 2>&1 | tee evidence/harness-toolchain.log
 just harness-resolve   2>&1 | tee evidence/harness-resolve.log
+just harness-fmt-check 2>&1 | tee evidence/harness-fmt-check.log
+just harness-check     2>&1 | tee evidence/harness-check.log
+just harness-clippy    2>&1 | tee evidence/harness-clippy.log
+just harness-test      2>&1 | tee evidence/harness-test.log
 ```
 
-If the README lists build, check or test recipes, run each the same way with
-its own log. Record the exit status of each.
+The first of the last three builds the window toolkit and takes several
+minutes. If the README lists other recipes, run each the same way with its
+own log. Record the exit status of each; `tee` hides it, so read
+`${PIPESTATUS[0]}` straight after each line.
 
 ## 4. Android
 
@@ -120,9 +126,21 @@ mobile-android-install`, enter the address, then
 
 ### 4.2 Discovery against a real server
 
-Use an instance reachable from the Windows machine: one you start from this
-template (`just setup-local`, `just start`; set `server.host` to
-`127.0.0.1` or the LAN address, not `localhost`) or one you are given. Plain
+Use an instance reachable from the Windows machine: one you are given, or
+one you start from this template. To start one, pick a flavour that serves
+the routes of section 5 (`agents` or `full`; `just flavours` lists them) and
+give it ports nothing else uses:
+
+```bash
+just setup agents --anthropic-key <key> --http-port 8093 --pg-port 5471
+FLAVOUR=agents just start
+```
+
+Setup needs Docker for its Postgres and builds the server first; add
+`--no-build` when `FLAVOUR=agents just build` has already run. The key is
+only stored: nothing in this runbook calls a model. The profile it writes
+(`.systemprompt/profiles/agents/profile.yaml`) binds `127.0.0.1`; for a
+device on the LAN set `server.host` to the LAN address, not `localhost`. Plain
 HTTP is accepted by the app's debug build only, and only for loopback and
 private addresses.
 
@@ -149,6 +167,42 @@ first and not the second is refused at load. If the instance declares
 neither, the three Android requests below answer 404 or 401; record the
 status and move on.
 
+An instance you started in section 4.2 declares neither. To declare them for
+this run only, edit the staged copy of the gateway config, which is not
+tracked (`.systemprompt/flavours/agents/services/ai/gateway.yaml`), then
+stop and start the server. Under `gateway:`, replace `bridge_releases` and
+add `bridge_instance`:
+
+```yaml
+  bridge_releases:
+    repo: example/mobile-releases
+    tag_prefix: bridge-v
+    api_base: http://127.0.0.1:8766
+    assets:
+      android: app-debug.apk
+  bridge_instance:
+    device_link_path: /bridge-auth/device-link
+    identity_path: /api/public/bridge/whoami
+    branding:
+      display_name: Evidence run
+    clients:
+      android:
+        app_id: io.systemprompt.mobile
+    vouched_apps:
+      android:
+      - package_name: io.systemprompt.mobile
+        sha256_cert_fingerprints:
+        - <the SHA256 line of: keytool -list -v -keystore ~/.android/debug.keystore -storepass android>
+```
+
+`api_base` points the release proxy at a stand-in for the release API that
+serves the debug APK of section 4 and its checksum file. Leave it running in
+another terminal while you make the requests of 5.2:
+
+```bash
+python3 extensions/mobile/shared/stub-instance.py --releases extensions/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
 ### 5.1 Association file
 
 ```bash
@@ -169,7 +223,13 @@ certutil -hashfile evidence/android.apk SHA256 > evidence/android.apk.sha256
 
 No credential is sent. `android-latest.json` carries `version`, `sha256`
 and `size`; the hash and byte count of the downloaded file must equal them.
-Record both values and whether they match. Then confirm another platform is
+Record both values and whether they match. Outside Windows, `sha256sum
+evidence/android.apk` replaces `certutil`. When the instance declares the
+Android client and the stand-in is not running, the answer is 502. When the
+only release is newer than the server (`--version 99.0.0` on the stand-in),
+the answer is 404, and the 404 an anonymous caller reads is one fixed
+message with the key `app_download_unavailable`; it must not name a
+repository or a version window. Then confirm another platform is
 still closed: `curl -s -o /dev/null -w '%{http_code}' "$BASE/v1/bridge/latest?platform=windows-x64"`
 must not be 200 without a credential.
 
@@ -177,9 +237,20 @@ must not be 200 without a credential.
 
 This needs a signed-in user's bearer token and the fingerprint of a device
 that user has enrolled (the value the device was enrolled under through the
-existing device-link exchange). If you have no enrolled device, record the
-403 the first request returns (`device_not_enrolled`) as the result: that is
-the route refusing an unknown device, which is also worth having on record.
+existing device-link exchange). On an instance you started in section 4.2
+both come from its command line, run from the template root:
+
+```bash
+CLI=target/flavour-agents/debug/systemprompt   # release/ when you built with --release
+export SYSTEMPROMPT_PROFILE="$PWD/.systemprompt/profiles/agents/profile.yaml"
+FINGERPRINT=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')
+"$CLI" admin bridge enroll-cert --user-id <the admin email setup printed> --fingerprint "$FINGERPRINT" --label evidence
+TOKEN=$("$CLI" admin session login --token-only | tail -1)
+```
+
+On an instance you were given, with no enrolled device, record the 403 the
+first request returns (`device_not_enrolled`) as the result: that is the
+route refusing an unknown device, which is also worth having on record.
 
 ```bash
 curl -sS -X PUT "$BASE/api/v1/notifications/push-token" \
@@ -212,6 +283,7 @@ core <sha>   template <sha>   CORE_REF <sha>
 | Section | Step | Result (pass / fail / skipped) | Notes: exit code, sizes, hashes, status codes, the reason for a skip |
 | 3 | harness-toolchain | | |
 | 3 | harness-resolve | | |
+| 3 | harness-fmt-check, check, clippy, test | | one result each |
 | 4 | toolchain pins | | |
 | 4 | library, three ABIs | | sizes |
 | 4 | debug APK | | path, size, sha256 |
