@@ -1,0 +1,20 @@
+[package]
+name = "sp-brand"
+description = "Compile-time product identity per brand and channel: names, app id, URL scheme, default instance, data roots."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[features]
+default = []
+brand-astound = []
+channel-canary = []
+channel-dev = []
+
+[dependencies]
+dirs.workspace = true
+
+[lints]
+workspace = true

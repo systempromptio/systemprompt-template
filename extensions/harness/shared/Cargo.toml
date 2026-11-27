@@ -1,0 +1,17 @@
+[package]
+name = "harness-ui"
+description = "The shell's design system: themes, components, markdown and diff rendering. No engine or instance types."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+gpui-kit.workspace = true
+sp-brand.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

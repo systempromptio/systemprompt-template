@@ -1,0 +1,21 @@
+[package]
+name = "harness-drive-ui-tests"
+description = "Tests for harness-drive-ui, through its public API."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+harness-drive-ui.workspace = true
+
+[dev-dependencies]
+harness-shell.workspace = true
+sp-drive.workspace = true
+sp-extension.workspace = true
+sp-protocol.workspace = true
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+
+[lints]
+workspace = true

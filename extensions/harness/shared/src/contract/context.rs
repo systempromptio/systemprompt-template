@@ -1,0 +1,55 @@
+//! What the composition root hands every shell extension's views.
+//!
+//! Copyright (c) systemprompt.io — Business Source License 1.1.
+//! See <https://systemprompt.io> for licensing details.
+
+use std::fmt;
+use std::sync::Arc;
+
+use harness_engine::Engine;
+use harness_ids::ExtensionId;
+use harness_store::Store;
+use sp_accounts::Accounts;
+use sp_brand::Identity;
+use sp_client::HttpClient;
+use sp_extension::{Enablement, ExtensionSettings, Handles, SettingsAccess, SpPaths};
+use tokio::runtime::Handle;
+
+/// Everything a shell extension's views work with, built once by the
+/// composition root and cheap to clone.
+///
+/// `runtime` is the tokio runtime every engine, store and instance call runs
+/// on (the view applies results on the UI thread); `paths` are the directories
+/// the instance-side halves were given, the user's Documents directory among
+/// them; `handles` carries what the instance-side halves provided, found by
+/// type; `enablement` is the applied instance's enablement, which views
+/// subscribe to.
+#[derive(Clone)]
+pub struct ShellContext {
+    pub identity: &'static Identity,
+    pub runtime: Handle,
+    pub engine: Engine,
+    pub store: Store,
+    pub accounts: Accounts,
+    pub http: HttpClient,
+    pub paths: SpPaths,
+    pub settings: Arc<dyn SettingsAccess>,
+    pub handles: Handles,
+    pub enablement: Enablement,
+}
+
+impl ShellContext {
+    pub fn settings_for(&self, extension: &ExtensionId) -> ExtensionSettings {
+        ExtensionSettings::new(extension.clone(), Arc::clone(&self.settings))
+    }
+}
+
+impl fmt::Debug for ShellContext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ShellContext")
+            .field("app", &self.identity.display_name())
+            .field("handles", &self.handles)
+            .field("enablement", &self.enablement)
+            .finish_non_exhaustive()
+    }
+}
