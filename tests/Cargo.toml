@@ -56,12 +56,12 @@ systemprompt-kit-export = { path = "../extensions/cli/kit-export" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
-systemprompt-users = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
-systemprompt-content = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
-systemprompt-marketplace = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
-systemprompt-api = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "f61601289d76c8a0baabbce2f1b2540dc21c8513" }
+systemprompt = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "c1d24b20a112789125eb334d88045ef41aad14a3", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "c1d24b20a112789125eb334d88045ef41aad14a3" }
+systemprompt-users = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "c1d24b20a112789125eb334d88045ef41aad14a3" }
+systemprompt-content = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "c1d24b20a112789125eb334d88045ef41aad14a3" }
+systemprompt-marketplace = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "c1d24b20a112789125eb334d88045ef41aad14a3" }
+systemprompt-api = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "c1d24b20a112789125eb334d88045ef41aad14a3" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
