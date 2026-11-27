@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use sp_brand::{Brand, Channel, Identity, identity};
+use systemprompt_harness_brand::{Brand, Channel, Identity, identity};
 
 #[test]
 fn internal_has_no_channel_label() {

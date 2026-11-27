@@ -1,11 +1,11 @@
 //! Step 2 of the sign-in flow and its ending: the outcome of a sign-in, the
 //! signed-in instances, Finish, the first sync and the fade.
 
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{InstanceSummary, SignInOutcome};
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{InstanceSummary, SignInOutcome};
 
 use super::{Direction, Effect, Failure, FirstSync, Flow, Method, Step};
-use crate::views::signin::address::InstanceChoice;
+use crate::signin::address::InstanceChoice;
 
 impl Flow {
     pub(super) fn ended(&mut self, attempt: u64, outcome: SignInOutcome) -> Vec<Effect> {

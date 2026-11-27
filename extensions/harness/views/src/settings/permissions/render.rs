@@ -6,19 +6,21 @@ use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, Render, SharedString, Styled as _,
     Window, div, px,
 };
-use harness_config::Action;
-use harness_config::permission::{
+use systemprompt_engine::config::Action;
+use systemprompt_engine::config::permission::{
     EDIT, EXTERNAL_DIRECTORY, FETCH, GLOB, GREP, QUESTION, READ, SHELL, SKILL, TASK, TODO,
 };
-use harness_ui::components::{Badge, Banner, Button, IconButton, Select, SelectOption};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
+use systemprompt_harness_shared::components::{
+    Badge, Banner, Button, IconButton, Select, SelectOption,
+};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
 
+use crate::settings::layout;
+use crate::settings::permissions::load::RulesView;
+use crate::settings::permissions::rules::{Group, ShownRule, Source};
+use crate::settings::permissions::{Loading, PermissionsPage};
 use crate::strings::settings as text;
-use crate::views::settings::layout;
-use crate::views::settings::permissions::load::RulesView;
-use crate::views::settings::permissions::rules::{Group, ShownRule, Source};
-use crate::views::settings::permissions::{Loading, PermissionsPage};
 
 const ANY: &str = "*";
 const PERMISSIONS: [&str; 12] = [

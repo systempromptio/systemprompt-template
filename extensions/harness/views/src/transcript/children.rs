@@ -4,9 +4,9 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use harness_store::{Change, MessageWithParts, Part, PartBody, PartId, SessionId};
+use systemprompt_engine::store::{Change, MessageWithParts, Part, PartBody, PartId, SessionId};
 
-use crate::views::transcript::tool_info::{self, Phase};
+use crate::transcript::tool_info::{self, Phase};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ChildProgress {

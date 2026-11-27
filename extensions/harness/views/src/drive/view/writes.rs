@@ -1,15 +1,15 @@
 //! What the Drive screen writes: new folders and documents, comments, replies
 //! and resolving a thread. After a write the parts it changed are read again.
 
+use crate::drive::items::DriveFailure;
 use gpui_kit::{Context, Window};
-use harness_ui::Tone;
-use sp_drive::DocumentKind;
-use sp_drive::view::DriveFailure;
-use sp_protocol::ids::DocumentCommentId;
-use sp_protocol::wire::drive::{CommentRequest, CreateDocumentRequest, DriveAnchor};
+use systemprompt_harness::members::drive::DocumentKind;
+use systemprompt_harness_shared::Tone;
+use systemprompt_identifiers::DocumentCommentId;
+use systemprompt_models::documents::client::{CommentRequest, CreateDocumentRequest, DriveAnchor};
 
 use super::{DriveView, jobs};
-use crate::{bridge, strings as text};
+use crate::drive::{bridge, strings as text};
 
 impl DriveView {
     pub(super) fn create_folder(&mut self, name: &str, cx: &mut Context<Self>) {

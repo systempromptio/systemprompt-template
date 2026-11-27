@@ -14,15 +14,17 @@ use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, StatefulInteractiveElement as _, Styled as _, Task, Window, div, px,
 };
-use harness_ui::IconName;
-use harness_ui::components::{Banner, Button, IconButton, StatusDot};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use sp_notifications::{FeedStatus, Inbox, NotificationId, NotificationsHandle};
+use systemprompt_harness::members::notifications::{
+    FeedStatus, Inbox, NotificationId, NotificationsHandle,
+};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Banner, Button, IconButton, StatusDot};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
 use tokio::runtime::Handle;
 use tokio::sync::watch;
 
-use crate::model::{Action, Pending, accepts_actions, feed_tone, unseen};
-use crate::{bridge, strings as text};
+use crate::notifications::model::{Action, Pending, accepts_actions, feed_tone, unseen};
+use crate::notifications::{bridge, strings as text};
 
 const PAGE_WIDTH: f32 = 760.0;
 

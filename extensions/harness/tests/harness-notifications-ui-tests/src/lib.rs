@@ -1,4 +1,5 @@
-//! Tests for harness-notifications-ui, through its public API.
+//! Tests for the notifications and Slack screens of systemprompt-harness-views,
+//! through the public API.
 
 #[cfg(test)]
 mod extension_tests;

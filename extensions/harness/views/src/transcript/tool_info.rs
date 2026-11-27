@@ -2,9 +2,11 @@
 //! where it stands and how it ended, read from the stored tool state without
 //! any GPUI.
 
-use harness_engine::denied;
-use harness_store::{JsonMap, SessionId, TodoStatus, ToolState};
-use harness_ui::IconName;
+use systemprompt_engine::run::denied;
+use systemprompt_engine::store::{JsonMap, SessionId, TodoStatus, ToolState};
+use systemprompt_harness_shared::IconName;
+// JSON: a tool call's input and metadata are the tool's own JSON, stored by
+// the engine as the model and the tool wrote them.
 use serde_json::Value;
 
 const SUBJECT_LIMIT: usize = 160;
@@ -144,6 +146,8 @@ pub(crate) const fn metadata(state: &ToolState) -> Option<&JsonMap> {
 }
 
 // JSON: the tool input as the model sent it and the metadata the tool reported.
+// JSON: a tool call's input and metadata are the tool's own JSON, stored by
+// the engine as the model and the tool wrote them.
 fn subject(kind: ToolKind, input: &Value, metadata: Option<&JsonMap>) -> Option<String> {
     let text = |key: &str| input.get(key).and_then(Value::as_str).map(str::to_owned);
     let found = match kind {
@@ -182,6 +186,8 @@ pub fn truncate(text: &str, limit: usize) -> String {
 }
 
 // JSON: the tool part's metadata, where the engine marks a refused call.
+// JSON: a tool call's input and metadata are the tool's own JSON, stored by
+// the engine as the model and the tool wrote them.
 fn outcome(error: &str, metadata: &JsonMap) -> Outcome {
     let detail = |key: &str| {
         metadata
@@ -207,6 +213,8 @@ fn first_line(text: &str) -> String {
     text.lines().next().unwrap_or_default().trim().to_owned()
 }
 
+// JSON: a tool call's input and metadata are the tool's own JSON, stored by
+// the engine as the model and the tool wrote them.
 pub(crate) fn metadata_text<'a>(state: &'a ToolState, key: &str) -> Option<&'a str> {
     metadata(state)
         .and_then(|map| map.get(key))
@@ -232,6 +240,8 @@ pub(crate) fn child_session(state: &ToolState) -> Option<SessionId> {
     metadata_text(state, "session_id").and_then(|id| SessionId::parse(id).ok())
 }
 
+// JSON: a tool call's input and metadata are the tool's own JSON, stored by
+// the engine as the model and the tool wrote them.
 pub fn todos(state: &ToolState) -> Vec<TodoLine> {
     let listed = metadata(state)
         .and_then(|map| map.get("todos"))

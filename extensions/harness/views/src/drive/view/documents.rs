@@ -2,28 +2,28 @@
 //! listing failed.
 
 use super::DriveView;
-use crate::model::Load;
-use crate::strings as text;
+use crate::drive::items::{DocumentItem, DriveFailure};
+use crate::drive::model::DriveLoad;
+use crate::drive::strings as text;
 use gpui_kit::{AnyElement, Context, IntoElement, ParentElement as _, Styled as _, div};
-use harness_ui::IconName;
-use harness_ui::components::{Button, EmptyState, ListRow, Spinner};
-use harness_ui::theme::space;
-use sp_drive::view::{DocumentItem, DriveFailure};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Button, EmptyState, ListRow, Spinner};
+use systemprompt_harness_shared::theme::space;
 
 impl DriveView {
     pub(super) fn documents(&self, cx: &Context<Self>) -> AnyElement {
         let items = match &self.browse.documents {
-            Load::Ready(items) => items,
-            Load::Loading | Load::Idle => {
+            DriveLoad::Ready(items) => items,
+            DriveLoad::Loading | DriveLoad::Idle => {
                 return div().p(space::LG).child(Spinner::new()).into_any_element();
             },
-            Load::Failed(DriveFailure::NotFound) => {
+            DriveLoad::Failed(DriveFailure::NotFound) => {
                 return EmptyState::new(text::NO_DRIVE_TITLE)
                     .icon(IconName::Cloud)
                     .description(text::NO_DRIVE_BODY)
                     .into_any_element();
             },
-            Load::Failed(failure) => return Self::listing_failure(*failure, cx),
+            DriveLoad::Failed(failure) => return Self::listing_failure(*failure, cx),
         };
         if items.is_empty() {
             let searching = !self.browse.query.trim().is_empty();

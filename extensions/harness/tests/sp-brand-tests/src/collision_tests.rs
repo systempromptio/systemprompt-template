@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use sp_brand::Identity;
+use systemprompt_harness_brand::Identity;
 
 fn all() -> Vec<&'static Identity> {
     Identity::ALL

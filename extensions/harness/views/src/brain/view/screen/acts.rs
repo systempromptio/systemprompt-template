@@ -3,12 +3,12 @@
 //! instance accepts bumps the brain's feed, which reloads what it touched.
 
 use gpui_kit::{Context, SharedString};
-use sp_brain::{BrainError, BrainService};
-use sp_protocol::wire::brain::{BrainFactId, BrainProposalId};
+use systemprompt_harness::members::brain::{BrainError, BrainService};
+use systemprompt_identifiers::{BrainFactId, BrainProposalId};
 
 use super::{BrainScreen, bridge};
-use crate::model::{BrainFailure, Decision, FactAction};
-use crate::strings;
+use crate::brain::model::{BrainFailure, Decision, FactAction};
+use crate::brain::strings;
 
 impl BrainScreen {
     pub(super) fn start_action(&mut self, action: FactAction, cx: &mut Context<Self>) {

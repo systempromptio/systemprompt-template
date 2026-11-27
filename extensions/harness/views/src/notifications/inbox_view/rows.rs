@@ -6,14 +6,16 @@
 
 use chrono::{DateTime, Utc};
 use gpui_kit::{AnyElement, Context, IntoElement, ParentElement as _, Styled as _, div};
-use harness_ui::components::{Badge, Button, EmptyState, IconButton, ListRow, Spinner, StatusDot};
-use harness_ui::theme::{size, space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
-use sp_notifications::{Inbox, Notification};
+use systemprompt_harness::members::notifications::{Inbox, Notification};
+use systemprompt_harness_shared::components::{
+    Badge, Button, EmptyState, IconButton, ListRow, Spinner, StatusDot,
+};
+use systemprompt_harness_shared::theme::{size, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
 
 use super::InboxView;
-use crate::model::{Action, InboxBody, accepts_actions, inbox_body, needs_reader};
-use crate::strings as text;
+use crate::notifications::model::{Action, InboxBody, accepts_actions, inbox_body, needs_reader};
+use crate::notifications::strings as text;
 
 #[derive(Clone, Copy)]
 struct RowFrame {

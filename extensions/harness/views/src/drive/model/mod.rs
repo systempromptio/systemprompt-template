@@ -12,7 +12,7 @@ mod preview_text;
 mod settings;
 mod target;
 
-pub use browse::{Browse, BrowseScope, Load, SortKey, sort_documents};
+pub use browse::{Browse, BrowseScope, DriveLoad, SortKey, sort_documents};
 pub use folders::{FolderRow, folder_rows};
 pub use links::{local_path, web_link};
 pub use preview_text::{AnchorChoice, EXCERPT_CHARS, PREVIEW_LIMIT, PreviewText};

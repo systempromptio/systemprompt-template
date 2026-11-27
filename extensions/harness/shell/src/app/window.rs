@@ -14,17 +14,15 @@ use gpui_kit::component::TitleBar;
 use gpui_kit::{
     AnyWindowHandle, App, AppContext as _, AsyncApp, Entity, WindowBounds, WindowOptions, px, size,
 };
-use harness_tasks::OwnedTask;
+use systemprompt_traits::OwnedTask;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-use crate::app::Services;
-use crate::app::deeplink::LaunchRequest;
-use crate::app::settings::UiSettings;
-use crate::keymap;
-use crate::state::AppState;
-use crate::views::fatal::FatalView;
-use crate::views::frame::Frame;
-use crate::views::window_state;
+use systemprompt_harness_views::app::Services;
+use systemprompt_harness_views::app::deeplink::LaunchRequest;
+use systemprompt_harness_views::fatal::FatalView;
+use systemprompt_harness_views::frame::Frame;
+use systemprompt_harness_views::state::AppState;
+use systemprompt_harness_views::{keymap, window_state};
 
 const FATAL_WIDTH: f32 = 520.0;
 const FATAL_HEIGHT: f32 = 300.0;
@@ -46,13 +44,13 @@ pub(crate) fn run(launch: Launch) {
         forward,
         requests,
     } = launch;
-    let application = gpui_kit::application().with_assets(harness_ui::Assets);
+    let application = gpui_kit::application().with_assets(systemprompt_harness_shared::Assets);
     application.on_open_urls(move |links| forward_links(&forward, links));
     application.run(move |cx| {
         let identity = services.identity();
         cx.set_app_identity(identity.app_id(), identity.display_name());
-        harness_ui::init(cx);
-        harness_ui::theme::set_scheme(cx, services.settings().read(UiSettings::scheme));
+        systemprompt_harness_shared::init(cx);
+        systemprompt_harness_shared::theme::set_scheme(cx, services.settings().get().scheme());
         keymap::bind(cx);
         cx.on_window_closed(|cx, _| {
             if cx.windows().is_empty() {
@@ -95,7 +93,7 @@ fn open_main_window(
     cx: &mut App,
 ) -> anyhow::Result<AnyWindowHandle> {
     let identity = services.identity();
-    let saved = services.settings().read(|settings| settings.window);
+    let saved = services.settings().get().window;
     let options = WindowOptions {
         window_bounds: Some(window_state::initial_bounds(saved, cx)),
         window_min_size: Some(window_state::min_size()),
@@ -147,7 +145,7 @@ fn quit(services: Services) -> impl Future<Output = ()> {
         OwnedTask::spawn(SHUTDOWN_TASK, async move { services.shutdown().await })
     };
     async move {
-        if let Err(error) = job.join().await {
+        if let Err(error) = job.join_named().await {
             tracing::warn!(error = %error, "shutdown task failed");
         }
     }
@@ -155,9 +153,9 @@ fn quit(services: Services) -> impl Future<Output = ()> {
 
 pub(crate) fn show_fatal() {
     gpui_kit::application()
-        .with_assets(harness_ui::Assets)
+        .with_assets(systemprompt_harness_shared::Assets)
         .run(|cx| {
-            harness_ui::init(cx);
+            systemprompt_harness_shared::init(cx);
             cx.on_window_closed(|cx, _| cx.quit()).detach();
             let options = WindowOptions {
                 window_bounds: Some(WindowBounds::centered(
@@ -167,7 +165,7 @@ pub(crate) fn show_fatal() {
                 ..WindowOptions::default()
             };
             let opened = gpui_kit::open_window(options, cx, |window, cx| {
-                window.set_window_title(sp_brand::identity().display_name());
+                window.set_window_title(systemprompt_harness_brand::identity().display_name());
                 cx.new(|_| FatalView)
             });
             match opened {

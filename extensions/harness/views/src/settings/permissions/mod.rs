@@ -3,7 +3,7 @@
 //! It shows the effective rules for the open project and the chosen agent,
 //! grouped by permission with where each rule comes from, and the user's own
 //! rules added and removed in the global settings file through
-//! `harness_config::update_global_setting` on the runtime.
+//! `systemprompt_engine::config::update_global_setting` on the runtime.
 
 pub mod jsonc;
 mod load;
@@ -15,16 +15,16 @@ use std::path::PathBuf;
 use gpui_kit::{
     AnyView, App, AppContext as _, Context, Entity, SharedString, Subscription, Task, Window,
 };
-use harness_config::Action;
-use harness_ui::components::TextField;
-use harness_ui::{IconName, Tone};
+use systemprompt_engine::config::Action;
+use systemprompt_harness_shared::components::TextField;
+use systemprompt_harness_shared::{IconName, Tone};
 
 use crate::app::{Services, runtime};
+use crate::settings::permissions::load::{Request, RulesView};
+use crate::settings::permissions::rules::RuleEdit;
+use crate::settings::{SettingsPage, reveal};
 use crate::state::AppState;
 use crate::strings::settings as text;
-use crate::views::settings::permissions::load::{Request, RulesView};
-use crate::views::settings::permissions::rules::RuleEdit;
-use crate::views::settings::{SettingsPage, reveal};
 
 pub(super) fn settings_page() -> SettingsPage {
     SettingsPage {
@@ -109,7 +109,7 @@ impl PermissionsPage {
             loading: Loading::Idle,
             field,
             pattern: String::new(),
-            permission: SharedString::new_static(harness_config::permission::SHELL),
+            permission: SharedString::new_static(systemprompt_engine::config::permission::SHELL),
             action: Action::Ask,
             load_task: None,
             tasks: Vec::new(),
@@ -199,7 +199,12 @@ impl PermissionsPage {
         let write = move || {
             let keys: Vec<&str> = edit.key.iter().map(String::as_str).collect();
             let value = edit.value.as_ref().map(rules::to_json);
-            harness_config::update_global_setting(&paths, &layout, &keys, value.as_ref())
+            systemprompt_engine::config::update_global_setting(
+                &paths,
+                &layout,
+                &keys,
+                value.as_ref(),
+            )
         };
         let task = runtime::blocking(cx, self.services.runtime(), write, |page, result, cx| {
             if let Err(error) = result {

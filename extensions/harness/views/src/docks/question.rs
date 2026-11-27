@@ -6,14 +6,14 @@ use gpui_kit::{
     AnyElement, Context, FontWeight, IntoElement, ParentElement as _, SharedString, Styled as _,
     div,
 };
-use harness_engine::{Question, QuestionAsk, QuestionId};
-use harness_ui::components::{Badge, Button, ListRow};
-use harness_ui::theme::{size, space, text as type_scale, tokens};
-use harness_ui::{Icon, IconName};
+use systemprompt_engine::run::{Question, QuestionAsk, QuestionId};
+use systemprompt_harness_shared::components::{Badge, Button, ListRow};
+use systemprompt_harness_shared::theme::{size, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{Icon, IconName};
 
+use crate::docks::DocksView;
+use crate::docks::permission::{dock_card, dock_title, with_key};
 use crate::strings::docks as text;
-use crate::views::docks::DocksView;
-use crate::views::docks::permission::{dock_card, dock_title, with_key};
 
 impl DocksView {
     pub(super) fn render_question(

@@ -6,15 +6,17 @@ use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     SharedString, StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use harness_store::{Part, ToolState};
-use harness_ui::components::{Badge, Spinner};
-use harness_ui::theme::{mono_font, radius, size, space, text as type_scale, tokens};
-use harness_ui::{Icon, IconName, Palette, Tone};
+use systemprompt_engine::store::{Part, ToolState};
+use systemprompt_harness_shared::components::{Badge, Spinner};
+use systemprompt_harness_shared::theme::{
+    mono_font, radius, size, space, text as type_scale, tokens,
+};
+use systemprompt_harness_shared::{Icon, IconName, Palette, Tone};
 
 use crate::strings::transcript as text;
-use crate::views::transcript::TranscriptView;
-use crate::views::transcript::parts::part_element_id;
-use crate::views::transcript::tool_info::{self, Outcome, Phase, ToolKind, ToolSummary};
+use crate::transcript::TranscriptView;
+use crate::transcript::parts::part_element_id;
+use crate::transcript::tool_info::{self, Outcome, Phase, ToolKind, ToolSummary};
 
 const TITLE_WIDTH: f32 = 320.0;
 

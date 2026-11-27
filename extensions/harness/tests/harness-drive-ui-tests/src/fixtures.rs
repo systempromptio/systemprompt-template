@@ -1,5 +1,5 @@
-use sp_drive::view::{DocumentItem, FolderNode};
-use sp_protocol::ids::{DocumentFolderId, DocumentId};
+use systemprompt_harness_views::drive::items::{DocumentItem, FolderNode};
+use systemprompt_identifiers::{DocumentFolderId, DocumentId};
 
 pub(crate) fn id(n: u32) -> DocumentId {
     DocumentId::new(format!("00000000-0000-4000-8000-{n:012}"))

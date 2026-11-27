@@ -4,26 +4,26 @@
 
 use std::time::Duration;
 
+use crate::drive::items::DriveFailure;
 use gpui_kit::{AsyncApp, Context, SharedString, WeakEntity, Window};
-use harness_shell::DraftInSession;
-use harness_ui::MarkdownDocument;
-use sp_drive::DriveError;
-use sp_drive::view::DriveFailure;
-use sp_protocol::ids::{DocumentFolderId, DocumentId};
+use systemprompt_drive::DriveError;
+use systemprompt_harness_shared::MarkdownDocument;
+use systemprompt_harness_shared::contract::DraftInSession;
+use systemprompt_identifiers::{DocumentFolderId, DocumentId};
 
 use super::jobs::{self, DocumentLoad};
 use super::{DriveView, OpenDocument, PreviewTab};
-use crate::model::{BrowseScope, Load, SortKey, web_link};
-use crate::{bridge, strings as text};
+use crate::drive::model::{BrowseScope, DriveLoad, SortKey, web_link};
+use crate::drive::{bridge, strings as text};
 
 const SEARCH_PAUSE: Duration = Duration::from_millis(250);
 
-pub(super) fn settle<T>(result: Result<T, DriveError>, what: &'static str) -> Load<T> {
+pub(super) fn settle<T>(result: Result<T, DriveError>, what: &'static str) -> DriveLoad<T> {
     match result {
-        Ok(value) => Load::Ready(value),
+        Ok(value) => DriveLoad::Ready(value),
         Err(error) => {
             tracing::warn!(what, error = %error, "a Drive read failed");
-            Load::Failed(DriveFailure::from(&error))
+            DriveLoad::Failed(DriveFailure::from(&error))
         },
     }
 }
@@ -39,11 +39,11 @@ impl DriveView {
 
     pub(super) fn reload_folders(&mut self, cx: &Context<Self>) {
         let Some(client) = self.client() else {
-            self.browse.folders = Load::Failed(DriveFailure::SignedOut);
+            self.browse.folders = DriveLoad::Failed(DriveFailure::SignedOut);
             return;
         };
         if self.browse.folders.ready().is_none() {
-            self.browse.folders = Load::Loading;
+            self.browse.folders = DriveLoad::Loading;
         }
         let task = bridge::run(
             cx,
@@ -194,7 +194,7 @@ impl DriveView {
         };
         open.detail = settle(load.detail, "document");
         open.preview = settle(load.preview, "preview");
-        if let Load::Ready(preview) = &open.preview {
+        if let DriveLoad::Ready(preview) = &open.preview {
             open.markdown = MarkdownDocument::from_text(&preview.markdown);
             let known = self
                 .anchor

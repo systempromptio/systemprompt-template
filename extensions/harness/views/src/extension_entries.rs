@@ -6,8 +6,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use gpui_kit::{AnyElement, AnyView, App, Entity, IntoElement, Window};
-use harness_shell::{OpenScreen, Placement, ScreenKey, ShellContext};
-use harness_ui::components::{IconButton, ListRow};
+use systemprompt_harness_shared::components::{IconButton, ListRow};
+use systemprompt_harness_shared::contract::{OpenScreen, Placement, ScreenKey, ShellContext};
 
 use crate::state::extensions::Contributions;
 use crate::state::{AppState, Route};

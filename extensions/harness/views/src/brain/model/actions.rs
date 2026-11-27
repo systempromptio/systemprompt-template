@@ -3,7 +3,7 @@
 //! Which of them the account may take is the instance's decision; a refusal
 //! comes back as a failure.
 
-use sp_protocol::wire::brain::{BrainFact, FactStatus};
+use systemprompt_models::brain::{BrainFact, FactStatus};
 
 use super::failure::BrainFailure;
 

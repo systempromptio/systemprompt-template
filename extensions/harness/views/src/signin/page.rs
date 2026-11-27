@@ -5,8 +5,8 @@ use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use harness_ui::motion;
-use harness_ui::theme::{self, space, tokens};
+use systemprompt_harness_shared::motion;
+use systemprompt_harness_shared::theme::{self, space, tokens};
 
 use super::SignInGate;
 use super::flow::Step;

@@ -2,21 +2,21 @@
 //! facts and muted notes.
 
 use super::{DriveView, OpenDocument};
-use crate::model::Load;
-use crate::strings as text;
+use crate::drive::items::{RevisionItem, ShareGrant};
+use crate::drive::model::DriveLoad;
+use crate::drive::strings as text;
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, SharedString, Styled as _, div,
 };
-use harness_ui::components::{Badge, ListRow, Spinner};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
-use sp_drive::view::{RevisionItem, ShareGrant};
+use systemprompt_harness_shared::components::{Badge, ListRow, Spinner};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
 
 pub(super) fn revisions(open: &OpenDocument, cx: &Context<DriveView>) -> AnyElement {
     let items: &Vec<RevisionItem> = match &open.revisions {
-        Load::Ready(items) => items,
-        Load::Loading | Load::Idle => return Spinner::new().into_any_element(),
-        Load::Failed(failure) => return muted(text::failure(*failure), cx),
+        DriveLoad::Ready(items) => items,
+        DriveLoad::Loading | DriveLoad::Idle => return Spinner::new().into_any_element(),
+        DriveLoad::Failed(failure) => return muted(text::failure(*failure), cx),
     };
     if items.is_empty() {
         return muted(text::NO_REVISIONS, cx);

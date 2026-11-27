@@ -1,4 +1,4 @@
-use harness_ui::theme::{Color, contrast_ratio};
+use systemprompt_harness_shared::theme::{Color, contrast_ratio};
 
 fn close(a: f64, b: f64) -> bool {
     (a - b).abs() < 0.01

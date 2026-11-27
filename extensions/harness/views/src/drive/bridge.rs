@@ -11,7 +11,7 @@
 use std::future::Future;
 
 use gpui_kit::{AsyncApp, Context, Task, WeakEntity};
-use harness_tasks::{OwnedTask, TaskError};
+use systemprompt_traits::{OwnedTask, TaskError};
 use tokio::runtime::Handle;
 use tokio::sync::watch;
 
@@ -62,7 +62,7 @@ where
     Done: FnOnce(&mut T, R, &mut Context<T>) + 'static,
 {
     cx.spawn(async move |this: WeakEntity<T>, cx: &mut AsyncApp| {
-        let joined: Result<R, TaskError> = job.join().await;
+        let joined: Result<R, TaskError> = job.join_named().await;
         match joined {
             Ok(value) => {
                 if this

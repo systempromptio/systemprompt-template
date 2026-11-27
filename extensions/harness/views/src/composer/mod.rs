@@ -23,14 +23,14 @@ use gpui_kit::{
     App, AppContext as _, Context, Entity, FocusHandle, Focusable, SharedString, Subscription,
     Task, Window,
 };
-use harness_store::SessionId;
+use systemprompt_engine::store::SessionId;
 
 use crate::app::{Services, runtime};
+use crate::composer::drafts::{Attachment, Draft, Drafts};
+use crate::composer::popup::Popup;
+use crate::pickers::{AgentPicker, ModelPicker};
 use crate::state::AppState;
 use crate::strings::composer as text;
-use crate::views::composer::drafts::{Attachment, Draft, Drafts};
-use crate::views::composer::popup::Popup;
-use crate::views::pickers::{AgentPicker, ModelPicker};
 
 const MIN_ROWS: usize = 1;
 const MAX_ROWS: usize = 10;

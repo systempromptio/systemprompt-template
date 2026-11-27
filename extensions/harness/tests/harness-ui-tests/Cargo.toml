@@ -1,18 +1,21 @@
 [package]
 name = "harness-ui-tests"
-description = "Tests for harness-ui, through its public API."
+description = "Tests for the design system of systemprompt-harness-shared and systemprompt-harness-theme, through its public API."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 publish.workspace = true
 
 [dependencies]
-harness-ui.workspace = true
+systemprompt-harness-shared.workspace = true
 
 [dev-dependencies]
-sp-brand.workspace = true
-gpui-kit = { version = "=0.9.1", features = ["syntect"] }
+gpui-kit.workspace = true
+systemprompt-harness-brand.workspace = true
 
 [lints]
 workspace = true

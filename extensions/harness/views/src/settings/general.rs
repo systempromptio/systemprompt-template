@@ -9,15 +9,15 @@ use gpui_kit::{
     ParentElement as _, PathPromptOptions, Render, SharedString, Styled as _, Subscription, Task,
     WeakEntity, Window, div, px,
 };
-use harness_ui::components::{Button, Select, SelectOption, Toggle};
-use harness_ui::theme::space;
-use harness_ui::{IconName, Scheme};
+use systemprompt_harness_shared::components::{Button, Select, SelectOption, Toggle};
+use systemprompt_harness_shared::theme::space;
+use systemprompt_harness_shared::{IconName, Scheme};
 
 use crate::app::settings::{DeliveryPref, UiSettings};
 use crate::app::{Services, runtime};
+use crate::settings::{SettingsPage, layout, reveal};
 use crate::state::AppState;
 use crate::strings::settings as text;
-use crate::views::settings::{SettingsPage, layout, reveal};
 
 const SELECT_WIDTH: f32 = 200.0;
 const DELIVERIES: [DeliveryPref; 2] = [DeliveryPref::Steer, DeliveryPref::Queue];
@@ -113,7 +113,7 @@ impl GeneralPage {
                     return;
                 };
                 store.update(|settings| settings.set_scheme(scheme));
-                harness_ui::theme::set_scheme(cx, scheme);
+                systemprompt_harness_shared::theme::set_scheme(cx, scheme);
             });
         let row = layout::row(
             text::SCHEME,

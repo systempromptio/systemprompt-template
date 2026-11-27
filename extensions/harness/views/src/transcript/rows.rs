@@ -6,7 +6,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash as _, Hasher as _};
 use std::ops::Range;
 
-use harness_store::{Message, MessageId, MessageWithParts, PartBody};
+use systemprompt_engine::store::{Message, MessageId, MessageWithParts, PartBody};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RowKey {
@@ -67,7 +67,7 @@ fn fingerprint(entry: &MessageWithParts, live: bool) -> u64 {
         reply.error.is_some().hash(&mut hasher);
         reply
             .finish
-            .map(harness_store::FinishReason::as_str)
+            .map(systemprompt_engine::store::FinishReason::as_str)
             .hash(&mut hasher);
     }
     for part in &entry.parts {

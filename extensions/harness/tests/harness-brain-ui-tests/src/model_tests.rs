@@ -1,13 +1,14 @@
 //! Fact actions, the open fact, availability, failures and latest replies.
 
-use harness_brain_ui::model::{
+use systemprompt_harness::extension::{EnabledExtensions, extension_id};
+use systemprompt_harness::members::brain::{BRAIN_EXTENSION, BrainError, BrainStatus};
+use systemprompt_harness_views::brain::model::{
     ActionOutcome, Availability, BrainFailure, FactAction, FactDetail, LatestReplies, Load,
 };
-use harness_brain_ui::strings;
-use harness_ids::{MessageId, SessionId};
-use sp_brain::{BRAIN_EXTENSION, BrainError, BrainStatus};
-use sp_extension::{EnabledExtensions, extension_id};
-use sp_protocol::wire::brain::{BrainFactId, FactStatus};
+use systemprompt_harness_views::brain::strings;
+use systemprompt_identifiers::BrainFactId;
+use systemprompt_identifiers::engine::{MessageId, SessionId};
+use systemprompt_models::brain::FactStatus;
 
 use crate::fixtures::{FACT_A, fact};
 

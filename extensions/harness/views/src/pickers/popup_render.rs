@@ -10,9 +10,9 @@ use gpui_kit::{
     AnyElement, ClickEvent, Context, FontWeight, InteractiveElement as _, IntoElement, MouseButton,
     ParentElement as _, StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use harness_ui::components::{Badge, Divider, ListRow};
-use harness_ui::theme::{size, space, text as type_scale, tokens};
-use harness_ui::{Icon, IconName};
+use systemprompt_harness_shared::components::{Badge, Divider, ListRow};
+use systemprompt_harness_shared::theme::{size, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{Icon, IconName};
 
 pub(super) fn render_surface<H: PickerHost>(
     host: &H,

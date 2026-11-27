@@ -1,4 +1,5 @@
-//! Tests for harness-desktop, through its public API.
+//! Tests for the views, state and services of systemprompt-harness-views and
+//! the launch of systemprompt-harness-shell, through the public API.
 
 mod app;
 mod state;

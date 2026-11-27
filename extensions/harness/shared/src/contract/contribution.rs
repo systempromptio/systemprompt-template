@@ -5,22 +5,23 @@
 use std::fmt;
 use std::rc::Rc;
 
+use crate::IconName;
 use gpui_kit::{AnyElement, AnyView, App, Task, Window};
-use harness_ids::ExtensionId;
-use harness_store::MessageWithParts;
-use harness_ui::IconName;
+use systemprompt_engine::store::MessageWithParts;
+use systemprompt_identifiers::engine::ExtensionId;
 
-use crate::context::ShellContext;
+use crate::contract::context::ShellContext;
 
-/// Builds a view on the UI thread from the shell context.
+/// Runs on the UI thread only: the result is an `Rc`, never sent to the
+/// runtime.
 pub type ViewBuilder = Rc<dyn Fn(&ShellContext, &mut Window, &mut App) -> AnyView>;
 
 /// Opens or closes one screen; the shell hands it to the titlebar item it
 /// placed for that screen.
 pub type OpenScreen = Rc<dyn Fn(&mut Window, &mut App)>;
 
-/// Builds a titlebar item on the UI thread from the shell context and the
-/// callback that opens its screen.
+/// Runs on the UI thread only; the item keeps the [`OpenScreen`] it is given
+/// for as long as it is shown.
 pub type TitlebarItemBuilder =
     Rc<dyn Fn(&ShellContext, OpenScreen, &mut Window, &mut App) -> AnyView>;
 

@@ -1,9 +1,10 @@
 //! Which facts the list shows: a kind, a subject and any of several statuses,
 //! turned into the instance's listing query one page at a time.
 
-use sp_brain::FactQuery;
-use sp_protocol::wire::brain::{FactKindId, FactStatus, SubjectKey, SubjectKeyError};
+use systemprompt_harness::members::brain::FactQuery;
+use systemprompt_identifiers::FactKindId;
 use systemprompt_identifiers::error::IdValidationError;
+use systemprompt_models::brain::{FactStatus, SubjectKey, SubjectKeyError};
 
 pub const PAGE_SIZE: u32 = 50;
 

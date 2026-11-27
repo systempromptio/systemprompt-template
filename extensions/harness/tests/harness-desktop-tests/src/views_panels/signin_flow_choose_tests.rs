@@ -1,6 +1,8 @@
-use harness_desktop::views::signin::flow::{Direction, Effect, Event, Failure, FirstSync, Step};
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::InstanceSummary;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::InstanceSummary;
+use systemprompt_harness_views::signin::flow::{
+    Direction, Effect, Event, Failure, FirstSync, Step,
+};
 
 use super::signin_flow_fixtures::signed_in;
 

@@ -1,7 +1,7 @@
-use harness_desktop::app::settings_store::SettingsStore;
-use harness_ids::extension_id;
 use serde_json::{Map, Value, json};
-use sp_extension::SettingsAccess;
+use systemprompt_harness::extension::SettingsAccess;
+use systemprompt_harness_views::app::settings_store::SettingsStore;
+use systemprompt_identifiers::extension_id;
 
 fn folder(path: &str) -> Map<String, Value> {
     let Value::Object(values) = json!({ "folder": path }) else {

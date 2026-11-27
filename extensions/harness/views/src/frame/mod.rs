@@ -1,6 +1,8 @@
 //! The root view: titlebar, sidebar and main area, or the sign-in gate over
 //! everything below the titlebar while no instance is signed in and until the
-//! gate lets go of the window. It routes the main area between the session (or
+//! gate lets go of the window.
+//!
+//! It routes the main area between the session (or
 //! the home screen), Settings and the admitted extensions' screens (each built
 //! from its builder when its route opens and dropped when the route leaves it
 //! or the enablement withdraws it), owns one transcript and docks pair
@@ -16,20 +18,20 @@ use gpui_kit::{
     AnyElement, AnyView, AppContext as _, Context, Entity, FocusHandle, Focusable, IntoElement,
     ParentElement as _, Styled as _, Subscription, Window, div,
 };
-use harness_shell::ScreenKey;
-use harness_store::SessionId;
+use systemprompt_engine::store::SessionId;
+use systemprompt_harness_shared::contract::ScreenKey;
 
 use crate::app::Services;
+use crate::composer::ComposerView;
+use crate::docks::DocksView;
+use crate::home::HomeView;
+use crate::settings::SettingsView;
+use crate::sidebar::SidebarView;
+use crate::signin::SignInGate;
 use crate::state::{AppEvent, AppState, Route};
-use crate::views::composer::ComposerView;
-use crate::views::docks::DocksView;
-use crate::views::home::HomeView;
-use crate::views::settings::SettingsView;
-use crate::views::sidebar::SidebarView;
-use crate::views::signin::SignInGate;
-use crate::views::titlebar::TitleBarView;
-use crate::views::transcript::{TranscriptEvent, TranscriptView};
-use crate::views::{toasts, window_state};
+use crate::titlebar::TitleBarView;
+use crate::transcript::{TranscriptEvent, TranscriptView};
+use crate::{toasts, window_state};
 
 struct SessionPane {
     id: SessionId,
@@ -44,7 +46,7 @@ struct Screens {
     extension: HashMap<ScreenKey, AnyView>,
 }
 
-pub(crate) struct Frame {
+pub struct Frame {
     app: Entity<AppState>,
     services: Services,
     titlebar: Entity<TitleBarView>,
@@ -67,7 +69,7 @@ impl std::fmt::Debug for Frame {
 }
 
 impl Frame {
-    pub(crate) fn new(
+    pub fn new(
         app: Entity<AppState>,
         services: Services,
         window: &mut Window,
@@ -84,7 +86,9 @@ impl Frame {
                 this.on_app_event(event, window, cx);
             }),
             cx.observe_window_bounds(window, |this, window, _| this.remember_bounds(window)),
-            cx.observe_window_appearance(window, |_, _, cx| harness_ui::theme::refresh(cx)),
+            cx.observe_window_appearance(window, |_, _, cx| {
+                systemprompt_harness_shared::theme::refresh(cx);
+            }),
             cx.observe_window_activation(window, |this, window, _| this.follow_activation(window)),
             cx.observe(&signin, |_, _, cx| cx.notify()),
         ];

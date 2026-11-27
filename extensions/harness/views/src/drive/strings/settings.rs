@@ -3,7 +3,7 @@
 //! The base folder of the local sync, where it comes from, and choosing or
 //! resetting it.
 
-use crate::model::SyncFolder;
+use crate::drive::model::SyncFolder;
 
 pub const TITLE: &str = "Drive";
 pub const DESCRIPTION: &str =

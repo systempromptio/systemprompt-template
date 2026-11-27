@@ -1,7 +1,7 @@
 //! What the Drive screen is pointed at: the account and the instance whose
 //! Drive the handle follows. A change of either resets what the screen shows.
 
-use sp_protocol::ids::AccountId;
+use systemprompt_device::protocol::ids::AccountId;
 
 /// The account and instance the Drive screen shows.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -6,16 +6,15 @@
 use std::rc::Rc;
 
 use gpui_kit::{AnyView, App, AppContext as _, Window};
-use harness_shell::{
+use systemprompt_harness::members::drive::{DriveExtension, DriveHandle};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::contract::{
     ExtensionMetadata, Placement, ScreenSpec, SettingsPaneSpec, ShellContext, ShellExtension,
-    register_shell_extension,
 };
-use harness_ui::IconName;
-use sp_drive::{DriveExtension, DriveHandle};
 
-use crate::settings_pane::DriveSettingsPane;
-use crate::strings as text;
-use crate::view::DriveView;
+use crate::drive::settings_pane::DriveSettingsPane;
+use crate::drive::strings as text;
+use crate::drive::view::DriveView;
 
 pub const DRIVE_SCREEN: &str = "drive";
 
@@ -56,8 +55,6 @@ impl ShellExtension for DriveShellExtension {
         }]
     }
 }
-
-register_shell_extension!(DriveShellExtension);
 
 fn drive_handle(ctx: &ShellContext) -> DriveHandle {
     ctx.handles

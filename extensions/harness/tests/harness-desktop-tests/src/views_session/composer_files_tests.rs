@@ -1,6 +1,6 @@
 use std::fs;
 
-use harness_desktop::views::composer::files::{FILE_LIMIT, walk};
+use systemprompt_harness_views::composer::files::{FILE_LIMIT, walk};
 
 #[test]
 fn walks_files_and_skips_noise() {

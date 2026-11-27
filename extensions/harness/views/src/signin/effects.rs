@@ -7,10 +7,10 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use gpui_kit::{AsyncApp, Context, Task, WeakEntity};
-use harness_ui::motion;
-use sp_accounts::SignInCancel;
-use sp_protocol::ids::AccountId;
-use sp_sync::SyncEngine;
+use systemprompt_device::accounts::SignInCancel;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_harness::sync::SyncEngine;
+use systemprompt_harness_shared::motion;
 
 use super::address::{self, Credential};
 use super::flow::{Effect, Event, FirstSync, SignInRequest, Step};

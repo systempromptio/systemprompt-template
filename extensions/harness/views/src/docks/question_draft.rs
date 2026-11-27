@@ -4,7 +4,7 @@
 
 use std::collections::BTreeSet;
 
-use harness_engine::Question;
+use systemprompt_engine::run::Question;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QuestionDraft {

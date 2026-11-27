@@ -1,10 +1,10 @@
 use std::time::Duration;
 
 use chrono::TimeDelta;
-use harness_notifications_ui::strings;
-use sp_notifications::{FeedStatus, NotificationsError, UnreadCount};
-use sp_protocol::view::SyncErrorKind;
-use sp_slack::SlackStatus;
+use systemprompt_device::view::SyncErrorKind;
+use systemprompt_harness::members::notifications::{FeedStatus, NotificationsError, UnreadCount};
+use systemprompt_harness::members::slack::SlackStatus;
+use systemprompt_harness_views::notifications::strings;
 
 use crate::support::at;
 

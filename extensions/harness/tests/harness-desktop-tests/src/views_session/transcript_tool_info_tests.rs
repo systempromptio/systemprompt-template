@@ -1,9 +1,9 @@
-use harness_desktop::views::transcript::tool_info::{
+use serde_json::{Value, json};
+use systemprompt_engine::run::denied;
+use systemprompt_engine::store::{TodoStatus, ToolState};
+use systemprompt_harness_views::transcript::tool_info::{
     Outcome, Phase, TodoLine, ToolKind, exit_code, summarize, todos, truncate,
 };
-use harness_engine::denied;
-use harness_store::{TodoStatus, ToolState};
-use serde_json::{Value, json};
 
 fn completed(input: Value, metadata: Value) -> ToolState {
     let Value::Object(metadata) = metadata else {
@@ -115,7 +115,7 @@ fn rule_denials_show_the_reason_or_the_error() {
 
 #[test]
 fn aborts_carry_the_marker_and_unmarked_errors_are_failures() {
-    let aborted = harness_tools::ToolError::Aborted.to_string();
+    let aborted = systemprompt_engine::tools::ToolError::Aborted.to_string();
     assert_eq!(
         outcome(&failed(&aborted, &json!({ denied::KEY: denied::ABORTED }))),
         Outcome::Aborted

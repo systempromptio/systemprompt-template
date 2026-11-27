@@ -2,6 +2,8 @@
 //! address or path it would act on, read from the metadata the tool attached to
 //! the request.
 
+// JSON: a permission request's metadata is the asking tool's own JSON,
+// passed through by the engine.
 use serde_json::Value;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,6 +16,8 @@ pub enum Preview {
 
 // JSON: the metadata a tool attaches to its permission request; its keys are
 // the tool's own.
+// JSON: a permission request's metadata is the asking tool's own JSON,
+// passed through by the engine.
 pub fn preview(metadata: &Value) -> Option<Preview> {
     let text = |key: &str| {
         metadata

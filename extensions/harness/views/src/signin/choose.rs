@@ -6,12 +6,12 @@ use gpui_kit::{
     AnyElement, ClickEvent, Context, InteractiveElement as _, IntoElement, ParentElement as _,
     SharedString, Styled as _, div,
 };
-use harness_ui::components::{
+use systemprompt_harness_shared::components::{
     Activate, Badge, Button, Card, Dismiss, LIST_CONTEXT, ListRow, ProgressBar, SelectNext,
     SelectPrevious, Spinner,
 };
-use harness_ui::theme::{self, radius, space, tokens};
-use harness_ui::{IconName, Tone};
+use systemprompt_harness_shared::theme::{self, radius, space, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
 
 use super::address::{InstanceChoice, grouped_fingerprint};
 use super::connect::{failure_line, note};

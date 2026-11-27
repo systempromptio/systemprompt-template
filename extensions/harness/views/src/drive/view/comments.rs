@@ -2,26 +2,28 @@
 //! reply to a thread) and the threads, open ones first, each with Reply and
 //! Resolve.
 
+use crate::drive::items::CommentThread;
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, SharedString, Styled as _, div,
 };
-use harness_ui::components::{Badge, Button, Card, IconButton, Select, SelectOption, Spinner};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
-use sp_drive::view::CommentThread;
-use sp_protocol::wire::drive::DriveComment;
+use systemprompt_harness_shared::components::{
+    Badge, Button, Card, IconButton, Select, SelectOption, Spinner,
+};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
+use systemprompt_models::documents::client::DriveComment;
 
 use super::preview_parts::muted;
 use super::{DriveView, OpenDocument};
-use crate::model::Load;
-use crate::strings as text;
+use crate::drive::model::DriveLoad;
+use crate::drive::strings as text;
 
 impl DriveView {
     pub(super) fn render_comments(&self, open: &OpenDocument, cx: &Context<Self>) -> AnyElement {
         let threads: &Vec<CommentThread> = match &open.comments {
-            Load::Ready(threads) => threads,
-            Load::Loading | Load::Idle => return Spinner::new().into_any_element(),
-            Load::Failed(failure) => return muted(text::failure(*failure), cx),
+            DriveLoad::Ready(threads) => threads,
+            DriveLoad::Loading | DriveLoad::Idle => return Spinner::new().into_any_element(),
+            DriveLoad::Failed(failure) => return muted(text::failure(*failure), cx),
         };
         let mut ordered: Vec<(usize, &CommentThread)> = threads.iter().enumerate().collect();
         ordered.sort_by_key(|(_, thread)| thread.is_resolved());
@@ -155,7 +157,9 @@ impl DriveView {
             card = card.child(div().pl(space::XL).child(comment(reply, cx)));
         }
         let card = card.child(actions);
-        let frame = div().rounded(harness_ui::theme::radius::XL).border_1();
+        let frame = div()
+            .rounded(systemprompt_harness_shared::theme::radius::XL)
+            .border_1();
         let border = if selected {
             tokens(cx).border.focus
         } else {

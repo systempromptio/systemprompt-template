@@ -10,12 +10,12 @@ use gpui_kit::{
     AnyElement, App, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, StatefulInteractiveElement as _, Styled as _, Task, Window, div, px,
 };
-use harness_ui::components::{Card, ListRow, StatusDot};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use sp_slack::{SlackHandle, SlackStatus};
+use systemprompt_harness::members::slack::{SlackHandle, SlackStatus};
+use systemprompt_harness_shared::components::{Card, ListRow, StatusDot};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
 
-use crate::model::slack_tone;
-use crate::{bridge, strings as text};
+use crate::notifications::model::slack_tone;
+use crate::notifications::{bridge, strings as text};
 
 const PAGE_WIDTH: f32 = 760.0;
 

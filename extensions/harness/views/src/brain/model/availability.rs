@@ -1,7 +1,7 @@
 //! Whether the brain can be used from the shell right now.
 
-use sp_brain::{BRAIN_EXTENSION, BrainStatus};
-use sp_extension::EnabledExtensions;
+use systemprompt_harness::extension::EnabledExtensions;
+use systemprompt_harness::members::brain::{BRAIN_EXTENSION, BrainStatus};
 
 /// Where the brain stands for the views.
 ///

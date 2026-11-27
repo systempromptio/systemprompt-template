@@ -10,11 +10,11 @@ const DEFAULT_HEIGHT: f32 = 820.0;
 const MIN_WIDTH: f32 = 760.0;
 const MIN_HEIGHT: f32 = 520.0;
 
-pub(crate) const fn min_size() -> Size<Pixels> {
+pub const fn min_size() -> Size<Pixels> {
     size(px(MIN_WIDTH), px(MIN_HEIGHT))
 }
 
-pub(crate) fn initial_bounds(saved: Option<WindowGeometry>, cx: &App) -> WindowBounds {
+pub fn initial_bounds(saved: Option<WindowGeometry>, cx: &App) -> WindowBounds {
     let Some(saved) = saved.filter(WindowGeometry::is_sane) else {
         return WindowBounds::centered(size(px(DEFAULT_WIDTH), px(DEFAULT_HEIGHT)), cx);
     };

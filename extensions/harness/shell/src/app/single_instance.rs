@@ -11,13 +11,13 @@
 use std::io;
 use std::time::Duration;
 
-use harness_tasks::BackgroundTasks;
-use sp_brand::Identity;
+use systemprompt_harness_brand::Identity;
+use systemprompt_traits::BackgroundTasks;
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, BufReader};
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::app::deeplink::LaunchRequest;
-use crate::app::paths::AppPaths;
+use systemprompt_harness_views::app::deeplink::LaunchRequest;
+use systemprompt_harness_views::app::paths::AppPaths;
 
 const ACK: &str = "ok";
 const MAX_REQUEST: u64 = 64 * 1024;
@@ -137,15 +137,15 @@ mod platform {
     use std::io;
     use std::time::Duration;
 
-    use sp_brand::Identity;
+    use systemprompt_harness_brand::Identity;
     use tokio::net::windows::named_pipe::{
         ClientOptions, NamedPipeClient, NamedPipeServer, ServerOptions,
     };
     use tokio::sync::mpsc::UnboundedSender;
 
     use super::{Endpoint, answer, pipe_name};
-    use crate::app::deeplink::LaunchRequest;
-    use crate::app::paths::AppPaths;
+    use systemprompt_harness_views::app::deeplink::LaunchRequest;
+    use systemprompt_harness_views::app::paths::AppPaths;
 
     const PIPE_BUSY: i32 = 231;
     const BUSY_RETRIES: u32 = 20;
@@ -203,13 +203,13 @@ mod platform {
 mod platform {
     use std::io;
 
-    use sp_brand::Identity;
+    use systemprompt_harness_brand::Identity;
     use tokio::net::{UnixListener, UnixStream};
     use tokio::sync::mpsc::UnboundedSender;
 
     use super::{Endpoint, answer};
-    use crate::app::deeplink::LaunchRequest;
-    use crate::app::paths::AppPaths;
+    use systemprompt_harness_views::app::deeplink::LaunchRequest;
+    use systemprompt_harness_views::app::paths::AppPaths;
 
     pub(crate) type Listener = UnixListener;
 
@@ -254,13 +254,13 @@ mod platform {
 mod platform {
     use std::io;
 
-    use sp_brand::Identity;
+    use systemprompt_harness_brand::Identity;
     use tokio::io::DuplexStream;
     use tokio::sync::mpsc::UnboundedSender;
 
     use super::Endpoint;
-    use crate::app::deeplink::LaunchRequest;
-    use crate::app::paths::AppPaths;
+    use systemprompt_harness_views::app::deeplink::LaunchRequest;
+    use systemprompt_harness_views::app::paths::AppPaths;
 
     pub(crate) type Listener = ();
 

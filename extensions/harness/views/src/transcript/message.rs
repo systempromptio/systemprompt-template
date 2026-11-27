@@ -8,13 +8,15 @@ use gpui_kit::{
     ParentElement as _, SharedString, StatefulInteractiveElement as _, Styled as _, Window, div,
     list, px,
 };
-use harness_store::{AssistantMessage, Message, MessageErrorKind, MessageWithParts, PartBody};
-use harness_ui::IconName;
-use harness_ui::components::{Button, EmptyState, Spinner};
-use harness_ui::theme::{radius, size, space, text as type_scale, tokens};
+use systemprompt_engine::store::{
+    AssistantMessage, Message, MessageErrorKind, MessageWithParts, PartBody,
+};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Button, EmptyState, Spinner};
+use systemprompt_harness_shared::theme::{radius, size, space, text as type_scale, tokens};
 
 use crate::strings::transcript as text;
-use crate::views::transcript::{TranscriptView, rows};
+use crate::transcript::{TranscriptView, rows};
 
 const CONTENT_WIDTH: f32 = 880.0;
 
@@ -271,7 +273,7 @@ pub(super) fn file_chip(name: Option<&str>, url: &str, cx: &Context<TranscriptVi
         .bg(palette.surface.sunken)
         .text_size(type_scale::CAPTION)
         .text_color(palette.text.secondary)
-        .child(harness_ui::Icon::new(IconName::File).size(px(12.)))
+        .child(systemprompt_harness_shared::Icon::new(IconName::File).size(px(12.)))
         .child(
             div()
                 .max_w(px(240.))

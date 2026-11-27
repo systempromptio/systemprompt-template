@@ -1,9 +1,9 @@
 //! The design system's tone for each fact status and availability.
 
-use harness_ui::Tone;
-use sp_protocol::wire::brain::{FactStatus, ProposalStatus};
+use systemprompt_harness_shared::Tone;
+use systemprompt_models::brain::{FactStatus, ProposalStatus};
 
-use crate::model::Availability;
+use crate::brain::model::Availability;
 
 pub(crate) const fn status(status: FactStatus) -> Tone {
     match status {

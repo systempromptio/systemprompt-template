@@ -1,9 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use harness_desktop::app::settings::{DeliveryPref, UiSettings, WindowGeometry};
-use harness_desktop::app::settings_store::{SettingsStore, decode, encode};
-use harness_store::SessionId;
-use harness_ui::Scheme;
+use systemprompt_engine::store::SessionId;
+use systemprompt_harness_shared::Scheme;
+use systemprompt_harness_views::app::settings::{DeliveryPref, UiSettings, WindowGeometry};
+use systemprompt_harness_views::app::settings_store::{SettingsStore, decode, encode};
 
 const RECENT_LIMIT: usize = 10;
 

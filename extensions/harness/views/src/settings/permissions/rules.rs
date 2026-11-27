@@ -8,8 +8,8 @@
 use super::jsonc::strip_jsonc;
 use std::path::PathBuf;
 
-use harness_config::{Action, InvalidRule, Rule, Ruleset};
 use serde_json::{Map, Value};
+use systemprompt_engine::config::{Action, InvalidRule, Rule, Ruleset};
 
 const PERMISSION_KEY: &str = "permission";
 const ANY: &str = "*";

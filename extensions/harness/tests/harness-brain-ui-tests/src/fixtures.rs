@@ -1,7 +1,8 @@
 //! Wire values built from the JSON the instance writes.
 
 use serde_json::json;
-use sp_protocol::wire::brain::{BrainFact, BrainProposal, FactPage, FactStatus};
+use systemprompt_models::brain::client::FactPage;
+use systemprompt_models::brain::{BrainFact, BrainProposal, FactStatus};
 
 pub(crate) const FACT_A: &str = "m_6f1c2a5e-3b7d-4c1e-9a8f-0d2b4e6f8a10";
 pub(crate) const FACT_B: &str = "m_7a2d3b6f-4c8e-4d2f-8b9a-1e3c5f7a9b21";

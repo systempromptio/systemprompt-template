@@ -2,11 +2,12 @@
 //! filter, the open fact with its timeline and why-view, and the proposals.
 
 use gpui_kit::{Context, SharedString, Window};
-use sp_protocol::wire::brain::{BrainFactId, FactStatus};
+use systemprompt_identifiers::BrainFactId;
+use systemprompt_models::brain::FactStatus;
 
 use super::{BrainScreen, bridge};
-use crate::model::{BrainFailure, FactDetail, FactFilter, Load};
-use crate::strings;
+use crate::brain::model::{BrainFailure, FactDetail, FactFilter, Load};
+use crate::brain::strings;
 
 impl BrainScreen {
     pub(super) fn reload_all(&mut self, cx: &mut Context<Self>) {

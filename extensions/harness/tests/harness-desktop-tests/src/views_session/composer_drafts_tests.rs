@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 
-use harness_desktop::views::composer::drafts::{Attachment, Draft, Drafts, add};
-use harness_engine::AttachmentInput;
-use harness_store::SessionId;
+use systemprompt_engine::run::AttachmentInput;
+use systemprompt_engine::store::SessionId;
+use systemprompt_harness_views::composer::drafts::{Attachment, Draft, Drafts, add};
 
 fn draft(text: &str) -> Draft {
     Draft {

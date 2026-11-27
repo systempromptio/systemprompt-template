@@ -4,22 +4,22 @@
 
 use std::path::PathBuf;
 
+use crate::drive::items::DriveFailure;
 use gpui_kit::{
     AnyElement, AsyncApp, Context, IntoElement, ParentElement as _, PathPromptOptions,
     SharedString, Styled as _, WeakEntity, div,
 };
-use harness_tasks::CancellationToken;
-use harness_ui::components::{IconButton, ProgressBar};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
-use sp_drive::view::DriveFailure;
-use sp_drive::{DriveError, ImportFile, UploadProgress};
-use sp_protocol::wire::drive::DriveCreated;
+use systemprompt_drive::{DriveError, ImportFile, UploadProgress};
+use systemprompt_harness_shared::components::{IconButton, ProgressBar};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
+use systemprompt_models::documents::client::DriveCreated;
+use systemprompt_traits::CancellationToken;
 use tokio::sync::watch;
 
 use super::jobs::{self, ImportReadError};
 use super::{DriveView, Upload};
-use crate::{bridge, strings as text};
+use crate::drive::{bridge, strings as text};
 
 impl DriveView {
     pub(super) fn pick_import(&mut self, cx: &Context<Self>) {

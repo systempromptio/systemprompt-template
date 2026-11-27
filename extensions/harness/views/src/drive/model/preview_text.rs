@@ -1,7 +1,7 @@
 //! A document's preview text built from its outline nodes, with the anchors a
 //! comment can attach to.
 
-use sp_protocol::wire::drive::DriveOutline;
+use systemprompt_models::documents::client::DriveOutline;
 
 pub const PREVIEW_LIMIT: usize = 200_000;
 pub const EXCERPT_CHARS: usize = 60;

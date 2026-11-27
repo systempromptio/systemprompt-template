@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use harness_drive_ui::{DRIVE_SCREEN, DRIVE_SETTINGS_PANE, DriveShellExtension};
-use harness_shell::{ExtensionId, ShellExtension, ShellExtensions};
-use sp_drive::DriveExtension;
+use systemprompt_harness::members::drive::DriveExtension;
+use systemprompt_harness_shared::contract::{ExtensionId, ShellExtension, ShellExtensions};
+use systemprompt_harness_views::drive::{DRIVE_SCREEN, DRIVE_SETTINGS_PANE, DriveShellExtension};
 
 #[test]
 fn the_shell_half_shares_the_drive_id_and_is_not_required() {

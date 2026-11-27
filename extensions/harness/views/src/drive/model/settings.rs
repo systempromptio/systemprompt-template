@@ -4,8 +4,10 @@
 
 use std::path::{Path, PathBuf};
 
-use sp_drive::{DriveSettings, default_drive_root};
-use sp_extension::SettingsError;
+use systemprompt_harness::members::drive::DriveSettings;
+
+use systemprompt_drive::default_drive_root;
+use systemprompt_harness::extension::SettingsError;
 
 /// The base folder of the local sync.
 ///

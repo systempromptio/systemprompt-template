@@ -4,9 +4,9 @@
 //! follows, a preview of the chosen document with its comments, revisions and
 //! sharing, and the local folder the sync keeps. While the handle is withheld
 //! the screen says so and holds nothing of the last instance. Every Drive call
-//! runs on the runtime through [`bridge`](crate::bridge); the view only applies
-//! results. It follows the instance's enablement, which changes after every
-//! apply, to notice when the handle moves to another account or instance.
+//! runs on the runtime through [`bridge`](crate::drive::bridge); the view only
+//! applies results. It follows the instance's enablement, which changes after
+//! every apply, to notice when the handle moves to another account or instance.
 
 mod browse;
 mod comments;
@@ -22,21 +22,22 @@ mod sync_details;
 mod sync_panel;
 mod writes;
 
+use crate::drive::items::{CommentThread, DocumentItem, DriveFailure, RevisionItem, ShareState};
 use gpui_kit::{AppContext as _, Context, Entity, FocusHandle, Task, Window};
-use harness_shell::ShellContext;
-use harness_tasks::CancellationToken;
-use harness_ui::components::TextField;
-use harness_ui::{MarkdownDocument, Tone};
-use sp_accounts::Accounts;
-use sp_drive::view::{CommentThread, DocumentItem, DriveFailure, RevisionItem, ShareState};
-use sp_drive::{DriveClient, DriveHandle, DriveStatus, UploadProgress};
-use sp_protocol::ids::{DocumentCommentId, DocumentId};
-use sp_protocol::wire::drive::DriveDetail;
+use systemprompt_device::accounts::Accounts;
+use systemprompt_drive::{DriveClient, DriveStatus, UploadProgress};
+use systemprompt_harness::members::drive::DriveHandle;
+use systemprompt_harness_shared::components::TextField;
+use systemprompt_harness_shared::contract::ShellContext;
+use systemprompt_harness_shared::{MarkdownDocument, Tone};
+use systemprompt_identifiers::{DocumentCommentId, DocumentId};
+use systemprompt_models::documents::client::DriveDetail;
+use systemprompt_traits::CancellationToken;
 use tokio::runtime::Handle;
 use tokio::sync::watch;
 
-use crate::model::{Browse, DriveTarget, Load, PreviewText};
-use crate::{bridge, strings as text};
+use crate::drive::model::{Browse, DriveLoad, DriveTarget, PreviewText};
+use crate::drive::{bridge, strings as text};
 
 const FOLDER_PANE: f32 = 232.0;
 const LIST_PANE: f32 = 360.0;
@@ -71,12 +72,12 @@ impl PreviewTab {
 struct OpenDocument {
     id: DocumentId,
     item: DocumentItem,
-    detail: Load<DriveDetail>,
-    preview: Load<PreviewText>,
+    detail: DriveLoad<DriveDetail>,
+    preview: DriveLoad<PreviewText>,
     markdown: MarkdownDocument,
-    comments: Load<Vec<CommentThread>>,
-    revisions: Load<Vec<RevisionItem>>,
-    access: Load<ShareState>,
+    comments: DriveLoad<Vec<CommentThread>>,
+    revisions: DriveLoad<Vec<RevisionItem>>,
+    access: DriveLoad<ShareState>,
 }
 
 impl OpenDocument {
@@ -84,12 +85,12 @@ impl OpenDocument {
         Self {
             id: item.id.clone(),
             item,
-            detail: Load::Loading,
-            preview: Load::Loading,
+            detail: DriveLoad::Loading,
+            preview: DriveLoad::Loading,
             markdown: MarkdownDocument::new(),
-            comments: Load::Loading,
-            revisions: Load::Loading,
-            access: Load::Loading,
+            comments: DriveLoad::Loading,
+            revisions: DriveLoad::Loading,
+            access: DriveLoad::Loading,
         }
     }
 }

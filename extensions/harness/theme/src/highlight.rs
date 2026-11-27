@@ -50,6 +50,8 @@ pub fn highlight_theme(id: &str, palette: &Palette) -> Option<Arc<HighlightTheme
         String::from("comment"),
         serde_json::json!({ "color": s.comment.to_hex(), "font_style": "italic" }),
     );
+    // JSON: the toolkit's highlight theme has no public constructor; it is built
+    // in the fixed JSON shape its own Deserialize reads.
     let value = serde_json::json!({
         "name": format!("{id}-{}", if palette.dark { "dark" } else { "light" }),
         "appearance": if palette.dark { "dark" } else { "light" },

@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use harness_config::Skill;
-use harness_desktop::views::governance::feeds::{AppliedView, McpState, held};
-use harness_mcp::{ServerStatus, StatusMap};
 use serde_json::Map;
+use systemprompt_engine::config::Skill;
+use systemprompt_engine::mcp::{ServerStatus, StatusMap};
+use systemprompt_harness_views::governance::feeds::{AppliedView, McpState, held};
 
 fn skill(name: &str, dir: &Path, description: &str) -> Skill {
     Skill {

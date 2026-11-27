@@ -2,21 +2,21 @@
 //! in the browser, refresh), the tabs, and the Preview, Revisions and Sharing
 //! tabs. Comments are drawn by `comments`.
 
+use crate::drive::items::{DriveFailure, ShareState};
 use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     SharedString, StatefulInteractiveElement as _, Styled as _, div,
 };
-use harness_ui::components::{
+use systemprompt_harness_shared::components::{
     Badge, Banner, Button, EmptyState, IconButton, SectionHeader, Spinner,
 };
-use harness_ui::theme::{space, text as type_scale, tokens};
-use harness_ui::{IconName, Markdown, Tone};
-use sp_drive::view::{DriveFailure, ShareState};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Markdown, Tone};
 
 use super::preview_parts::{fact, grant_row, muted, revisions};
 use super::{DriveView, OpenDocument, PreviewTab};
-use crate::model::{Load, PreviewText};
-use crate::strings as text;
+use crate::drive::model::{DriveLoad, PreviewText};
+use crate::drive::strings as text;
 
 impl DriveView {
     pub(super) fn render_preview(&self, cx: &Context<Self>) -> AnyElement {
@@ -138,9 +138,9 @@ impl DriveView {
 
     fn preview_body(&self, open: &OpenDocument, cx: &Context<Self>) -> AnyElement {
         let preview: &PreviewText = match &open.preview {
-            Load::Ready(preview) => preview,
-            Load::Loading | Load::Idle => return Spinner::new().into_any_element(),
-            Load::Failed(failure) => return self.unavailable(*failure, cx),
+            DriveLoad::Ready(preview) => preview,
+            DriveLoad::Loading | DriveLoad::Idle => return Spinner::new().into_any_element(),
+            DriveLoad::Failed(failure) => return self.unavailable(*failure, cx),
         };
         if preview.markdown.trim().is_empty() {
             return muted(text::PREVIEW_EMPTY, cx);
@@ -191,9 +191,9 @@ impl DriveView {
 
     fn sharing(open: &OpenDocument, cx: &Context<Self>) -> AnyElement {
         let access: &ShareState = match &open.access {
-            Load::Ready(access) => access,
-            Load::Loading | Load::Idle => return Spinner::new().into_any_element(),
-            Load::Failed(failure) => return muted(text::failure(*failure), cx),
+            DriveLoad::Ready(access) => access,
+            DriveLoad::Loading | DriveLoad::Idle => return Spinner::new().into_any_element(),
+            DriveLoad::Failed(failure) => return muted(text::failure(*failure), cx),
         };
         let id = open.id.clone();
         let facts = div()

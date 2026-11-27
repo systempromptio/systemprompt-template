@@ -1,8 +1,10 @@
 use std::collections::HashSet;
 
-use harness_drive_ui::model::{Browse, BrowseScope, Load, SortKey, folder_rows, sort_documents};
-use sp_drive::view::DriveFailure;
-use sp_protocol::wire::drive::DriveScope;
+use systemprompt_harness_views::drive::items::DriveFailure;
+use systemprompt_harness_views::drive::model::{
+    Browse, BrowseScope, DriveLoad, SortKey, folder_rows, sort_documents,
+};
+use systemprompt_models::documents::client::DriveScope;
 
 use crate::fixtures::{folder_id, id, item, node};
 
@@ -62,7 +64,10 @@ fn stale_pages_are_dropped_and_appended_pages_merge() {
     assert_eq!(browse.next_cursor, None);
     let failed = browse.begin(false);
     assert!(browse.fail_page(failed, DriveFailure::Unreachable));
-    assert_eq!(browse.documents, Load::Failed(DriveFailure::Unreachable));
+    assert_eq!(
+        browse.documents,
+        DriveLoad::Failed(DriveFailure::Unreachable)
+    );
 }
 
 #[test]
@@ -74,7 +79,7 @@ fn a_reset_forgets_everything_and_drops_pages_in_flight() {
     browse.reset();
     assert_eq!(browse.selected, None);
     assert_eq!(browse.folder, None);
-    assert_eq!(browse.documents, Load::Idle);
+    assert_eq!(browse.documents, DriveLoad::Idle);
     assert!(!browse.apply_page(in_flight, vec![item(1, "a", "1", None)], None));
 }
 

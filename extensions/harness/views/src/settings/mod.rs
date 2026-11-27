@@ -11,9 +11,9 @@
 //! - The shell's pages are `SettingsPage` values in the registry `pages()`.
 //!   Another module contributes a page by exposing a `fn settings_page() ->
 //!   SettingsPage` and being listed in `pages()`;
-//!   `crate::views::governance::settings_page` is listed and stays listed. A
-//!   page's `build` creates its view entity. The admitted extensions' settings
-//!   panes are listed after Governance and follow the enablement.
+//!   `crate::governance::settings_page` is listed and stays listed. A page's
+//!   `build` creates its view entity. The admitted extensions' settings panes
+//!   are listed after Governance and follow the enablement.
 //! - The page list is keyboard-navigable (Up, Down, Home, End). Text comes from
 //!   `crate::strings::settings`.
 
@@ -33,17 +33,17 @@ use gpui_kit::{
     AnyView, App, Context, Entity, FocusHandle, InteractiveElement as _, IntoElement,
     ParentElement as _, Render, Styled as _, Subscription, Window, div, px,
 };
-use harness_ui::IconName;
-use harness_ui::components::{
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{
     Dismiss, EmptyState, LIST_CONTEXT, ListRow, SelectFirst, SelectLast, SelectNext, SelectPrevious,
 };
-use harness_ui::theme::{space, tokens};
+use systemprompt_harness_shared::theme::{space, tokens};
 
 use crate::app::Services;
+use crate::settings::pages::Page;
 use crate::state::extensions::Contributions;
 use crate::state::{AppState, Route};
 use crate::strings::foundation as text;
-use crate::views::settings::pages::Page;
 
 const NAV_WIDTH: f32 = 220.0;
 
@@ -71,7 +71,7 @@ pub(crate) fn pages() -> Vec<SettingsPage> {
         permissions::settings_page(),
         agents::settings_page(),
         mcp::settings_page(),
-        crate::views::governance::settings_page(),
+        crate::governance::settings_page(),
         shortcuts::settings_page(),
         about::settings_page(),
     ]

@@ -1,8 +1,8 @@
-use harness_desktop::state::session_model::Effect;
-use harness_engine::{EngineEvent, RunStatus};
-use harness_store::{
+use systemprompt_engine::run::{EngineEvent, RunStatus};
+use systemprompt_engine::store::{
     AssistantMessage, Change, MessageId, PartBody, PartId, SessionId, UserMessage,
 };
+use systemprompt_harness_views::state::session_model::ModelEffect;
 
 use super::session_model_fixtures::{loaded, text_of, text_part};
 
@@ -34,7 +34,7 @@ fn a_streamed_turn_builds_the_transcript_in_order() {
         },
     ];
     for change in &script {
-        assert_eq!(model.apply_change(change), Effect::Changed);
+        assert_eq!(model.apply_change(change), ModelEffect::Changed);
     }
     assert_eq!(model.messages.len(), 2);
     assert_eq!(text_of(&model, 0, 0), "run the tests");
@@ -54,14 +54,14 @@ fn changes_for_other_sessions_are_ignored() {
     let revision = model.revision;
     assert_eq!(
         model.apply_change(&Change::MessageUpdated(message.into())),
-        Effect::Unchanged
+        ModelEffect::Unchanged
     );
     assert_eq!(
         model.apply_event(&EngineEvent::Status {
             session: other,
             status: RunStatus::Busy
         }),
-        Effect::Unchanged
+        ModelEffect::Unchanged
     );
     assert_eq!(model.revision, revision);
 }
@@ -73,7 +73,7 @@ fn a_part_for_an_unknown_message_asks_for_a_reload() {
     let part = text_part(&id, &MessageId::mint(), "orphan");
     assert_eq!(
         model.apply_change(&Change::PartUpdated(part)),
-        Effect::Reload
+        ModelEffect::Reload
     );
 }
 
@@ -93,14 +93,14 @@ fn a_delta_for_an_unknown_part_marks_the_model_stale_until_idle() {
         part_id: PartId::mint(),
         delta: "x".to_owned(),
     };
-    assert_eq!(model.apply_change(&lost), Effect::Unchanged);
+    assert_eq!(model.apply_change(&lost), ModelEffect::Unchanged);
     assert!(model.stale);
     assert_eq!(
         model.apply_event(&EngineEvent::Status {
             session: id,
             status: RunStatus::Idle
         }),
-        Effect::Reload
+        ModelEffect::Reload
     );
 }
 
@@ -120,7 +120,7 @@ fn an_older_part_update_does_not_overwrite_a_newer_one() {
     model.apply_change(&Change::PartUpdated(newer));
     assert_eq!(
         model.apply_change(&Change::PartUpdated(older)),
-        Effect::Unchanged
+        ModelEffect::Unchanged
     );
     assert_eq!(text_of(&model, 0, 0), "abc");
 }
@@ -138,16 +138,19 @@ fn removals_take_messages_and_parts_out() {
         message_id: user.id.clone(),
         part_id: part.id,
     };
-    assert_eq!(model.apply_change(&removed), Effect::Changed);
-    assert_eq!(model.messages[0].parts, Vec::<harness_store::Part>::new());
+    assert_eq!(model.apply_change(&removed), ModelEffect::Changed);
+    assert_eq!(
+        model.messages[0].parts,
+        Vec::<systemprompt_engine::store::Part>::new()
+    );
     let gone = Change::MessageRemoved {
         session_id: id,
         message_id: user.id,
     };
-    assert_eq!(model.apply_change(&gone), Effect::Changed);
+    assert_eq!(model.apply_change(&gone), ModelEffect::Changed);
     assert_eq!(
         model.messages,
-        Vec::<harness_store::MessageWithParts>::new()
+        Vec::<systemprompt_engine::store::MessageWithParts>::new()
     );
-    assert_eq!(model.apply_change(&gone), Effect::Unchanged);
+    assert_eq!(model.apply_change(&gone), ModelEffect::Unchanged);
 }

@@ -1,6 +1,6 @@
 //! One read the views wait on: not asked yet, in flight, answered or failed.
 
-use sp_brain::BrainError;
+use systemprompt_harness::members::brain::BrainError;
 
 use super::failure::BrainFailure;
 

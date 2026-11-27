@@ -1,4 +1,4 @@
-use harness_ui::theme::font::{MONO_STACK, UI_STACK, pick};
+use systemprompt_harness_shared::theme::font::{MONO_STACK, UI_STACK, pick};
 
 #[test]
 fn picks_the_first_installed_family() {

@@ -12,9 +12,9 @@ use gpui_kit::{
     Context, InteractiveElement as _, IntoElement, ParentElement as _, Render, Styled as _, Window,
     div,
 };
-use harness_shell::DraftInSession;
-use harness_ui::Tone;
-use harness_ui::theme::tokens;
+use systemprompt_harness_shared::Tone;
+use systemprompt_harness_shared::contract::DraftInSession;
+use systemprompt_harness_shared::theme::tokens;
 
 impl Render for Frame {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {

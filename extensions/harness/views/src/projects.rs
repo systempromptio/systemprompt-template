@@ -3,8 +3,8 @@
 use std::path::PathBuf;
 
 use gpui_kit::{App, AsyncApp, Entity, PathPromptOptions, SharedString};
-use harness_ui::IconName;
-use harness_ui::components::{Menu, MenuEntry, MenuItem};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Menu, MenuEntry, MenuItem};
 
 use crate::app::paths::display_name;
 use crate::state::AppState;

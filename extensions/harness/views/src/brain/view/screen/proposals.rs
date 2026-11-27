@@ -5,15 +5,17 @@ use gpui_kit::{
     AnyElement, Context, InteractiveElement as _, IntoElement, ParentElement as _,
     StatefulInteractiveElement as _, Styled as _, div,
 };
-use harness_ui::components::{Badge, Banner, Button, Card, EmptyState, SectionHeader};
-use harness_ui::theme::{space, text, tokens};
-use harness_ui::{CodeBlock, IconName, Tone};
-use sp_protocol::wire::brain::{BrainProposal, ProposalStatus};
+use systemprompt_harness_shared::components::{
+    Badge, Banner, Button, Card, EmptyState, SectionHeader,
+};
+use systemprompt_harness_shared::theme::{space, text, tokens};
+use systemprompt_harness_shared::{CodeBlock, IconName, Tone};
+use systemprompt_models::brain::{BrainProposal, ProposalStatus};
 
 use super::BrainScreen;
-use crate::model::{Decision, DecisionOutcome, Load};
-use crate::strings;
-use crate::view::tone;
+use crate::brain::model::{Decision, DecisionOutcome, Load};
+use crate::brain::strings;
+use crate::brain::view::tone;
 
 impl BrainScreen {
     pub(super) fn render_proposals(&self, cx: &Context<Self>) -> AnyElement {

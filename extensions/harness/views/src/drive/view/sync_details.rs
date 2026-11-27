@@ -2,16 +2,16 @@
 //! rows.
 
 use super::DriveView;
-use crate::strings::sync as text;
+use crate::drive::strings::sync as text;
 use gpui_kit::{
     AnyElement, Context, InteractiveElement as _, IntoElement, ParentElement as _,
     StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use harness_ui::IconName;
-use harness_ui::components::{IconButton, ListRow, SectionHeader};
-use harness_ui::theme::{text as type_scale, tokens};
-use sp_drive::DriveStatus;
-use sp_drive::sync::ConflictNotice;
+use systemprompt_drive::DriveStatus;
+use systemprompt_drive::sync::ConflictNotice;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{IconButton, ListRow, SectionHeader};
+use systemprompt_harness_shared::theme::{text as type_scale, tokens};
 
 const DETAILS_HEIGHT: f32 = 260.0;
 
@@ -104,7 +104,7 @@ impl DriveView {
             ListRow::new(("drive-sync-activity", index), item.path.clone()).subtitle(format!(
                 "{} · {}",
                 text::activity(&item.kind),
-                crate::strings::when(&item.at.to_rfc3339(), now)
+                crate::drive::strings::when(&item.at.to_rfc3339(), now)
             ))
         }))
         .into_any_element()

@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde_json::json;
-use sp_notifications::{Notification, NotificationId};
+use systemprompt_harness::members::notifications::{Notification, NotificationId};
 
 pub(crate) fn id_of(index: usize) -> NotificationId {
     NotificationId::try_new(format!("00000000-0000-4000-8000-{index:012x}")).unwrap()

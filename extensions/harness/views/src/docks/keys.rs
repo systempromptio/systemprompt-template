@@ -3,7 +3,7 @@
 
 use super::{DocksView, Head};
 use gpui_kit::{Context, KeyDownEvent, Window};
-use harness_engine::Reply;
+use systemprompt_engine::run::Reply;
 
 impl DocksView {
     pub(super) fn primary(&self, window: &Window, cx: &mut Context<Self>) {

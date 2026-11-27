@@ -8,6 +8,7 @@ recipe alone needs stays inline in `harness.just`.
 | Script | Does |
 |---|---|
 | `toolchain.sh` | prints `rustc -Vv` and `cargo -V` as resolved from inside `extensions/harness` |
+| `cargo.sh` | runs `resolve`, `check`, `test`, `clippy` or `fmt-check` from inside `extensions/harness`, so rustup resolves the workspace's own toolchain (`fmt-check` uses the template's, for its `rustfmt.toml`) |
 
 Every script here runs on macOS and Linux, and under Git Bash on a Windows
 runner: no GNU-only flags.

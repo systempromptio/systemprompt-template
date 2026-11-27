@@ -1,4 +1,4 @@
-use harness_ui::components::initials;
+use systemprompt_harness_shared::components::initials;
 
 #[test]
 fn initials_take_first_and_last_words() {

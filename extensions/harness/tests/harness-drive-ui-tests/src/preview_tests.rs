@@ -1,6 +1,6 @@
-use harness_drive_ui::model::{EXCERPT_CHARS, PREVIEW_LIMIT, PreviewText};
-use sp_protocol::ids::DocumentRevisionId;
-use sp_protocol::wire::drive::DriveOutline;
+use systemprompt_harness_views::drive::model::{EXCERPT_CHARS, PREVIEW_LIMIT, PreviewText};
+use systemprompt_identifiers::DocumentRevisionId;
+use systemprompt_models::documents::client::DriveOutline;
 
 fn outline(lines: Vec<String>) -> DriveOutline {
     DriveOutline {

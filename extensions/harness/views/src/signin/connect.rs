@@ -6,9 +6,11 @@ use gpui_kit::{
     AnyElement, ClickEvent, Context, IntoElement, ParentElement as _, SharedString, Styled as _,
     div, px,
 };
-use harness_ui::components::{Banner, Button, Checkbox, Divider, KeyHint, Spinner, StatusDot};
-use harness_ui::theme::{self, size, space, tokens};
-use harness_ui::{Icon, IconName, Tone};
+use systemprompt_harness_shared::components::{
+    Banner, Button, Checkbox, Divider, KeyHint, Spinner, StatusDot,
+};
+use systemprompt_harness_shared::theme::{self, size, space, tokens};
+use systemprompt_harness_shared::{Icon, IconName, Tone};
 
 use super::flow::{Check, Event, Method};
 use super::{SignInGate, send};

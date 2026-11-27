@@ -1,7 +1,7 @@
-use harness_desktop::views::transcript::rows::{changed_range, plain_text, row_keys};
-use harness_store::{
+use systemprompt_engine::store::{
     AssistantMessage, Message, MessageId, MessageWithParts, Part, PartBody, SessionId, UserMessage,
 };
+use systemprompt_harness_views::transcript::rows::{changed_range, plain_text, row_keys};
 
 fn user(session: &SessionId, text: &str, system: bool) -> MessageWithParts {
     let mut message = UserMessage::new(session.clone(), "build", "model");

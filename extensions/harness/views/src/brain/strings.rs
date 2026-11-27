@@ -5,11 +5,11 @@
 //! view.
 
 use chrono::{DateTime, Local, Utc};
-use sp_protocol::wire::brain::{
+use systemprompt_models::brain::{
     FactStatus, ProposalKind, ProposalStatus, RevisionChange, ScopeLevel, WithheldReason,
 };
 
-use crate::model::{Availability, BrainFailure, Decision, FactAction};
+use crate::brain::model::{Availability, BrainFailure, Decision, FactAction};
 
 pub const EXTENSION_NAME: &str = "Brain";
 pub const SCREEN_TITLE: &str = "Brain";

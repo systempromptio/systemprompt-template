@@ -4,25 +4,27 @@
 
 use std::path::{Path, PathBuf};
 
-use harness_tasks::CancellationToken;
-use sp_drive::view::{
+use crate::drive::items::{
     CommentThread, DocumentItem, FolderNode, RevisionItem, ShareState, comment_threads,
     document_items, folder_tree,
 };
-use sp_drive::{DriveClient, DriveError, ImportFile, ListQuery, ReadView, UploadProgress};
-use sp_protocol::ids::{DocumentCommentId, DocumentFolderId, DocumentId};
-use sp_protocol::wire::drive::{
+use systemprompt_drive::{
+    DriveClient, DriveError, ImportFile, ListQuery, ReadView, UploadProgress,
+};
+use systemprompt_identifiers::{DocumentCommentId, DocumentFolderId, DocumentId};
+use systemprompt_models::documents::client::{
     CommentRequest, CreateDocumentRequest, CreateFolderRequest, DriveComment, DriveCreated,
     DriveDetail, DriveFolder,
 };
+use systemprompt_traits::CancellationToken;
 use tokio::sync::watch;
 
-use crate::model::PreviewText;
+use crate::drive::model::PreviewText;
 
 const IMPORT_LIMIT: u64 = 512 * 1024 * 1024;
 
 #[derive(Debug)]
-pub(super) struct Page {
+pub(super) struct ListingPage {
     pub(super) items: Vec<DocumentItem>,
     pub(super) next_cursor: Option<String>,
 }
@@ -48,9 +50,9 @@ pub(super) enum ImportReadError {
     TooLarge { path: PathBuf },
 }
 
-pub(super) async fn page(client: DriveClient, query: ListQuery) -> Result<Page, DriveError> {
+pub(super) async fn page(client: DriveClient, query: ListQuery) -> Result<ListingPage, DriveError> {
     let listing = client.list_documents(&query).await?;
-    Ok(Page {
+    Ok(ListingPage {
         items: document_items(&listing.documents),
         next_cursor: listing.next_cursor,
     })

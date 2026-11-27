@@ -9,16 +9,18 @@ use std::sync::Arc;
 use gpui_kit::{
     AnyElement, App, Context, IntoElement, ParentElement as _, Styled as _, Window, div,
 };
-use harness_ui::components::{Banner, Button, IconButton, SectionHeader, StatusDot};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
-use sp_drive::sync::HeldChoice;
-use sp_drive::{DriveStatus, SyncPhase};
+use systemprompt_drive::sync::HeldChoice;
+use systemprompt_drive::{DriveStatus, SyncPhase};
+use systemprompt_harness_shared::components::{
+    Banner, Button, IconButton, SectionHeader, StatusDot,
+};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
 
 use super::DriveView;
-use crate::bridge;
-use crate::model::local_path;
-use crate::strings::sync as text;
+use crate::drive::bridge;
+use crate::drive::model::local_path;
+use crate::drive::strings::sync as text;
 
 impl DriveView {
     fn toggle_pause(&self, cx: &mut Context<Self>) {

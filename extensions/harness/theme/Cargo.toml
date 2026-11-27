@@ -1,0 +1,20 @@
+[package]
+name = "systemprompt-harness-theme"
+description = "Design tokens, the brand theme palettes and their projection onto the window toolkit theme."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+publish.workspace = true
+
+[dependencies]
+gpui-kit.workspace = true
+serde_json.workspace = true
+systemprompt-harness-brand.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

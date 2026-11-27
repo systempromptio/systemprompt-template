@@ -8,18 +8,18 @@
 use std::rc::Rc;
 
 use gpui_kit::{AnyView, App, AppContext as _, Window};
-use harness_shell::{
+use systemprompt_harness::members::notifications::{NotificationsExtension, NotificationsHandle};
+use systemprompt_harness::members::slack::{SlackExtension, SlackHandle};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::contract::{
     ExtensionMetadata, OpenScreen, Placement, ScreenSpec, SettingsPaneSpec, ShellContext,
-    ShellExtension, TitlebarItemSpec, register_shell_extension,
+    ShellExtension, TitlebarItemSpec,
 };
-use harness_ui::IconName;
-use sp_notifications::{NotificationsExtension, NotificationsHandle};
-use sp_slack::{SlackExtension, SlackHandle};
 
-use crate::bell::unread_bell;
-use crate::inbox_view::InboxView;
-use crate::slack_pane::SlackPane;
-use crate::strings as text;
+use crate::notifications::bell::unread_bell;
+use crate::notifications::inbox_view::InboxView;
+use crate::notifications::slack_pane::SlackPane;
+use crate::notifications::strings as text;
 
 pub const INBOX_SCREEN: &str = "inbox";
 
@@ -58,8 +58,6 @@ impl ShellExtension for NotificationsShell {
     }
 }
 
-register_shell_extension!(NotificationsShell);
-
 /// Slack as a shell extension: one settings pane, depending on
 /// `notifications`.
 #[derive(Debug, Clone, Copy, Default)]
@@ -83,8 +81,6 @@ impl ShellExtension for SlackShell {
         }]
     }
 }
-
-register_shell_extension!(SlackShell);
 
 pub(crate) fn notifications_handle(ctx: &ShellContext) -> NotificationsHandle {
     ctx.handles

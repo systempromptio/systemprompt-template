@@ -14,9 +14,9 @@ use gpui_kit::{
     Anchor, AnyElement, App, AppContext as _, Context, Entity, Focusable as _, IntoElement,
     ParentElement as _, ScrollHandle, SharedString, Window,
 };
-use harness_ui::components::TextField;
+use systemprompt_harness_shared::components::TextField;
 
-use crate::views::pickers::search;
+use crate::pickers::search;
 
 pub(super) const SURFACE_WIDTH: f32 = 380.0;
 pub(super) const LIST_HEIGHT: f32 = 320.0;

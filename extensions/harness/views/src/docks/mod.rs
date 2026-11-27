@@ -26,17 +26,17 @@ use gpui_kit::{
     InteractiveElement as _, IntoElement, ParentElement as _, Render, SharedString, Styled as _,
     Subscription, Window, div,
 };
-use harness_engine::{PermissionAsk, PermissionId, QuestionAsk, Reply};
-use harness_ui::Patch;
-use harness_ui::components::{Activate, Dismiss, LIST_CONTEXT, TextField};
-use harness_ui::motion::{self, Edge};
-use harness_ui::theme::space;
+use systemprompt_engine::run::{PermissionAsk, PermissionId, QuestionAsk, Reply};
+use systemprompt_harness_shared::Patch;
+use systemprompt_harness_shared::components::{Activate, Dismiss, LIST_CONTEXT, TextField};
+use systemprompt_harness_shared::motion::{self, Edge};
+use systemprompt_harness_shared::theme::space;
 
 use crate::app::Services;
+use crate::docks::question_draft::QuestionDraft;
 use crate::state::SessionState;
 use crate::state::session_model::SessionModel;
 use crate::strings::docks as text;
-use crate::views::docks::question_draft::QuestionDraft;
 
 const ARM_DELAY: Duration = Duration::from_millis(600);
 

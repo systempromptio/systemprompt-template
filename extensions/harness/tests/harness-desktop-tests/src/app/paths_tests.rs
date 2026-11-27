@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use harness_desktop::app::paths::{AppPaths, Forbidden, choose_directory, display_name};
+use systemprompt_harness_views::app::paths::{AppPaths, Forbidden, choose_directory, display_name};
 
 fn forbidden() -> Forbidden {
     Forbidden {

@@ -1,6 +1,6 @@
-use harness_desktop::app::settings::DeliveryPref;
-use harness_desktop::views::composer::input::delivery;
-use harness_engine::Delivery;
+use systemprompt_engine::run::Delivery;
+use systemprompt_harness_views::app::settings::DeliveryPref;
+use systemprompt_harness_views::composer::input::delivery;
 
 #[test]
 fn enter_uses_the_preference_and_ctrl_enter_the_other_delivery() {

@@ -1,4 +1,4 @@
-use harness_desktop::views::settings::shortcuts::{APP_KEYS, key_caps};
+use systemprompt_harness_views::settings::shortcuts::{APP_KEYS, key_caps};
 
 #[test]
 fn modifiers_and_keys_become_caps() {

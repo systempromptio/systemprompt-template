@@ -1,7 +1,10 @@
 //! The fact list: paging, superseded reads, failures and filters.
 
-use harness_brain_ui::model::{BrainFailure, FactFilter, FactListing, Load, PAGE_SIZE};
-use sp_protocol::wire::brain::{BrainFactId, FactStatus};
+use systemprompt_harness_views::brain::model::{
+    BrainFailure, FactFilter, FactListing, Load, PAGE_SIZE,
+};
+use systemprompt_identifiers::BrainFactId;
+use systemprompt_models::brain::FactStatus;
 
 use crate::fixtures::{FACT_A, FACT_B, FACT_C, page};
 

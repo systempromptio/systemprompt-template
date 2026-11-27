@@ -5,15 +5,17 @@ use gpui_kit::{
     AnyElement, Context, InteractiveElement as _, IntoElement, ParentElement as _,
     StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use harness_ui::components::{Badge, Banner, Button, EmptyState, ListRow, SectionHeader};
-use harness_ui::theme::{space, tokens};
-use harness_ui::{IconName, Tone};
-use sp_protocol::wire::brain::{BrainFact, FactStatus};
+use systemprompt_harness_shared::components::{
+    Badge, Banner, Button, EmptyState, ListRow, SectionHeader,
+};
+use systemprompt_harness_shared::theme::{space, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
+use systemprompt_models::brain::{BrainFact, FactStatus};
 
 use super::BrainScreen;
-use crate::model::Load;
-use crate::strings;
-use crate::view::tone;
+use crate::brain::model::Load;
+use crate::brain::strings;
+use crate::brain::view::tone;
 
 const LIST_PANE: f32 = 380.0;
 

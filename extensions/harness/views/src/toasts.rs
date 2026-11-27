@@ -2,7 +2,7 @@
 //! notification stack.
 
 use gpui_kit::{App, Window};
-use harness_ui::components::Toast;
+use systemprompt_harness_shared::components::Toast;
 
 use crate::state::Notice;
 

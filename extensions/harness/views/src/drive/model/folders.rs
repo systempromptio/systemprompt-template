@@ -4,8 +4,8 @@
 use std::collections::HashSet;
 use std::hash::BuildHasher;
 
-use sp_drive::view::FolderNode;
-use sp_protocol::ids::DocumentFolderId;
+use crate::drive::items::FolderNode;
+use systemprompt_identifiers::DocumentFolderId;
 
 /// One visible folder: its depth in the tree and whether it can open.
 #[derive(Debug, Clone, PartialEq, Eq)]

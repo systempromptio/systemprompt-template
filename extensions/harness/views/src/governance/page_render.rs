@@ -1,16 +1,16 @@
 //! The Governance settings page drawn from its model.
 
 use super::page::{GovernancePage, PAGE_WIDTH};
-use crate::views::governance::feeds::{self};
-use crate::views::governance::heartbeat::heartbeat_line;
-use crate::views::governance::model::{Inputs, instances};
-use crate::views::governance::{page_sections, page_view};
+use crate::governance::feeds::{self};
+use crate::governance::heartbeat::heartbeat_line;
+use crate::governance::model::{Inputs, instances};
+use crate::governance::{page_sections, page_view};
 use chrono::Utc;
 use gpui_kit::{
     Context, InteractiveElement as _, IntoElement, ParentElement as _, Render,
     StatefulInteractiveElement as _, Styled as _, Window, div, px,
 };
-use harness_ui::theme::space;
+use systemprompt_harness_shared::theme::space;
 
 impl Render for GovernancePage {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {

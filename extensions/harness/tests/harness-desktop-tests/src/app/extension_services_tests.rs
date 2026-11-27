@@ -2,12 +2,13 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-use harness_desktop::app::extension_services::AdmittedService;
-use harness_ids::{ExtensionId, extension_id};
-use harness_tasks::{CancellationToken, OwnedTask};
-use sp_extension::{
+use systemprompt_harness::extension::{
     BackgroundService, EnabledExtensions, Enablement, ExtensionMetadata, SpExtension, SpExtensions,
 };
+use systemprompt_harness_views::app::extension_services::AdmittedService;
+use systemprompt_identifiers::engine::ExtensionId;
+use systemprompt_identifiers::extension_id;
+use systemprompt_traits::{CancellationToken, OwnedTask};
 
 #[derive(Default)]
 struct Counting {
@@ -115,7 +116,7 @@ async fn a_service_runs_only_while_its_extension_is_admitted() {
     eventually(&service, (2, 1)).await;
 
     cancel.cancel();
-    task.join().await.unwrap();
+    task.join_named().await.unwrap();
     assert_eq!(service.counts(), (2, 2));
 }
 
@@ -137,6 +138,6 @@ async fn a_service_whose_dependency_is_withheld_does_not_run() {
     eventually(&service, (1, 0)).await;
 
     cancel.cancel();
-    task.join().await.unwrap();
+    task.join_named().await.unwrap();
     assert_eq!(service.counts(), (1, 1));
 }

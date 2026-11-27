@@ -12,18 +12,18 @@ use gpui_kit::{
     ParentElement as _, Render, StatefulInteractiveElement as _, Styled as _, Subscription, Window,
     div,
 };
-use harness_shell::ScreenKey;
-use harness_ui::IconName;
-use harness_ui::components::{Badge, IconButton, tooltip_with_keys};
-use harness_ui::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Badge, IconButton, tooltip_with_keys};
+use systemprompt_harness_shared::contract::ScreenKey;
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
 
 use crate::app::Services;
+use crate::governance::GovernancePill;
 use crate::keymap::TOGGLE_SIDEBAR_KEYS;
 use crate::state::AppState;
 use crate::state::extensions::Contributions;
 use crate::strings::foundation as text;
-use crate::views::governance::GovernancePill;
-use crate::views::{extension_entries, projects};
+use crate::{extension_entries, projects};
 
 pub(crate) struct TitleBarView {
     app: Entity<AppState>,

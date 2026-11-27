@@ -1,4 +1,5 @@
-//! Tests for harness-brain-ui, through its public API.
+//! Tests for the Brain screens of systemprompt-harness-views, through
+//! the public API.
 
 #[cfg(test)]
 mod fixtures;

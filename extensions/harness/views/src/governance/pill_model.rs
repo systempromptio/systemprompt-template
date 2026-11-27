@@ -3,12 +3,12 @@
 //! signed-in instances it can switch to.
 
 use chrono::{DateTime, Utc};
-use harness_ui::{IconName, Tone};
-use sp_accounts::AccountsSnapshot;
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{AccountStatus, SyncErrorKind, SyncStatus};
+use systemprompt_device::accounts::AccountsSnapshot;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{AccountStatus, SyncErrorKind, SyncStatus};
+use systemprompt_harness_shared::{IconName, Tone};
 
-use crate::views::governance::model::{Ago, Fix, ago, display_name, fix};
+use crate::governance::model::{Ago, Fix, ago, display_name, fix};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PillStatus {

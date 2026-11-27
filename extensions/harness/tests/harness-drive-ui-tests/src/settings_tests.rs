@@ -1,9 +1,10 @@
 use std::path::{Path, PathBuf};
 
-use harness_drive_ui::model::{SyncFolder, default_folder};
-use harness_drive_ui::strings::settings as text;
-use sp_drive::{DriveExtension, DriveSettings, default_drive_root};
-use sp_extension::SettingsError;
+use systemprompt_drive::default_drive_root;
+use systemprompt_harness::extension::SettingsError;
+use systemprompt_harness::members::drive::{DriveExtension, DriveSettings};
+use systemprompt_harness_views::drive::model::{SyncFolder, default_folder};
+use systemprompt_harness_views::drive::strings::settings as text;
 
 #[test]
 fn a_chosen_folder_wins_over_the_default() {
