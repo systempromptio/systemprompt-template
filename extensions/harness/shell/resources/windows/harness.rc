@@ -1,0 +1,3 @@
+// Icon resource 1 is the one the window class and the taskbar use.
+// The icon file is supplied by packaging at assets/icons/icon.ico; build.rs skips this resource while it is absent.
+1 ICON "../../assets/icons/icon.ico"

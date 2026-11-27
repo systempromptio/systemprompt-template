@@ -1,0 +1,21 @@
+[package]
+name = "harness-brain-ui-tests"
+description = "Tests for harness-brain-ui, through its public API."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+harness-brain-ui.workspace = true
+
+[dev-dependencies]
+harness-ids.workspace = true
+serde_json.workspace = true
+sp-brain.workspace = true
+sp-extension.workspace = true
+sp-protocol.workspace = true
+
+[lints]
+workspace = true

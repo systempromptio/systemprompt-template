@@ -1,0 +1,19 @@
+[package]
+name = "harness-shell-tests"
+description = "Tests for harness-shell, through its public API."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+harness-shell.workspace = true
+
+[dev-dependencies]
+gpui-kit = { version = "=0.9.1", features = ["syntect"] }
+harness-ui.workspace = true
+sp-extension.workspace = true
+
+[lints]
+workspace = true

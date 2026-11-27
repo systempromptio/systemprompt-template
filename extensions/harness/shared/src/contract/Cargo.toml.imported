@@ -1,0 +1,25 @@
+[package]
+name = "harness-shell"
+description = "The shell's extension contract: registration, discovery, screens, settings panes, transcript adornments and the context views are built with."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+gpui-kit.workspace = true
+harness-engine.workspace = true
+harness-ids.workspace = true
+harness-store.workspace = true
+harness-ui.workspace = true
+inventory.workspace = true
+sp-accounts.workspace = true
+sp-brand.workspace = true
+sp-client.workspace = true
+sp-extension.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

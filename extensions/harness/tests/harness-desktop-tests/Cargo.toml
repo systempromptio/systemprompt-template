@@ -1,0 +1,35 @@
+[package]
+name = "harness-desktop-tests"
+description = "Tests for harness-desktop, through its public API."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+harness-desktop.workspace = true
+
+[dev-dependencies]
+harness-config.workspace = true
+harness-engine.workspace = true
+harness-ids.workspace = true
+harness-llm.workspace = true
+harness-mcp.workspace = true
+harness-store.workspace = true
+harness-tasks.workspace = true
+harness-tools.workspace = true
+harness-ui.workspace = true
+sp-accounts.workspace = true
+sp-brand.workspace = true
+sp-extension.workspace = true
+sp-protocol.workspace = true
+sp-sync.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+tokio.workspace = true
+async-trait = "0.1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+
+[lints]
+workspace = true
