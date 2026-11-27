@@ -3,14 +3,14 @@
 //! The HTTP client verifies certificates with the system's verifier, which on
 //! Android is reached through the JVM: it needs the virtual machine and an
 //! application context before the first HTTPS request. The app's
-//! `NativeLibrary` object declares the native method this module exports.
+//! `NativeLibrary` object declares the native method this module exports:
+//! `io.systemprompt.mobile.NativeLibrary.initialisePlatform(Context)`. A
+//! failure is thrown to the caller as a `RuntimeException`.
 
 use jni::EnvUnowned;
 use jni::errors::ThrowRuntimeExAndDefault;
 use jni::objects::{JClass, JObject};
 
-/// `io.systemprompt.mobile.NativeLibrary.initialisePlatform(Context)`. A
-/// failure is thrown to the caller as a `RuntimeException`.
 #[expect(
     unsafe_code,
     reason = "the JVM binds a native method by its unmangled symbol name"

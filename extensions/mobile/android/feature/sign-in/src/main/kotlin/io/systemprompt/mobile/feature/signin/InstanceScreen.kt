@@ -29,18 +29,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import io.systemprompt.mobile.R
 
-/** The ids the tests look for; the iOS app uses the same ones. */
-object InstanceScreenTags {
-    const val TITLE = "root.title"
-    const val ADDRESS = "sign_in.instance.address"
-    const val DISCOVER = "sign_in.instance.discover"
-    const val DISCOVERING = "sign_in.instance.discovering"
-    const val DISPLAY_NAME = "sign_in.instance.display_name"
-    const val ERROR = "sign_in.instance.error"
-    const val LIBRARY_VERSION = "sign_in.instance.library_version"
-    const val CORE_VERSION = "sign_in.instance.core_version"
-}
-
 private val screenPadding = 24.dp
 private val gap = 16.dp
 
@@ -100,13 +88,17 @@ fun InstanceScreen(state: InstanceViewState, onDiscover: (String) -> Unit, modif
 private fun DiscoveryResult(discovery: DiscoveryState) {
     when (discovery) {
         DiscoveryState.Empty -> Unit
+
         DiscoveryState.Discovering -> Text(
             text = stringResource(R.string.sign_in_instance_discovering),
             modifier = Modifier.testTag(InstanceScreenTags.DISCOVERING)
         )
+
         is DiscoveryState.Found -> FoundInstance(discovery)
+
         is DiscoveryState.Failed -> Text(
-            text = stringResource(discovery.message, *discovery.arguments.toTypedArray()),
+            text = discovery.argument?.let { stringResource(discovery.message, it) }
+                ?: stringResource(discovery.message),
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.testTag(InstanceScreenTags.ERROR)
         )

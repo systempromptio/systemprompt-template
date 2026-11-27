@@ -1,0 +1,12 @@
+# What the generator is told when it writes Kotlin for the Android app
+# (../shared/env.sh passes this file with --config). The defaults apply to
+# every annotated crate in the library, core's included.
+#
+# android: release native objects with the Android system cleaner where the
+# device has one, and with JNA's otherwise, instead of java.lang.ref.Cleaner,
+# which Android gained at API 33.
+# java_8_compatible: do not call Reference.reachabilityFence, which Android
+# gained at API 28; the app's minimum is below that.
+[defaults.bindings.kotlin]
+android = true
+java_8_compatible = true

@@ -6,8 +6,9 @@
 #   android-emulator.sh stop     shut the emulator down
 # The system image is the one extensions/mobile/shared/toolchain.env pins, for
 # this machine's architecture; it is installed with sdkmanager when absent. The
-# emulator needs hardware virtualisation (KVM on Linux), which hosted Linux
-# runners do not all have, so no workflow runs this.
+# emulator needs hardware virtualisation: on Linux this user must be able to
+# open /dev/kvm (membership of the kvm group), and the script says so when it
+# cannot. Hosted Linux runners do not all offer it, so no workflow runs this.
 # Run by `just mobile-android-emulator`.
 set -euo pipefail
 source "$(dirname "$0")/../../extensions/mobile/shared/env.sh"
@@ -26,6 +27,9 @@ boot_seconds=300
 
 ensure_avd() {
     [ -x "$emulator" ] || mobile_fail "the emulator is not installed (sdkmanager emulator)"
+    if [ "$(uname -s)" = Linux ] && { [ ! -r /dev/kvm ] || [ ! -w /dev/kvm ]; }; then
+        mobile_fail "this user cannot open /dev/kvm, which the emulator needs: add the user to the kvm group (sudo usermod -aG kvm \"$USER\") and log in again"
+    fi
     if [ ! -d "$ANDROID_HOME/system-images/android-$MOBILE_ANDROID_EMULATOR_API/$MOBILE_ANDROID_EMULATOR_TAG/$abi" ]; then
         set +o pipefail
         yes | "$tools/sdkmanager" --sdk_root="$ANDROID_HOME" "$image" > /dev/null
@@ -43,8 +47,8 @@ flags=(-avd "$avd" -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftsha
 
 wait_for_boot() {
     local waited=0
-    "$adb" wait-for-device
-    until [ "$("$adb" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = 1 ]; do
+    until [ "$("$adb" get-state 2> /dev/null || true)" = device ] \
+        && [ "$("$adb" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = 1 ]; do
         [ "$waited" -lt "$boot_seconds" ] || mobile_fail "the emulator did not boot in $boot_seconds seconds (log: $log)"
         sleep 5
         waited=$((waited + 5))

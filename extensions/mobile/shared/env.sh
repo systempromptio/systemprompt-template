@@ -61,7 +61,8 @@ mobile_rust_library_android() {
         library="$(find "$MOBILE_ANDROID_JNILIBS" -name "lib$MOBILE_LIBRARY.so" | sort | head -1)"
         [ -n "$library" ] || mobile_fail "the build left no lib$MOBILE_LIBRARY.so under $MOBILE_ANDROID_JNILIBS"
         cargo run --locked --quiet --features cli --bin uniffi-bindgen -- \
-            generate --language kotlin --no-format --out-dir "$MOBILE_ANDROID_BINDINGS" "$library"
+            generate --language kotlin --no-format --config "$MOBILE_CORE/uniffi-android.toml" \
+            --out-dir "$MOBILE_ANDROID_BINDINGS" "$library"
     )
     find "$MOBILE_ANDROID_JNILIBS" -name "lib$MOBILE_LIBRARY.so" | sort | while read -r library; do
         echo "mobile: $library ($(wc -c < "$library" | tr -d ' ') bytes, $profile)"

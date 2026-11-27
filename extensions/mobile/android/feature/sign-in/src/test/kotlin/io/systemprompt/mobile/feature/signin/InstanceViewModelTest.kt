@@ -70,11 +70,11 @@ class InstanceViewModelTest {
             MobileException.Network() to DiscoveryState.Failed(R.string.sign_in_instance_error_network),
             MobileException.NotFound() to DiscoveryState.Failed(R.string.sign_in_instance_error_not_found),
             MobileException.Refused(503.toUShort()) to
-                DiscoveryState.Failed(R.string.sign_in_instance_error_refused, listOf("503")),
+                DiscoveryState.Failed(R.string.sign_in_instance_error_refused, "503"),
             MobileException.VersionTooOld() to
                 DiscoveryState.Failed(R.string.sign_in_instance_error_version_too_old),
             MobileException.Internal("ref-1") to
-                DiscoveryState.Failed(R.string.sign_in_instance_error_internal, listOf("ref-1"))
+                DiscoveryState.Failed(R.string.sign_in_instance_error_internal, "ref-1")
         )
         for ((error, failure) in expected) {
             val model = InstanceViewModel(FakeDirectory(versions) { throw error })

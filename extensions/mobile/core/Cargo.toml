@@ -31,12 +31,6 @@ repository = "https://github.com/systempromptio/systemprompt-template"
 homepage = "https://systemprompt.io"
 documentation = "https://systemprompt.io/documentation"
 
-[workspace.dependencies]
-systemprompt-mobile = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "c1d24b20a112789125eb334d88045ef41aad14a3" }
-uniffi = "0.33"
-jni = { version = "0.22", default-features = false }
-rustls-platform-verifier = "0.7"
-
 # What a phone ships: small, and with the symbols the generator reads left in
 # the dynamic table (strip removes only debug information and the static
 # symbol table).
@@ -74,13 +68,15 @@ cli = ["uniffi/cli"]
 name = "uniffi-bindgen"
 required-features = ["cli"]
 
+# One package, so its dependencies are declared here and not in a
+# [workspace.dependencies] table. scripts/core-pin.sh rewrites the rev.
 [dependencies]
-systemprompt-mobile = { workspace = true }
-uniffi = { workspace = true }
+systemprompt-mobile = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "c1d24b20a112789125eb334d88045ef41aad14a3" }
+uniffi = "0.33"
 
 [target.'cfg(target_os = "android")'.dependencies]
-jni = { workspace = true }
-rustls-platform-verifier = { workspace = true }
+jni = { version = "0.22", default-features = false }
+rustls-platform-verifier = "0.7"
 
 [lints]
 workspace = true
