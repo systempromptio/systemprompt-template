@@ -5,9 +5,9 @@
 #   dist/<scheme>-<version>-macos-<arch>.zip        the bundle, zipped with ditto (resource forks and signature kept)
 #   dist/SHA256SUMS                                 the zip's SHA-256, in sha256sum format
 #
-# The identity table below is the packaging side of extensions/harness/brand/src/identity.rs (sp-brand): display name,
+# The identity table below is the packaging side of extensions/harness/brand/src/identity.rs (systemprompt-harness-brand): display name,
 # app id (the bundle identifier) and URL scheme per brand and channel, as in packaging/harness/windows/package.ps1.
-# The three change together; the version is read from sp-brand itself. The cargo build turns on the matching sp-brand
+# The three change together; the version is read from systemprompt-harness-brand itself. The cargo build turns on the matching systemprompt-harness-brand
 # features, so the binary and its bundle always carry the same identity, and MACOSX_DEPLOYMENT_TARGET matches
 # LSMinimumSystemVersion.
 #
@@ -182,10 +182,10 @@ if [ "$skip_build" -eq 0 ]; then
     features=()
     for feature in "$brand_feature" "$channel_feature"; do
         if [ -n "$feature" ]; then
-            features+=("sp-brand/$feature")
+            features+=("systemprompt-harness-brand/$feature")
         fi
     done
-    cargo_args=(build --release --locked -p harness-desktop)
+    cargo_args=(build --release --locked -p systemprompt-harness-shell)
     if [ "${#features[@]}" -gt 0 ]; then
         cargo_args+=(--features "$(IFS=,; echo "${features[*]}")")
     fi
