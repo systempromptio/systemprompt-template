@@ -45,10 +45,13 @@ ensure_avd() {
 
 flags=(-avd "$avd" -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect)
 
+# Why: sys.boot_completed flips before the package service answers, and an
+# install in that gap fails, so "booted" also means pm can name a package.
 wait_for_boot() {
     local waited=0
     until [ "$("$adb" get-state 2> /dev/null || true)" = device ] \
-        && [ "$("$adb" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = 1 ]; do
+        && [ "$("$adb" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = 1 ] \
+        && "$adb" shell pm path android 2> /dev/null | grep -q '^package:'; do
         [ "$waited" -lt "$boot_seconds" ] || mobile_fail "the emulator did not boot in $boot_seconds seconds (log: $log)"
         sleep 5
         waited=$((waited + 5))

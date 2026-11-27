@@ -118,9 +118,11 @@ just mobile-android-screenshots evidence/android-screens
 ```
 
 It installs the debug APK, types into the app and writes `01-launch.png`,
-`02-found.png`, `03-invalid-address.png` and `04-unreachable.png`. It fails
-when a capture is one flat colour, which means the emulator has no hardware
-acceleration (section 1). To capture one by hand instead: `just
+`02-found.png`, `03-invalid-address.png` and `04-unreachable.png`. The
+pinned emulator image is the test-only one (`aosp_atd`), which boots with
+drawing switched off; the recipe switches it on for the run and puts it back,
+and fails when a capture is still blank. To capture one by hand instead:
+`adb shell setprop debug.hwui.drawing_enabled 1`, `just
 mobile-android-install`, enter the address, then
 `adb exec-out screencap -p > evidence/android-discovery.png`.
 

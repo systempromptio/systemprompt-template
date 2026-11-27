@@ -12,8 +12,10 @@
 # found by their test tags in a uiautomator dump (the screen publishes them as
 # resource ids), tapped, and typed into with `adb shell input`. What was typed
 # is read back from the field and typed again when the device dropped a
-# character. A capture that is one flat colour fails the run: an emulator
-# without hardware acceleration draws nothing.
+# character. The pinned emulator image (aosp_atd) ships with drawing switched
+# off (debug.hwui.drawing_enabled=0) and captures as an empty frame, so the
+# property is set for the run and put back afterwards. A capture that is
+# still blank fails the run.
 # Needs a connected device or emulator (just mobile-android-emulator), the
 # debug APK (just mobile-android) and python3. The stub instance is started
 # unless one is listening on MOBILE_STUB_PORT.
@@ -46,8 +48,10 @@ mkdir -p "$out"
 out="$(cd "$out" && pwd)"
 work="$(mktemp -d)"
 stub_pid=""
+drawing="$("$adb" shell getprop debug.hwui.drawing_enabled | tr -d '\r')"
 cleanup() {
     [ -z "$stub_pid" ] || kill "$stub_pid" 2> /dev/null || true
+    "$adb" shell setprop debug.hwui.drawing_enabled "${drawing:-\"\"}" 2> /dev/null || true
     rm -rf "$work"
 }
 trap cleanup EXIT
@@ -144,7 +148,7 @@ capture() {
     local file="$out/$1"
     hide_keyboard
     "$adb" exec-out screencap -p > "$file"
-    python3 - "$file" << 'PY' || mobile_fail "the capture $1 is one flat colour: the device drew nothing (an emulator without hardware acceleration does this)"
+    python3 - "$file" << 'PY' || mobile_fail "the capture $1 is blank: the device drew nothing"
 import struct
 import sys
 import zlib
@@ -164,7 +168,9 @@ while position < len(data):
 pixels = zlib.decompress(packed)
 stride = len(pixels) // height if height else 0
 rows = {pixels[row * stride:(row + 1) * stride] for row in range(height)}
-sys.exit(0 if width and len(rows) > 1 else 1)
+# Why: an empty frame still has one odd row (the status bar line), so a drawn
+# screen is one with many distinct rows, not merely more than one.
+sys.exit(0 if width and len(rows) > 8 else 1)
 PY
     echo "mobile: $file"
 }
@@ -181,6 +187,9 @@ forward() {
 }
 
 "$adb" install -r "$apk" > /dev/null
+# Why: the property is read when the app's process starts; every state below
+# begins with launch, which force-stops the app first.
+"$adb" shell setprop debug.hwui.drawing_enabled 1
 
 if [ -n "$instance" ]; then
     case "$instance" in
