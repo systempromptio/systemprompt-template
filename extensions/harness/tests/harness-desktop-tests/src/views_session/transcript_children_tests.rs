@@ -1,6 +1,6 @@
-use harness_desktop::views::transcript::children::Children;
-use harness_store::{Change, MessageId, Part, PartBody, SessionId};
 use serde_json::json;
+use systemprompt_engine::store::{Change, MessageId, Part, PartBody, SessionId};
+use systemprompt_harness_views::transcript::children::Children;
 
 fn tool_part(session: &SessionId, finished: bool) -> Part {
     let state = if finished {

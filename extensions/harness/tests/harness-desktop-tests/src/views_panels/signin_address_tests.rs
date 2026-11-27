@@ -1,12 +1,14 @@
-use harness_desktop::strings::signin as copy;
-use harness_desktop::views::signin::address::{
+use systemprompt_device::accounts::AccountsSnapshot;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{
+    AccountStatus, AccountView, InstanceSummary, SyncCounts, SyncStatus,
+};
+use systemprompt_harness_views::signin::address::{
     Credential, choices, credential_kind, grouped_fingerprint, instance_target, opening_address,
     settled,
 };
-use harness_desktop::views::signin::flow::FirstSync;
-use sp_accounts::AccountsSnapshot;
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{AccountStatus, AccountView, InstanceSummary, SyncCounts, SyncStatus};
+use systemprompt_harness_views::signin::flow::FirstSync;
+use systemprompt_harness_views::strings::signin as copy;
 
 fn account(id: &str, status: AccountStatus) -> AccountView {
     AccountView {

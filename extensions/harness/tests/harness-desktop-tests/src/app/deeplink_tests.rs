@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
-use harness_desktop::app::deeplink::{
+use systemprompt_engine::store::SessionId;
+use systemprompt_harness_views::app::deeplink::{
     ArgsError, LaunchRequest, Link, LinkError, is_link, parse, parse_args,
 };
-use harness_store::SessionId;
 
 const SCHEME: &str = "sp-harness";
 

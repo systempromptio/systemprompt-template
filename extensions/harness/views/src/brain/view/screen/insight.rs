@@ -2,15 +2,15 @@
 //! would leave it out) and its revision timeline, newest first.
 
 use gpui_kit::{AnyElement, Context, IntoElement, ParentElement as _, Styled as _, div};
-use harness_ui::components::{Badge, Banner, Card, Spinner};
-use harness_ui::theme::{space, text, tokens};
-use sp_protocol::wire::brain::FactRevision;
+use systemprompt_harness_shared::components::{Badge, Banner, Card, Spinner};
+use systemprompt_harness_shared::theme::{space, text, tokens};
+use systemprompt_models::brain::FactRevision;
 
 use super::BrainScreen;
 use super::detail::row;
-use crate::model::{FactDetail, Load};
-use crate::strings;
-use crate::view::tone;
+use crate::brain::model::{FactDetail, Load};
+use crate::brain::strings;
+use crate::brain::view::tone;
 
 impl BrainScreen {
     pub(super) fn render_why(detail: &FactDetail, cx: &Context<Self>) -> AnyElement {

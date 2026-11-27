@@ -1,27 +1,27 @@
-//! Registration and discovery of shell extensions, and what a screen shows of
-//! itself.
+//! The registration list and resolution of shell extensions, and what a screen
+//! shows of itself.
 
 use std::rc::Rc;
 use std::sync::Arc;
 
 use gpui_kit::AppContext as _;
-use harness_shell::{
-    ExtensionId, ExtensionMetadata, Placement, ScreenSpec, ShellExtension, ShellExtensions,
-    extension_id, register_shell_extension,
+use systemprompt_harness::extension::{ExtensionError, ResolveError};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::contract::{
+    ExtensionId, ExtensionMetadata, Placement, ScreenSpec, ShellExtension,
+    ShellExtensionRegistration, ShellExtensions, extension_id,
 };
-use harness_ui::IconName;
-use sp_extension::{ExtensionError, ResolveError};
+
+const REGISTERED_UI: ExtensionId = extension_id!("registered-ui");
 
 #[derive(Default)]
 struct Registered;
 
 impl ShellExtension for Registered {
     fn metadata(&self) -> ExtensionMetadata {
-        ExtensionMetadata::new(extension_id!("registered-ui"), "registered")
+        ExtensionMetadata::new(REGISTERED_UI, "registered")
     }
 }
-
-register_shell_extension!(Registered);
 
 struct Plain(ExtensionMetadata);
 
@@ -38,8 +38,9 @@ fn plain(id: &str, priority: u32) -> Arc<dyn ShellExtension> {
 }
 
 #[test]
-fn a_registered_shell_extension_is_discovered() {
-    let found = ShellExtensions::discover().unwrap();
+fn a_registered_shell_extension_is_built_from_the_list() {
+    let list = [ShellExtensionRegistration::of::<Registered>(REGISTERED_UI)];
+    let found = ShellExtensions::from_registrations(&list).unwrap();
     assert!(
         found
             .entries()

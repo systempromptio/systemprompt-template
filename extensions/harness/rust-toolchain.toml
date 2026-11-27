@@ -1,0 +1,9 @@
+# The desktop shell builds on stable 1.99.1, not the template's nightly: the
+# window toolkit pinned in Cargo.toml (gpui-kit =0.9.1) uses library features
+# stabilised after the template's nightly-2026-06-03, and core's device crates
+# are built on this same toolchain in core. Formatting still follows the
+# template's rustfmt.toml, which needs its nightly: run rustfmt for this
+# workspace with the template's toolchain (`just harness-fmt-check`).
+[toolchain]
+channel = "1.99.1"
+components = ["rustfmt", "clippy"]

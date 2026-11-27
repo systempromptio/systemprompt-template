@@ -4,15 +4,15 @@
 //! notice.
 
 use gpui_kit::{Context, Entity, SharedString, Task};
-use harness_ui::Tone;
-use sp_accounts::AccountsError;
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::KeyFingerprint;
+use systemprompt_device::accounts::AccountsError;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::KeyFingerprint;
+use systemprompt_harness_shared::Tone;
 
 use crate::app::{Services, runtime};
+use crate::governance::feeds;
 use crate::state::AppState;
 use crate::strings::governance as text;
-use crate::views::governance::feeds;
 
 pub(crate) fn notify<T: 'static>(
     app: &Entity<AppState>,

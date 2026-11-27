@@ -10,7 +10,7 @@
 //!   &mut Window, cx: &mut Context<GovernancePill>) -> GovernancePill`, mounted
 //!   in the titlebar's right-hand slot.
 //! - `settings_page() -> SettingsPage` (id `governance`), listed in
-//!   `crate::views::settings::pages()`.
+//!   `crate::settings::pages()`.
 //! - Account state is `AppState::accounts`; the sync engine and governance are
 //!   found in `services.handles()`, and a part whose handle is absent is not
 //!   rendered; the verdict switch is `UiSettings::verdict_enabled`.
@@ -31,12 +31,12 @@ mod pill_menu;
 pub mod pill_model;
 
 use gpui_kit::{AnyView, App, AppContext as _, Entity, Window};
-use harness_ui::IconName;
+use systemprompt_harness_shared::IconName;
 
 use crate::app::Services;
+use crate::governance::page::GovernancePage;
+use crate::settings::SettingsPage;
 use crate::state::AppState;
-use crate::views::governance::page::GovernancePage;
-use crate::views::settings::SettingsPage;
 
 pub(crate) use pill::GovernancePill;
 
@@ -45,7 +45,7 @@ pub(crate) const PAGE_ID: &str = "governance";
 pub(crate) fn settings_page() -> SettingsPage {
     SettingsPage {
         id: PAGE_ID,
-        title: sp_brand::identity().governance_label(),
+        title: systemprompt_harness_brand::identity().governance_label(),
         icon: IconName::Shield,
         build: build_page,
     }

@@ -1,7 +1,9 @@
 //! The proposals inbox: open and decided proposals and one decision at a time.
 
-use harness_brain_ui::model::{BrainFailure, Decision, DecisionOutcome, Load, ProposalInbox};
-use sp_protocol::wire::brain::BrainProposalId;
+use systemprompt_harness_views::brain::model::{
+    BrainFailure, Decision, DecisionOutcome, Load, ProposalInbox,
+};
+use systemprompt_identifiers::BrainProposalId;
 
 use crate::fixtures::{PROPOSAL_DONE, PROPOSAL_OPEN, proposal};
 

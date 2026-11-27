@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 
-use harness_desktop::state::session_model::{SessionModel, Snapshot};
-use harness_engine::{CallId, PermissionAsk, PermissionId, RunStatus};
-use harness_store::{DiffSummary, MessageId, Part, PartBody, ProjectId, Session, SessionId};
+use systemprompt_engine::run::{CallId, PermissionAsk, PermissionId, RunStatus};
+use systemprompt_engine::store::{
+    DiffSummary, MessageId, Part, PartBody, ProjectId, Session, SessionId,
+};
+use systemprompt_harness_views::state::session_model::{SessionModel, Snapshot};
 
 pub(crate) fn session(id: &SessionId) -> Session {
     Session {
@@ -16,7 +18,7 @@ pub(crate) fn session(id: &SessionId) -> Session {
         permission: None,
         revert: None,
         summary: DiffSummary::default(),
-        metadata: harness_store::JsonMap::new(),
+        metadata: systemprompt_engine::store::JsonMap::new(),
         created_at: 1,
         updated_at: 1,
         archived_at: None,

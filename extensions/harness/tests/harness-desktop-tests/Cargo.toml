@@ -1,35 +1,33 @@
 [package]
 name = "harness-desktop-tests"
-description = "Tests for harness-desktop, through its public API."
+description = "Tests for the views, state and services of systemprompt-harness-views and the launch of systemprompt-harness-shell, through its public API."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 publish.workspace = true
 
 [dependencies]
-harness-desktop.workspace = true
+systemprompt-harness-shell.workspace = true
+systemprompt-harness-views.workspace = true
 
 [dev-dependencies]
-harness-config.workspace = true
-harness-engine.workspace = true
-harness-ids.workspace = true
-harness-llm.workspace = true
-harness-mcp.workspace = true
-harness-store.workspace = true
-harness-tasks.workspace = true
-harness-tools.workspace = true
-harness-ui.workspace = true
-sp-accounts.workspace = true
-sp-brand.workspace = true
-sp-extension.workspace = true
-sp-protocol.workspace = true
-sp-sync.workspace = true
+async-trait.workspace = true
+chrono.workspace = true
 serde_json.workspace = true
+systemprompt-device.workspace = true
+systemprompt-engine.workspace = true
+systemprompt-harness.workspace = true
+systemprompt-harness-brand.workspace = true
+systemprompt-harness-shared.workspace = true
+systemprompt-identifiers.workspace = true
+systemprompt-models.workspace = true
+systemprompt-traits.workspace = true
 tempfile.workspace = true
 tokio.workspace = true
-async-trait = "0.1"
-chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 
 [lints]
 workspace = true

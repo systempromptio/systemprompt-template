@@ -1,4 +1,4 @@
-use harness_desktop::views::pickers::search::{context_size, initial, matches, step};
+use systemprompt_harness_views::pickers::search::{context_size, initial, matches, step};
 
 #[test]
 fn every_word_of_the_query_must_appear() {

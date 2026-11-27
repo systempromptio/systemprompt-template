@@ -2,19 +2,21 @@
 
 use std::rc::Rc;
 
-use harness_engine::extension::ExtensionMetadata;
+use systemprompt_engine::run::extension::ExtensionMetadata;
 
-use crate::context::ShellContext;
-use crate::contribution::{ScreenSpec, SettingsPaneSpec, TitlebarItemSpec, TranscriptAdornment};
+use crate::contract::context::ShellContext;
+use crate::contract::contribution::{
+    ScreenSpec, SettingsPaneSpec, TitlebarItemSpec, TranscriptAdornment,
+};
 
 /// A feature's part of the shell.
 ///
-/// `Default`-constructed by
-/// [`register_shell_extension!`](crate::register_shell_extension) and held as
-/// `dyn ShellExtension`. Only `metadata` is required; its id is the id of
-/// the extension's instance-side half, and the instance's enablement of that
-/// id decides whether anything here is shown. Contributions are read on the UI
-/// thread whenever the shell rebuilds its navigation.
+/// `Default`-constructed from its
+/// [`ShellExtensionRegistration`](crate::contract::ShellExtensionRegistration)
+/// and held as `dyn ShellExtension`. Only `metadata` is required; its id is the
+/// id of the extension's instance-side half, and the instance's enablement of
+/// that id decides whether anything here is shown. Contributions are read on
+/// the UI thread whenever the shell rebuilds its navigation.
 pub trait ShellExtension: Send + Sync + 'static {
     fn metadata(&self) -> ExtensionMetadata;
 

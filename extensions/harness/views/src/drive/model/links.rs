@@ -3,7 +3,7 @@
 
 use std::path::{Path, PathBuf};
 
-use sp_protocol::ids::DocumentId;
+use systemprompt_identifiers::DocumentId;
 
 pub fn web_link(instance_base: &str, id: Option<&DocumentId>) -> String {
     let base = instance_base.trim_end_matches('/');

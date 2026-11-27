@@ -1,4 +1,4 @@
-use harness_ui::code::fenced;
+use systemprompt_harness_shared::code::fenced;
 
 #[test]
 fn fence_outgrows_backtick_runs_in_the_code() {

@@ -4,12 +4,12 @@
 use gpui_kit::{App, Context, Entity, IntoElement, Render, SharedString, Subscription, Window};
 
 use crate::app::Services;
-use crate::state::{AppEvent, AppState};
-use crate::strings::pickers as text;
-use crate::views::pickers::popup::{
+use crate::pickers::popup::{
     self, EmptyCopy, PickerHost, PickerIds, PickerOption, PickerPopup, TriggerCopy,
 };
-use crate::views::pickers::search;
+use crate::pickers::search;
+use crate::state::{AppEvent, AppState};
+use crate::strings::pickers as text;
 
 const IDS: PickerIds = PickerIds {
     popover: "agent-picker",

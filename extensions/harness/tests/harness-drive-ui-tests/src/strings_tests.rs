@@ -1,8 +1,9 @@
 use chrono::{Local, TimeZone as _};
-use harness_drive_ui::model::BrowseScope;
-use harness_drive_ui::strings::{self as text, sync};
-use sp_drive::view::DriveFailure;
-use sp_drive::{DocumentKind, SyncPhase};
+use systemprompt_drive::SyncPhase;
+use systemprompt_harness::members::drive::DocumentKind;
+use systemprompt_harness_views::drive::items::DriveFailure;
+use systemprompt_harness_views::drive::model::BrowseScope;
+use systemprompt_harness_views::drive::strings::{self as text, sync};
 
 #[test]
 fn sizes_and_times_read_well() {

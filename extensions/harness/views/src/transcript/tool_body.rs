@@ -5,16 +5,18 @@
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, SharedString, Styled as _, div, px,
 };
-use harness_store::{Part, TodoStatus, ToolState};
-use harness_ui::components::{Badge, Button};
-use harness_ui::theme::{size, space, text as type_scale, tokens};
-use harness_ui::{CodeBlock, DiffView, Icon, IconName, Tone};
+use systemprompt_engine::store::{Part, TodoStatus, ToolState};
+use systemprompt_harness_shared::components::{Badge, Button};
+use systemprompt_harness_shared::theme::{size, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{CodeBlock, DiffView, Icon, IconName, Tone};
+// JSON: a tool call's input and metadata are the tool's own JSON, stored by
+// the engine as the model and the tool wrote them.
 use serde_json::Value;
 
 use crate::strings::transcript as text;
-use crate::views::transcript::parts::part_element_id;
-use crate::views::transcript::tool_info::{self, Outcome, Phase, TodoLine, ToolKind, ToolSummary};
-use crate::views::transcript::{TranscriptEvent, TranscriptView};
+use crate::transcript::parts::part_element_id;
+use crate::transcript::tool_info::{self, Outcome, Phase, TodoLine, ToolKind, ToolSummary};
+use crate::transcript::{TranscriptEvent, TranscriptView};
 
 const OUTPUT_HEIGHT: f32 = 320.0;
 const DIFF_HEIGHT: f32 = 420.0;
@@ -92,6 +94,8 @@ impl TranscriptView {
     }
 }
 
+// JSON: a tool call's input and metadata are the tool's own JSON, stored by
+// the engine as the model and the tool wrote them.
 fn shell_body(part: &Part, state: &ToolState) -> AnyElement {
     let command = state
         .input()

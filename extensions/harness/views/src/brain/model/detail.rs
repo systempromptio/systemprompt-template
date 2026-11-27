@@ -2,7 +2,11 @@
 //! being written for a dispute or retraction, the action in flight and how the
 //! last one ended.
 
-use sp_protocol::wire::brain::{BrainFact, BrainFactId, FactRevision, FactWhy};
+use systemprompt_models::brain::{BrainFact, FactRevision};
+
+use systemprompt_identifiers::BrainFactId;
+
+use systemprompt_models::brain::client::FactWhy;
 
 use super::actions::{ActionOutcome, FactAction};
 use super::failure::BrainFailure;

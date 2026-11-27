@@ -2,7 +2,11 @@
 //! page and the selected fact. Each read carries the generation it was started
 //! in, so an answer to a superseded read is dropped.
 
-use sp_protocol::wire::brain::{BrainFact, BrainFactId, FactPage};
+use systemprompt_models::brain::BrainFact;
+
+use systemprompt_identifiers::BrainFactId;
+
+use systemprompt_models::brain::client::FactPage;
 
 use super::failure::BrainFailure;
 use super::filter::FactFilter;

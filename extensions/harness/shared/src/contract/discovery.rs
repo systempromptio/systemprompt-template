@@ -1,17 +1,21 @@
-//! Finding every linked shell extension and reading the contributions of the
-//! ones the instance's enablement admits.
+//! Building every registered shell extension and reading the contributions of
+//! the ones the instance's enablement admits.
 
 use std::fmt;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use harness_engine::extension::{Contributed, EnabledExtensions, Resolved, admitted, resolve};
-use sp_extension::ExtensionError;
+use systemprompt_engine::run::extension::{
+    Contributed, EnabledExtensions, Resolved, admitted, resolve,
+};
+use systemprompt_harness::extension::ExtensionError;
 
-use crate::context::ShellContext;
-use crate::contribution::{ScreenSpec, SettingsPaneSpec, TitlebarItemSpec, TranscriptAdornment};
-use crate::extension::ShellExtension;
-use crate::register::ShellExtensionRegistration;
+use crate::contract::context::ShellContext;
+use crate::contract::contribution::{
+    ScreenSpec, SettingsPaneSpec, TitlebarItemSpec, TranscriptAdornment,
+};
+use crate::contract::extension::ShellExtension;
+use crate::contract::register::ShellExtensionRegistration;
 
 type Entry = Resolved<Arc<dyn ShellExtension>>;
 
@@ -26,14 +30,16 @@ pub struct ShellExtensions {
 }
 
 impl ShellExtensions {
-    pub fn discover() -> Result<Self, ExtensionError> {
-        let found = inventory::iter::<ShellExtensionRegistration>
-            .into_iter()
+    pub fn from_registrations(
+        registrations: &[ShellExtensionRegistration],
+    ) -> Result<Self, ExtensionError> {
+        let built = registrations
+            .iter()
             .map(|registration| (registration.factory)());
-        let extensions = Self::from_extensions(found)?;
+        let extensions = Self::from_extensions(built)?;
         tracing::info!(
             count = extensions.entries.len(),
-            "shell extensions discovered"
+            "shell extensions registered"
         );
         Ok(extensions)
     }

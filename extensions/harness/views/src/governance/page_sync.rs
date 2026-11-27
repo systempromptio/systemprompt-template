@@ -2,16 +2,16 @@
 //! which signing key it trusts.
 
 use super::page_view::LABEL_WIDTH;
+use crate::governance::model::{InstanceModel, KeyTrust};
+use crate::governance::page::{AccountTarget, GovernancePage};
 use crate::strings::governance as text;
-use crate::views::governance::model::{InstanceModel, KeyTrust};
-use crate::views::governance::page::{GovernancePage, Target};
 use gpui_kit::{
     AnyElement, Context, FontWeight, IntoElement, ParentElement as _, Styled as _, div, px,
 };
-use harness_ui::components::{Button, StatusDot};
-use harness_ui::theme::{mono_font, radius, space, text as type_scale, tokens};
-use harness_ui::{Icon, IconName, Tone};
-use sp_protocol::view::SyncCounts;
+use systemprompt_device::view::SyncCounts;
+use systemprompt_harness_shared::components::{Button, StatusDot};
+use systemprompt_harness_shared::theme::{mono_font, radius, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{Icon, IconName, Tone};
 
 pub(super) fn sync_status(
     row: &InstanceModel,
@@ -91,7 +91,7 @@ pub(super) fn holdings(counts: &SyncCounts, cx: &Context<GovernancePage>) -> Any
 pub(super) fn key_trust(
     key: &KeyTrust,
     index: usize,
-    target: &Target,
+    target: &AccountTarget,
     cx: &Context<GovernancePage>,
 ) -> AnyElement {
     let palette = *tokens(cx);

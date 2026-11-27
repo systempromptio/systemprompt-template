@@ -1,68 +1,37 @@
 [package]
-name = "harness-desktop"
-description = "The native shell and composition root."
+name = "systemprompt-harness-shell"
+description = "The native shell: the launch, the single instance, logging, the main window and the harness binary."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
-publish = false
+repository.workspace = true
+homepage.workspace = true
+publish.workspace = true
 build = "build.rs"
-
-[lib]
-name = "harness_desktop"
-path = "src/lib.rs"
 
 [[bin]]
 name = "harness"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1"
-async-trait.workspace = true
-chrono.workspace = true
+anyhow.workspace = true
 dirs.workspace = true
 gpui-kit.workspace = true
-harness-config.workspace = true
-harness-brain-ui.workspace = true
-harness-drive-ui.workspace = true
-harness-engine.workspace = true
-harness-ids.workspace = true
-harness-llm.workspace = true
-harness-mcp.workspace = true
-harness-notifications-ui.workspace = true
-harness-shell.workspace = true
-harness-store.workspace = true
-harness-tasks.workspace = true
-harness-ui.workspace = true
-harness-workspace.workspace = true
-ignore.workspace = true
-open = "5"
-parking_lot.workspace = true
-serde.workspace = true
 serde_json.workspace = true
-sp-accounts.workspace = true
-sp-brain.workspace = true
-sp-brand.workspace = true
-sp-client.workspace = true
-sp-drive.workspace = true
-sp-extension.workspace = true
-sp-governance.workspace = true
-sp-notifications.workspace = true
-sp-projection.workspace = true
-sp-protocol.workspace = true
-sp-secure.workspace = true
-sp-slack.workspace = true
-sp-sync.workspace = true
+systemprompt-harness-brand.workspace = true
+systemprompt-harness-shared.workspace = true
+systemprompt-harness-views.workspace = true
+systemprompt-traits.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["rt-multi-thread", "net", "io-util", "sync", "time", "macros"] }
+tokio.workspace = true
 tracing.workspace = true
-tracing-appender = "0.2"
-tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "registry", "tracing-log"] }
-url.workspace = true
-uuid.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true
 
 [build-dependencies]
-embed-resource = "3"
+embed-resource.workspace = true
 
 [lints]
 workspace = true

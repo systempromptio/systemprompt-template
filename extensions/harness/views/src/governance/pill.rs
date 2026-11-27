@@ -12,17 +12,17 @@ use gpui_kit::{
     Render, SharedString, StatefulInteractiveElement as _, Styled as _, Subscription, Task, Window,
     div, px,
 };
-use harness_ui::theme::{size, space, text as type_scale, tokens};
-use harness_ui::{Icon, motion};
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::SyncStatus;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::SyncStatus;
+use systemprompt_harness_shared::theme::{size, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{Icon, motion};
 
 use crate::app::{Services, runtime};
+use crate::governance::model::Fix;
+use crate::governance::pill_model::{PillModel, pill};
+use crate::governance::{PAGE_ID, actions, feeds};
 use crate::state::{AppState, Route};
 use crate::strings::governance as text;
-use crate::views::governance::model::Fix;
-use crate::views::governance::pill_model::{PillModel, pill};
-use crate::views::governance::{PAGE_ID, actions, feeds};
 
 const LABEL_WIDTH: f32 = 160.;
 pub(super) const MENU_WIDTH: f32 = 260.;

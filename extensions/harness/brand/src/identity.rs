@@ -47,14 +47,12 @@ macro_rules! brand_rows {
     };
 }
 
-static TABLE: [[Identity; 3]; 1] = [
-    brand_rows!(
-        Systemprompt,
-        "systemprompt Harness",
-        "io.systemprompt.harness",
-        "sp-harness"
-    ),
-];
+static TABLE: [[Identity; 3]; 1] = [brand_rows!(
+    Systemprompt,
+    "systemprompt Harness",
+    "io.systemprompt.harness",
+    "sp-harness"
+)];
 
 #[must_use]
 pub fn identity() -> &'static Identity {

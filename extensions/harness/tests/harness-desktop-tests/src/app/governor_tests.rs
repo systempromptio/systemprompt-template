@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use harness_desktop::app::governor::GovernorSlot;
-use harness_engine::extension::EnabledExtensions;
-use harness_engine::{
+use systemprompt_engine::run::extension::EnabledExtensions;
+use systemprompt_engine::run::{
     Endpoint, GovernError, Governor, McpSpec, ModelCall, ModelSpec, ResponseAction, ToolCall,
     Usage, Verdict,
 };
-use harness_ids::extension_id;
+use systemprompt_harness_views::app::governor::GovernorSlot;
+use systemprompt_identifiers::extension_id;
 
 #[derive(Debug)]
 struct Offering;
@@ -17,10 +17,10 @@ impl Governor for Offering {
         vec![ModelSpec {
             id: "m".to_owned(),
             name: "M".to_owned(),
-            protocol: harness_engine::Protocol::Messages,
+            protocol: systemprompt_engine::run::Protocol::Messages,
             context_window: 0,
             max_output: 0,
-            supports: harness_llm::Supports::default(),
+            supports: systemprompt_engine::llm::Supports::default(),
         }]
     }
     fn mcp_servers(&self) -> Vec<McpSpec> {

@@ -1,8 +1,8 @@
-use harness_desktop::views::signin::address::InstanceChoice;
-use harness_desktop::views::signin::flow::{Effect, Event, Flow};
-use sp_accounts::{ProbeResult, ProbedInstance};
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::SignInOutcome;
+use systemprompt_device::accounts::{ProbeResult, ProbedInstance};
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::SignInOutcome;
+use systemprompt_harness_views::signin::address::InstanceChoice;
+use systemprompt_harness_views::signin::flow::{Effect, Event, Flow};
 
 pub(crate) const ADDRESS: &str = "https://sp.example.com";
 

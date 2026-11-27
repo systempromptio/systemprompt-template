@@ -2,7 +2,9 @@
 //! decision in flight and how the last one ended. Nothing a proposal describes
 //! applies itself; it waits for a person's approval.
 
-use sp_protocol::wire::brain::{BrainProposal, BrainProposalId, ProposalStatus};
+use systemprompt_models::brain::{BrainProposal, ProposalStatus};
+
+use systemprompt_identifiers::BrainProposalId;
 
 use super::actions::{Decision, DecisionOutcome};
 use super::failure::BrainFailure;

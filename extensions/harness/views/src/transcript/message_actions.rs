@@ -3,14 +3,14 @@
 
 use super::message::RowFlags;
 use crate::strings::transcript as text;
-use crate::views::transcript::TranscriptView;
+use crate::transcript::TranscriptView;
 use gpui_kit::{
     AnyElement, Context, InteractiveElement as _, IntoElement, ParentElement as _, Styled as _, div,
 };
-use harness_store::{Message, MessageWithParts};
-use harness_ui::IconName;
-use harness_ui::components::IconButton;
-use harness_ui::theme::{radius, space, tokens};
+use systemprompt_engine::store::{Message, MessageWithParts};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::IconButton;
+use systemprompt_harness_shared::theme::{radius, space, tokens};
 
 impl TranscriptView {
     pub(super) fn render_actions(

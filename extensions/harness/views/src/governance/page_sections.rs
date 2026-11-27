@@ -6,14 +6,16 @@ use gpui_kit::{
     AnyElement, Context, FontWeight, IntoElement, ParentElement as _, SharedString, Styled as _,
     div,
 };
-use harness_ui::components::{Badge, Banner, Button, ListRow, SectionHeader, StatusDot, Toggle};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
+use systemprompt_harness_shared::components::{
+    Badge, Banner, Button, ListRow, SectionHeader, StatusDot, Toggle,
+};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
 
+use crate::governance::feeds::{Held, HeldServer, McpState};
+use crate::governance::heartbeat::HeartbeatLine;
+use crate::governance::page::GovernancePage;
 use crate::strings::governance as text;
-use crate::views::governance::feeds::{Held, HeldServer, McpState};
-use crate::views::governance::heartbeat::HeartbeatLine;
-use crate::views::governance::page::GovernancePage;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct VerdictState {

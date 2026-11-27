@@ -1,21 +1,26 @@
 [package]
 name = "harness-drive-ui-tests"
-description = "Tests for harness-drive-ui, through its public API."
+description = "Tests for the Drive screens of systemprompt-harness-views, through its public API."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 publish.workspace = true
 
 [dependencies]
-harness-drive-ui.workspace = true
+systemprompt-harness-views.workspace = true
 
 [dev-dependencies]
-harness-shell.workspace = true
-sp-drive.workspace = true
-sp-extension.workspace = true
-sp-protocol.workspace = true
-chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+chrono.workspace = true
+systemprompt-device.workspace = true
+systemprompt-drive.workspace = true
+systemprompt-harness.workspace = true
+systemprompt-harness-shared.workspace = true
+systemprompt-identifiers.workspace = true
+systemprompt-models.workspace = true
 
 [lints]
 workspace = true

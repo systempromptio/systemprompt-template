@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use harness_ids::{MessageId, SessionId};
+use systemprompt_identifiers::engine::{MessageId, SessionId};
 
 /// The greatest reply id seen per session.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

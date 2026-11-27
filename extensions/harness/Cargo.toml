@@ -3,13 +3,18 @@
 # Kept as a SEPARATE workspace (the root [workspace] lists it under `exclude`)
 # with its own Cargo.lock, so the server image never compiles the window
 # toolkit and the desktop build never compiles the server closure. The crates
-# that land under this directory are the only ones in the repository that link
-# the window toolkit.
+# under this directory are the only ones in the repository that link the
+# window toolkit.
 #
-# It has no members yet: README.md names the crates that arrive and where they
-# come from. Until the first one lands, `cargo metadata` resolves the
-# workspace and every command that needs a package to act on (check, build,
-# clippy, fmt, test) reports that there is none.
+# Members, in dependency order: brand, theme, shared, views, shell. `shell`
+# builds the `harness` binary; tests/ holds the seven crates that test them
+# through their public API. README.md says what each holds.
+#
+# Core is named the way the root manifest names it: git dependencies on one
+# rev of systemprompt-core, every entry on one line in the form
+# scripts/core-pin.sh rewrites. The rev here is core's `future` branch, which
+# carries the device crates (engine, device, drive, harness); bridge/CORE_REF
+# does not hold it yet, so this workspace is not under core-pin.sh --check.
 #
 # rust-toolchain.toml, rustfmt.toml, clippy.toml and deny.toml are the
 # template's: rustup, rustfmt, clippy and cargo-deny each find them by walking
@@ -33,13 +38,51 @@ resolver = "2"
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.96"
+rust-version = "1.99"
 version = "0.70.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
+publish = false
 repository = "https://github.com/systempromptio/systemprompt-template"
 homepage = "https://systemprompt.io"
 documentation = "https://systemprompt.io/documentation"
+
+[workspace.dependencies]
+systemprompt-harness-brand = { path = "brand" }
+systemprompt-harness-theme = { path = "theme" }
+systemprompt-harness-shared = { path = "shared" }
+systemprompt-harness-views = { path = "views" }
+systemprompt-harness-shell = { path = "shell" }
+
+systemprompt-device = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
+systemprompt-drive = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
+systemprompt-engine = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
+systemprompt-harness = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
+systemprompt-identifiers = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
+systemprompt-models = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
+systemprompt-traits = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "1ac0dc44fbd4829da338a37937f5507d9d3775e2" }
+
+# The window toolkit, pinned exactly: a bump is re-checked against every view.
+gpui-kit = { version = "=0.9.1", features = ["syntect"] }
+
+anyhow = "1"
+async-trait = "0.1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+dirs = "7"
+embed-resource = "3"
+ignore = "0.4"
+open = "5"
+parking_lot = "0.13"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "raw_value"] }
+tempfile = "3.27"
+thiserror = "2"
+tokio = { version = "1.54", features = ["rt-multi-thread", "net", "io-util", "time", "sync", "macros", "fs"] }
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "registry", "tracing-log"] }
+url = "2.5"
+uuid = { version = "1", features = ["v4", "v5"] }
 
 # The root workspace's lint table, unchanged. [workspace.lints] is read per
 # workspace, so the shell carries its own copy; keep the two identical.
@@ -141,3 +184,12 @@ variant_size_differences = "warn"
 unreachable_pub = "warn"
 unused_lifetimes = "warn"
 single_use_lifetimes = "warn"
+
+# Shipping profile: thin LTO; panic stays "unwind" so tokio turns a panicking
+# task into a JoinError and the app survives it.
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = "debuginfo"
+panic = "unwind"

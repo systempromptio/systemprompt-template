@@ -5,12 +5,12 @@
 use std::rc::Rc;
 
 use gpui_kit::{AnyElement, App, Context, Entity, Window};
-use harness_shell::OnChange;
-use harness_store::{Message, MessageWithParts};
+use systemprompt_engine::store::{Message, MessageWithParts};
+use systemprompt_harness_shared::contract::OnChange;
 
 use crate::state::AppState;
 
-use crate::views::transcript::TranscriptView;
+use crate::transcript::TranscriptView;
 
 impl TranscriptView {
     pub(super) fn render_adornments(

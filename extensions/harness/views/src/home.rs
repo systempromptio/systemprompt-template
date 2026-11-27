@@ -4,8 +4,8 @@ use gpui_kit::{
     Context, Entity, IntoElement, ParentElement as _, Render, Styled as _, Subscription, Window,
     div,
 };
-use harness_ui::IconName;
-use harness_ui::components::EmptyState;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::EmptyState;
 
 use crate::app::Services;
 use crate::state::AppState;

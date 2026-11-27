@@ -1,5 +1,5 @@
-use harness_desktop::state::input::{Intent, Submission, classify, slash_command};
-use harness_engine::{AttachmentInput, CommandInfo, Delivery};
+use systemprompt_engine::run::{AttachmentInput, CommandInfo, Delivery};
+use systemprompt_harness_views::state::input::{Intent, Submission, classify, slash_command};
 
 fn commands() -> Vec<CommandInfo> {
     ["compact", "review"]

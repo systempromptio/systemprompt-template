@@ -6,18 +6,18 @@ use gpui_kit::{
     AnyElement, Context, InteractiveElement as _, IntoElement, ParentElement as _, SharedString,
     StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use harness_ui::components::{
+use systemprompt_harness::members::drive::DocumentKind;
+use systemprompt_harness_shared::components::{
     Activate, Button, Dismiss, IconButton, LIST_CONTEXT, ListRow, Menu, MenuEntry, MenuItem,
     SectionHeader, Select, SelectNext, SelectOption, SelectPrevious, Spinner,
 };
-use harness_ui::theme::{space, tokens};
-use harness_ui::{Icon, IconName};
-use sp_drive::DocumentKind;
+use systemprompt_harness_shared::theme::{space, tokens};
+use systemprompt_harness_shared::{Icon, IconName};
 
 use super::DriveView;
 use super::dialogs::NewItem;
-use crate::model::{BrowseScope, Load, SortKey, folder_rows};
-use crate::strings as text;
+use crate::drive::model::{BrowseScope, DriveLoad, SortKey, folder_rows};
+use crate::drive::strings as text;
 
 impl DriveView {
     pub(super) fn render_folders(&self, cx: &Context<Self>) -> AnyElement {
@@ -67,11 +67,11 @@ impl DriveView {
 
     fn folder_tree(&self, cx: &Context<Self>) -> Vec<AnyElement> {
         let tree = match &self.browse.folders {
-            Load::Ready(tree) => tree,
-            Load::Loading => {
+            DriveLoad::Ready(tree) => tree,
+            DriveLoad::Loading => {
                 return vec![div().p(space::MD).child(Spinner::new()).into_any_element()];
             },
-            Load::Failed(_) | Load::Idle => return Vec::new(),
+            DriveLoad::Failed(_) | DriveLoad::Idle => return Vec::new(),
         };
         if tree.is_empty() {
             let palette = tokens(cx);

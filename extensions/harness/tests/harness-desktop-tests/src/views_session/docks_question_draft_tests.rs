@@ -1,5 +1,5 @@
-use harness_desktop::views::docks::question_draft::QuestionDraft;
-use harness_engine::{Question, QuestionOption};
+use systemprompt_engine::run::{Question, QuestionOption};
+use systemprompt_harness_views::docks::question_draft::QuestionDraft;
 
 fn question(multiple: bool) -> Question {
     Question {

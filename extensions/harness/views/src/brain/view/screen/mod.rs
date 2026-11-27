@@ -16,14 +16,14 @@ mod proposals;
 mod render;
 
 use gpui_kit::{AppContext as _, Context, Entity, Task, Window};
-use harness_shell::ShellContext;
-use harness_ui::components::TextField;
-use sp_brain::{BrainFeed, BrainService};
-use sp_extension::Enablement;
+use systemprompt_harness::extension::Enablement;
+use systemprompt_harness::members::brain::{BrainFeed, BrainService};
+use systemprompt_harness_shared::components::TextField;
+use systemprompt_harness_shared::contract::ShellContext;
 use tokio::runtime::Handle;
 
 use super::bridge;
-use crate::model::{Availability, FactDetail, FactListing, ProposalInbox};
+use crate::brain::model::{Availability, FactDetail, FactListing, ProposalInbox};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum Tab {
@@ -65,8 +65,9 @@ impl BrainScreen {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let kind_field = Self::filter_field(crate::strings::KIND_PLACEHOLDER, window, cx);
-        let subject_field = Self::filter_field(crate::strings::SUBJECT_PLACEHOLDER, window, cx);
+        let kind_field = Self::filter_field(crate::brain::strings::KIND_PLACEHOLDER, window, cx);
+        let subject_field =
+            Self::filter_field(crate::brain::strings::SUBJECT_PLACEHOLDER, window, cx);
         let weak = cx.weak_entity();
         let reason_field = cx.new(|cx| {
             TextField::new(window, cx).on_submit(move |_, _, cx| {

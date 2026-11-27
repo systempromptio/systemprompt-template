@@ -2,14 +2,14 @@
 //! are, and a way out.
 
 use gpui_kit::{App, Context, IntoElement, ParentElement as _, Render, Styled as _, Window, div};
-use harness_ui::IconName;
-use harness_ui::components::{Button, EmptyState};
-use harness_ui::theme::tokens;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Button, EmptyState};
+use systemprompt_harness_shared::theme::tokens;
 
 use crate::strings::foundation as text;
 
-#[derive(Debug, Default)]
-pub(crate) struct FatalView;
+#[derive(Debug, Clone, Copy, Default)]
+pub struct FatalView;
 
 impl Render for FatalView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {

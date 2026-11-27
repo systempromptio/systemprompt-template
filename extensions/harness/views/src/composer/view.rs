@@ -7,14 +7,14 @@ use gpui_kit::{
     AnyElement, Context, ExternalPaths, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, SharedString, Styled as _, Window, div, px,
 };
-use harness_ui::components::{Badge, Button, IconButton, ListRow};
-use harness_ui::theme::{radius, space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
+use systemprompt_harness_shared::components::{Badge, Button, IconButton, ListRow};
+use systemprompt_harness_shared::theme::{radius, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
 
 use crate::app::settings::DeliveryPref;
+use crate::composer::ComposerView;
+use crate::composer::popup::PopupKind;
 use crate::strings::composer as text;
-use crate::views::composer::ComposerView;
-use crate::views::composer::popup::PopupKind;
 
 const POPUP_WIDTH: f32 = 520.0;
 

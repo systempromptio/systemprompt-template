@@ -5,25 +5,25 @@
 
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::{AppContext as _, Context, Entity, Subscription, Task, Window, px};
-use harness_ui::Tone;
-use harness_ui::components::{ButtonKind, DialogAction, DialogSpec};
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{KeyFingerprint, SyncStatus};
-use sp_sync::HeartbeatState;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{KeyFingerprint, SyncStatus};
+use systemprompt_harness::sync::HeartbeatState;
+use systemprompt_harness_shared::Tone;
+use systemprompt_harness_shared::components::{ButtonKind, DialogAction, DialogSpec};
 
 use crate::app::{Services, runtime};
+use crate::governance::actions;
+use crate::governance::connect::{ConnectEvent, ConnectForm};
+use crate::governance::feeds::{self, Held};
+use crate::governance::model::{InstanceAction, LastSynced, remember_synced};
 use crate::state::AppState;
 use crate::strings::governance as text;
-use crate::views::governance::actions;
-use crate::views::governance::connect::{ConnectEvent, ConnectForm};
-use crate::views::governance::feeds::{self, Held};
-use crate::views::governance::model::{InstanceAction, LastSynced, remember_synced};
 
 pub(super) const PAGE_WIDTH: f32 = 760.;
 const DIALOG_WIDTH: f32 = 460.;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Target {
+pub(crate) struct AccountTarget {
     pub(crate) id: AccountId,
     pub(crate) name: String,
     pub(crate) url: String,
@@ -119,7 +119,11 @@ impl GovernancePage {
             || self.services.paths().home.clone(),
             |project| project.directory.clone(),
         );
-        let managed_root = self.services.paths().config.join(sp_projection::SKILLS_DIR);
+        let managed_root = self
+            .services
+            .paths()
+            .config
+            .join(systemprompt_harness::projection::SKILLS_DIR);
         let job = feeds::load_held(governance, engine, directory, managed_root);
         let task = runtime::spawn(cx, self.services.runtime(), job, |this, held, cx| {
             this.held = held;
@@ -131,7 +135,7 @@ impl GovernancePage {
     pub(crate) fn run(
         &mut self,
         action: InstanceAction,
-        target: &Target,
+        target: &AccountTarget,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {

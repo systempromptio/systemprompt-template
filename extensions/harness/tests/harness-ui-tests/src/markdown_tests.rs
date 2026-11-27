@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use harness_ui::markdown::{MarkdownBlock, MarkdownDocument};
+use systemprompt_harness_shared::markdown::{MarkdownBlock, MarkdownDocument};
 
 fn ranges(document: &MarkdownDocument) -> Vec<Range<usize>> {
     document.blocks().iter().map(MarkdownBlock::range).collect()

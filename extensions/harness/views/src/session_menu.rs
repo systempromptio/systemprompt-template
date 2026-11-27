@@ -2,9 +2,11 @@
 //! delete it after a confirmation.
 
 use gpui_kit::{App, Entity, SharedString, Window};
-use harness_store::SessionId;
-use harness_ui::IconName;
-use harness_ui::components::{ButtonKind, DialogAction, DialogSpec, Menu, MenuItem};
+use systemprompt_engine::store::SessionId;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{
+    ButtonKind, DialogAction, DialogSpec, Menu, MenuItem,
+};
 
 use crate::state::AppState;
 use crate::strings::foundation as text;

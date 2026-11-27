@@ -4,12 +4,12 @@
 
 use std::collections::HashSet;
 
-use harness_engine::RunStatus;
-use harness_store::{PartBody, PartId, SessionId};
+use systemprompt_engine::run::RunStatus;
+use systemprompt_engine::store::{PartBody, PartId, SessionId};
 
 use crate::state::session_model::SessionModel;
-use crate::views::transcript::rows::{self, RowKey};
-use crate::views::transcript::tool_info;
+use crate::transcript::rows::{self, RowKey};
+use crate::transcript::tool_info;
 
 pub(super) struct Survey {
     pub(super) revision: u64,

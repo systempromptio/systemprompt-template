@@ -7,9 +7,11 @@
 use std::collections::HashSet;
 use std::hash::BuildHasher;
 
-use harness_ui::Tone;
-use sp_notifications::{Attention, FeedStatus, Notification, NotificationId, UnreadCount};
-use sp_slack::SlackStatus;
+use systemprompt_harness::members::notifications::{
+    Attention, FeedStatus, Notification, NotificationId, UnreadCount,
+};
+use systemprompt_harness::members::slack::SlackStatus;
+use systemprompt_harness_shared::Tone;
 
 /// What the inbox screen's body shows for the feed's status and whether the
 /// inbox holds any item.

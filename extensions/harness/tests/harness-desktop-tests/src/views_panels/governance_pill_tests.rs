@@ -1,12 +1,12 @@
 use chrono::{DateTime, Utc};
-use harness_desktop::views::governance::model::Fix;
-use harness_desktop::views::governance::pill_model::{PillStatus, SwitchTarget, pill};
-use harness_ui::{IconName, Tone};
-use sp_accounts::{AccountsSnapshot, PendingKeyOffer};
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{
+use systemprompt_device::accounts::{AccountsSnapshot, PendingKeyOffer};
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{
     AccountStatus, AccountView, KeyFingerprint, KeyOffer, SyncCounts, SyncErrorKind, SyncStatus,
 };
+use systemprompt_harness_shared::{IconName, Tone};
+use systemprompt_harness_views::governance::model::Fix;
+use systemprompt_harness_views::governance::pill_model::{PillStatus, SwitchTarget, pill};
 
 fn at(seconds: i64) -> DateTime<Utc> {
     DateTime::<Utc>::UNIX_EPOCH + chrono::TimeDelta::seconds(seconds)

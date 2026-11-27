@@ -6,14 +6,14 @@ use gpui_kit::{
     AnyElement, Context, ElementId, InteractiveElement as _, IntoElement, ParentElement as _,
     SharedString, StatefulInteractiveElement as _, Styled as _, div,
 };
-use harness_store::{MessageId, MessageWithParts, Part, PartBody, PartId, SessionId};
-use harness_ui::components::{Button, Divider, Spinner};
-use harness_ui::theme::{radius, size, space, text as type_scale, tokens};
-use harness_ui::{Icon, IconName, Markdown};
+use systemprompt_engine::store::{MessageId, MessageWithParts, Part, PartBody, PartId, SessionId};
+use systemprompt_harness_shared::components::{Button, Divider, Spinner};
+use systemprompt_harness_shared::theme::{radius, size, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{Icon, IconName, Markdown};
 
 use crate::strings::transcript as text;
-use crate::views::transcript::message::file_chip;
-use crate::views::transcript::{TranscriptEvent, TranscriptView};
+use crate::transcript::message::file_chip;
+use crate::transcript::{TranscriptEvent, TranscriptView};
 
 pub(super) fn part_element_id(prefix: &str, id: &PartId) -> ElementId {
     ElementId::Name(SharedString::from(format!("{prefix}-{id}")))

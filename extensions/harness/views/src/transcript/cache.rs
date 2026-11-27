@@ -7,8 +7,8 @@ use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher as _};
 use std::sync::Arc;
 
-use harness_store::PartId;
-use harness_ui::{MarkdownDocument, Patch};
+use systemprompt_engine::store::PartId;
+use systemprompt_harness_shared::{MarkdownDocument, Patch};
 
 #[derive(Debug, Default)]
 pub(crate) struct DocumentCache {

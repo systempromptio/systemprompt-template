@@ -1,11 +1,11 @@
-use harness_desktop::state::session_model::{Effect, SessionModel, Snapshot};
-use harness_engine::{
+use systemprompt_engine::run::{
     CallId, EngineEvent, ErrorKind, QuestionAsk, QuestionId, Reply, RunStatus, SessionFailure,
 };
-use harness_store::{
+use systemprompt_engine::store::{
     Change, DiffSummary, MessageWithParts, ProjectId, RevertMarker, SessionId, Todo, TodoPriority,
     TodoStatus, UserMessage,
 };
+use systemprompt_harness_views::state::session_model::{ModelEffect, SessionModel, Snapshot};
 
 use super::session_model_fixtures::{loaded, permission, session};
 
@@ -18,18 +18,18 @@ fn status_permissions_and_questions_follow_the_engine() {
             session: id.clone(),
             status: RunStatus::Busy
         }),
-        Effect::Changed
+        ModelEffect::Changed
     );
     assert!(model.is_busy());
     let ask = permission(&id);
     let ask_id = ask.id.clone();
     assert_eq!(
         model.apply_event(&EngineEvent::PermissionAsked(Box::new(ask.clone()))),
-        Effect::Changed
+        ModelEffect::Changed
     );
     assert_eq!(
         model.apply_event(&EngineEvent::PermissionAsked(Box::new(ask))),
-        Effect::Unchanged
+        ModelEffect::Unchanged
     );
     let question_id = QuestionId::mint();
     let question = QuestionAsk {
@@ -46,7 +46,7 @@ fn status_permissions_and_questions_follow_the_engine() {
         session: id.clone(),
         reply: Reply::Once,
     };
-    assert_eq!(model.apply_event(&resolved), Effect::Changed);
+    assert_eq!(model.apply_event(&resolved), ModelEffect::Changed);
     assert!(model.resolve_question(&question_id));
     assert!(!model.resolve_question(&question_id));
     assert!(model.permissions.is_empty() && model.questions.is_empty());
@@ -55,7 +55,7 @@ fn status_permissions_and_questions_follow_the_engine() {
             session: id,
             status: RunStatus::Idle
         }),
-        Effect::Changed
+        ModelEffect::Changed
     );
     assert!(!model.is_busy());
 }
@@ -93,8 +93,8 @@ fn todos_and_session_updates_replace_their_values() {
         session_id: id.clone(),
         todos: todos.clone(),
     };
-    assert_eq!(model.apply_change(&change), Effect::Changed);
-    assert_eq!(model.apply_change(&change), Effect::Unchanged);
+    assert_eq!(model.apply_change(&change), ModelEffect::Changed);
+    assert_eq!(model.apply_change(&change), ModelEffect::Unchanged);
     assert_eq!(model.todos, todos);
     let mut renamed = session(&id);
     renamed.title = "Ship it".to_owned();
@@ -139,11 +139,11 @@ fn deletion_clears_pending_work() {
         project_id: ProjectId::mint(),
         parent_id: None,
     };
-    assert_eq!(model.apply_change(&deleted), Effect::Changed);
+    assert_eq!(model.apply_change(&deleted), ModelEffect::Changed);
     assert!(model.deleted);
     assert_eq!(
         model.permissions,
-        Vec::<harness_engine::PermissionAsk>::new()
+        Vec::<systemprompt_engine::run::PermissionAsk>::new()
     );
 }
 
@@ -177,10 +177,16 @@ fn load_sorts_and_filters_what_it_is_given() {
 
 #[test]
 fn effects_merge_towards_reload() {
-    assert_eq!(Effect::Unchanged.merge(Effect::Changed), Effect::Changed);
-    assert_eq!(Effect::Changed.merge(Effect::Reload), Effect::Reload);
     assert_eq!(
-        Effect::Unchanged.merge(Effect::Unchanged),
-        Effect::Unchanged
+        ModelEffect::Unchanged.merge(ModelEffect::Changed),
+        ModelEffect::Changed
+    );
+    assert_eq!(
+        ModelEffect::Changed.merge(ModelEffect::Reload),
+        ModelEffect::Reload
+    );
+    assert_eq!(
+        ModelEffect::Unchanged.merge(ModelEffect::Unchanged),
+        ModelEffect::Unchanged
     );
 }

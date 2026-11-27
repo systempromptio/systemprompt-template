@@ -4,12 +4,10 @@
 
 use std::path::{Path, PathBuf};
 
-use harness_config::{AgentDef, AgentMode, Layout, Paths, Ruleset, Worktree};
-use harness_engine::{Engine, EngineError};
+use systemprompt_engine::config::{AgentDef, AgentMode, Layout, Paths, Ruleset, Worktree};
+use systemprompt_engine::run::{Engine, EngineError};
 
-use crate::views::settings::permissions::rules::{
-    self, FileRules, Group, RulesError, ShownRule, Source,
-};
+use crate::settings::permissions::rules::{self, FileRules, Group, RulesError, ShownRule, Source};
 
 #[derive(Debug)]
 pub(super) struct Request {
@@ -29,7 +27,7 @@ pub(super) enum ProblemKind {
 }
 
 #[derive(Debug)]
-pub(super) struct Problem {
+pub(super) struct RulesProblem {
     pub(super) path: PathBuf,
     pub(super) kind: ProblemKind,
 }
@@ -40,7 +38,7 @@ pub(super) struct RulesView {
     pub(super) user: FileRules,
     pub(super) sources: Vec<Source>,
     pub(super) groups: Vec<Group>,
-    pub(super) problems: Vec<Problem>,
+    pub(super) problems: Vec<RulesProblem>,
 }
 
 pub(super) async fn load(request: Request) -> Result<RulesView, EngineError> {
@@ -143,7 +141,7 @@ fn project_files(layout: &Layout, directory: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
-fn read_rules(path: &Path, home: &Path, problems: &mut Vec<Problem>) -> Option<FileRules> {
+fn read_rules(path: &Path, home: &Path, problems: &mut Vec<RulesProblem>) -> Option<FileRules> {
     let text = match std::fs::read_to_string(path) {
         Ok(text) => text,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
@@ -154,7 +152,7 @@ fn read_rules(path: &Path, home: &Path, problems: &mut Vec<Problem>) -> Option<F
         },
         Err(error) => {
             tracing::warn!(path = %path.display(), error = %error, "settings file unreadable");
-            problems.push(Problem {
+            problems.push(RulesProblem {
                 path: path.to_path_buf(),
                 kind: ProblemKind::Read(error),
             });
@@ -165,7 +163,7 @@ fn read_rules(path: &Path, home: &Path, problems: &mut Vec<Problem>) -> Option<F
         Ok(rules) => Some(rules),
         Err(error) => {
             tracing::warn!(path = %path.display(), error = %error, "settings rules unreadable");
-            problems.push(Problem {
+            problems.push(RulesProblem {
                 path: path.to_path_buf(),
                 kind: ProblemKind::Rules(error),
             });

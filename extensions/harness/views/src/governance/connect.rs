@@ -6,10 +6,10 @@ use gpui_kit::{
     AppContext as _, Context, Entity, EventEmitter, Focusable as _, IntoElement,
     ParentElement as _, Render, SharedString, Styled as _, Task, Window, div,
 };
-use harness_ui::Tone;
-use harness_ui::components::{Banner, Button, Checkbox, Spinner, TextField};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use sp_protocol::view::SignInOutcome;
+use systemprompt_device::view::SignInOutcome;
+use systemprompt_harness_shared::Tone;
+use systemprompt_harness_shared::components::{Banner, Button, Checkbox, Spinner, TextField};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
 
 use crate::app::{Services, runtime};
 use crate::strings::governance as text;

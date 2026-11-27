@@ -8,16 +8,16 @@ use gpui_kit::{
     AnyElement, AnyView, App, AppContext as _, Context, Entity, FontWeight, IntoElement,
     ParentElement as _, Render, SharedString, Styled as _, Subscription, Task, Window, div,
 };
-use harness_config::{AgentDef, Origin, Skill};
-use harness_engine::EngineError;
-use harness_ui::IconName;
-use harness_ui::components::{Badge, IconButton};
-use harness_ui::theme::{space, text as type_scale, tokens};
+use systemprompt_engine::config::{AgentDef, Origin, Skill};
+use systemprompt_engine::run::EngineError;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Badge, IconButton};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
 
 use crate::app::{Services, runtime};
+use crate::settings::{SettingsPage, layout, reveal};
 use crate::state::AppState;
 use crate::strings::settings as text;
-use crate::views::settings::{SettingsPage, layout, reveal};
 
 pub(super) fn settings_page() -> SettingsPage {
     SettingsPage {

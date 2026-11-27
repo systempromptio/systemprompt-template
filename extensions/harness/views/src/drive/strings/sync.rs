@@ -4,8 +4,8 @@
 //! recent activity.
 
 use chrono::{DateTime, Local, Utc};
-use sp_drive::sync::{HeldReason, SyncProblemKind};
-use sp_drive::{ActivityKind, SyncPhase};
+use systemprompt_drive::sync::{HeldReason, SyncProblemKind};
+use systemprompt_drive::{ActivityKind, SyncPhase};
 
 use super::when;
 

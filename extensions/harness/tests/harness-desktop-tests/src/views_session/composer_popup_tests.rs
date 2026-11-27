@@ -1,7 +1,7 @@
-use harness_desktop::views::composer::popup::{
+use systemprompt_engine::run::CommandInfo;
+use systemprompt_harness_views::composer::popup::{
     Popup, PopupItem, PopupKind, Trigger, command_items, insert_mention, path_items, trigger,
 };
-use harness_engine::CommandInfo;
 
 fn command(name: &str) -> CommandInfo {
     CommandInfo {

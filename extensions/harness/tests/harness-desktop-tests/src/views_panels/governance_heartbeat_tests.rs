@@ -1,7 +1,9 @@
-use harness_desktop::views::governance::heartbeat::{HeartbeatLine, Unsupported, heartbeat_line};
-use harness_ui::Tone;
-use sp_protocol::wire::heartbeat::WindowStatus;
-use sp_sync::HeartbeatState;
+use systemprompt_harness::sync::HeartbeatState;
+use systemprompt_harness_shared::Tone;
+use systemprompt_harness_views::governance::heartbeat::{
+    HeartbeatLine, Unsupported, heartbeat_line,
+};
+use systemprompt_models::bridge::instance::WindowStatus;
 
 #[test]
 fn heartbeat_states_map_to_lines() {

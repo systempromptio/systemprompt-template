@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use harness_config::{Action, Rule};
-use harness_desktop::views::settings::permissions::jsonc::strip_jsonc;
-use harness_desktop::views::settings::permissions::rules::{
+use serde_json::Value;
+use systemprompt_engine::config::{Action, Rule};
+use systemprompt_harness_views::settings::permissions::jsonc::strip_jsonc;
+use systemprompt_harness_views::settings::permissions::rules::{
     EditValue, RulesError, ShownRule, add_edit, group, parse_file, remove_edit, to_json,
 };
-use serde_json::Value;
 
 fn home() -> &'static Path {
     Path::new("/home/user")
@@ -75,7 +75,7 @@ fn an_empty_file_is_editable_and_has_no_rules() {
     assert!(file.editable);
     assert_eq!(
         file.entries,
-        Vec::<harness_desktop::views::settings::permissions::rules::Entry>::new()
+        Vec::<systemprompt_harness_views::settings::permissions::rules::Entry>::new()
     );
 }
 

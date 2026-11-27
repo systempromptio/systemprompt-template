@@ -2,16 +2,16 @@
 //! attention, Sync now and the settings page.
 
 use super::pill::{GovernancePill, MENU_WIDTH};
+use crate::governance::model::Fix;
+use crate::governance::pill_model::{PillModel, PillStatus};
 use crate::strings::governance as text;
-use crate::views::governance::model::Fix;
-use crate::views::governance::pill_model::{PillModel, PillStatus};
 use gpui_kit::{
     AnyElement, Context, Div, FontWeight, IntoElement, ParentElement as _, SharedString,
     Styled as _, div, px,
 };
-use harness_ui::IconName;
-use harness_ui::components::{Button, Divider, ListRow, SectionHeader};
-use harness_ui::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Button, Divider, ListRow, SectionHeader};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
 
 impl GovernancePill {
     pub(super) fn render_menu(model: &PillModel, cx: &Context<Self>) -> AnyElement {

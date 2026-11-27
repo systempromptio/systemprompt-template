@@ -1,14 +1,14 @@
 use std::collections::HashSet;
 use std::time::Duration;
 
-use harness_notifications_ui::model::{
+use systemprompt_device::view::SyncErrorKind;
+use systemprompt_harness::members::notifications::{FeedStatus, UnreadCount};
+use systemprompt_harness::members::slack::SlackStatus;
+use systemprompt_harness_shared::Tone;
+use systemprompt_harness_views::notifications::model::{
     Action, InboxBody, Pending, accepts_actions, feed_tone, inbox_body, needs_reader, shows_badge,
     slack_tone, unseen,
 };
-use harness_ui::Tone;
-use sp_notifications::{FeedStatus, UnreadCount};
-use sp_protocol::view::SyncErrorKind;
-use sp_slack::SlackStatus;
 
 use crate::support::{at, id_of, notification};
 

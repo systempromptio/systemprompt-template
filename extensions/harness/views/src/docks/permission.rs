@@ -8,14 +8,16 @@ use gpui_kit::{
     AnyElement, Context, Div, FontWeight, IntoElement, ParentElement as _, SharedString,
     Styled as _, div, px,
 };
-use harness_engine::{PermissionAsk, PermissionId, Reply};
-use harness_ui::components::{Badge, Button, KeyHint};
-use harness_ui::theme::{mono_font, radius, size, space, text as type_scale, tokens};
-use harness_ui::{CodeBlock, DiffView, Icon, IconName, Patch, Tone};
+use systemprompt_engine::run::{PermissionAsk, PermissionId, Reply};
+use systemprompt_harness_shared::components::{Badge, Button, KeyHint};
+use systemprompt_harness_shared::theme::{
+    mono_font, radius, size, space, text as type_scale, tokens,
+};
+use systemprompt_harness_shared::{CodeBlock, DiffView, Icon, IconName, Patch, Tone};
 
+use crate::docks::DocksView;
+use crate::docks::permission_info::{self, Preview};
 use crate::strings::docks as text;
-use crate::views::docks::DocksView;
-use crate::views::docks::permission_info::{self, Preview};
 
 const PREVIEW_HEIGHT: f32 = 240.0;
 

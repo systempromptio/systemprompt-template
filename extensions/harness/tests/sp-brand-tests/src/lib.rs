@@ -1,4 +1,5 @@
-//! Tests for sp-brand, through its public API.
+//! Tests for systemprompt-harness-brand, through
+//! the public API.
 
 #[cfg(test)]
 mod collision_tests;

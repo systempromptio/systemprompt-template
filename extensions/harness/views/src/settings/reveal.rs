@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use gpui_kit::{Context, Entity, Task};
-use harness_ui::Tone;
+use systemprompt_harness_shared::Tone;
 
 use crate::app::{Services, runtime};
 use crate::state::AppState;

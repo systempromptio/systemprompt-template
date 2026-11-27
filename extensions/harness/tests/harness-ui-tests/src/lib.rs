@@ -1,4 +1,5 @@
-//! Tests for harness-ui, through its public API.
+//! Tests for the design system of systemprompt-harness-shared and the theme
+//! crate, through the public API.
 
 #[cfg(test)]
 mod code_tests;

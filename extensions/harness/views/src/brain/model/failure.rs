@@ -1,8 +1,8 @@
 //! How a failed brain call is shown: the error reduced to what the person can
 //! act on. The error itself is logged where it happens.
 
-use sp_brain::BrainError;
-use sp_client::ClientError;
+use systemprompt_device::client::ClientError;
+use systemprompt_harness::members::brain::BrainError;
 
 /// What went wrong with a brain call, as a view tells the person.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

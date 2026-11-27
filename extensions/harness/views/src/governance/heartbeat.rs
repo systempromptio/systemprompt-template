@@ -1,9 +1,9 @@
 //! The heartbeat line of the Governance page: online, failing, paused, or a
 //! version the instance does not accept with the minimum it asks for.
 
-use harness_ui::Tone;
-use sp_protocol::wire::heartbeat::WindowStatus;
-use sp_sync::HeartbeatState;
+use systemprompt_harness::sync::HeartbeatState;
+use systemprompt_harness_shared::Tone;
+use systemprompt_models::bridge::instance::WindowStatus;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Unsupported {

@@ -16,7 +16,7 @@ mod toolkit_colors;
 
 use gpui_kit::component::{Theme, ThemeMode};
 use gpui_kit::{App, Global, SharedString, WindowAppearance};
-use sp_brand::Brand;
+use systemprompt_harness_brand::Brand;
 
 pub use color::{AA_LARGE, AA_TEXT, Color, contrast_ratio};
 pub use highlight::highlight_theme;
@@ -85,7 +85,7 @@ impl BrandTheme {
 
     #[must_use]
     pub fn current() -> &'static Self {
-        Self::for_brand(sp_brand::identity().brand())
+        Self::for_brand(systemprompt_harness_brand::identity().brand())
     }
 
     #[must_use]

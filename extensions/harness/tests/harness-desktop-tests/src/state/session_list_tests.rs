@@ -2,8 +2,8 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 
 use chrono::{DateTime, NaiveDate, Utc};
-use harness_desktop::state::session_list::{DayBucket, SessionList, SessionRow, bucket};
-use harness_store::{ProjectId, Session, SessionId};
+use systemprompt_engine::store::{ProjectId, Session, SessionId};
+use systemprompt_harness_views::state::session_list::{DayBucket, SessionList, SessionRow, bucket};
 
 const DAY_MS: i64 = 24 * 60 * 60 * 1000;
 
@@ -18,8 +18,8 @@ fn session(title: &str, updated_at: i64, parent: Option<&SessionId>) -> Session 
         model: None,
         permission: None,
         revert: None,
-        summary: harness_store::DiffSummary::default(),
-        metadata: harness_store::JsonMap::new(),
+        summary: systemprompt_engine::store::DiffSummary::default(),
+        metadata: systemprompt_engine::store::JsonMap::new(),
         created_at: updated_at,
         updated_at,
         archived_at: None,

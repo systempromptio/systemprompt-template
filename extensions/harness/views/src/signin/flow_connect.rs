@@ -1,13 +1,13 @@
 //! Step 1 of the sign-in flow: the address as it is typed and checked, and the
 //! browser and token sign-ins it starts.
 
-use sp_accounts::ProbeResult;
-use sp_protocol::view::SignInFailure;
+use systemprompt_device::accounts::ProbeResult;
+use systemprompt_device::view::SignInFailure;
 
 use super::{
     Check, Effect, Failure, Flow, Method, Problem, RETRY_DELAY, SETTLE_DELAY, SignInRequest, Target,
 };
-use crate::views::signin::address::{Credential, instance_target};
+use crate::signin::address::{Credential, instance_target};
 
 impl Flow {
     pub(super) fn edited(&mut self, text: String) -> Vec<Effect> {

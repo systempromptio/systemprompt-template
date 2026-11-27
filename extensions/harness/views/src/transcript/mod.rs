@@ -36,20 +36,20 @@ use gpui_kit::{
     InteractiveElement as _, IntoElement, ListAlignment, ListScrollEvent, ListState,
     ParentElement as _, Render, Styled as _, Subscription, Task, WeakEntity, Window, div, px,
 };
-use harness_engine::RunStatus;
-use harness_store::{Change, PartId, SessionId};
-use harness_ui::components::LIST_CONTEXT;
-use harness_ui::theme::tokens;
+use systemprompt_engine::run::RunStatus;
+use systemprompt_engine::store::{Change, PartId, SessionId};
+use systemprompt_harness_shared::components::LIST_CONTEXT;
+use systemprompt_harness_shared::theme::tokens;
 
 use crate::app::Services;
 use crate::app::runtime::{self, FRAME};
 use crate::state::extensions::Contributions;
 use crate::state::{AppState, SessionState};
-use crate::views::transcript::cache::{DocumentCache, PatchCache};
-use crate::views::transcript::children::Children;
-use crate::views::transcript::footer::RetryClock;
-use crate::views::transcript::rows::RowKey;
-use crate::views::transcript::survey::survey;
+use crate::transcript::cache::{DocumentCache, PatchCache};
+use crate::transcript::children::Children;
+use crate::transcript::footer::RetryClock;
+use crate::transcript::rows::RowKey;
+use crate::transcript::survey::survey;
 
 const OVERDRAW: f32 = 800.0;
 const TICK: Duration = Duration::from_secs(1);

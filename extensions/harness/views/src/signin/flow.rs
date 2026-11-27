@@ -6,9 +6,9 @@
 
 use std::time::Duration;
 
-use sp_accounts::ProbeResult;
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{InstanceSummary, SignInFailure, SignInOutcome};
+use systemprompt_device::accounts::ProbeResult;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{InstanceSummary, SignInFailure, SignInOutcome};
 
 use super::address::{Credential, InstanceChoice};
 

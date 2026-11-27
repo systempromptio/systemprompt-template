@@ -1,4 +1,6 @@
-use harness_ui::diff::{DiffLine, FileStatus, LineKind, Patch, Segment, Stat, fold_unchanged};
+use systemprompt_harness_shared::diff::{
+    DiffLine, FileStatus, LineKind, Patch, Segment, Stat, fold_unchanged,
+};
 
 const GIT: &str = "diff --git a/src/lib.rs b/src/lib.rs
 index 1111111..2222222 100644

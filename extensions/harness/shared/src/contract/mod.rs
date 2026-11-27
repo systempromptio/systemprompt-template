@@ -1,9 +1,10 @@
 //! The shell's extension contract.
 //!
 //! A feature with its own screens is a [`ShellExtension`]: a
-//! `Default`-constructed type registered with [`register_shell_extension!`],
-//! keyed by the same extension id as its instance-side half, and found at
-//! startup by [`ShellExtensions::discover`]. It contributes screens placed in
+//! `Default`-constructed type named in a registration list of
+//! [`ShellExtensionRegistration`]s, keyed by the same extension id as its
+//! instance-side half, and built at startup by
+//! [`ShellExtensions::from_registrations`]. It contributes screens placed in
 //! the sidebar or the titlebar (optionally with a titlebar item it draws
 //! itself, such as a live count), settings panes and transcript adornments
 //! that may ask to be drawn again, each built from the [`ShellContext`] the
@@ -22,9 +23,6 @@ mod discovery;
 mod extension;
 mod register;
 
-#[doc(hidden)]
-pub use inventory as __inventory;
-
 pub use actions::DraftInSession;
 pub use context::ShellContext;
 pub use contribution::{
@@ -33,6 +31,7 @@ pub use contribution::{
 };
 pub use discovery::ShellExtensions;
 pub use extension::ShellExtension;
-pub use harness_engine::extension::{Contributed, ExtensionMetadata};
-pub use harness_ids::{ExtensionId, extension_id};
 pub use register::ShellExtensionRegistration;
+pub use systemprompt_engine::run::extension::{Contributed, ExtensionMetadata};
+pub use systemprompt_identifiers::engine::ExtensionId;
+pub use systemprompt_identifiers::extension_id;

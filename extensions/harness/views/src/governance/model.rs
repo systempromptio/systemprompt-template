@@ -5,12 +5,12 @@
 //! is tested without a window.
 
 use chrono::{DateTime, Utc};
-use harness_ui::Tone;
-use sp_accounts::AccountsSnapshot;
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{
+use systemprompt_device::accounts::AccountsSnapshot;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{
     AccountStatus, AccountView, KeyFingerprint, SyncCounts, SyncErrorKind, SyncStatus,
 };
+use systemprompt_harness_shared::Tone;
 
 use crate::strings::governance as text;
 

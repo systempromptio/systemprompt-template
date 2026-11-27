@@ -10,15 +10,15 @@ use gpui_kit::{
     AnyElement, App, AsyncApp, InteractiveElement as _, IntoElement, ParentElement as _,
     SharedString, StatefulInteractiveElement as _, Styled as _, Task, Window, div,
 };
-use harness_shell::{OnChange, ShellContext, TranscriptAdornment};
-use harness_store::{Message, MessageWithParts};
-use harness_ui::components::Badge;
-use harness_ui::theme::space;
-use harness_ui::{IconName, Tone, tooltip};
-use sp_brain::BrainService;
+use systemprompt_engine::store::{Message, MessageWithParts};
+use systemprompt_harness::members::brain::BrainService;
+use systemprompt_harness_shared::components::Badge;
+use systemprompt_harness_shared::contract::{OnChange, ShellContext, TranscriptAdornment};
+use systemprompt_harness_shared::theme::space;
+use systemprompt_harness_shared::{IconName, Tone, tooltip};
 
-use crate::model::LatestReplies;
-use crate::strings;
+use crate::brain::model::LatestReplies;
+use crate::brain::strings;
 
 pub(crate) struct RecalledFacts {
     service: BrainService,

@@ -3,13 +3,15 @@
 use std::fmt;
 use std::sync::Arc;
 
-use harness_engine::Engine;
-use harness_ids::ExtensionId;
-use harness_store::Store;
-use sp_accounts::Accounts;
-use sp_brand::Identity;
-use sp_client::HttpClient;
-use sp_extension::{Enablement, ExtensionSettings, Handles, SettingsAccess, SpPaths};
+use systemprompt_device::accounts::Accounts;
+use systemprompt_device::client::HttpClient;
+use systemprompt_engine::run::Engine;
+use systemprompt_engine::store::Store;
+use systemprompt_harness::extension::{
+    Enablement, ExtensionSettings, Handles, SettingsAccess, SpPaths,
+};
+use systemprompt_harness_brand::Identity;
+use systemprompt_identifiers::engine::ExtensionId;
 use tokio::runtime::Handle;
 
 /// Everything a shell extension's views work with, built once by the

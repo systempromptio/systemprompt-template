@@ -1,4 +1,4 @@
-//! The native shell and composition root: reads the launch, becomes (or hands
+//! The native shell: reads the launch, becomes (or hands
 //! off to) the running instance, starts the services on one tokio runtime,
 //! opens the window and shuts everything down when the app quits.
 //!
@@ -6,10 +6,6 @@
 //! workspace reaches what it tests.
 
 pub mod app;
-pub mod keymap;
-pub mod state;
-pub mod strings;
-pub mod views;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -18,12 +14,14 @@ use std::time::Duration;
 use anyhow::Context as _;
 use tokio::runtime::Runtime;
 
-use crate::app::deeplink::{self, LaunchRequest};
-use crate::app::paths::{self, AppPaths, Forbidden};
-use crate::app::settings_store::SettingsStore;
 use crate::app::single_instance::{self, Endpoint, Instance};
 use crate::app::window::{self, Launch};
-use crate::app::{Services, ServicesConfig, logging};
+use systemprompt_harness_views::app::deeplink::{self, LaunchRequest};
+use systemprompt_harness_views::app::paths::{self, AppPaths, Forbidden};
+use systemprompt_harness_views::app::settings_store::SettingsStore;
+use systemprompt_harness_views::app::{Services, ServicesConfig};
+
+use crate::app::logging;
 
 const SHUTDOWN_WAIT: Duration = Duration::from_secs(5);
 const RUNTIME_DRAIN: Duration = Duration::from_secs(2);
@@ -40,7 +38,7 @@ pub fn run() -> ExitCode {
 }
 
 fn start() -> anyhow::Result<ExitCode> {
-    let identity = sp_brand::identity();
+    let identity = systemprompt_harness_brand::identity();
     let home = dirs::home_dir().unwrap_or_else(|| identity.data_root());
     let paths = AppPaths {
         documents: dirs::document_dir(),
@@ -122,11 +120,11 @@ fn launch_directory(
             .ok()
             .and_then(|exe| exe.parent().map(Path::to_path_buf)),
     };
-    let scheme = sp_brand::identity().scheme();
+    let scheme = systemprompt_harness_brand::identity().scheme();
     let requested = request
         .project_directory(scheme)
         .and_then(|directory| paths::absolute(&directory));
-    let last = settings.read(|settings| settings.last_project.clone());
+    let last = settings.get().last_project;
     paths::choose_directory(requested, last, &paths.home, &forbidden, Path::is_dir)
 }
 

@@ -7,13 +7,13 @@ use gpui_kit::{
     AnyElement, Context, FontWeight, IntoElement, ParentElement as _, SharedString, Styled as _,
     div, px,
 };
-use harness_ui::components::{Avatar, Badge, Button, ButtonKind, EmptyState};
-use harness_ui::theme::{mono_font, radius, space, text as type_scale, tokens};
-use harness_ui::{IconName, Tone};
+use systemprompt_harness_shared::components::{Avatar, Badge, Button, ButtonKind, EmptyState};
+use systemprompt_harness_shared::theme::{mono_font, radius, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
 
+use crate::governance::model::{InstanceAction, InstanceModel};
+use crate::governance::page::{AccountTarget, GovernancePage};
 use crate::strings::governance as text;
-use crate::views::governance::model::{InstanceAction, InstanceModel};
-use crate::views::governance::page::{GovernancePage, Target};
 
 pub(super) const LABEL_WIDTH: f32 = 112.;
 
@@ -42,7 +42,7 @@ pub(crate) fn instance_list(rows: &[InstanceModel], cx: &Context<GovernancePage>
 
 fn instance_card(row: &InstanceModel, index: usize, cx: &Context<GovernancePage>) -> AnyElement {
     let palette = *tokens(cx);
-    let target = Target {
+    let target = AccountTarget {
         id: row.id.clone(),
         name: row.name.clone(),
         url: row.url.clone(),
@@ -75,7 +75,7 @@ fn instance_card(row: &InstanceModel, index: usize, cx: &Context<GovernancePage>
 fn header(
     row: &InstanceModel,
     index: usize,
-    target: &Target,
+    target: &AccountTarget,
     cx: &Context<GovernancePage>,
 ) -> AnyElement {
     let mut badges: Vec<Badge> = Vec::new();
@@ -139,7 +139,7 @@ fn header(
 fn action_button(
     action: InstanceAction,
     index: usize,
-    target: &Target,
+    target: &AccountTarget,
     cx: &Context<GovernancePage>,
 ) -> Option<Button> {
     let (id, label, kind) = match action {

@@ -2,9 +2,11 @@
 //! use, what the token field holds, the instances step 2 lists and the sync
 //! status that ends the finishing step.
 
-use sp_accounts::AccountsSnapshot;
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{AccountStatus, AccountView, InstanceSummary, KeyFingerprint, SyncStatus};
+use systemprompt_device::accounts::AccountsSnapshot;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{
+    AccountStatus, AccountView, InstanceSummary, KeyFingerprint, SyncStatus,
+};
 use url::Url;
 
 use super::flow::FirstSync;

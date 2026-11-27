@@ -4,14 +4,14 @@
 use gpui_kit::{
     AnyElement, AnyView, App, AppContext as _, Context, Entity, IntoElement, Render, Window,
 };
-use harness_ui::IconName;
-use harness_ui::components::KeyHint;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::KeyHint;
 
 use crate::app::Services;
 use crate::keymap;
+use crate::settings::{SettingsPage, layout};
 use crate::state::AppState;
 use crate::strings::settings as text;
-use crate::views::settings::{SettingsPage, layout};
 
 pub const APP_KEYS: [(&str, &str); 6] = [
     (text::KEY_NEW_SESSION, keymap::NEW_SESSION_KEYS),

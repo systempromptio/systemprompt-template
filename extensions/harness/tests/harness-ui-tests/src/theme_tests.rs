@@ -1,8 +1,8 @@
 use gpui_kit::WindowAppearance;
-use harness_ui::theme::{
+use systemprompt_harness_brand::Brand;
+use systemprompt_harness_shared::theme::{
     AA_LARGE, AA_TEXT, BrandTheme, Color, Palette, Scheme, Tone, contrast_ratio, highlight_theme,
 };
-use sp_brand::Brand;
 
 fn palettes() -> Vec<(&'static str, &'static Palette)> {
     BrandTheme::all()

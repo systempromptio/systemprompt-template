@@ -7,11 +7,11 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use harness_config::Skill;
-use harness_engine::Engine;
-use harness_mcp::{ServerStatus, StatusMap};
-use sp_governance::Governance;
-use sp_sync::SyncEngine;
+use systemprompt_engine::config::Skill;
+use systemprompt_engine::mcp::{ServerStatus, StatusMap};
+use systemprompt_engine::run::Engine;
+use systemprompt_harness::governance::Governance;
+use systemprompt_harness::sync::SyncEngine;
 
 use crate::app::Services;
 

@@ -11,17 +11,18 @@ use gpui_kit::{
     ParentElement as _, PathPromptOptions, Render, SharedString, StatefulInteractiveElement as _,
     Styled as _, Task, WeakEntity, Window, div, px,
 };
-use harness_shell::ShellContext;
-use harness_ui::components::{Badge, Banner, Button, Card};
-use harness_ui::theme::{space, text as type_scale, tokens};
-use harness_ui::{Icon, IconName, Tone};
-use sp_drive::{DriveExtension, DriveHandle, DriveSettings, DriveStatus};
-use sp_extension::ExtensionSettings;
+use systemprompt_drive::DriveStatus;
+use systemprompt_harness::extension::ExtensionSettings;
+use systemprompt_harness::members::drive::{DriveExtension, DriveHandle, DriveSettings};
+use systemprompt_harness_shared::components::{Badge, Banner, Button, Card};
+use systemprompt_harness_shared::contract::ShellContext;
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::{Icon, IconName, Tone};
 use tokio::sync::watch;
 
-use crate::bridge;
-use crate::model::{SyncFolder, default_folder};
-use crate::strings::settings as text;
+use crate::drive::bridge;
+use crate::drive::model::{SyncFolder, default_folder};
+use crate::drive::strings::settings as text;
 
 const PAGE_WIDTH: f32 = 760.0;
 

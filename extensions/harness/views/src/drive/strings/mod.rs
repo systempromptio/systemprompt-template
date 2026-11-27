@@ -7,11 +7,11 @@
 pub mod settings;
 pub mod sync;
 
+use crate::drive::items::DriveFailure;
 use chrono::{DateTime, Datelike as _, Local};
-use sp_drive::DocumentKind;
-use sp_drive::view::DriveFailure;
+use systemprompt_harness::members::drive::DocumentKind;
 
-use crate::model::BrowseScope;
+use crate::drive::model::BrowseScope;
 
 pub const DRIVE_NAME: &str = "Drive";
 pub const DRIVE_TITLE: &str = "Drive";

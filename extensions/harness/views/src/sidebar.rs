@@ -12,18 +12,18 @@ use gpui_kit::{
     AnyElement, AppContext as _, Context, Entity, IntoElement, ParentElement as _, Render,
     SharedString, Styled as _, Subscription, Window, div, px, uniform_list,
 };
-use harness_store::SessionId;
-use harness_ui::IconName;
-use harness_ui::components::{
+use systemprompt_engine::store::SessionId;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{
     Avatar, Button, EmptyState, IconButton, ListRow, SectionHeader, Spinner, TextField,
 };
-use harness_ui::theme::{space, tokens};
+use systemprompt_harness_shared::theme::{space, tokens};
 
 use crate::app::Services;
+use crate::session_menu::session_menu;
 use crate::state::{AppState, Route, SessionRow};
 use crate::strings::foundation as text;
-use crate::views::session_menu::session_menu;
-use crate::views::{extension_entries, projects};
+use crate::{extension_entries, projects};
 
 const WIDTH: f32 = 264.0;
 

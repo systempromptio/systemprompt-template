@@ -1,12 +1,12 @@
 use chrono::{DateTime, Utc};
-use harness_desktop::views::governance::model::{
+use systemprompt_device::accounts::{AccountsSnapshot, PendingKeyOffer};
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_device::view::{
+    AccountStatus, AccountView, KeyFingerprint, KeyOffer, SyncCounts, SyncErrorKind, SyncStatus,
+};
+use systemprompt_harness_views::governance::model::{
     Ago, Fix, Inputs, InstanceAction, LastSynced, SyncLine, ago, display_name, fix, instances,
     remember_synced, short_fingerprint,
-};
-use sp_accounts::{AccountsSnapshot, PendingKeyOffer};
-use sp_protocol::ids::AccountId;
-use sp_protocol::view::{
-    AccountStatus, AccountView, KeyFingerprint, KeyOffer, SyncCounts, SyncErrorKind, SyncStatus,
 };
 
 fn at(seconds: i64) -> DateTime<Utc> {

@@ -7,13 +7,13 @@ use gpui_kit::{
     AnyElement, Context, FontWeight, IntoElement, ParentElement as _, SharedString, Styled as _,
     div,
 };
-use harness_engine::RunStatus;
-use harness_ui::components::{Banner, Button, Spinner};
-use harness_ui::theme::{size, space, text as type_scale, tokens};
-use harness_ui::{Icon, IconName};
+use systemprompt_engine::run::RunStatus;
+use systemprompt_harness_shared::components::{Banner, Button, Spinner};
+use systemprompt_harness_shared::theme::{size, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{Icon, IconName};
 
 use crate::strings::transcript as text;
-use crate::views::transcript::TranscriptView;
+use crate::transcript::TranscriptView;
 
 #[derive(Debug, Default)]
 pub(crate) struct RetryClock {

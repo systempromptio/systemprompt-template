@@ -10,15 +10,15 @@ use gpui_kit::{
     AnyView, App, AppContext as _, Context, IntoElement, ParentElement as _, Render, Styled as _,
     Task, Window, div, px,
 };
-use harness_shell::ShellContext;
-use harness_ui::components::{ActionHandler, Badge, IconButton};
-use harness_ui::{IconName, Tone};
-use sp_notifications::Inbox;
+use systemprompt_harness::members::notifications::Inbox;
+use systemprompt_harness_shared::components::{ActionHandler, Badge, IconButton};
+use systemprompt_harness_shared::contract::ShellContext;
+use systemprompt_harness_shared::{IconName, Tone};
 use tokio::sync::watch;
 
-use crate::extension::notifications_handle;
-use crate::model::shows_badge;
-use crate::{bridge, strings as text};
+use crate::notifications::extension::notifications_handle;
+use crate::notifications::model::shows_badge;
+use crate::notifications::{bridge, strings as text};
 
 const BADGE_OFFSET: f32 = -4.0;
 

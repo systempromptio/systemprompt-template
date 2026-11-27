@@ -11,7 +11,7 @@
 use std::future::Future;
 
 use gpui_kit::{AsyncApp, Context, Task, WeakEntity};
-use harness_tasks::OwnedTask;
+use systemprompt_traits::OwnedTask;
 use tokio::runtime::Handle;
 use tokio::sync::watch;
 
@@ -33,7 +33,7 @@ where
         OwnedTask::spawn(name, future)
     };
     cx.spawn(
-        async move |this: WeakEntity<T>, cx: &mut AsyncApp| match job.join().await {
+        async move |this: WeakEntity<T>, cx: &mut AsyncApp| match job.join_named().await {
             Ok(value) => {
                 if this
                     .update(cx, move |this, cx| done(this, value, cx))

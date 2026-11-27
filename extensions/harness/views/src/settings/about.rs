@@ -8,13 +8,13 @@ use gpui_kit::{
     AnyElement, AnyView, App, AppContext as _, Context, Entity, IntoElement, Render, SharedString,
     Subscription, Task, Window,
 };
-use harness_ui::IconName;
-use harness_ui::components::Button;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::Button;
 
 use crate::app::Services;
+use crate::settings::{SettingsPage, layout, reveal};
 use crate::state::AppState;
 use crate::strings::settings as text;
-use crate::views::settings::{SettingsPage, layout, reveal};
 
 pub(super) fn settings_page() -> SettingsPage {
     SettingsPage {

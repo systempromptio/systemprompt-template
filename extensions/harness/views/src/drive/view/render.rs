@@ -2,11 +2,11 @@
 //! panel, or the withheld state. Notices the screen raised show as toasts.
 
 use super::{DriveView, FOLDER_PANE, LIST_PANE};
-use crate::strings as text;
+use crate::drive::strings as text;
 use gpui_kit::{Context, IntoElement, ParentElement as _, Render, Styled as _, Window, div, px};
-use harness_ui::IconName;
-use harness_ui::components::{EmptyState, Toast};
-use harness_ui::theme::tokens;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{EmptyState, Toast};
+use systemprompt_harness_shared::theme::tokens;
 
 impl Render for DriveView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {

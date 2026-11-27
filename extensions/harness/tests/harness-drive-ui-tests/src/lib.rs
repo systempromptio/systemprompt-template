@@ -1,4 +1,5 @@
-//! Tests for harness-drive-ui, through its public API.
+//! Tests for the Drive screens of systemprompt-harness-views, through
+//! the public API.
 
 #[cfg(test)]
 mod browse_tests;

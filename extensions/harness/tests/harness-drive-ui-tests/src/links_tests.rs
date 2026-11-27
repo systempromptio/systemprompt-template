@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use harness_drive_ui::model::{DriveTarget, local_path, web_link};
-use sp_protocol::ids::AccountId;
+use systemprompt_device::protocol::ids::AccountId;
+use systemprompt_harness_views::drive::model::{DriveTarget, local_path, web_link};
 
 use crate::fixtures::id;
 

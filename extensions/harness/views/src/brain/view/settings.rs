@@ -6,15 +6,15 @@
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, Render, Styled as _, Task, Window, div,
 };
-use harness_shell::ShellContext;
-use harness_ui::components::{Banner, Card, StatusDot, Toggle};
-use harness_ui::theme::{space, text, tokens};
-use sp_brain::{BRAIN_EXTENSION, BrainService, BrainSettings};
-use sp_extension::{Enablement, ExtensionSettings};
+use systemprompt_harness::extension::{Enablement, ExtensionSettings};
+use systemprompt_harness::members::brain::{BRAIN_EXTENSION, BrainService, BrainSettings};
+use systemprompt_harness_shared::components::{Banner, Card, StatusDot, Toggle};
+use systemprompt_harness_shared::contract::ShellContext;
+use systemprompt_harness_shared::theme::{space, text, tokens};
 
 use super::{bridge, tone};
-use crate::model::Availability;
-use crate::strings;
+use crate::brain::model::Availability;
+use crate::brain::strings;
 
 pub(crate) struct BrainSettingsPane {
     settings: ExtensionSettings,

@@ -5,13 +5,13 @@ use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, Render, SharedString, Styled as _,
     Window, div,
 };
-use harness_ui::IconName;
-use harness_ui::components::{Button, EmptyState, IconButton, Spinner};
-use harness_ui::theme::{space, tokens};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::components::{Button, EmptyState, IconButton, Spinner};
+use systemprompt_harness_shared::theme::{space, tokens};
 
 use super::{BrainScreen, Tab};
-use crate::model::{Availability, BrainFailure};
-use crate::strings;
+use crate::brain::model::{Availability, BrainFailure};
+use crate::brain::strings;
 
 impl Render for BrainScreen {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {

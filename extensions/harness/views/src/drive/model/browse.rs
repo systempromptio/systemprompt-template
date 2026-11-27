@@ -4,16 +4,16 @@
 
 use std::collections::HashSet;
 
-use sp_drive::ListQuery;
-use sp_drive::view::{DocumentItem, DriveFailure, FolderNode};
-use sp_protocol::ids::{DocumentFolderId, DocumentId};
-use sp_protocol::wire::drive::DriveScope;
+use crate::drive::items::{DocumentItem, DriveFailure, FolderNode};
+use systemprompt_drive::ListQuery;
+use systemprompt_identifiers::{DocumentFolderId, DocumentId};
+use systemprompt_models::documents::client::DriveScope;
 
 const PAGE_SIZE: u32 = 100;
 
 /// One read of the Drive as the screen shows it.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub enum Load<T> {
+pub enum DriveLoad<T> {
     #[default]
     Idle,
     Loading,
@@ -21,7 +21,7 @@ pub enum Load<T> {
     Failed(DriveFailure),
 }
 
-impl<T> Load<T> {
+impl<T> DriveLoad<T> {
     pub const fn ready(&self) -> Option<&T> {
         match self {
             Self::Ready(value) => Some(value),
@@ -95,9 +95,9 @@ pub struct Browse {
     pub folder: Option<DocumentFolderId>,
     pub query: String,
     pub sort: SortKey,
-    pub folders: Load<Vec<FolderNode>>,
+    pub folders: DriveLoad<Vec<FolderNode>>,
     pub expanded: HashSet<DocumentFolderId>,
-    pub documents: Load<Vec<DocumentItem>>,
+    pub documents: DriveLoad<Vec<DocumentItem>>,
     pub next_cursor: Option<String>,
     pub selected: Option<DocumentId>,
     pub generation: u64,
@@ -124,7 +124,7 @@ impl Browse {
     pub fn begin(&mut self, appending: bool) -> u64 {
         self.generation = self.generation.wrapping_add(1);
         if !appending {
-            self.documents = Load::Loading;
+            self.documents = DriveLoad::Loading;
             self.next_cursor = None;
         }
         self.generation
@@ -139,16 +139,16 @@ impl Browse {
         if generation != self.generation {
             return false;
         }
-        if let Load::Ready(known) = &mut self.documents {
+        if let DriveLoad::Ready(known) = &mut self.documents {
             for item in items {
                 if !known.iter().any(|existing| existing.id == item.id) {
                     known.push(item);
                 }
             }
         } else {
-            self.documents = Load::Ready(items);
+            self.documents = DriveLoad::Ready(items);
         }
-        if let Load::Ready(known) = &mut self.documents {
+        if let DriveLoad::Ready(known) = &mut self.documents {
             sort_documents(known, self.sort);
         }
         self.next_cursor = cursor;
@@ -159,13 +159,13 @@ impl Browse {
         if generation != self.generation {
             return false;
         }
-        self.documents = Load::Failed(failure);
+        self.documents = DriveLoad::Failed(failure);
         true
     }
 
     pub fn set_sort(&mut self, sort: SortKey) {
         self.sort = sort;
-        if let Load::Ready(items) = &mut self.documents {
+        if let DriveLoad::Ready(items) = &mut self.documents {
             sort_documents(items, sort);
         }
     }

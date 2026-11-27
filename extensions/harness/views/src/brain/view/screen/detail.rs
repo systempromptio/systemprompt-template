@@ -6,16 +6,20 @@ use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     SharedString, StatefulInteractiveElement as _, Styled as _, div,
 };
-use harness_ui::components::{Badge, Banner, Button, ButtonKind, Card, EmptyState};
-use harness_ui::theme::{space, text, tokens};
-use harness_ui::{IconName, Tone};
+use systemprompt_harness_shared::components::{
+    Badge, Banner, Button, ButtonKind, Card, EmptyState,
+};
+use systemprompt_harness_shared::theme::{space, text, tokens};
+use systemprompt_harness_shared::{IconName, Tone};
+// JSON: a fact's field values follow its kind's declaration, which only the
+// instance knows; they arrive as JSON.
 use serde_json::Value;
-use sp_protocol::wire::brain::BrainFact;
+use systemprompt_models::brain::BrainFact;
 
 use super::BrainScreen;
-use crate::model::{ActionOutcome, FactAction, FactDetail, Load};
-use crate::strings;
-use crate::view::tone;
+use crate::brain::model::{ActionOutcome, FactAction, FactDetail, Load};
+use crate::brain::strings;
+use crate::brain::view::tone;
 
 impl BrainScreen {
     pub(super) fn render_detail(&self, cx: &Context<Self>) -> AnyElement {
@@ -212,6 +216,8 @@ fn scope_text(fact: &BrainFact) -> String {
 
 // JSON: a fact field is typed by the fact's kind declaration, which only the
 // instance holds.
+// JSON: a fact's field values follow its kind's declaration, which only the
+// instance knows; they arrive as JSON.
 fn field_text(value: &Value) -> String {
     match value {
         Value::String(text) => text.clone(),

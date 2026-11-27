@@ -6,9 +6,9 @@
 use std::time::Duration;
 
 use chrono::{DateTime, Local, Utc};
-use sp_notifications::{FeedStatus, NotificationsError, UnreadCount};
-use sp_protocol::view::SyncErrorKind;
-use sp_slack::SlackStatus;
+use systemprompt_device::view::SyncErrorKind;
+use systemprompt_harness::members::notifications::{FeedStatus, NotificationsError, UnreadCount};
+use systemprompt_harness::members::slack::SlackStatus;
 
 pub const NOTIFICATIONS_NAME: &str = "Notifications";
 pub const INBOX_TITLE: &str = "Notifications";

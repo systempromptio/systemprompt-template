@@ -2,11 +2,11 @@
 //! field, Enter to create.
 
 use gpui_kit::{App, AppContext as _, Context, Entity, Window};
-use harness_ui::components::{ButtonKind, DialogAction, DialogSpec, TextField};
-use sp_drive::DocumentKind;
+use systemprompt_harness::members::drive::DocumentKind;
+use systemprompt_harness_shared::components::{ButtonKind, DialogAction, DialogSpec, TextField};
 
 use super::DriveView;
-use crate::strings as text;
+use crate::drive::strings as text;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum NewItem {

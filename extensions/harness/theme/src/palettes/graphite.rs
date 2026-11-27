@@ -1,12 +1,12 @@
 //! The graphite palettes: neutral greys with a blue accent.
 
-use crate::theme::tokens::{
+use crate::tokens::{
     Accent, Borders, DiffColors, Palette, StatusColors, Surfaces, SyntaxPalette, TextColors,
 };
 
 use super::c;
 
-pub(in crate::theme) const GRAPHITE_LIGHT: Palette = Palette {
+pub(crate) const GRAPHITE_LIGHT: Palette = Palette {
     dark: false,
     surface: Surfaces {
         app: c(0xF7, 0xF8, 0xFA),
@@ -92,7 +92,7 @@ pub(in crate::theme) const GRAPHITE_LIGHT: Palette = Palette {
     scrollbar: c(0x1B, 0x1F, 0x24).with_alpha(0.28),
 };
 
-pub(in crate::theme) const GRAPHITE_DARK: Palette = Palette {
+pub(crate) const GRAPHITE_DARK: Palette = Palette {
     dark: true,
     surface: Surfaces {
         app: c(0x1B, 0x1D, 0x21),

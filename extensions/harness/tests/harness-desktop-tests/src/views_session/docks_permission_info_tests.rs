@@ -1,5 +1,5 @@
-use harness_desktop::views::docks::permission_info::{Preview, preview};
 use serde_json::json;
+use systemprompt_harness_views::docks::permission_info::{Preview, preview};
 
 #[test]
 fn a_diff_wins_over_the_files_it_touches() {

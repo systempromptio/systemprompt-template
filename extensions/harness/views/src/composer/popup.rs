@@ -4,7 +4,7 @@
 //! what the query is, which entries match it and in what order, and how a
 //! chosen file is written into the prompt.
 
-use harness_engine::CommandInfo;
+use systemprompt_engine::run::CommandInfo;
 
 const POPUP_LIMIT: usize = 8;
 

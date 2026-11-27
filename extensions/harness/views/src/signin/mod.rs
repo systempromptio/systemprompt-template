@@ -21,9 +21,9 @@ use gpui_kit::{
     Focusable as _, InteractiveElement as _, IntoElement, ParentElement as _, Render, Styled as _,
     Subscription, WeakEntity, Window, div, ease_out_quint,
 };
-use harness_ui::components::TextField;
-use harness_ui::motion;
-use harness_ui::theme::tokens;
+use systemprompt_harness_shared::components::TextField;
+use systemprompt_harness_shared::motion;
+use systemprompt_harness_shared::theme::tokens;
 
 use crate::app::Services;
 use crate::keymap::{

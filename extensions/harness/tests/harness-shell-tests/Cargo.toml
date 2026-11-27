@@ -1,19 +1,21 @@
 [package]
 name = "harness-shell-tests"
-description = "Tests for harness-shell, through its public API."
+description = "Tests for the shell extension contract of systemprompt-harness-shared, through its public API."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 publish.workspace = true
 
 [dependencies]
-harness-shell.workspace = true
+systemprompt-harness-shared.workspace = true
 
 [dev-dependencies]
-gpui-kit = { version = "=0.9.1", features = ["syntect"] }
-harness-ui.workspace = true
-sp-extension.workspace = true
+gpui-kit.workspace = true
+systemprompt-harness.workspace = true
 
 [lints]
 workspace = true

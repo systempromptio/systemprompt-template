@@ -8,13 +8,13 @@ use gpui_kit::component::input::{
     Enter, Escape, IndentInline, InputEvent, MoveDown, MoveUp, TextareaState,
 };
 use gpui_kit::{Context, Div, Entity, InteractiveElement as _, SharedString, Window};
-use harness_engine::Delivery;
+use systemprompt_engine::run::Delivery;
 
 use crate::app::settings::DeliveryPref;
+use crate::composer::ComposerView;
+use crate::composer::drafts::{self, Attachment};
+use crate::composer::popup::{self, Popup, PopupKind, Trigger};
 use crate::state::Submission;
-use crate::views::composer::ComposerView;
-use crate::views::composer::drafts::{self, Attachment};
-use crate::views::composer::popup::{self, Popup, PopupKind, Trigger};
 
 pub const fn delivery(preference: DeliveryPref, alternate: bool) -> Delivery {
     match (preference, alternate) {

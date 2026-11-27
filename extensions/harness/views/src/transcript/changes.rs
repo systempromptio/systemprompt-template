@@ -5,14 +5,14 @@ use gpui_kit::{
     AnyElement, Context, ElementId, FontWeight, InteractiveElement as _, IntoElement,
     ParentElement as _, SharedString, StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use harness_store::TodoStatus;
-use harness_ui::components::{Badge, EmptyState, IconButton, SectionHeader};
-use harness_ui::theme::{radius, size, space, text as type_scale, tokens};
-use harness_ui::{DiffStat, DiffView, Icon, IconName};
-use harness_workspace::FileDiff;
+use systemprompt_engine::store::TodoStatus;
+use systemprompt_engine::workspace::FileDiff;
+use systemprompt_harness_shared::components::{Badge, EmptyState, IconButton, SectionHeader};
+use systemprompt_harness_shared::theme::{radius, size, space, text as type_scale, tokens};
+use systemprompt_harness_shared::{DiffStat, DiffView, Icon, IconName};
 
 use crate::strings::transcript as text;
-use crate::views::transcript::TranscriptView;
+use crate::transcript::TranscriptView;
 
 const PANEL_WIDTH: f32 = 480.0;
 const HEADER_HEIGHT: f32 = 36.0;

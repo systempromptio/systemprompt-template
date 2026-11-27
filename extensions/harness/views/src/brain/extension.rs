@@ -1,5 +1,5 @@
-//! [`BrainShellExtension`]: the brain's shell half, registered with
-//! `register_shell_extension!` under the id of its instance-side half.
+//! [`BrainShellExtension`]: the brain's shell half, named in the registration list
+//! under the id of its instance-side half.
 //!
 //! Every contribution is built over the [`BrainService`] that half publishes in
 //! the shared handles; without it nothing is contributed. The shell shows the
@@ -8,15 +8,15 @@
 use std::rc::Rc;
 
 use gpui_kit::{AnyView, AppContext as _};
-use harness_shell::{
+use systemprompt_harness::members::brain::{BRAIN_EXTENSION, BrainService};
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::contract::{
     ExtensionMetadata, Placement, ScreenSpec, SettingsPaneSpec, ShellContext, ShellExtension,
-    TranscriptAdornment, register_shell_extension,
+    TranscriptAdornment,
 };
-use harness_ui::IconName;
-use sp_brain::{BRAIN_EXTENSION, BrainService};
 
-use crate::strings;
-use crate::view::{BrainScreen, BrainSettingsPane, RecalledFacts};
+use crate::brain::strings;
+use crate::brain::view::{BrainScreen, BrainSettingsPane, RecalledFacts};
 
 const SCREEN_KEY: &str = "facts";
 const SETTINGS_KEY: &str = "brain";
@@ -24,8 +24,6 @@ const SETTINGS_KEY: &str = "brain";
 /// The brain's screens, settings pane and transcript adornment.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BrainShellExtension;
-
-register_shell_extension!(BrainShellExtension);
 
 impl ShellExtension for BrainShellExtension {
     fn metadata(&self) -> ExtensionMetadata {

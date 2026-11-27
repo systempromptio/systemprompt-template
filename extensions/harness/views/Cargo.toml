@@ -1,0 +1,38 @@
+[package]
+name = "systemprompt-harness-views"
+description = "The window views with their state, services and strings, and the Drive, Brain and notifications screens as shell extensions."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+publish.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+chrono.workspace = true
+gpui-kit.workspace = true
+ignore.workspace = true
+open.workspace = true
+parking_lot.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+systemprompt-device.workspace = true
+systemprompt-drive.workspace = true
+systemprompt-engine.workspace = true
+systemprompt-harness.workspace = true
+systemprompt-harness-brand.workspace = true
+systemprompt-harness-shared.workspace = true
+systemprompt-identifiers.workspace = true
+systemprompt-models.workspace = true
+systemprompt-traits.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+url.workspace = true
+uuid.workspace = true
+
+[lints]
+workspace = true

@@ -2,13 +2,13 @@
 //! admitted extensions after Governance.
 
 use gpui_kit::{AnyView, App, Entity, Window};
-use harness_shell::SettingsPaneSpec;
-use harness_ui::IconName;
+use systemprompt_harness_shared::IconName;
+use systemprompt_harness_shared::contract::SettingsPaneSpec;
 
 use crate::app::Services;
+use crate::settings::SettingsPage;
 use crate::state::AppState;
 use crate::state::extensions::Contributions;
-use crate::views::settings::SettingsPage;
 
 const EXTENSIONS_AFTER: &str = "governance";
 

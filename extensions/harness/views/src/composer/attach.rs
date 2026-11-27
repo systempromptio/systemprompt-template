@@ -8,15 +8,15 @@ use std::path::PathBuf;
 use gpui_kit::{
     AsyncApp, ClipboardEntry, ClipboardItem, Context, PathPromptOptions, SharedString, WeakEntity,
 };
-use harness_engine::AttachmentInput;
-use harness_store::now_ms;
-use harness_ui::Tone;
+use systemprompt_engine::run::AttachmentInput;
+use systemprompt_engine::store::now_ms;
+use systemprompt_harness_shared::Tone;
 
 use crate::app::runtime;
+use crate::composer::ComposerView;
+use crate::composer::drafts::{self, Attachment};
 use crate::state::AppState;
 use crate::strings::composer as text;
-use crate::views::composer::ComposerView;
-use crate::views::composer::drafts::{self, Attachment};
 
 impl ComposerView {
     pub(super) fn choose_files(&mut self, cx: &Context<Self>) {

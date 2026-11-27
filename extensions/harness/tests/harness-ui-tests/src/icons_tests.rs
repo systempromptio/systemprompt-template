@@ -1,4 +1,4 @@
-use harness_ui::IconName;
+use systemprompt_harness_shared::IconName;
 
 #[test]
 fn every_icon_resolves_through_its_asset_path() {

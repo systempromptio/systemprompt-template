@@ -1,9 +1,9 @@
-use harness_desktop::views::signin::address::Credential;
-use harness_desktop::views::signin::flow::{
+use systemprompt_device::accounts::ProbeResult;
+use systemprompt_device::view::{SignInFailure, SignInOutcome};
+use systemprompt_harness_views::signin::address::Credential;
+use systemprompt_harness_views::signin::flow::{
     Check, Effect, Event, Failure, Flow, Method, Problem, RETRY_DELAY, SETTLE_DELAY, Step,
 };
-use sp_accounts::ProbeResult;
-use sp_protocol::view::{SignInFailure, SignInOutcome};
 
 use super::signin_flow_fixtures::{ADDRESS, instance, ready};
 

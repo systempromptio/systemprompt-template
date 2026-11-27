@@ -5,8 +5,8 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use harness_engine::AttachmentInput;
-use harness_store::SessionId;
+use systemprompt_engine::run::AttachmentInput;
+use systemprompt_engine::store::SessionId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Attachment {

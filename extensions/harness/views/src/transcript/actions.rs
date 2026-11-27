@@ -5,13 +5,13 @@
 use gpui_kit::{
     ClipboardItem, Context, Div, InteractiveElement as _, KeyDownEvent, Stateful, Window,
 };
-use harness_store::{Message, MessageWithParts, PartBody};
-use harness_ui::components::{
+use systemprompt_engine::store::{Message, MessageWithParts, PartBody};
+use systemprompt_harness_shared::components::{
     Activate, Dismiss, SelectFirst, SelectLast, SelectNext, SelectPrevious, Toast,
 };
 
 use crate::strings::transcript as text;
-use crate::views::transcript::{TranscriptEvent, TranscriptView, rows};
+use crate::transcript::{TranscriptEvent, TranscriptView, rows};
 
 impl TranscriptView {
     pub(super) fn bind_keys(root: Stateful<Div>, cx: &Context<Self>) -> Stateful<Div> {

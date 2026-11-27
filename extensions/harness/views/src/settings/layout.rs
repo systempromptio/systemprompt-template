@@ -6,8 +6,8 @@ use gpui_kit::{
     AnyElement, App, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     SharedString, StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use harness_ui::components::{Card, EmptyState, Spinner};
-use harness_ui::theme::{space, text as type_scale, tokens};
+use systemprompt_harness_shared::components::{Card, EmptyState, Spinner};
+use systemprompt_harness_shared::theme::{space, text as type_scale, tokens};
 
 const PAGE_WIDTH: f32 = 760.0;
 
@@ -113,7 +113,7 @@ pub(super) fn mono(value: impl Into<SharedString>, cx: &App) -> AnyElement {
     div()
         .min_w_0()
         .truncate()
-        .font_family(harness_ui::theme::mono_font(cx))
+        .font_family(systemprompt_harness_shared::theme::mono_font(cx))
         .text_size(type_scale::MONO)
         .text_color(palette.text.secondary)
         .child(value.into())
