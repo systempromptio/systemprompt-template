@@ -46,6 +46,10 @@ fn catalog_analysis_routes() -> Router<Arc<PgPool>> {
         )
 }
 
+// Why: the report handlers take the inference service as an optional
+// extension. The console is built with none, so a report request is queued
+// and recorded as failed with that reason instead of faulting on a missing
+// extension.
 #[cfg(feature = "agents")]
 fn conversation_analysis_routes() -> Router<Arc<PgPool>> {
     Router::new()
@@ -98,4 +102,5 @@ fn conversation_analysis_routes() -> Router<Arc<PgPool>> {
             "/analysis/conversations/{context_id}/judge",
             post(handlers::ssr::analysis::conversation_detail::judge_now),
         )
+        .layer(axum::Extension(None::<Arc<systemprompt::ai::AiService>>))
 }
