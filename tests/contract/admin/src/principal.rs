@@ -1,17 +1,17 @@
 //! The seven principals every route is driven under, and the credentials that
 //! distinguish them.
 //!
-//! Role membership is deliberately *not* carried in the JWT:
+//! Role membership is deliberately *not* carried in the token:
 //! `user_context_middleware` reads `users.roles` from the database, so the
 //! admin / non-admin split is seeded as table rows and the middleware resolves
 //! it the same way it does in production. The token only has to validate and
 //! carry a subject.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
-use systemprompt_security::{AdminTokenParams, JwtService};
+use systemprompt::identifiers::UserId;
+use systemprompt::models::auth::{JwtAudience, Permission};
 
-use crate::globals;
+use crate::tokens::{self, Grant};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Principal {
@@ -76,6 +76,8 @@ pub struct Credentials {
     // The non-admin's own user id, so a case can seed a row that principal
     // genuinely owns and drive an owner-facing route as its owner.
     pub non_admin_user_id: UserId,
+    pub admin_user_id: UserId,
+    pub knowledge_worker_user_id: Option<UserId>,
 }
 
 impl Credentials {
@@ -97,11 +99,14 @@ impl Credentials {
 pub async fn provision(pool: &PgPool) -> Credentials {
     let (non_admin, non_admin_user_id) =
         provision_one(pool, "contract-user", &["user"], false).await;
-    let (admin, _) = provision_one(pool, "contract-admin", &["admin", "user"], false).await;
+    let (admin, admin_user_id) =
+        provision_one(pool, "contract-admin", &["admin", "user"], false).await;
     Credentials {
         non_admin,
         admin,
         non_admin_user_id,
+        admin_user_id,
+        knowledge_worker_user_id: None,
         developer: String::new(),
         platform_admin: String::new(),
         project_manager: String::new(),
@@ -135,7 +140,8 @@ pub async fn provision_dashboard(pool: &PgPool) -> Credentials {
     let (non_admin, non_admin_user_id) =
         provision_one(pool, "contract-user", &["user"], true).await;
     let (developer, _) = provision_one(pool, "contract-dev", &["developer", "user"], true).await;
-    let (admin, _) = provision_one(pool, "contract-admin", &["admin", "user"], false).await;
+    let (admin, admin_user_id) =
+        provision_one(pool, "contract-admin", &["admin", "user"], false).await;
     let (platform_admin, _) = provision_one(
         pool,
         "contract-platform",
@@ -166,6 +172,8 @@ pub async fn provision_dashboard(pool: &PgPool) -> Credentials {
         project_manager,
         knowledge_worker,
         non_admin_user_id,
+        admin_user_id,
+        knowledge_worker_user_id: Some(knowledge_worker_user_id),
     }
 }
 
@@ -205,16 +213,13 @@ async fn provision_one(
         .expect("place the principal in the contract group");
     }
 
-    let session_id = SessionId::new(uuid::Uuid::new_v4().to_string());
-    let token = JwtService::generate_admin_token(&AdminTokenParams {
-        user_id: &user_id,
-        session_id: &session_id,
+    let token = tokens::issue(&Grant {
+        subject: user_id.as_str(),
         email: &email,
-        issuer: &globals::jwt_issuer(),
-        duration: chrono::Duration::hours(1),
-        client_id: None,
-    })
-    .expect("mint a session token");
+        permission: Permission::User,
+        scopes: vec![Permission::User],
+        audiences: vec![JwtAudience::Api],
+    });
 
-    (token.as_str().to_owned(), user_id)
+    (token, user_id)
 }

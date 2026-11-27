@@ -4,8 +4,8 @@ use axum::http::StatusCode;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn public_registration_never_grants_admin() {

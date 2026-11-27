@@ -13,8 +13,8 @@ use axum::http::StatusCode;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 const SETTINGS: &str = "/api/public/admin/user/settings";
 const ACCOUNT: &str = "/api/public/admin/user/account";

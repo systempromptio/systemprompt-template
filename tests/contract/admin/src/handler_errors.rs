@@ -25,8 +25,8 @@ use axum::http::StatusCode;
 
 use crate::app::{ADMIN_API_PREFIX, App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 // What a case demands of the response.
 #[derive(Clone, Copy)]

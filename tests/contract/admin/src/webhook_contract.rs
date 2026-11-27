@@ -18,8 +18,8 @@ use systemprompt::models::auth::{JwtAudience, Permission};
 use crate::app::{App, Call};
 use crate::principal::Principal;
 use crate::seed::{self, TokenSpec};
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 const GOVERN: &str = "/hooks/govern";
 const AUTHZ: &str = "/govern/authz";
@@ -133,7 +133,6 @@ async fn govern_answers_two_hundred_with_a_decision_either_way() {
         subject: &user_id,
         audiences: vec![JwtAudience::Hook],
         scopes: vec![Permission::HookTrack],
-        plugin_id: Some("contract-plugin"),
     });
     let (status, body) = app
         .call_with_bearer(post(GOVERN, &benign), &other_hook_scope)
@@ -152,7 +151,6 @@ async fn govern_answers_two_hundred_with_a_decision_either_way() {
         subject: &user_id,
         audiences: vec![JwtAudience::Bridge],
         scopes: vec![Permission::HookGovern],
-        plugin_id: Some("contract-plugin"),
     });
     let (status, body) = app
         .call_with_bearer(post(GOVERN, &benign), &wrong_audience)
@@ -523,19 +521,18 @@ async fn statusline_and_transcript_ingests_authenticate_and_accept() {
         r#"{"session_id":"contract-session","transcript":[{"role":"user","content":"hi"}]}"#;
 
     let mut failures = Vec::new();
-    let accepted: [(&str, &str, &str); 4] = [
-        ("statusline, full payload", "/hooks/statusline", statusline),
+    let accepted: [(&str, &str, &str); 3] = [
+        (
+            "statusline, full payload",
+            "/hooks/statusline?plugin_id=contract-plugin&session_id=s-1",
+            statusline,
+        ),
         (
             "statusline with only the extras",
             "/hooks/statusline?plugin_id=contract-plugin&session_id=s-1",
             r#"{"anything":"goes"}"#,
         ),
         ("transcript", "/hooks/transcript", transcript),
-        (
-            "transcript with no session id",
-            "/hooks/transcript?plugin_id=contract-plugin",
-            r#"{"transcript":[]}"#,
-        ),
     ];
     for (label, path, body) in accepted {
         let (status, body) = app.call_with_bearer(post(path, body), &token).await;
@@ -568,6 +565,24 @@ async fn statusline_and_transcript_ingests_authenticate_and_accept() {
         }
     }
 
+    // A transcript is attributed to a session, so one that names none is
+    // refused rather than stored unattributed.
+    let (status, _) = app
+        .call_with_bearer(
+            post(
+                "/hooks/transcript?plugin_id=contract-plugin",
+                r#"{"transcript":[]}"#,
+            ),
+            &token,
+        )
+        .await;
+    if status != StatusCode::BAD_REQUEST {
+        failures.push(format!(
+            "  a transcript with no session id -> {} (expected 400)",
+            status.as_u16()
+        ));
+    }
+
     // The transcript payload requires a `transcript` field; the extractor
     // refuses a body without one before the handler runs.
     let (status, _) = app
@@ -586,10 +601,15 @@ async fn statusline_and_transcript_ingests_authenticate_and_accept() {
         subject: &user_id,
         audiences: vec![JwtAudience::Api],
         scopes: vec![Permission::User],
-        plugin_id: None,
     });
     let (status, _) = app
-        .call_with_bearer(post("/hooks/statusline", statusline), &api_token)
+        .call_with_bearer(
+            post(
+                "/hooks/statusline?plugin_id=contract-plugin&session_id=s-1",
+                statusline,
+            ),
+            &api_token,
+        )
         .await;
     if status != StatusCode::NO_CONTENT {
         failures.push(format!(

@@ -21,8 +21,8 @@ use serde_json::Value;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 const REJECTED: &str = "Invalid or revoked token";
 
@@ -146,9 +146,9 @@ async fn an_issued_token_unlocks_that_user_s_manifest() {
     let (token, url) = issue(&app, &user_id_str).await;
     assert_eq!(url, manifest_path(&token), "the url embeds the token");
     assert_eq!(
-        token.split(':').count(),
-        4,
-        "the token is user:version:expiry:mac, got {token}"
+        token.split('.').count(),
+        3,
+        "the token is the signer's prefix.payload.signature, got {token}"
     );
 
     let (status, body) = app.call(Call::get(&url, Principal::Anonymous)).await;
@@ -243,41 +243,35 @@ async fn a_tampered_token_is_refused() {
     seed::insert_profile_ext(&db.pool, &user_id, 1).await;
 
     let (token, _) = issue(&app, &user_id_str).await;
-    let parts: Vec<&str> = token.split(':').collect();
-    let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
+    let parts: Vec<&str> = token.split('.').collect();
+    let flip = |segment: &str| {
+        let last = segment.chars().last().expect("a non-empty segment");
+        let swapped = if last == 'A' { 'B' } else { 'A' };
+        format!("{}{swapped}", &segment[..segment.len() - 1])
+    };
 
-    // Flip one hex digit of the MAC, keeping the length identical so the
-    // constant-time compare — not the length precheck — is what rejects it.
-    let mac = parts[2];
-    let flipped = mac
-        .strip_prefix('0')
-        .map_or_else(|| format!("0{}", &mac[1..]), |rest| format!("1{rest}"));
-    let forged = format!("{}:{}:{flipped}", parts[0], parts[1]);
+    // Flip one character of the signature, keeping the length identical so the
+    // constant-time compare — not a length precheck — is what rejects it.
+    let forged = format!("{}.{}.{}", parts[0], parts[1], flip(parts[2]));
     let (status, body) = app
         .call(Call::get(&manifest_path(&forged), Principal::Anonymous))
         .await;
-    assert_eq!(status, StatusCode::UNAUTHORIZED, "flipped mac: {body}");
+    assert_eq!(
+        status,
+        StatusCode::UNAUTHORIZED,
+        "flipped signature: {body}"
+    );
     assert_eq!(parse(&body)["error"], REJECTED);
 
-    // Same MAC, different user. A token that carried over to another id would
-    // be the worst possible failure of this endpoint.
-    let other = b64.encode(b"someone-else");
-    let swapped = format!("{other}:{}:{}", parts[1], parts[2]);
+    // Same signature over a different payload. A token whose signature carried
+    // over to another subject or version would be the worst possible failure
+    // of this endpoint.
+    let swapped = format!("{}.{}.{}", parts[0], flip(parts[1]), parts[2]);
     let (status, body) = app
         .call(Call::get(&manifest_path(&swapped), Principal::Anonymous))
         .await;
-    assert_eq!(status, StatusCode::UNAUTHORIZED, "swapped subject: {body}");
-
-    // Same MAC, different version.
-    let bumped = b64.encode(b"99");
-    let reversioned = format!("{}:{bumped}:{}", parts[0], parts[2]);
-    let (status, _) = app
-        .call(Call::get(
-            &manifest_path(&reversioned),
-            Principal::Anonymous,
-        ))
-        .await;
-    assert_eq!(status, StatusCode::UNAUTHORIZED, "swapped version");
+    assert_eq!(status, StatusCode::UNAUTHORIZED, "altered payload: {body}");
+    assert_eq!(parse(&body)["error"], REJECTED);
 
     db.cleanup().await;
 }

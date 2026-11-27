@@ -6,8 +6,8 @@ use chrono::{Duration, Utc};
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn access_control_ledger_filters_and_explains_expiring_mixed_rules() {

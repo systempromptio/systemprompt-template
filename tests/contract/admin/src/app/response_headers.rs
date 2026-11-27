@@ -9,12 +9,8 @@ impl App {
         self.response_headers_with(call, &[]).await
     }
 
-    // Status plus the two response headers the redirect-driven flows are
-    // specified in terms of.
-    //
-    // `call` reads the body, which is empty on a redirect: for the SSO flows
-    // the entire outcome — where the browser goes, and what state it carries
-    // there — lives in `Location` and `Set-Cookie`.
+    // Status plus the `Location` a redirect-driven flow is specified in terms
+    // of: `call` reads the body, which is empty on a redirect.
     pub async fn response_headers_with(
         &self,
         call: Call<'_>,
@@ -33,24 +29,11 @@ impl App {
             .get("location")
             .and_then(|v| v.to_str().ok())
             .map(ToOwned::to_owned);
-        let set_cookie = headers
-            .get_all("set-cookie")
-            .iter()
-            .filter_map(|v| v.to_str().ok())
-            .map(ToOwned::to_owned)
-            .collect();
-        (
-            status,
-            ResponseHeaders {
-                location,
-                set_cookie,
-            },
-        )
+        (status, ResponseHeaders { location })
     }
 }
 
 // Headers carrying the outcome of a browser login or redirect.
 pub struct ResponseHeaders {
     pub location: Option<String>,
-    pub set_cookie: Vec<String>,
 }

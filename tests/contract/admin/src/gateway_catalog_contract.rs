@@ -25,8 +25,8 @@ use systemprompt::identifiers::UserId;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 // The two routes `fixtures/profile.yaml` declares. `contract-claude` matches
 // the `claude-contract-model` that `seed::insert_request` writes.

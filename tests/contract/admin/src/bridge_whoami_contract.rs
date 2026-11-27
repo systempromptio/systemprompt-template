@@ -17,8 +17,8 @@ use serde_json::Value;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 const PATH: &str = "/api/public/bridge/whoami";
 

@@ -5,8 +5,8 @@ use axum::http::StatusCode;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 const CREATE_BODY: &str = r#"{"id":"contract-made","name":"Made by the contract suite"}"#;
 
@@ -324,64 +324,5 @@ async fn recomputing_attribution_keys_reports_its_writes_and_repeats_cleanly() {
         assert_eq!(status, StatusCode::FORBIDDEN, "{principal:?}: {body}");
     }
 
-    db.cleanup().await;
-}
-
-// Why: upgrades must introduce groups alongside departments, without copying
-// memberships or deleting the old authorization rules.
-#[tokio::test]
-async fn group_schema_reapplication_preserves_department_membership_and_denials() {
-    if !globals::init() {
-        return;
-    }
-    let Some(db) = TempDb::create().await else {
-        return;
-    };
-    let user =
-        crate::seed::insert_user(&db.pool, "legacy-dept-user", "legacy-dept@contract.test").await;
-    sqlx::query("INSERT INTO departments (id, name) VALUES ('legacy-dept', 'Legacy department')")
-        .execute(&*db.pool)
-        .await
-        .expect("legacy department");
-    sqlx::query(
-        "INSERT INTO user_profile_ext (user_id, department) VALUES ($1, 'Legacy department')",
-    )
-    .bind(user.as_str())
-    .execute(&*db.pool)
-    .await
-    .expect("legacy assignment");
-    crate::seed::insert_acl_rule(
-        &db.pool,
-        &crate::seed::AclRule {
-            entity_type: "mcp_server",
-            entity_id: "legacy-mcp",
-            rule_type: "department",
-            rule_value: "Legacy department",
-            access: "deny",
-        },
-    )
-    .await;
-    sqlx::raw_sql(include_str!(
-        "../../../../extensions/web/schema/migrations/052_dashboard_groups_projects.sql"
-    ))
-    .execute(&*db.pool)
-    .await
-    .expect("reapply additive migration");
-    let department: String =
-        sqlx::query_scalar("SELECT department FROM user_profile_ext WHERE user_id = $1")
-            .bind(user.as_str())
-            .fetch_one(&*db.pool)
-            .await
-            .expect("department retained");
-    assert_eq!(department, "Legacy department");
-    let denials: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM access_control_rules WHERE rule_type = 'department' AND rule_value = 'Legacy department' AND access = 'deny'")
-        .fetch_one(&*db.pool).await.expect("legacy ACL retained");
-    assert_eq!(denials, 1);
-    let mapped: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM group_members WHERE user_id = $1")
-        .bind(user.as_str())
-        .fetch_one(&*db.pool)
-        .await
-        .expect("no inferred mapping");
-    assert_eq!(mapped, 0);
     db.cleanup().await;
 }

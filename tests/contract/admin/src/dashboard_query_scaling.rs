@@ -1,9 +1,9 @@
 //! HTTP coverage of the contexts time window and the explicit All time escape.
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
 use axum::http::StatusCode;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn contexts_defaults_to_thirty_days_and_all_time_preserves_old_conversations() {

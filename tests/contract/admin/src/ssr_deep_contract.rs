@@ -22,8 +22,8 @@ use systemprompt::identifiers::UserId;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 // Everything one seeded activity trail is keyed on. The pages cross-link, so
 // the same session must carry the requests, the decisions, the context, and
@@ -81,7 +81,7 @@ async fn seed_trail(pool: &PgPool) -> Trail {
             session_id: Some(&session_id),
             trace_id: Some(&trace_id),
             context_id: Some(context_id.as_str()),
-            status: "error",
+            status: "failed",
         },
     )
     .await;

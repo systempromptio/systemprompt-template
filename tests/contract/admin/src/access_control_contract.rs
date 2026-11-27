@@ -17,8 +17,8 @@ use axum::http::StatusCode;
 
 use crate::app::{ADMIN_API_PREFIX, App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 fn api(path: &str) -> String {
     format!("{ADMIN_API_PREFIX}{path}")

@@ -12,8 +12,8 @@ use systemprompt::identifiers::UserId;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 async fn seed_user(pool: &PgPool, id: &str, roles: &[&str]) -> String {
     let user_id = UserId::new(format!("{id}-{}", uuid::Uuid::new_v4().simple()));

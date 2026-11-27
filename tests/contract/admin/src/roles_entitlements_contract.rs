@@ -5,8 +5,8 @@ use axum::http::StatusCode;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn role_entitlements_render_mixed_allow_and_deny_with_entity_defaults() {

@@ -12,17 +12,11 @@
 //! that reused a plausible id would be asserting against seeded rows without
 //! knowing it.
 
-use std::collections::BTreeMap;
-
-use chrono::{Duration, Utc};
-use jsonwebtoken::{Algorithm, Header, encode};
 use sqlx::PgPool;
-use systemprompt::identifiers::{PluginId, UserId};
-use systemprompt::models::auth::{
-    JwtAudience, JwtClaims, Permission, RateLimitTier, TokenType, UserType,
-};
+use systemprompt::identifiers::UserId;
+use systemprompt::models::auth::{JwtAudience, Permission};
 
-use crate::globals;
+use crate::tokens::{self, Grant};
 
 // A fresh, collision-proof id fragment.
 pub fn unique(prefix: &str) -> String {
@@ -37,18 +31,15 @@ pub fn unique_user_id() -> String {
     uuid::Uuid::new_v4().to_string()
 }
 
-// Mint a token for an arbitrary audience / scope / `plugin_id` triple.
+// Mint a token for an arbitrary audience / scope pair.
 //
-// The hook endpoints validate against `aud=hook` and `scope=hook:*`, which
-// neither [`crate::principal`]'s admin token nor any core minter produces —
-// `JwtService::generate_admin_token` hard-codes the standard audiences. The
-// claims are therefore assembled here so a case can also mint the *wrong*
-// token on purpose and prove the validator rejects it.
+// The hook endpoints validate against `aud=hook`, which no session token in
+// [`crate::principal`] carries, so a case can also mint the *wrong* token on
+// purpose and prove the validator rejects it.
 pub struct TokenSpec<'a> {
     pub subject: &'a str,
     pub audiences: Vec<JwtAudience>,
     pub scopes: Vec<Permission>,
-    pub plugin_id: Option<&'a str>,
 }
 
 impl<'a> TokenSpec<'a> {
@@ -58,7 +49,6 @@ impl<'a> TokenSpec<'a> {
             subject,
             audiences: vec![JwtAudience::Hook],
             scopes: vec![Permission::HookTrack, Permission::HookGovern],
-            plugin_id: Some("contract-plugin"),
         }
     }
 
@@ -72,43 +62,18 @@ impl<'a> TokenSpec<'a> {
             subject,
             audiences: vec![JwtAudience::Resource("plugin".to_owned())],
             scopes: Vec::new(),
-            plugin_id: Some("contract-plugin"),
         }
     }
 }
 
 pub fn mint(spec: &TokenSpec<'_>) -> String {
-    let now = Utc::now();
-    let claims = JwtClaims {
-        sub: spec.subject.to_owned(),
-        iat: now.timestamp(),
-        exp: (now + Duration::hours(1)).timestamp(),
-        nbf: Some(now.timestamp()),
-        iss: globals::jwt_issuer(),
-        aud: spec.audiences.clone(),
-        jti: uuid::Uuid::new_v4().to_string(),
-        scope: spec.scopes.clone(),
-        username: "hook@contract.test".to_owned(),
-        email: "hook@contract.test".to_owned(),
-        user_type: UserType::Service,
-        roles: vec!["user".to_owned()],
-        attributes: BTreeMap::new(),
-        client_id: None,
-        token_type: TokenType::Bearer,
-        auth_time: now.timestamp(),
-        session_id: None,
-        rate_limit_tier: Some(RateLimitTier::Service),
-        plugin_id: spec.plugin_id.map(PluginId::new),
-        act: None,
-        purpose: None,
-    };
-
-    let kid =
-        systemprompt_security::keys::authority::active_kid().expect("an installed signing key");
-    let mut header = Header::new(Algorithm::RS256);
-    header.kid = Some(kid.to_owned());
-    let key = systemprompt_security::keys::authority::encoding_key().expect("an encoding key");
-    encode(&header, &claims, key).expect("sign the token")
+    tokens::issue(&Grant {
+        subject: spec.subject,
+        email: "hook@contract.test",
+        permission: Permission::User,
+        scopes: spec.scopes.clone(),
+        audiences: spec.audiences.clone(),
+    })
 }
 
 // Insert a user with the `user` role. `users.name` is unique, so the email

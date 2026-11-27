@@ -2,9 +2,9 @@
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
 use axum::http::StatusCode;
+use template_test_common::TempDb;
 
 #[tokio::test]
 async fn console_reader_cannot_revoke_sessions_or_post_to_admin_pages() {

@@ -13,8 +13,8 @@ use systemprompt_web_admin::repositories::bridge::api_keys::issue_api_key;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 async fn pat_for(db: &TempDb, user: &UserId) -> String {
     issue_api_key(&db.pool, user, "export-contract", None)

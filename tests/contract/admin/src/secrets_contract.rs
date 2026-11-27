@@ -20,8 +20,8 @@ use serde_json::Value;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 const PLUGIN: &str = "contract-secrets-plugin";
 

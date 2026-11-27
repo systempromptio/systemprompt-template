@@ -5,8 +5,8 @@ use sqlx::PgPool;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 async fn seed_artifact(pool: &PgPool) -> String {
     let user = seed::insert_user(

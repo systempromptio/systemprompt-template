@@ -18,8 +18,8 @@ use axum::http::StatusCode;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 const PAGE: &str = "/bridge-auth/device-link";
 const APPROVE: &str = "/bridge-auth/device-link/approve";

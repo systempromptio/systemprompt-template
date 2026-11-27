@@ -7,8 +7,8 @@ use serde_json::json;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 async fn record_version(
     pool: &sqlx::PgPool,

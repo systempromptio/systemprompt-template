@@ -8,8 +8,8 @@ use systemprompt_web_admin::repositories::users::connector_credentials;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn connector_token_never_exposes_credentials_without_broker_authentication() {
@@ -112,7 +112,8 @@ async fn connector_consent_callbacks_enforce_owner_binding_and_single_use() {
         resource_name: String::new(),
         authorization_scheme: "Bearer".to_owned(),
     };
-    let sealed = connector_oauth::seal(&grant).expect("seal consent state");
+    let sealed = connector_oauth::seal(template_test_common::env::member_cipher().as_ref(), &grant)
+        .expect("seal consent state");
     connector_credentials::save_state(
         &db.pool,
         &admin_user,

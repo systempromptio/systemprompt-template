@@ -30,10 +30,13 @@ use systemprompt::models::auth::{JwtAudience, Permission};
 use crate::app::{App, Call};
 use crate::principal::Principal;
 use crate::seed::{self, TokenSpec};
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
-const TRACK: &str = "/hooks/track";
+// The plugin an event is attributed to is the `plugin_id` the hook URL
+// carries, as the installed hook writes it.
+const TRACK: &str = "/hooks/track?plugin_id=contract-plugin";
+const TRACK_WITHOUT_PLUGIN: &str = "/hooks/track";
 
 // A hook request carries its own bearer, so it is issued as an anonymous
 // principal with the token spelled out rather than through `Credentials`.
@@ -59,7 +62,7 @@ struct EventCase {
 
 fn common(session: &str, event: &str) -> String {
     format!(
-        r#""session_id":"{session}","cwd":"/tmp/contract","permission_mode":"default","transcript_path":"/tmp/contract/t.jsonl","hook_event_name":"{event}""#
+        r#""session_id":"{session}","event_id":"{session}-{event}","cwd":"/tmp/contract","permission_mode":"default","transcript_path":"/tmp/contract/t.jsonl","hook_event_name":"{event}""#
     )
 }
 
@@ -67,7 +70,10 @@ fn cases(session: &str) -> Vec<EventCase> {
     let ev = |label: &'static str, name: &'static str, rest: &str, recorded_as: &'static str| {
         EventCase {
             label,
-            body: format!("{{{},{rest}}}", common(session, name)),
+            body: format!(
+                r#"{{{},{rest},"event_id":"{session}-{label}"}}"#,
+                common(session, name)
+            ),
             recorded_as,
         }
     };
@@ -475,7 +481,6 @@ async fn hook_track_refuses_every_token_that_is_not_a_hook_token() {
         subject: &subject,
         audiences: vec![JwtAudience::Api],
         scopes: vec![Permission::HookTrack],
-        plugin_id: Some("contract-plugin"),
     });
     let wrong_scope = seed::mint(&TokenSpec {
         subject: &subject,
@@ -483,21 +488,14 @@ async fn hook_track_refuses_every_token_that_is_not_a_hook_token() {
         // `hook:govern` is the *other* hook endpoint's scope; a token minted
         // for the governance gate must not be able to write tracking rows.
         scopes: vec![Permission::HookGovern],
-        plugin_id: Some("contract-plugin"),
     });
-    let no_plugin = seed::mint(&TokenSpec {
-        subject: &subject,
-        audiences: vec![JwtAudience::Hook],
-        scopes: vec![Permission::HookTrack],
-        plugin_id: None,
-    });
+    let hook_token = seed::mint(&TokenSpec::hook(&subject));
 
-    let rejected: [(&str, Option<&str>); 5] = [
+    let rejected: [(&str, Option<&str>); 4] = [
         ("no authorization header", None),
         ("a token that is not a JWT", Some("not-a-jwt")),
         ("aud=api instead of aud=hook", Some(&wrong_audience)),
         ("scope hook:govern, not hook:track", Some(&wrong_scope)),
-        ("no plugin_id claim", Some(&no_plugin)),
     ];
 
     let mut failures = Vec::new();
@@ -516,6 +514,27 @@ async fn hook_track_refuses_every_token_that_is_not_a_hook_token() {
         if status != StatusCode::UNAUTHORIZED {
             failures.push(format!("  {label} -> {} (expected 401)", status.as_u16()));
         }
+    }
+
+    // A valid hook token on a URL that names no plugin is a malformed request,
+    // not an authentication failure.
+    let (status, _) = app
+        .call_with_bearer(
+            Call {
+                method: "post",
+                path: TRACK_WITHOUT_PLUGIN,
+                principal: Principal::Anonymous,
+                content_type: Some("application/json"),
+                body: Some(&body),
+            },
+            &hook_token,
+        )
+        .await;
+    if status != StatusCode::BAD_REQUEST {
+        failures.push(format!(
+            "  no plugin_id on the hook url -> {} (expected 400)",
+            status.as_u16()
+        ));
     }
 
     // A body that is not JSON at all is refused by the extractor, before the

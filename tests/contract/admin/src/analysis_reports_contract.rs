@@ -7,8 +7,8 @@ use serde_json::json;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 fn inputs() -> serde_json::Value {
     json!({
@@ -68,7 +68,7 @@ async fn insert_report(
 }
 
 fn request_origin() -> String {
-    let profile = systemprompt::config::ProfileBootstrap::get().expect("fixture profile");
+    let profile = template_test_common::env::fixture_profile();
     url::Url::parse(&profile.server.api_external_url)
         .expect("fixture origin")
         .origin()

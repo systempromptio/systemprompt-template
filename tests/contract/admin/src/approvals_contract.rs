@@ -17,8 +17,8 @@ use sqlx::PgPool;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 const CALL_ID: &str = "contract-approval-1";
 

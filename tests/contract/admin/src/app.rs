@@ -8,10 +8,12 @@
 
 use std::sync::Arc;
 
-use systemprompt::analytics::AnalyticsService;
 use systemprompt::database::Database;
-use systemprompt::oauth::SessionCreationService;
-use systemprompt::users::UserService;
+use systemprompt::governance::policy::{
+    GovernanceConfig, GovernanceEngine, PolicyCatalog, RateWindowRepository,
+};
+use systemprompt::traits::ConfigWatch;
+use systemprompt::users::{UserRepository, UserService};
 
 use axum::Router;
 use axum::body::Body;
@@ -19,6 +21,7 @@ use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt as _;
 use sqlx::PgPool;
 use systemprompt_web_admin as admin;
+use template_test_common::env::EnvFixture;
 use tower::ServiceExt;
 
 use crate::globals;
@@ -28,53 +31,70 @@ use crate::principal::{Credentials, Principal};
 // exhaustiveness check agree on where each route module lands.
 pub const ADMIN_API_PREFIX: &str = "/api/public/admin";
 pub const SSR_PREFIX: &str = "/admin";
+const BRIDGE_AUTH_PREFIX: &str = "/bridge-auth";
+
+// The governance hook evaluates against the policy chain the server boots
+// with; the shipped config is the one a deployment starts from.
+const GOVERNANCE: &str = include_str!("../../../../services/governance/config.yaml");
 
 pub struct App {
     router: Router,
     credentials: Credentials,
 }
 
-fn session_service(pool: &Arc<PgPool>) -> Arc<SessionCreationService> {
-    let db = Arc::new(Database::from_pools(
-        Arc::clone(pool),
-        Some(Arc::clone(pool)),
-    ));
-    let user_repository =
-        systemprompt::users::UserRepository::new(&db).expect("build the user repository");
-    let user = UserService::new(Arc::new(user_repository));
-    let analytics_repositories =
-        systemprompt::analytics::repository::AnalyticsRepositories::new(&db)
-            .expect("build the analytics repositories");
-    let analytics = AnalyticsService::new(None, None, &analytics_repositories);
-    Arc::new(SessionCreationService::new(
-        Arc::new(analytics),
-        Arc::new(user),
-    ))
-}
-
 impl App {
     pub fn new(pool: &Arc<PgPool>, credentials: Credentials) -> Self {
-        let admin_dir = globals::repo_root().join("storage/files/admin");
+        let fixture = EnvFixture::with_services_and_authenticator(
+            pool,
+            globals::services(),
+            globals::services_root(),
+            crate::tokens::authenticator(),
+        );
+        let database = Arc::new(Database::from_pools(
+            Arc::clone(pool),
+            Some(Arc::clone(pool)),
+        ));
         // Branding is not decoration here: the templates read `branding.*`
         // under strict mode, so an engine built without it 500s on every page
         // the server renders fine.
-        let branding = systemprompt_web_extension::branding_config();
-        let engine = admin::templates::AdminTemplateEngine::new(&admin_dir)
-            .expect("build the admin template engine from storage/files/admin")
-            .with_branding(branding);
+        let engine = admin::templates::AdminTemplateEngine::new(
+            &globals::repo_root().join("storage/files/admin"),
+        )
+        .expect("build the admin template engine from storage/files/admin")
+        .with_branding(systemprompt_web_shared::config_loader::branding_config(
+            &globals::repo_root().join("services"),
+        ));
+        let owner = credentials.admin_user_id.clone();
+        let bridge_auth = admin::bridge_auth_ssr_router(Arc::clone(pool), engine.clone());
 
-        let api = Router::new().nest("/admin", admin::admin_router(Arc::clone(pool)));
-        let ssr = admin::admin_ssr_router(Arc::clone(pool), engine);
+        let api = Router::new().nest(
+            "/admin",
+            admin::admin_router(&database, Arc::clone(pool), pool, owner.clone()),
+        );
+        let ssr = admin::admin_ssr_router(
+            &database,
+            Arc::clone(pool),
+            owner,
+            admin::AdminSsrShell {
+                engine,
+                sign_in: admin::SignInOptions::default(),
+            },
+        );
 
-        // The hook endpoints are mounted at the root by `extension_impl.rs`,
+        // The hook endpoints are mounted at the root by the web router,
         // outside both route modules the contract table is derived from. They
         // are here because `handler_errors` drives their rejection paths;
         // nothing reads them back into the table.
-        let hooks = admin::hooks_webhook_router(
-            Arc::clone(pool),
-            session_service(pool),
-            systemprompt::governance::policy::RateWindowRepository::new(pool.as_ref().clone()),
-        );
+        let users: Arc<dyn systemprompt::traits::UserProvider> =
+            Arc::new(UserService::new(Arc::new(UserRepository::new(&database))));
+        let governance = GovernanceEngine::from_config(
+            &GovernanceConfig::parse(GOVERNANCE).expect("the shipped governance config parses"),
+            &PolicyCatalog::builtin(),
+            Some(RateWindowRepository::new(pool.as_ref().clone())),
+        )
+        .expect("the shipped governance config builds an engine");
+        let hooks = admin::hooks_webhook_router(Arc::clone(pool), users)
+            .layer(axum::Extension(ConfigWatch::new(governance)));
 
         // `secrets_router` and `share_manifest_router` are merged at the root
         // by `extensions/web/src/router/api.rs`, not nested under either route
@@ -83,13 +103,24 @@ impl App {
         // the public manifest verifier are reachable from the suite.
         let secrets = admin::secrets_router(Arc::clone(pool));
         let share = admin::share_manifest_router(Arc::clone(pool));
+        let public = Router::new()
+            .nest(
+                "/api/public",
+                api.merge(admin::session_router(Arc::clone(pool), true)),
+            )
+            .merge(Router::new().nest(
+                "/api/public",
+                admin::bridge_identity_router(Arc::clone(pool)),
+            ));
 
         let router = Router::new()
             .nest_service(SSR_PREFIX, ssr)
-            .nest("/api/public", api)
+            .nest_service(BRIDGE_AUTH_PREFIX, bridge_auth)
+            .merge(public)
             .merge(hooks)
             .merge(secrets)
-            .merge(share);
+            .merge(share)
+            .layer(axum::Extension(fixture.env));
 
         Self {
             router,

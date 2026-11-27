@@ -59,7 +59,11 @@ pub fn web_member() -> ExtensionId {
 pub fn fixture_profile() -> Profile {
     let root = repo_root();
     let text = PROFILE.replace("__REPO__", &root.to_string_lossy());
-    serde_yaml::from_str(&text).expect("the fixture profile parses")
+    let mut profile: Profile = serde_yaml::from_str(&text).expect("the fixture profile parses");
+    profile
+        .derive_fields()
+        .expect("the fixture profile derives its URLs");
+    profile
 }
 
 #[must_use]
@@ -410,6 +414,22 @@ impl EnvFixture {
             pool,
             ServicesConfig::default(),
             &repo_root().join("services"),
+            member_cipher(),
+            authenticator,
+        )
+    }
+
+    #[must_use]
+    pub fn with_services_and_authenticator(
+        pool: &Arc<PgPool>,
+        services: ServicesConfig,
+        services_root: &Path,
+        authenticator: DynRequestAuthenticator,
+    ) -> Self {
+        Self::build(
+            pool,
+            services,
+            services_root,
             member_cipher(),
             authenticator,
         )

@@ -17,8 +17,8 @@ use systemprompt::identifiers::UserId;
 
 use crate::app::{ADMIN_API_PREFIX, App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 struct RejectedTrail {
     user_id: UserId,
@@ -48,7 +48,7 @@ async fn seed_rejected_trail(pool: &PgPool) -> RejectedTrail {
 
     let trace_id = seed::unique("rejected-trace");
     let request_id = seed::unique("rejected-request");
-    seed::insert_rejected_request(
+    seed::insert_request(
         pool,
         &seed::RequestSpec {
             id: request_id.clone(),
@@ -67,6 +67,7 @@ async fn seed_rejected_trail(pool: &PgPool) -> RejectedTrail {
             id: seed::unique("rejected-decision"),
             user_id: &user_id,
             session_id: &session_id,
+            context_id: &context_id,
             decision: "deny",
             policy: "blocklist",
             tool_name: "Bash",

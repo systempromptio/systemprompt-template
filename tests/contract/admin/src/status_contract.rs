@@ -12,8 +12,8 @@ use axum::http::StatusCode;
 use crate::app::App;
 use crate::principal::Principal;
 use crate::route_source::{MountedRoute, mounted_routes};
-use crate::tempdb::TempDb;
 use crate::{baseline, globals, principal};
+use template_test_common::TempDb;
 
 // Routes known to answer 5xx today, each with the defect that causes it.
 //

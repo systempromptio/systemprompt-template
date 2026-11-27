@@ -206,8 +206,6 @@ test:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=()
-    # The contract crate currently declares no test modules. Keep its explicit
-    # recipe fail-closed, but do not advertise an empty tier as validation.
     for tier in test-unit test-integration; do
         echo "==> $tier"
         {{just_executable()}} "$tier" || failed+=("$tier")

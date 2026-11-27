@@ -18,8 +18,8 @@ use axum::http::StatusCode;
 
 use crate::app::{ADMIN_API_PREFIX, App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 fn api(path: &str) -> String {
     format!("{ADMIN_API_PREFIX}{path}")
@@ -544,18 +544,23 @@ async fn the_matrix_resolves_a_role_granted_marketplace_at_the_role_layer() {
         return;
     };
 
-    let credentials = principal::provision(&db.pool).await;
-    let knowledge_worker = credentials.knowledge_worker_user_id.clone();
+    let credentials = principal::provision_dashboard(&db.pool).await;
+    let knowledge_worker = credentials
+        .knowledge_worker_user_id
+        .clone()
+        .expect("the dashboard provisioning seeds a knowledge worker");
     let plain_user = credentials.non_admin_user_id.clone();
     let app = App::new(&db.pool, credentials);
     const MARKETPLACE: &str = "acme-admin";
     seed::insert_acl_rule(
         &db.pool,
-        "marketplace",
-        MARKETPLACE,
-        "role",
-        "knowledge_worker",
-        "allow",
+        &seed::AclRule {
+            entity_type: "marketplace",
+            entity_id: MARKETPLACE,
+            rule_type: "role",
+            rule_value: "knowledge_worker",
+            access: "allow",
+        },
     )
     .await;
 

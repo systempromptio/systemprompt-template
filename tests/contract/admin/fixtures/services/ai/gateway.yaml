@@ -1,13 +1,96 @@
+# The admin contract fixture's model catalog: one provider, two models, two
+# routes. It is deliberately not the repository's services/ai tree, so the
+# catalog and ACL contracts assert against a controlled two-route gateway
+# rather than whatever this deployment ships. Nothing is reachable: the suite
+# issues no inference and gateway.enabled is false.
 gateway:
   enabled: false
   routes:
   - id: contract-claude
-    model_pattern: claude-*
-    provider: anthropic
+    label: Contract Claude
+    models:
+    - claude-contract-model
   - id: contract-gpt
-    model_pattern: gpt-*
-    provider: anthropic
-  default_provider: null
-  allow_unlisted_models: false
+    label: Contract GPT
+    models:
+    - gpt-contract-model
   auth_scheme: bearer
   inference_path_prefix: /v1
+models:
+  claude-contract-model:
+    capabilities:
+      streaming: true
+      tools: true
+      system_prompts: true
+    limits:
+      context_window: 200000
+      max_output_tokens: 8000
+    pricing:
+      input_per_million: 1.0
+      output_per_million: 1.0
+      cache_read_per_million: 0.1
+      cache_write_per_million: 1.0
+      per_image_cents: null
+    clients:
+    - claude
+  gpt-contract-model:
+    capabilities:
+      streaming: true
+      tools: true
+      system_prompts: true
+    limits:
+      context_window: 200000
+      max_output_tokens: 8000
+    pricing:
+      input_per_million: 1.0
+      output_per_million: 1.0
+      cache_read_per_million: 0.1
+      cache_write_per_million: 1.0
+      per_image_cents: null
+    clients:
+    - claude
+deployments:
+  claude-contract-model:
+  - anthropic/api
+  gpt-contract-model:
+  - anthropic/api
+credentials:
+  anthropic:
+    kind: platform
+    secret: anthropic
+providers:
+  anthropic:
+    credential: anthropic
+    governance:
+      european: false
+      no_retain: false
+    enabled: true
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: false
+      tools: false
+      structured_output: false
+      system_prompts: false
+      image_resolution_config: false
+      reasoning: false
+      prompt_caching: true
+    resilience:
+      request_timeout_ms: 60000
+      connect_timeout_ms: 10000
+      stream_idle_timeout_ms: 60000
+      retry_attempts: 3
+      retry_base_delay_ms: 200
+      retry_max_delay_ms: 10000
+      breaker_failure_threshold: 5
+      breaker_open_cooldown_ms: 30000
+      breaker_half_open_probes: 1
+      max_concurrent: 16
+    google_search_enabled: false
+    endpoints:
+      api:
+        wire: anthropic
+        url: https://api.anthropic.com/v1

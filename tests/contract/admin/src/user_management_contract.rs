@@ -8,13 +8,13 @@
 
 use axum::http::StatusCode;
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
-use systemprompt_security::{AdminTokenParams, JwtService};
+use systemprompt::identifiers::UserId;
+use systemprompt::models::auth::{JwtAudience, Permission};
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal};
+use template_test_common::TempDb;
 
 // A second admin, seeded plainly. The `admin` role alone is system-wide on
 // this instance, so nothing distinguishes them from the fixture admin but the
@@ -32,18 +32,13 @@ async fn seed_second_admin(pool: &PgPool) -> String {
     .execute(pool)
     .await
     .expect("seed second admin");
-    let session_id = SessionId::new(uuid::Uuid::new_v4().to_string());
-    JwtService::generate_admin_token(&AdminTokenParams {
-        user_id: &user_id,
-        session_id: &session_id,
+    crate::tokens::issue(&crate::tokens::Grant {
+        subject: user_id.as_str(),
         email: &email,
-        issuer: &globals::jwt_issuer(),
-        duration: chrono::Duration::hours(1),
-        client_id: None,
+        permission: Permission::User,
+        scopes: vec![Permission::User],
+        audiences: vec![JwtAudience::Api],
     })
-    .expect("mint a session token")
-    .as_str()
-    .to_owned()
 }
 
 // Why: this rule used to be asserted against `POST /invites`. Invites are gone

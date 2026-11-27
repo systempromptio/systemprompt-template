@@ -19,8 +19,8 @@ use sqlx::PgPool;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 const PATS: &str = "/admin/devices/pats";
 const ENROLL: &str = "/api/public/admin/management/devices";

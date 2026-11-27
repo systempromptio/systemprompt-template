@@ -18,8 +18,8 @@ use systemprompt::identifiers::UserId;
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 // A person with enough traffic that every panel on the page has something to
 // render: two requests so the trend has a shape, one of them failed so the

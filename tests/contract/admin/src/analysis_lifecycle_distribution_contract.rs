@@ -15,8 +15,8 @@ use systemprompt::marketplace::managed::{
 
 use crate::app::{App, Call};
 use crate::principal::Principal;
-use crate::tempdb::TempDb;
 use crate::{globals, principal, seed};
+use template_test_common::TempDb;
 
 async fn publish_skill(repo: &ManagedRepository, owner: &UserId, key: &str) -> String {
     let source = repo
@@ -83,6 +83,7 @@ async fn publish_skill(repo: &ManagedRepository, owner: &UserId, key: &str) -> S
                 action: PublicationAction::InitialAdoption,
                 expected_generation: 0,
                 operation_key: seed::unique("distribution-publication"),
+                cohort: None,
                 comparison_evidence: ComparisonEvidence {
                     recorded: BTreeMap::from([(
                         "composed_hash".to_owned(),
