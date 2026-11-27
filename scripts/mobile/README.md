@@ -9,6 +9,7 @@ inline in `mobile.just`.
 |---|---|
 | `toolchain.sh` | prints the pins in `extensions/mobile/shared/toolchain.env` and what this machine has (JDK, Android SDK packages, Xcode); fails when the Gradle wrapper, the version catalog, the Xcode project or the workflow disagree with the pins |
 | `android-sdk.sh` | installs the pinned Android platform and build tools with `sdkmanager`, and the NDK with `--ndk` |
+| `ios-tools.sh` | installs the pinned SwiftLint binary, checked against its pinned sha256, into `extensions/mobile/ios/build/tools` (macOS only) |
 
 The build scripts themselves are part of the extension a fork takes with it:
 `extensions/mobile/shared/build-android.sh` and `build-ios.sh`.

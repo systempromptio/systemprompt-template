@@ -30,8 +30,10 @@ case "$mode" in
         echo "mobile: built $MOBILE_ROOT/ios/build/DerivedData/Build/Products/Debug-iphonesimulator/Mobile.app"
         ;;
     check)
-        command -v swiftlint > /dev/null || { echo "mobile: swiftlint is not installed (brew install swiftlint)" >&2; exit 1; }
-        swiftlint lint --strict --config .swiftlint.yml
+        swiftlint="build/tools/swiftlint"
+        [ -x "$swiftlint" ] || swiftlint="$(command -v swiftlint || true)"
+        [ -n "$swiftlint" ] || { echo "mobile: SwiftLint is not installed (just mobile-ios-tools)" >&2; exit 1; }
+        "$swiftlint" lint --strict --config .swiftlint.yml
         xcrun swift-format lint --strict --recursive --configuration .swift-format App Design Features Tests UITests
         ;;
     *)

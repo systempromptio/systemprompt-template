@@ -62,9 +62,12 @@ jobs:
           persist-credentials: false
       - run: bash scripts/mobile/toolchain.sh
         timeout-minutes: 5
-      - name: Lint
-        run: bash extensions/mobile/shared/build-ios.sh check
-        timeout-minutes: 10
+      - name: Install the pinned linter
+        run: bash scripts/mobile/ios-tools.sh
+        timeout-minutes: 5
       - name: Simulator build
         run: bash extensions/mobile/shared/build-ios.sh build
         timeout-minutes: 20
+      - name: Lint
+        run: bash extensions/mobile/shared/build-ios.sh check
+        timeout-minutes: 10

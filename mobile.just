@@ -40,6 +40,10 @@ mobile-android-install: mobile-android
 mobile-ios:
     bash {{MOBILE_SHARED}}/build-ios.sh build
 
+# Install the pinned SwiftLint into extensions/mobile/ios/build/tools (macOS only)
+mobile-ios-tools:
+    bash scripts/mobile/ios-tools.sh
+
 # SwiftLint and swift-format over the iOS sources (macOS only; warnings are errors)
 mobile-ios-check:
     bash {{MOBILE_SHARED}}/build-ios.sh check
