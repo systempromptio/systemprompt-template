@@ -71,7 +71,7 @@ required-features = ["cli"]
 # One package, so its dependencies are declared here and not in a
 # [workspace.dependencies] table. scripts/core-pin.sh rewrites the rev.
 [dependencies]
-systemprompt-mobile = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "14294cf4c5c0a1170a1cc167c584f9a70b10d31d" }
+systemprompt-mobile = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "0b45e83d2b7ebb8bbcf06ae19cf0bc65d3f647d4" }
 uniffi = "0.33"
 
 [target.'cfg(target_os = "android")'.dependencies]

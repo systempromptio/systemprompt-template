@@ -40,8 +40,8 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "14294cf4c5c0a1170a1cc167c584f9a70b10d31d", default-features = false, features = ["core"] }
-systemprompt-extension = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "14294cf4c5c0a1170a1cc167c584f9a70b10d31d" }
+systemprompt = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "0b45e83d2b7ebb8bbcf06ae19cf0bc65d3f647d4", default-features = false, features = ["core"] }
+systemprompt-extension = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "0b45e83d2b7ebb8bbcf06ae19cf0bc65d3f647d4" }
 
 # ============================================
 # LOCAL EXTENSIONS
