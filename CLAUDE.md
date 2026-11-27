@@ -38,8 +38,8 @@ crate here; the file exists for that checkout and for `core-guard`. With the
 override inert it must be `v<pin>` (`scripts/check-core-ref.sh`, a lint gate).
 
 **Building against unreleased core.** The override set lives inert under
-`[workspace.metadata.unreleased-core-patch]` in `Cargo.toml` and
-`tests/Cargo.toml`. To track core `next`, rename that table to
+`[workspace.metadata.unreleased-core-patch]` in `Cargo.toml`,
+`tests/Cargo.toml` and `extensions/harness/Cargo.toml`. To track core `next`, rename that table to
 `[patch.crates-io]` in **every** manifest (`scripts/core-patch.sh on` does the
 root and `extensions/harness`; `tests/` by hand — `[patch]` is per-workspace: patch
 the root alone and the tests quietly build against crates.io), add the
