@@ -93,6 +93,15 @@ jobs:
       # looks for it on PATH instead of locating Visual Studio itself; this
       # puts the MSVC tools of the runner's Visual Studio on PATH.
       - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+      # Why: the cargo steps run under Git Bash, whose /usr/bin/link (GNU
+      # coreutils) comes before the MSVC linker on PATH; rustc is given the
+      # MSVC one by its full path.
+      - name: Name the MSVC linker by path
+        shell: pwsh
+        run: |
+          $link = (Get-Command link.exe -CommandType Application | Select-Object -First 1).Source
+          if ($link -notlike "*\VC\Tools\MSVC\*") { throw "link.exe resolved to $link, not the MSVC linker" }
+          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$link" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - name: Install the toolchain the shell pins
         run: rustup toolchain install || rustup show
         working-directory: extensions/harness
