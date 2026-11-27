@@ -1,7 +1,4 @@
 //! The English text of the sign-in gate.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::view::{InstanceSummary, SignInFailure};
 

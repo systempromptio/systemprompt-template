@@ -9,9 +9,6 @@
 //! applied instance to the extensions' manifest appliers, and runs the
 //! extensions' background services while their extensions are admitted; the
 //! shell context shares its settings, handles and enablement.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::sync::Arc;
 

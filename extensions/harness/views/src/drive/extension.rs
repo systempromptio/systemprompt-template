@@ -2,9 +2,6 @@
 //! the Drive settings pane, each present only while the instance-side half
 //! provided its handle (the shell adds them only while the instance admits the
 //! extension).
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

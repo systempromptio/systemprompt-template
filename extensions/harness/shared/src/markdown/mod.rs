@@ -5,9 +5,6 @@
 //! on top: the text is held as top-level blocks ([`MarkdownDocument`]), each
 //! block is rendered by its own text view keyed by content hash, so a growing
 //! reply re-parses only its last block.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod blocks;
 

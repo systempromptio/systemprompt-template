@@ -1,8 +1,5 @@
 //! The table of every (brand, channel) build and the identity this binary was
 //! built as.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

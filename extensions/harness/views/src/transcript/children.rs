@@ -1,9 +1,6 @@
 //! The progress of subagent sessions a transcript shows on its task rows: how
 //! many tool steps each child has taken and what it is doing now, kept current
 //! from the store's change feed.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::{BTreeMap, HashMap};
 

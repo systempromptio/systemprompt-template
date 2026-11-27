@@ -1,8 +1,5 @@
 //! The English text of the docks: the permission request and the questions a
 //! session waits on.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub(crate) const PERMISSION_TITLE: &str = "Permission needed";
 pub(crate) const ALLOW_ONCE: &str = "Allow once";

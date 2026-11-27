@@ -5,9 +5,6 @@
 //! enablement withdraws it, and starts again when it is admitted again. One
 //! that ends on its own is not restarted until the enablement changes, so a
 //! service that cannot run does not spin.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::fmt;
 use std::sync::Arc;

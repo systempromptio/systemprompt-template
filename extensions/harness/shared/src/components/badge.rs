@@ -1,8 +1,5 @@
 //! Small status marks: a toned badge or pill, and a status dot that can pulse
 //! while work is live.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     App, ElementId, IntoElement, ParentElement as _, Pixels, RenderOnce, SharedString, Styled as _,

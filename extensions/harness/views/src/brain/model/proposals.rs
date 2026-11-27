@@ -1,9 +1,6 @@
 //! The proposals inbox: the proposals the instance's analyses drafted, the
 //! decision in flight and how the last one ended. Nothing a proposal describes
 //! applies itself; it waits for a person's approval.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::wire::brain::{BrainProposal, BrainProposalId, ProposalStatus};
 

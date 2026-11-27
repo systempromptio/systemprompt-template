@@ -2,9 +2,6 @@
 //! files, and files dropped on the composer. Disk work runs on the blocking
 //! pool; a pasted image is written to the app's scratch folder and attached by
 //! path.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

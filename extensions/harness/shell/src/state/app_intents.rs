@@ -1,9 +1,6 @@
 //! What views ask the app state to do: open a project, start, select, fork and
 //! delete sessions, send from the composer, choose the model and agent,
 //! navigate, and follow links and later starts.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::{Path, PathBuf};
 

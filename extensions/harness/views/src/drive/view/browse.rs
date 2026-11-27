@@ -1,9 +1,6 @@
 //! The browsing panes: the scope switch and folder tree on the left, and the
 //! document list with its search, sort, New, Import and Refresh controls in the
 //! middle. The list takes the arrow keys, Enter and Escape.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, InteractiveElement as _, IntoElement, ParentElement as _, SharedString,

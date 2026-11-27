@@ -1,9 +1,6 @@
 //! Parsed content the transcript keeps between frames: one markdown document
 //! per text part, re-split only at its tail as text streams in, and one parsed
 //! patch per diff, re-parsed only when the diff text changes.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};

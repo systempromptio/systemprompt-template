@@ -1,7 +1,4 @@
 //! What the composition root hands every shell extension's views.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::fmt;
 use std::sync::Arc;

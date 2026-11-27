@@ -1,8 +1,5 @@
 //! Progress and identity marks: spinner, progress bar, key hints and initials
 //! avatars.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::hash::{Hash as _, Hasher as _};
 

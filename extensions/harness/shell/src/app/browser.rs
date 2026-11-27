@@ -1,8 +1,5 @@
 //! Opening pages in the user's default browser, for the sign-in flows of
 //! `sp-accounts`.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_accounts::{Browser, BrowserError};
 use url::Url;

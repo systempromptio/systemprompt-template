@@ -1,8 +1,5 @@
 //! The open fact's why-view (the terms of its importance and the reason recall
 //! would leave it out) and its revision timeline, newest first.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{AnyElement, Context, IntoElement, ParentElement as _, Styled as _, div};
 use harness_ui::components::{Badge, Banner, Card, Spinner};

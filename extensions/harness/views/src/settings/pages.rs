@@ -1,8 +1,5 @@
 //! The pages Settings lists: the shell's own, with the settings panes of the
 //! admitted extensions after Governance.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{AnyView, App, Entity, Window};
 use harness_shell::SettingsPaneSpec;

@@ -1,7 +1,4 @@
 //! One read the views wait on: not asked yet, in flight, answered or failed.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_brain::BrainError;
 

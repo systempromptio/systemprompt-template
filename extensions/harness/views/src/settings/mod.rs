@@ -16,9 +16,6 @@
 //!   panes are listed after Governance and follow the enablement.
 //! - The page list is keyboard-navigable (Up, Down, Home, End). Text comes from
 //!   `crate::strings::settings`.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod about;
 mod agents;

@@ -1,8 +1,5 @@
 //! The status lines under the conversation: the retry countdown, the error
 //! banner with its dismiss, and the boundary left by an undo with the way back.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::time::Instant;
 

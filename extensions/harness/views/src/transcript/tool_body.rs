@@ -1,9 +1,6 @@
 //! The expanded details of a tool call: the shell command and its output, the
 //! diff an edit, write or patch made, the todo checklist, a subagent's
 //! progress, or the raw input and output of any other tool.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, SharedString, Styled as _, div, px,

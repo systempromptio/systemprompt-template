@@ -6,9 +6,6 @@
 //! app's scheme through the toolkit's open-URLs callback rather than the
 //! command line) is forwarded into the same request channel as a start handed
 //! over by a second instance; the callback is registered before the run.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::future::Future;
 use std::path::PathBuf;

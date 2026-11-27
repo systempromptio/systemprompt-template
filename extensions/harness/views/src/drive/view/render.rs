@@ -1,8 +1,5 @@
 //! The Drive screen drawn: folders, the document list, the preview and the sync
 //! panel, or the withheld state. Notices the screen raised show as toasts.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::{DriveView, FOLDER_PANE, LIST_PANE};
 use crate::strings as text;

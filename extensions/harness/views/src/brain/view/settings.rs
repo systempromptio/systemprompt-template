@@ -2,9 +2,6 @@
 //! extension's own settings, and where the brain stands. It reads the stored
 //! preference on every render and follows the preference store, the brain's
 //! feed and the instance's enablement.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, Render, Styled as _, Task, Window, div,

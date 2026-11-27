@@ -1,8 +1,5 @@
 //! The Shortcuts settings page: the app's keyboard commands from the keymap and
 //! the keys every list and picker answers to, shown as keycaps.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, AnyView, App, AppContext as _, Context, Entity, IntoElement, Render, Window,

@@ -7,9 +7,6 @@
 //! `follow` keeps an entity current from a watch receiver; tokio's receivers
 //! need no runtime context to be awaited, so it runs on GPUI's foreground
 //! executor directly.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::future::Future;
 

@@ -1,9 +1,6 @@
 //! What a shell extension contributes: screens, the titlebar items that open
 //! them, settings panes and transcript adornments, each built from the shell
 //! context.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::fmt;
 use std::rc::Rc;

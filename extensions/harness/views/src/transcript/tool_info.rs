@@ -1,9 +1,6 @@
 //! What a tool call shows in its row: the kind of tool, its salient argument,
 //! where it stands and how it ended, read from the stored tool state without
 //! any GPUI.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_engine::denied;
 use harness_store::{JsonMap, SessionId, TodoStatus, ToolState};

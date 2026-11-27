@@ -7,9 +7,6 @@
 //! `SessionModel::apply_event` one engine event; both say whether anything
 //! visible changed, or that the model can no longer be trusted and must be
 //! reloaded. No GPUI, no IO: the reducer is tested over scripted sequences.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_engine::{
     EngineEvent, PermissionAsk, PermissionId, QuestionAsk, QuestionId, RunStatus, SessionFailure,

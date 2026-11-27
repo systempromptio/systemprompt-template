@@ -1,8 +1,5 @@
 //! Requests a shell extension's view makes of the frame around it, dispatched
 //! as toolkit actions from the view's window and handled by the frame.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{Action, SharedString};
 

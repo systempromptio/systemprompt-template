@@ -2,9 +2,6 @@
 //! switcher, and on the right the entry points of the admitted extensions'
 //! titlebar screens and the governance pill. The toolkit's titlebar draws the
 //! window controls and moves the window.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashMap;
 use std::rc::Rc;

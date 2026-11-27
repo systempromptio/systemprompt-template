@@ -1,8 +1,5 @@
 //! The model picker: the models the signed-in instance offers, searchable by
 //! name, id and wire protocol, each with its protocol family and context size.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{App, Context, Entity, IntoElement, Render, SharedString, Subscription, Window};
 

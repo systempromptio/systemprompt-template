@@ -1,9 +1,6 @@
 //! What a message offers by pointer or keyboard: copy it, undo the session back
 //! to it, fork a new session from it, and the list selection that the keyboard
 //! moves.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     ClipboardItem, Context, Div, InteractiveElement as _, KeyDownEvent, Stateful, Window,

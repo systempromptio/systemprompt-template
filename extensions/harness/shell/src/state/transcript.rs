@@ -1,8 +1,5 @@
 //! Order-keeping edits to a session's messages and their parts, and the effect
 //! each edit had.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_store::{Message, MessageId, MessageWithParts, Part, PartBody, PartId};
 

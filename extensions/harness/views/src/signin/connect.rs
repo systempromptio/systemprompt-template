@@ -1,9 +1,6 @@
 //! Step 1 of the sign-in gate: the instance address with its live check, the
 //! browser sign-in with its waiting state, "keep me signed in", and the
 //! personal access token or one-time code field.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, ClickEvent, Context, IntoElement, ParentElement as _, SharedString, Styled as _,

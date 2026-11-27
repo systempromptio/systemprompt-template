@@ -1,8 +1,5 @@
 //! Checkbox and on/off toggle, controlled by the caller: they report the
 //! requested value and render what they are given.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

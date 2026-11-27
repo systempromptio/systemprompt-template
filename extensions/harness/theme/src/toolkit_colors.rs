@@ -1,8 +1,5 @@
 //! The projection of a palette onto the toolkit's theme colours, so the
 //! toolkit's own controls match.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::Hsla;
 use gpui_kit::component::ThemeColor;

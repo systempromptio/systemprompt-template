@@ -10,9 +10,6 @@
 //! (Activate, Dismiss), A and R as plain keys, and all of them are
 //! accepted only after a short delay, so keys typed elsewhere a moment before
 //! cannot answer it.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod keys;
 mod permission;

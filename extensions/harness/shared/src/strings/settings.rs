@@ -1,7 +1,4 @@
 //! The English text of the Settings screen and its pages.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_config::{Action, AgentMode};
 use harness_ui::Scheme;
@@ -108,7 +105,8 @@ pub(crate) const NOT_SIGNED_IN: &str = "Not signed in";
 pub(crate) const DATA_FOLDER: &str = "Data folder";
 pub(crate) const LOG_FOLDER: &str = "Log folder";
 pub(crate) const LICENCES: &str = "Licences";
-pub(crate) const LICENCES_BODY: &str = "Licensed under the Business Source License 1.1. Third-party components are \
+pub(crate) const LICENCES_BODY: &str = "The shell is licensed under the MIT License; the systemprompt.io core it runs is under the Business \
+     Source License 1.1. Third-party components are \
      used under their own licences, listed with the installed app.";
 
 pub(crate) fn with_detail(label: &str, detail: &str) -> String {

@@ -3,9 +3,6 @@
 //!
 //! The scales are tuned for a dense desktop tool: a 4 px grid, small radii, 13
 //! px body text.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 /// The 4 px spacing grid.
 pub mod space {

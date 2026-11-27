@@ -1,9 +1,6 @@
 //! Which reply is a session's latest, as far as the transcript has shown.
 //! Message ids sort in creation order, so the greatest id seen per session is
 //! its latest reply.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashMap;
 

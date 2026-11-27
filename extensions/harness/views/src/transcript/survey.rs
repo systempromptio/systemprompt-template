@@ -1,9 +1,6 @@
 //! What one look at the session model tells the transcript: its revision, the
 //! rows to show, the run status, the subagent sessions to follow and the parts
 //! still alive.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashSet;
 

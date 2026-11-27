@@ -3,9 +3,6 @@
 //! The screen, the settings pane and the transcript adornment, in English.
 //! Views read their text from here; nothing user-facing is written inline in a
 //! view.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use chrono::{DateTime, Local, Utc};
 use sp_protocol::wire::brain::{

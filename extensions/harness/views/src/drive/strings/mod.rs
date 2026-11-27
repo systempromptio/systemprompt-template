@@ -3,9 +3,6 @@
 //! The screen's browsing, documents, preview and tabs, comments, sharing and
 //! the copy for every Drive failure are here; the sync panel's text is in
 //! [`sync`], the settings pane's in [`settings`].
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub mod settings;
 pub mod sync;

@@ -1,8 +1,5 @@
 //! The Brain screen drawn: why it cannot be used yet, or the tab bar over the
 //! facts tab or the proposals inbox.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, Render, SharedString, Styled as _,

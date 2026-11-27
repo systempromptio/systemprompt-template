@@ -1,7 +1,4 @@
 //! The semantic token set every component paints with.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::color::Color;
 

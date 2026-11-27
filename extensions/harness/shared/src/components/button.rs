@@ -1,8 +1,5 @@
 //! Labelled buttons in four kinds and three sizes, and the toolkit button both
 //! button types build on.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

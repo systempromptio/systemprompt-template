@@ -1,9 +1,6 @@
 //! The document pane: the name with its actions (attach to the composer, open
 //! in the browser, refresh), the tabs, and the Preview, Revisions and Sharing
 //! tabs. Comments are drawn by `comments`.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,

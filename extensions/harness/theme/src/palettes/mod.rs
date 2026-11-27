@@ -1,8 +1,5 @@
 //! The built-in palettes: a neutral graphite with a blue accent, and the
 //! Astound brand.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod astound;
 mod graphite;

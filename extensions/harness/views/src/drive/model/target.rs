@@ -1,8 +1,5 @@
 //! What the Drive screen is pointed at: the account and the instance whose
 //! Drive the handle follows. A change of either resets what the screen shows.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::ids::AccountId;
 

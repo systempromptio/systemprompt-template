@@ -1,8 +1,5 @@
 //! How a failed brain call is shown: the error reduced to what the person can
 //! act on. The error itself is logged where it happens.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_brain::BrainError;
 use sp_client::ClientError;

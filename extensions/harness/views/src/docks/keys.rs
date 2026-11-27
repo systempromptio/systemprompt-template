@@ -1,8 +1,5 @@
 //! The keys a dock answers to: Enter and Esc through the list bindings, A and R
 //! as plain keys, and the feedback field.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::{DocksView, Head};
 use gpui_kit::{Context, KeyDownEvent, Window};

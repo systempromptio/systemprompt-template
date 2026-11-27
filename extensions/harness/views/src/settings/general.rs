@@ -1,9 +1,6 @@
 //! The General settings page: the colour scheme (applied live), the project
 //! opened at start, the sidebar, and the composer's preferences. Every change
 //! is written through `SettingsStore::update`.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

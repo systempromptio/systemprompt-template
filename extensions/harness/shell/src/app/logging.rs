@@ -1,8 +1,5 @@
 //! The shell's log: a daily rolling file under the data root's `logs`
 //! directory, named with the build's link scheme and kept for a week.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::Path;
 

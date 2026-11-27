@@ -3,9 +3,6 @@
 //! call, read from [`BrainService::memory`]; the fact ids and revisions show
 //! on hover; the transcript draws it again whenever the feed's memory count
 //! moves. Held as `dyn TranscriptAdornment` on the UI thread.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::cell::RefCell;
 

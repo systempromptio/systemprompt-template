@@ -1,8 +1,5 @@
 //! The syntax palette handed to the toolkit's highlighter as its highlight
 //! theme.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::sync::Arc;
 

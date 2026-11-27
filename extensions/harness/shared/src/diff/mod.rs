@@ -1,8 +1,5 @@
 //! Unified diff rendering: a file-by-file view with numbered, tinted lines and
 //! folded unchanged runs, and an inline `+n −m` stat.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod model;
 mod parse;

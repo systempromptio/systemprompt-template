@@ -1,8 +1,5 @@
 //! The release track a build ships on, chosen by the `channel-canary` /
 //! `channel-dev` features.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 /// The release track a build ships on; each track installs beside the others.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

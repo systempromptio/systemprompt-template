@@ -4,9 +4,6 @@
 //! grouped by permission with where each rule comes from, and the user's own
 //! rules added and removed in the global settings file through
 //! `harness_config::update_global_setting` on the runtime.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub mod jsonc;
 mod load;

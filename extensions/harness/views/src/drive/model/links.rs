@@ -1,8 +1,5 @@
 //! Where a document lives outside the app: its page on the instance and its
 //! file under the local sync folder, refusing any path that leaves the folder.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::{Path, PathBuf};
 

@@ -1,8 +1,5 @@
 //! The main window's geometry: where it opens (the saved place when it is still
 //! on a display) and what is saved when it moves.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{App, Bounds, Pixels, Size, WindowBounds, point, px, size};
 

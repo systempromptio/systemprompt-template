@@ -1,8 +1,5 @@
 //! The menu on a session row in the sidebar: compact the session now, or
 //! delete it after a confirmation.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{App, Entity, SharedString, Window};
 use harness_store::SessionId;

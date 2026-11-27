@@ -4,9 +4,6 @@
 //! Every helper honours the reduced-motion flag (`App::reduce_motion`, seeded
 //! from the operating system by the toolkit, settable by the shell): with it
 //! set, the element is returned in its final state with no animation attached.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::time::Duration;
 

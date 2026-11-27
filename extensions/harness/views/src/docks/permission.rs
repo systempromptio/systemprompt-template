@@ -1,9 +1,6 @@
 //! The permission dock: which tool asks for what, the command, diff, address or
 //! path it would act on, what an "always" answer would cover, and Allow once,
 //! Always allow and Reject with optional feedback.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::sync::Arc;
 

@@ -1,9 +1,6 @@
 //! Step 2 of the sign-in gate and its ending: the signed-in instances with the
 //! chosen one's counts and manifest key fingerprint (information only; the gate
 //! never trusts a key), Finish, and the "Finishing setup" wait.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, ClickEvent, Context, InteractiveElement as _, IntoElement, ParentElement as _,

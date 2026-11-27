@@ -1,8 +1,5 @@
 //! The session header (title, todo progress and the changed-lines summary) and
 //! the changes panel it opens, one diff per changed file.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, ElementId, FontWeight, InteractiveElement as _, IntoElement,

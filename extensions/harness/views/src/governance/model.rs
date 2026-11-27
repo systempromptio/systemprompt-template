@@ -3,9 +3,6 @@
 //!
 //! The page only renders them, and every status and action an instance offers
 //! is tested without a window.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use chrono::{DateTime, Utc};
 use harness_ui::Tone;

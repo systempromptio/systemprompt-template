@@ -1,7 +1,4 @@
 //! A centred placeholder for an empty list or view.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, App, IntoElement, ParentElement as _, RenderOnce, SharedString, Styled as _,

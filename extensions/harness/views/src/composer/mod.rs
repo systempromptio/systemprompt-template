@@ -8,9 +8,6 @@
 //! sends through `AppState::send` and stops through `AppState::abort_current`.
 //! The unsent text and attachments are kept per session while the user moves
 //! between sessions.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod attach;
 pub mod drafts;

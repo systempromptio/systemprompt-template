@@ -1,8 +1,5 @@
 //! A dense, focusable list row: leading icon, title and subtitle, trailing
 //! slot, selected and hover states.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

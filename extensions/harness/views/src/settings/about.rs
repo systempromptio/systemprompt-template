@@ -1,9 +1,6 @@
 //! The About settings page: which build this is, who is signed in, where the
 //! app keeps its data and logs (each with an open button), and the licence
 //! note.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

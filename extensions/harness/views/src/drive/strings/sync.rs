@@ -2,9 +2,6 @@
 //!
 //! Where the sync stands, its counts and problems, held deletes, conflicts and
 //! recent activity.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use chrono::{DateTime, Local, Utc};
 use sp_drive::sync::{HeldReason, SyncProblemKind};

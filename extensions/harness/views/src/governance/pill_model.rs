@@ -1,9 +1,6 @@
 //! What the titlebar pill shows: the active instance, how its sync stands as an
 //! icon and a tone, the suggested fix when it needs attention, and the other
 //! signed-in instances it can switch to.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use chrono::{DateTime, Utc};
 use harness_ui::{IconName, Tone};

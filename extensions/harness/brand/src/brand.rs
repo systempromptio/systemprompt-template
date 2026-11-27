@@ -1,8 +1,5 @@
 //! The product line a build ships as, chosen by the `brand-astound` cargo
 //! feature.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 /// The product line a build ships as.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

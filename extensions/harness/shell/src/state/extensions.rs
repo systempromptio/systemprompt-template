@@ -1,9 +1,6 @@
 //! What the admitted shell extensions contribute (screens, their titlebar
 //! items, settings panes and transcript adornments), read again whenever the
 //! instance's enablement changes.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::fmt;
 use std::rc::Rc;

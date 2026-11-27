@@ -1,7 +1,4 @@
 //! The trait a shell extension implements.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

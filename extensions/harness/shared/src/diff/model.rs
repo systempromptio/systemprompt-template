@@ -1,8 +1,5 @@
 //! The parsed shape of a unified diff (files, hunks, numbered lines, stats) and
 //! the folding of long unchanged runs.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::ops::Range;
 

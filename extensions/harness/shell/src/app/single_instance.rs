@@ -7,9 +7,6 @@
 //! build) it is a Unix socket in the state directory. The wire is one JSON line
 //! each way: the request, then `ok`. The listener runs as an owned task of the
 //! services' `BackgroundTasks`, so it stops at shutdown.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::io;
 use std::time::Duration;

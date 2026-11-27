@@ -13,9 +13,6 @@
 //! shows a withheld Drive, a stopped sync or a failed call explicitly. The
 //! shell shows these contributions only while the instance admits the
 //! extension.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod bridge;
 mod extension;

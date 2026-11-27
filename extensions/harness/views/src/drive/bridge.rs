@@ -7,9 +7,6 @@
 //! work. `follow` keeps a view current from a watch channel: tokio's receivers
 //! need no tokio context to be awaited, so the waiting side runs on the UI
 //! thread's executor and ends with the view.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::future::Future;
 

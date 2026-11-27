@@ -1,8 +1,5 @@
 //! The facts tab: the filters and the paged fact list on the left, the open
 //! fact on the right.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, InteractiveElement as _, IntoElement, ParentElement as _,

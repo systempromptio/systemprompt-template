@@ -6,9 +6,6 @@
 //! or the enablement withdraws it), owns one transcript and docks pair
 //! per open session and routes their events, hosts the toasts, tells the sync
 //! whether the window is in front and handles the shell's keyboard commands.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod render;
 

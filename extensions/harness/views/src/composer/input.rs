@@ -3,9 +3,6 @@
 //! Enter sends (or steers while a run is busy), Ctrl+Enter takes the other
 //! delivery, Shift+Enter is a new line, and the arrow keys, Tab, Enter and
 //! Escape drive an open completion list.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::component::input::{
     Enter, Escape, IndentInline, InputEvent, MoveDown, MoveUp, TextareaState,

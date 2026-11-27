@@ -1,9 +1,6 @@
 //! What the Drive screen does when the user browses: reload the tree and the
 //! listing, switch scope, folder, search and sort, move the selection, open a
 //! document and its tabs, open it in the browser or hand it to the composer.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::time::Duration;
 

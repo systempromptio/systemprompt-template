@@ -1,9 +1,6 @@
 //! Which folder the local sync uses as its base, as the settings pane shows it:
 //! the folder the user chose, else the product's default under Documents. A
 //! preference that does not decode keeps the sync off rather than falling back.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::{Path, PathBuf};
 

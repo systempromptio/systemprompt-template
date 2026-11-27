@@ -1,8 +1,5 @@
 //! How the app state follows the accounts, the engine events, the store
 //! changes of the open project and the instance's extension enablement.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

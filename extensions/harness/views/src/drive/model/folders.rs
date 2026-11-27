@@ -1,8 +1,5 @@
 //! The folder tree flattened into the rows the folder pane draws, following
 //! which folders are expanded.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashSet;
 use std::hash::BuildHasher;

@@ -1,8 +1,5 @@
 //! How an open session takes in its load result, store changes and engine
 //! events, and settles what they change.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use crate::state::session_model::{Effect, Snapshot};
 use crate::state::session_state::SessionState;

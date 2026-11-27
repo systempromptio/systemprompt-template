@@ -1,9 +1,6 @@
 //! Which messages of a session become rows of the transcript list, and what
 //! changed between two renders, so the list re-measures only the rows whose
 //! content moved.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash as _, Hasher as _};

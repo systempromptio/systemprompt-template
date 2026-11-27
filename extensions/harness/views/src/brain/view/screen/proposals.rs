@@ -1,8 +1,5 @@
 //! The proposals inbox: the open proposals with their approve and reject
 //! actions, then the decided ones; each proposal's body shows on request.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, InteractiveElement as _, IntoElement, ParentElement as _,

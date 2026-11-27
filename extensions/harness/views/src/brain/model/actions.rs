@@ -2,9 +2,6 @@
 //! person's own decisions: none of them is ever a tool the model can call.
 //! Which of them the account may take is the instance's decision; a refusal
 //! comes back as a failure.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::wire::brain::{BrainFact, FactStatus};
 

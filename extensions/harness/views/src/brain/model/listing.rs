@@ -1,9 +1,6 @@
 //! The fact list: its filter, the pages read so far, the cursor of the next
 //! page and the selected fact. Each read carries the generation it was started
 //! in, so an answer to a superseded read is dropped.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::wire::brain::{BrainFact, BrainFactId, FactPage};
 

@@ -3,9 +3,6 @@
 //!
 //! Tokens are written as hex so palettes stay readable and testable without a
 //! running app; they become the toolkit's `Hsla` only when painted.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{Fill, Hsla, Rgba};
 

@@ -4,9 +4,6 @@
 //! geometry, the verdict switch, composer preferences and each extension's own
 //! preferences object, kept under its extension id. They are owned and saved by
 //! [`SettingsStore`](super::settings_store::SettingsStore).
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

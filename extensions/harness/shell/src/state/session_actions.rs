@@ -4,9 +4,6 @@
 //! A deleted session leaves the list through the store's change feed; a
 //! compaction shows up in the transcript as its marker and summary. Either
 //! failure is reported as a notice.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::Context;
 use harness_engine::ErrorKind;

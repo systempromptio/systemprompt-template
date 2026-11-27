@@ -1,8 +1,5 @@
 //! Step 2 of the sign-in flow and its ending: the outcome of a sign-in, the
 //! signed-in instances, Finish, the first sync and the fade.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::ids::AccountId;
 use sp_protocol::view::{InstanceSummary, SignInOutcome};

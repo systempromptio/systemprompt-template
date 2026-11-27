@@ -1,9 +1,6 @@
 //! The open fact: its statement and badges, the person's actions with the
 //! reason a dispute or retraction asks for, how the last action ended, and
 //! the fact's details.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,

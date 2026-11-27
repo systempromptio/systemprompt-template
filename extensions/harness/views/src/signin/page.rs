@@ -1,8 +1,5 @@
 //! The frame every step of the sign-in gate sits in: the product and step line,
 //! the step's title and lede, and a centred, scrollable column.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,

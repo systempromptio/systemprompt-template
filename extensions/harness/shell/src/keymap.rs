@@ -3,9 +3,6 @@
 //!
 //! The frame handles them in its key context; deeper contexts (lists, dialogs,
 //! the composer) take precedence for the keys they bind.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

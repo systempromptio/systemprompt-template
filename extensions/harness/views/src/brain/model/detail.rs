@@ -1,9 +1,6 @@
 //! The open fact: the fact, its revision timeline and its why-view, the reason
 //! being written for a dispute or retraction, the action in flight and how the
 //! last one ended.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::wire::brain::{BrainFact, BrainFactId, FactRevision, FactWhy};
 

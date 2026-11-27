@@ -4,9 +4,6 @@
 //!
 //! The `harness` binary calls [`run`]; the modules are public so the test
 //! workspace reaches what it tests.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub mod app;
 pub mod keymap;

@@ -4,9 +4,6 @@
 //! Nothing here reads XDG variables or another product's directories: the root
 //! is `sp_brand::identity().data_root()` (`%LOCALAPPDATA%\<vendor>\<product>[
 //! channel]` on Windows).
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::io;
 use std::path::{Path, PathBuf};

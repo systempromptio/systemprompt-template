@@ -3,9 +3,6 @@
 //! The explicit withheld, unserved, connecting, unavailable and empty states,
 //! or the notifications newest first with each row's unread mark, attention,
 //! age and Mark read, then Load older.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use chrono::{DateTime, Utc};
 use gpui_kit::{AnyElement, Context, IntoElement, ParentElement as _, Styled as _, div};

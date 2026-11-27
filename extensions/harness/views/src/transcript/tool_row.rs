@@ -1,9 +1,6 @@
 //! One compact row per tool call: icon, tool name, its salient argument, the
 //! live title, duration and status, with denials and rejections called out,
 //! expanding to the call's details.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,

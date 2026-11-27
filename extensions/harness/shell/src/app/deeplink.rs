@@ -8,9 +8,6 @@
 //!   one) on a new session with a draft.
 //! - `<scheme>://session?id=<session id>` opens a session.
 //! - `<scheme>://settings` or `<scheme>://settings?page=<id>` opens Settings.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

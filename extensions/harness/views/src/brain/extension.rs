@@ -4,9 +4,6 @@
 //! Every contribution is built over the [`BrainService`] that half publishes in
 //! the shared handles; without it nothing is contributed. The shell shows the
 //! contributions only while the instance admits the extension.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

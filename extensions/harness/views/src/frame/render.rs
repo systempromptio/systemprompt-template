@@ -1,9 +1,6 @@
 //! The frame drawn: titlebar, sidebar, the routed main area and the toasts,
 //! with the shell's keyboard commands and the requests extension views
 //! dispatch to it.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::Frame;
 use crate::keymap::{

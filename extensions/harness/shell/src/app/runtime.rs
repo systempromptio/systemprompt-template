@@ -17,9 +17,6 @@
 //! Tokio's channel receivers do not need a tokio context to be awaited, so the
 //! receiving side runs on GPUI's foreground executor directly. A result that
 //! arrives after its entity was released is dropped.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::future::Future;
 use std::time::Duration;

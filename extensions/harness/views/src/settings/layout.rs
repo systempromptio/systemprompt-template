@@ -1,9 +1,6 @@
 //! The shared shape of a settings page: a scrolling column with a title and
 //! description, cards of rows, and a row with a label on the left and its
 //! control on the right.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, App, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,

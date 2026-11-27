@@ -4,9 +4,6 @@
 //!
 //! No component carries user-facing text of its own: labels, tooltips and
 //! messages are always passed in.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod badge;
 mod button;

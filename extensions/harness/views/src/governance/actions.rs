@@ -2,9 +2,6 @@
 //! remove, trust a key and Sync now. The accounts write their store on each
 //! change, so every call runs on the blocking pool and reports back as a
 //! notice.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{Context, Entity, SharedString, Task};
 use harness_ui::Tone;

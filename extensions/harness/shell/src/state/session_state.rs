@@ -7,9 +7,6 @@
 //! batches at most once a frame. While a load is in flight, changes are
 //! held and applied after it, and streamed deltas are dropped (the model
 //! reloads once the run is idle).
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

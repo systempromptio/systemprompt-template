@@ -3,9 +3,6 @@
 //! The inbox's entry point with the unread count, read straight from the
 //! notifications handle's feed. No count shows while the feed is withheld or
 //! unserved.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

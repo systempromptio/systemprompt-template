@@ -2,9 +2,6 @@
 //! connection status, refreshed on demand. Servers the instance manages are
 //! marked as managed and offer no actions; the user's own servers are
 //! configured in the settings folder this page opens.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

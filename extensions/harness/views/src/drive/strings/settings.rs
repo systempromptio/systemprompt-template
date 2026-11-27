@@ -2,9 +2,6 @@
 //!
 //! The base folder of the local sync, where it comes from, and choosing or
 //! resetting it.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use crate::model::SyncFolder;
 

@@ -1,9 +1,6 @@
 //! How the composer looks: the completion list above a card holding the
 //! attachment chips, the growing prompt and a toolbar with attach, the agent
 //! and model pickers, the delivery hint and send or stop.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::component::input::Textarea;
 use gpui_kit::{

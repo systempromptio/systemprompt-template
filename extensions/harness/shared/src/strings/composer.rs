@@ -1,8 +1,5 @@
 //! The English text of the composer: placeholders, send and stop, delivery
 //! hints, attachments, the command and file lists.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub(crate) const PLACEHOLDER: &str = "Message — / for commands, @ to mention a file";
 pub(crate) const PLACEHOLDER_BUSY: &str = "Steer the running agent, or queue a follow-up";

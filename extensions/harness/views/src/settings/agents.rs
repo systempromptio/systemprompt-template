@@ -1,9 +1,6 @@
 //! The Agents and skills settings page: the project's agents and skills with
 //! where each is defined, and a button that shows a file-defined one in the
 //! file manager.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::{Path, PathBuf};
 

@@ -10,9 +10,6 @@
 //! the session's `SessionModel` and acts only through `SessionState`'s intents.
 //! Opening a subagent session and handing a reverted prompt back to the
 //! composer are emitted as `TranscriptEvent`s for the frame to route.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod actions;
 mod adornments;

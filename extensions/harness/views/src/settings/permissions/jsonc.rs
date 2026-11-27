@@ -1,8 +1,5 @@
 //! Settings files are JSON with comments and trailing commas; this turns them
 //! into plain JSON.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub fn strip_jsonc(text: &str) -> String {
     let chars: Vec<char> = text.chars().collect();

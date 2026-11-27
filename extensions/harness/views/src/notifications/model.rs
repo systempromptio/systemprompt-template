@@ -3,9 +3,6 @@
 //! What the inbox body shows for the feed, whether the reader's actions are
 //! offered, which items still owe a seen receipt, which actions are in flight,
 //! and the tone of each status.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashSet;
 use std::hash::BuildHasher;

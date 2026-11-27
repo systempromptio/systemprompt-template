@@ -1,7 +1,4 @@
 //! The English text of the governance pill and the Governance settings page.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::view::{SignInFailure, SignInOutcome, SyncErrorKind};
 

@@ -1,8 +1,5 @@
 //! The heartbeat line of the Governance page: online, failing, paused, or a
 //! version the instance does not accept with the minimum it asks for.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_ui::Tone;
 use sp_protocol::wire::heartbeat::WindowStatus;

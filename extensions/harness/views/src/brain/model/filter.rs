@@ -1,8 +1,5 @@
 //! Which facts the list shows: a kind, a subject and any of several statuses,
 //! turned into the instance's listing query one page at a time.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_brain::FactQuery;
 use sp_protocol::wire::brain::{FactKindId, FactStatus, SubjectKey, SubjectKeyError};

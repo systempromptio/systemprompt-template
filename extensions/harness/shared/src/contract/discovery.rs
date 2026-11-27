@@ -1,8 +1,5 @@
 //! Finding every linked shell extension and reading the contributions of the
 //! ones the instance's enablement admits.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::fmt;
 use std::rc::Rc;

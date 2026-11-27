@@ -1,9 +1,6 @@
 //! What the person does from the Brain screen: confirm, dispute, retract, pin
 //! or unpin the open fact, and approve or reject a proposal. A change the
 //! instance accepts bumps the brain's feed, which reloads what it touched.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{Context, SharedString};
 use sp_brain::{BrainError, BrainService};

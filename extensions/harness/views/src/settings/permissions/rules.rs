@@ -4,9 +4,6 @@
 //! with the key each rule sits under so it can be removed; grouping rules by
 //! permission in evaluation order; and the edit that adds a rule to the user's
 //! settings without losing a shorthand rule already there.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::jsonc::strip_jsonc;
 use std::path::PathBuf;

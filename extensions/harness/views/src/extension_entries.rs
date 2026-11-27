@@ -1,9 +1,6 @@
 //! The entry points of the admitted extensions' screens: in the titlebar the
 //! item an extension draws itself for a screen, or else an icon button, each
 //! opening its screen and closing it again; in the sidebar a row per screen.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashMap;
 use std::rc::Rc;

@@ -1,8 +1,5 @@
 //! The document list of the Drive: its rows and the state shown when the
 //! listing failed.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::DriveView;
 use crate::model::Load;

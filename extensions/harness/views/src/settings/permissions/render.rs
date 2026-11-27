@@ -1,9 +1,6 @@
 //! How the Permissions page draws: the add-rule form over one card per
 //! permission, each rule with its action and where it comes from, and a remove
 //! button on the user's own rules.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, Render, SharedString, Styled as _,

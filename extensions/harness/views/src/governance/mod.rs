@@ -15,9 +15,6 @@
 //!   found in `services.handles()`, and a part whose handle is absent is not
 //!   rendered; the verdict switch is `UiSettings::verdict_enabled`.
 //! - Text comes from `crate::strings::governance`.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod actions;
 mod connect;

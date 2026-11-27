@@ -1,8 +1,5 @@
 //! The sync part of an instance card: how its sync stands, what it holds and
 //! which signing key it trusts.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::page_view::LABEL_WIDTH;
 use crate::strings::governance as text;

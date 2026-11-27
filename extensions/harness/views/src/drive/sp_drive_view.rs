@@ -3,9 +3,6 @@
 //!
 //! Revisions, proposals, access and grants are drawn from the protocol types
 //! themselves, re-exported here.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::{BTreeMap, BTreeSet};
 

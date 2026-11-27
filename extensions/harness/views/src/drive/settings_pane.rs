@@ -3,9 +3,6 @@
 //! into now, and a native folder picker to choose another or go back to the
 //! default. The choice is stored in the Drive's own preferences, which the
 //! sync service follows; the pane reads them again on every change.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

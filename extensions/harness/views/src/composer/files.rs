@@ -3,9 +3,6 @@
 //! A capped, gitignore-aware walk of the project directory that also skips
 //! hidden directories and dependency and build output folders. It reads the
 //! disk, so callers run it on the blocking pool.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::Path;
 

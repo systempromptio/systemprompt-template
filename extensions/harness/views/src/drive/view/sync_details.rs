@@ -1,8 +1,5 @@
 //! The sync panel's summary counts, its expandable details and the conflict
 //! rows.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::DriveView;
 use crate::strings::sync as text;

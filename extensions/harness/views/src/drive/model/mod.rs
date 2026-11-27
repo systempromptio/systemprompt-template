@@ -4,9 +4,6 @@
 //! a document's outline, links into the instance and the local folder, what
 //! the screen is pointed at and which folder the sync uses. Nothing here
 //! touches the toolkit or the network.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod browse;
 mod folders;

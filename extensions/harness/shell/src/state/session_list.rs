@@ -3,9 +3,6 @@
 //! Roots come newest first, subagent children under their parent, grouped by
 //! day and filtered by a search. Pure data and functions; the sidebar renders
 //! the rows it produces.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::{HashMap, HashSet};
 

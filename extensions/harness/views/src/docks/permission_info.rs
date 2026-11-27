@@ -1,9 +1,6 @@
 //! What a permission request shows besides its title: the command, diff,
 //! address or path it would act on, read from the metadata the tool attached to
 //! the request.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use serde_json::Value;
 

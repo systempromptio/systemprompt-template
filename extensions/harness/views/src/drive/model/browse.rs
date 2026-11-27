@@ -1,9 +1,6 @@
 //! What the Drive screen browses: the scope, folder, search and sort, the page
 //! of documents with its cursor, the selection, and the generation that drops
 //! a listing answered after a newer one was asked for.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashSet;
 

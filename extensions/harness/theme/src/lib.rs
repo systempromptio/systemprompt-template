@@ -6,9 +6,6 @@
 //! projects the palette onto the toolkit's `Theme`, so the toolkit's own
 //! controls (inputs, menus, dialogs, notifications, scrollbars, the markdown
 //! view) match.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod color;
 mod highlight;

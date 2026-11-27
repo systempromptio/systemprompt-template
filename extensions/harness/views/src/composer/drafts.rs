@@ -1,9 +1,6 @@
 //! What the composer holds for each session while the user is elsewhere: the
 //! unsent text and attachments, keyed by session, with the new-session draft
 //! under no session.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

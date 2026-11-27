@@ -1,7 +1,4 @@
 //! Structural pieces: section headers, dividers and cards.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, App, IntoElement, ParentElement, Pixels, RenderOnce, SharedString, Styled as _,

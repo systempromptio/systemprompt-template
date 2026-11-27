@@ -1,9 +1,6 @@
 //! Pure helpers of the sign-in gate: the address the probe and the sign-ins
 //! use, what the token field holds, the instances step 2 lists and the sync
 //! status that ends the finishing step.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_accounts::AccountsSnapshot;
 use sp_protocol::ids::AccountId;

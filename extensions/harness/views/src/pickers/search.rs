@@ -1,9 +1,6 @@
 //! The pure part of the pickers: matching a query against an option's words,
 //! moving the keyboard highlight, and the compact context-size label a model
 //! row shows.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub fn matches(query: &str, fields: &[&str]) -> bool {
     let haystack = fields

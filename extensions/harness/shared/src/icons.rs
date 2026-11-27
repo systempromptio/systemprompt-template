@@ -5,9 +5,6 @@
 //! toolkit takes an icon (buttons, menu items, notifications). [`Assets`]
 //! serves these icons and falls back to the toolkit's bundled ones; the shell
 //! registers it with `Application::with_assets`.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::borrow::Cow;
 

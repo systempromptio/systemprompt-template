@@ -2,9 +2,6 @@
 //! sync stands, growing to show the status on hover. A click opens a small
 //! popover to fix what needs attention, Sync now, switch instance or open the
 //! page.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use chrono::Utc;
 use gpui_kit::component::Sizable as _;

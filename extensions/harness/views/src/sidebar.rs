@@ -2,9 +2,6 @@
 //! search and a menu per session (compact, delete), and a footer with the
 //! admitted extensions' screens, Settings and the account. The session list is
 //! virtualised: only visible rows are built.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashSet;
 use std::ops::Range;

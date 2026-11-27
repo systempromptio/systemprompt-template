@@ -1,8 +1,5 @@
 //! The window shown when the app cannot start: what happened, where the details
 //! are, and a way out.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{App, Context, IntoElement, ParentElement as _, Render, Styled as _, Window, div};
 use harness_ui::IconName;

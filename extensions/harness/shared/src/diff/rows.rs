@@ -1,8 +1,5 @@
 //! The rows of a diff view: file headers, hunk headers and numbered, tinted
 //! lines.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{Div, ParentElement as _, Pixels, SharedString, Styled as _, div, px};
 

@@ -1,8 +1,5 @@
 //! Where the app is showing: the route, the sidebar, the session search and the
 //! requests and links a launch hands over.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use crate::app::deeplink::{self, LaunchRequest, Link};
 use crate::state::app_state::{AppEvent, AppState, Route};

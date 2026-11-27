@@ -3,9 +3,6 @@
 //! They decide when a typed `/` opens the command list or an `@` the file list,
 //! what the query is, which entries match it and in what order, and how a
 //! chosen file is written into the prompt.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_engine::CommandInfo;
 

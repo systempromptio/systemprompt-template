@@ -7,9 +7,6 @@
 //! status, model list changes) and the instance's extension enablement, which
 //! decides the extension screens, settings panes and transcript adornments on
 //! offer. Intents live in `app_intents` and `session_actions`.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashMap;
 use std::path::PathBuf;

@@ -1,8 +1,5 @@
 //! A picker's open surface: the search field, the option rows and the empty
 //! state.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::popup::{
     EmptyCopy, LIST_HEIGHT, PickerHost, PickerOption, SURFACE_WIDTH, choose_value, move_active,

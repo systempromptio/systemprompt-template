@@ -1,9 +1,6 @@
 //! The question dock: one to four questions with their options, chosen one or
 //! several at a time, a typed answer of the user's own for each, and Submit or
 //! Dismiss.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, FontWeight, IntoElement, ParentElement as _, SharedString, Styled as _,

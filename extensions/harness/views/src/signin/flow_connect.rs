@@ -1,8 +1,5 @@
 //! Step 1 of the sign-in flow: the address as it is typed and checked, and the
 //! browser and token sign-ins it starts.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_accounts::ProbeResult;
 use sp_protocol::view::SignInFailure;

@@ -7,9 +7,6 @@
 //! runs on the runtime through [`bridge`](crate::bridge); the view only applies
 //! results. It follows the instance's enablement, which changes after every
 //! apply, to notice when the handle moves to another account or instance.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod browse;
 mod comments;

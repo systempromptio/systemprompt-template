@@ -1,8 +1,5 @@
 //! What the composer hands to the state: a prompt or a slash command, and the
 //! agent and model it goes to.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_engine::{AttachmentInput, CommandInfo, Delivery};
 

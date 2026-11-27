@@ -1,8 +1,5 @@
 //! The name prompts behind New folder and New document: a dialog with one text
 //! field, Enter to create.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{App, AppContext as _, Context, Entity, Window};
 use harness_ui::components::{ButtonKind, DialogAction, DialogSpec, TextField};

@@ -2,9 +2,6 @@
 //!
 //! The notifications inbox, its titlebar bell and the Slack settings pane, with
 //! the copy for every feed status and failure.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::time::Duration;
 

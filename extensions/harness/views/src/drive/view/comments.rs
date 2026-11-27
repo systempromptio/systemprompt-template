@@ -1,9 +1,6 @@
 //! The Comments tab: the composer (a new comment pinned to a paragraph, or a
 //! reply to a thread) and the threads, open ones first, each with Reply and
 //! Resolve.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, IntoElement, ParentElement as _, SharedString, Styled as _, div,

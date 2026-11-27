@@ -1,9 +1,6 @@
 //! The instance cards of the Governance page: name and badges, address, user,
 //! organisation and key, how the sync stands with its fix, what the active
 //! instance holds, the key waiting for trust, and the per-instance actions.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::page_sync::{holdings, key_trust, sync_status};
 use gpui_kit::{

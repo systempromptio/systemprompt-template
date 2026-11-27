@@ -1,8 +1,5 @@
 //! What the Brain screen reads: the fact list a page at a time under its
 //! filter, the open fact with its timeline and why-view, and the proposals.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{Context, SharedString, Window};
 use sp_protocol::wire::brain::{BrainFactId, FactStatus};

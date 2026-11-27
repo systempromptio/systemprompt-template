@@ -11,9 +11,6 @@
 //! Every view renders from its sp handle's own feed and keeps no copy of the
 //! inbox. The shell shows these contributions only while the instance admits
 //! the extension.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod bell;
 mod bridge;

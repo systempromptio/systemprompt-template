@@ -1,9 +1,6 @@
 //! The admitted extensions' marks under an assistant message, each drawn by
 //! its extension from the message as stored, and the tasks that draw the
 //! transcript again when an adornment's own state changed.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

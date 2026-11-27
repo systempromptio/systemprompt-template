@@ -4,9 +4,6 @@
 //! feed, with mark read, mark all read, load older and a check for new ones.
 //! The view keeps only what is its own: the actions in flight, the last
 //! action's failure and which items it already reported seen.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod rows;
 

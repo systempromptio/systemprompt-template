@@ -3,9 +3,6 @@
 //!
 //! That is its managed skills as the engine loaded them, its managed MCP
 //! servers with their live status, and its rules count.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

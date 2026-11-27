@@ -1,7 +1,4 @@
 //! The Governance settings page drawn from its model.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::page::{GovernancePage, PAGE_WIDTH};
 use crate::views::governance::feeds::{self};

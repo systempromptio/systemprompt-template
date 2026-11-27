@@ -1,9 +1,6 @@
 //! The Add instance form: an address, an optional personal access token and
 //! "keep me signed in", signing in through the browser or with the token. The
 //! new instance joins the list; it becomes active only when none is.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AppContext as _, Context, Entity, EventEmitter, Focusable as _, IntoElement,

@@ -1,7 +1,4 @@
 //! An inline `+added −removed` line count.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     App, IntoElement, ParentElement as _, RenderOnce, SharedString, Styled as _, Window, div,

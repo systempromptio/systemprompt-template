@@ -1,7 +1,4 @@
 //! The graphite palettes: neutral greys with a blue accent.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use crate::theme::tokens::{
     Accent, Borders, DiffColors, Palette, StatusColors, Surfaces, SyntaxPalette, TextColors,

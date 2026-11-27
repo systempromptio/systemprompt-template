@@ -4,9 +4,6 @@
 //! item, and the settings pane of `slack`, each present only while its
 //! instance-side half provided a handle (the shell adds them only while the
 //! instance admits the extension).
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

@@ -1,9 +1,6 @@
 //! Gathering the effective rules for one project and agent: the agent's
 //! built-in defaults, the user's settings, each project settings file from the
 //! project root down, and the agent's own rules, in the order they are checked.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::{Path, PathBuf};
 

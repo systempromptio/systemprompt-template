@@ -1,8 +1,5 @@
 //! A modal dialog scaffold: title, optional description and body, footer
 //! actions; Escape cancels, Enter confirms.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

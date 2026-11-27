@@ -1,9 +1,6 @@
 //! The sections of the Governance page below the instances: its header with Add
 //! instance, the content synced from the active instance, the verdict switch
 //! and the heartbeat line.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, FontWeight, IntoElement, ParentElement as _, SharedString, Styled as _,

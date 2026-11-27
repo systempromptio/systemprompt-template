@@ -4,9 +4,6 @@
 //! no token, no sending), its status as the inbox shows it, and the
 //! Slack-originated items, all read from the Slack handle on every change.
 //! Without a handle the pane shows Slack withheld.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use chrono::Utc;
 use gpui_kit::{

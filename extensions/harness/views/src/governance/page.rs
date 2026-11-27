@@ -2,9 +2,6 @@
 //! state, the sync status and the heartbeat through their feeds, reloads what
 //! the applied instance holds after each sync, and runs the per-instance
 //! actions, the confirmations and the Add instance dialog.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::{AppContext as _, Context, Entity, Subscription, Task, Window, px};

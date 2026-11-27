@@ -8,9 +8,6 @@
 //! swallowed. It engages when the accounts snapshot says sign-in is needed and,
 //! once a sign-in succeeded here, holds the window through step 2 until Finish
 //! has faded it out, even though the snapshot already counts as signed in.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub mod address;
 mod choose;

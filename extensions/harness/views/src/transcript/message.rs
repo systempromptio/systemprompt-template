@@ -2,9 +2,6 @@
 //! assistant reply as its visible parts in order, the admitted extensions'
 //! marks under it, and the per-message actions shown on hover or keyboard
 //! selection.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, FollowMode, FontWeight, InteractiveElement as _, IntoElement,

@@ -1,8 +1,5 @@
 //! The UI model: GPUI entities kept current from the engine, store and accounts
 //! feeds, over pure reducers that are tested without GPUI.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod app_feeds;
 mod app_intents;

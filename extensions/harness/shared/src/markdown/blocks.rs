@@ -6,9 +6,6 @@
 //! text, with one deliberate exception handled up front: link reference
 //! definitions resolve across the whole document, so text containing one is
 //! kept as a single block.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;

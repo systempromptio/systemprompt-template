@@ -1,7 +1,4 @@
 //! The design system's tone for each fact status and availability.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_ui::Tone;
 use sp_protocol::wire::brain::{FactStatus, ProposalStatus};

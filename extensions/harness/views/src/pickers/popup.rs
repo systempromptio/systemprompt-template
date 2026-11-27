@@ -5,9 +5,6 @@
 //! A picker supplies its options through `PickerHost`; this module owns
 //! opening, filtering, the highlight and the layout, so both pickers behave the
 //! same.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::popup_render::render_surface;
 use gpui_kit::component::Sizable as _;

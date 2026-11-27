@@ -1,9 +1,6 @@
 //! Importing a local file into the Drive: the file dialog, reading the file off
 //! the UI thread, the upload with its progress and cancel, and the strip that
 //! shows it.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::PathBuf;
 

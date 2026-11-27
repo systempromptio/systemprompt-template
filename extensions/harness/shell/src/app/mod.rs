@@ -3,9 +3,6 @@
 //! Paths, services and their startup, the systemprompt side and the linked
 //! extensions, preferences, the tokio bridge, links, single instance, logging
 //! and the main window's lifecycle.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub(crate) mod browser;
 pub mod deeplink;

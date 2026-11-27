@@ -6,9 +6,6 @@
 //! change reloads the list and the open fact, a proposals change reloads the
 //! inbox. Unless the instance admits the extension and has confirmed its
 //! brain, the screen shows why instead of any data.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod acts;
 mod detail;

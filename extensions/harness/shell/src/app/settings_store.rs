@@ -6,9 +6,6 @@
 //! background task writes the latest value once changes have been quiet for a
 //! moment, atomically and owner-only. A file that does not decode is logged and
 //! replaced by defaults on the next write: these are preferences, not data.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

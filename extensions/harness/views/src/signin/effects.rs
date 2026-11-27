@@ -2,9 +2,6 @@
 //! `crate::app::runtime`, each result fed back to the flow as an event. A task
 //! the gate replaces or drops stops delivering; a browser sign-in is ended
 //! through its canceller.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::sync::Arc;
 use std::time::Duration;

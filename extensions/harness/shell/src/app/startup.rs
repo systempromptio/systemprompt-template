@@ -2,9 +2,6 @@
 //! accounts, named for this computer, and the engine, built over the governor
 //! slot with the extensions' engine halves and the host's name for language
 //! servers.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::ffi::OsString;
 use std::sync::Arc;

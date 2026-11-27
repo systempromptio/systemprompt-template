@@ -11,9 +11,6 @@
 //! provide) in `Services::handles` by type. Shutdown runs in the reverse order
 //! of dependence: sync, the owned background tasks (the extensions' services
 //! among them), governance cleared, engine, accounts.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::ffi::OsString;
 use std::path::PathBuf;

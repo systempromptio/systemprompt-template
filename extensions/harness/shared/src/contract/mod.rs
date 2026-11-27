@@ -14,9 +14,6 @@
 //! dispatching an action from its window.
 //!
 //! Only this ring depends on the UI toolkit.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod actions;
 mod context;

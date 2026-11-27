@@ -3,9 +3,6 @@
 //! It holds what the gate shows and which work it asks for, driven by events
 //! from the view and from the background work. Nothing here touches the UI
 //! toolkit or the network, so the flow is tested as data.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::time::Duration;
 

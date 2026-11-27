@@ -1,8 +1,5 @@
 //! What the Drive screen writes: new folders and documents, comments, replies
 //! and resolving a thread. After a write the parts it changed are read again.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{Context, Window};
 use harness_ui::Tone;

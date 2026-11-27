@@ -13,9 +13,6 @@
 //!
 //! - [`model`]: the views' pure state, tested on its own.
 //! - [`strings`]: every user-facing string of this crate.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod extension;
 pub mod model;

@@ -3,9 +3,6 @@
 //! with their two choices, edits sent for review and recent activity. Pause,
 //! resume and Sync now act on the handle's sync; everything shown is read from
 //! the sync's status feed when drawn.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::sync::Arc;
 

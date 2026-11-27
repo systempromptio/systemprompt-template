@@ -5,9 +5,6 @@
 //! which highlights it with the theme's syntax palette. With line numbers the
 //! lines are laid out as rows beside their gutter so the two always align; that
 //! layout is not highlighted.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::sync::Arc;
 

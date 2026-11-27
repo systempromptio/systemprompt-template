@@ -1,9 +1,6 @@
 //! The non-tool parts of a reply: streamed markdown text, collapsible
 //! reasoning, the compaction marker, the summary a compaction leaves, attached
 //! files and subtask starts.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     AnyElement, Context, ElementId, InteractiveElement as _, IntoElement, ParentElement as _,

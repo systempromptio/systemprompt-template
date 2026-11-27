@@ -4,9 +4,6 @@
 //! leave out a crate nothing references, taking its registration with it.
 //! Naming every linked extension type here keeps each crate in the binary, and
 //! lets startup report a linked extension that discovery did not find.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_shell::{ExtensionMetadata, ShellExtension};
 use sp_extension::SpExtension;

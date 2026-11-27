@@ -1,8 +1,5 @@
 //! Unified diff parsing: files, hunks and numbered lines from `git diff` or
 //! `diff -u` text.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::model::{DiffLine, FilePatch, FileStatus, Hunk, LineKind, Patch};
 

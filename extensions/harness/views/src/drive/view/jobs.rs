@@ -1,9 +1,6 @@
 //! The Drive calls the screen starts on tokio: listings, the folder tree,
 //! everything a document's pane shows, the writes, and reading a file for
 //! import. Each answers plain data the view applies on the UI thread.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::path::{Path, PathBuf};
 

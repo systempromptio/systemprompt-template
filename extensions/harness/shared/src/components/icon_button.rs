@@ -1,7 +1,4 @@
 //! Square, icon-only buttons whose tooltip doubles as their accessible name.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 

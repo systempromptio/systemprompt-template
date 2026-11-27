@@ -1,8 +1,5 @@
 //! Pieces of the document preview: the revision list, share grants, labelled
 //! facts and muted notes.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::{DriveView, OpenDocument};
 use crate::model::Load;

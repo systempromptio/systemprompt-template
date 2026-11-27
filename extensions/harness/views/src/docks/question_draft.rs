@@ -1,9 +1,6 @@
 //! The answers being put together for a question request: which options are
 //! chosen for each question, single or several, and the answer lists the engine
 //! receives, typed text included.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::collections::BTreeSet;
 

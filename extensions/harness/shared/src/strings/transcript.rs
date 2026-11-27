@@ -1,8 +1,5 @@
 //! The English text of the transcript: the session header, message actions,
 //! tool rows, the changes panel and the status lines under the conversation.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_engine::ErrorKind;
 use harness_store::TodoStatus;

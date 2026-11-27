@@ -1,8 +1,5 @@
 //! The action bar shown on a hovered or selected message: copy, revert and
 //! fork.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::message::RowFlags;
 use crate::strings::transcript as text;

@@ -1,8 +1,5 @@
 //! The pill's menu: the instances to switch to, the fix for what needs
 //! attention, Sync now and the settings page.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use super::pill::{GovernancePill, MENU_WIDTH};
 use crate::strings::governance as text;

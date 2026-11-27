@@ -1,8 +1,5 @@
 //! The English text of the shell's frame: titlebar, sidebar and its session
 //! menu, home screen, notices and the empty Settings page.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use harness_engine::ErrorKind;
 

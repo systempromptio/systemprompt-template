@@ -4,9 +4,6 @@
 //! A screen reads its text from its
 //! own table and from `foundation` for shared words; nothing user-facing is
 //! written inline in a view.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 pub(crate) mod composer;
 pub(crate) mod docks;

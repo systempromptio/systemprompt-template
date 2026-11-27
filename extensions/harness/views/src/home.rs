@@ -1,7 +1,4 @@
 //! The new-session screen shown above the composer when no session is selected.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use gpui_kit::{
     Context, Entity, IntoElement, ParentElement as _, Render, Styled as _, Subscription, Window,

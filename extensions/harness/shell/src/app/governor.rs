@@ -8,9 +8,6 @@
 //! `sp_governance::Governance` before the engine is built. Installing bumps
 //! `Governor::generation`, so the engine re-reads models and MCP servers at
 //! once.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};

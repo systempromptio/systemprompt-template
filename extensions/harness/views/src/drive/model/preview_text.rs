@@ -1,8 +1,5 @@
 //! A document's preview text built from its outline nodes, with the anchors a
 //! comment can attach to.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use sp_protocol::wire::drive::DriveOutline;
 

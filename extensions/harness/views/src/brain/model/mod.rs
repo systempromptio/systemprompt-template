@@ -5,9 +5,6 @@
 //! actions a person may take on it, the proposals inbox, whether the brain can
 //! be used at all, and which reply of a session is its latest. Nothing here
 //! touches GPUI or the network.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 mod actions;
 mod availability;

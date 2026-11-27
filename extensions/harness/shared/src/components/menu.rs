@@ -1,7 +1,4 @@
 //! A menu: a trigger button that opens a keyboard-navigable list of commands.
-//!
-//! Copyright (c) systemprompt.io — Business Source License 1.1.
-//! See <https://systemprompt.io> for licensing details.
 
 use std::rc::Rc;
 
