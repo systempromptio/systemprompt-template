@@ -105,12 +105,18 @@ discovered display name. From an emulator the host machine is `10.0.2.2`;
 from a device use the machine's LAN address and allow the port through the
 firewall.
 
-Then install the debug APK (`just mobile-android-install`, or `adb install -r <apk>`), enter
-the address by hand, and capture the screen after a successful discovery:
+Then capture the screen in each of its states:
 
 ```bash
-adb exec-out screencap -p > evidence/android-discovery.png
+just mobile-android-screenshots evidence/android-screens
 ```
+
+It installs the debug APK, types into the app and writes `01-launch.png`,
+`02-found.png`, `03-invalid-address.png` and `04-unreachable.png`. It fails
+when a capture is one flat colour, which means the emulator has no hardware
+acceleration (section 1). To capture one by hand instead: `just
+mobile-android-install`, enter the address, then
+`adb exec-out screencap -p > evidence/android-discovery.png`.
 
 ### 4.2 Discovery against a real server
 
@@ -125,8 +131,13 @@ BASE=http://<host>:<port>
 curl -sS -D evidence/discovery.headers "$BASE/.well-known/systemprompt-bridge" -o evidence/discovery.json
 ```
 
-Enter the same address in the app and screenshot the result to
-`evidence/android-discovery-real.png`.
+Then have the app discover the same address and capture the result
+(`evidence/android-screens/05-instance.png`); a loopback address is forwarded
+to the device over adb:
+
+```bash
+just mobile-android-screenshots evidence/android-screens --instance "$BASE"
+```
 
 ## 5. Phone-facing routes
 
@@ -206,7 +217,7 @@ core <sha>   template <sha>   CORE_REF <sha>
 | 4 | debug APK | | path, size, sha256 |
 | 4 | lint and unit tests | | |
 | 4.1 | connected tests against the stub | | test count |
-| 4.1 | screenshot | | file name |
+| 4.1 | screenshots | | file names |
 | 4.2 | discovery against a server | | address kind (loopback, LAN, public) |
 | 5.1 | assetlinks.json | | status |
 | 5.2 | latest + download + checksum | | match or mismatch |

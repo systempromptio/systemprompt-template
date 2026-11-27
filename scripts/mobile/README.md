@@ -11,6 +11,7 @@ inline in `mobile.just`.
 | `android-sdk.sh` | installs the pinned Android platform and build tools with `sdkmanager`, and the NDK with `--ndk` |
 | `rust-targets.sh` | adds the pinned Rust targets for `android` or `ios` to the toolchain `rust-toolchain.toml` names |
 | `android-emulator.sh` | creates the AVD from the pinned system image when it is missing and starts it headless (`start`, `run`, `wait`, `stop`); local only, no workflow runs it |
+| `android-screenshots.sh` | installs the debug APK on the connected device or emulator, drives the first screen by its test tags and writes one PNG per state (launch, found, invalid address, unreachable) into a directory; `--instance URL` captures one against a real instance; fails on a capture that is one flat colour; local only |
 | `ios-tools.sh` | installs the pinned SwiftLint binary, checked against its pinned sha256, into `extensions/mobile/ios/build/tools` (macOS only) |
 
 The build scripts themselves are part of the extension a fork takes with it:

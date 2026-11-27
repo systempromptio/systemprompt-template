@@ -20,9 +20,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,12 +35,23 @@ import io.systemprompt.mobile.R
 private val screenPadding = 24.dp
 private val gap = 16.dp
 
-/** Sign-in, "enter an instance": an address, what the instance says about itself, and the library's versions. */
+/**
+ * Sign-in, "enter an instance": an address, what the instance says about itself, and the library's versions.
+ *
+ * The test tags are published as resource ids, so a tool that reads the window from outside the process
+ * (uiautomator, the screenshot script) finds the same nodes the instrumented tests do.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun InstanceScreen(state: InstanceViewState, onDiscover: (String) -> Unit, modifier: Modifier = Modifier) {
     var address by rememberSaveable { mutableStateOf("") }
     val busy = state.discovery == DiscoveryState.Discovering
-    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(
+        modifier = modifier
+            .fillMaxSize()
+            .semantics { testTagsAsResourceId = true },
+        color = MaterialTheme.colorScheme.background
+    ) {
         Column(
             modifier = Modifier
                 .safeDrawingPadding()

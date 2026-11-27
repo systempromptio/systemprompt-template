@@ -116,6 +116,7 @@ just mobile-android            # the debug APK
 just mobile-android-install    # install it on the connected device or emulator and launch it
 just mobile-android-emulator   # create and start a headless emulator (stop: just mobile-android-emulator stop)
 just mobile-android-test       # the instrumented tests on it, against the stub instance
+just mobile-android-screenshots OUT   # one PNG per state of the first screen, into the directory OUT
 just mobile-stub-instance      # the stub instance alone, for trying the app by hand
 just mobile-ios-check          # SwiftLint and swift-format (macOS only)
 just mobile-ios                # the simulator build, unsigned (macOS only)
@@ -148,6 +149,22 @@ machine's loopback, port 8765 (`MOBILE_STUB_PORT` moves it), which an
 emulator reaches at `http://10.0.2.2:8765`; the recipe starts it when none is
 listening. The library admits plain HTTP for loopback and private addresses
 only, and the app permits it in the debug build only.
+
+`just mobile-android-screenshots OUT` drives the installed debug build on the
+same emulator or device and writes one PNG per state of the first screen:
+launch, the stub instance found, an invalid address and an unreachable one.
+`--instance URL` writes one more against a real instance; a loopback URL is
+forwarded over adb first. It finds the field and the button by their test
+tags, which the screen publishes as resource ids, reads back what it typed,
+and fails on a capture that is one flat colour, which is what an emulator
+without hardware acceleration produces.
+
+`shared/stub-instance.py --releases APK` is a second stand-in, for the
+release API an instance reads its Android download from: it serves one
+release whose assets are that file and its `SHA256SUMS`. Point a local
+instance's `gateway.bridge_releases.api_base` at it to try
+`/v1/bridge/latest` and `/v1/bridge/download/android` without a GitHub
+release.
 
 The iOS tests (`xcodebuild test`) need a simulator; no recipe starts one yet.
 

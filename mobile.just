@@ -54,6 +54,10 @@ mobile-android-emulator ACTION="start":
 mobile-android-test:
     bash {{MOBILE_SHARED}}/build-android.sh connected
 
+# One PNG per state of the first screen into OUT, from the connected device or emulator (--instance URL: one screenshot against that instance)
+mobile-android-screenshots OUT *FLAGS:
+    bash scripts/mobile/android-screenshots.sh {{OUT}} {{FLAGS}}
+
 # Serve the stub instance the discovery test reads (--port, --name; an emulator reaches it at http://10.0.2.2:8765)
 mobile-stub-instance *FLAGS:
     python3 {{MOBILE_SHARED}}/stub-instance.py {{FLAGS}}
