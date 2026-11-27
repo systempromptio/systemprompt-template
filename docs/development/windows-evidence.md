@@ -79,22 +79,24 @@ From the template root:
 ```bash
 just mobile-toolchain        2>&1 | tee evidence/mobile-toolchain.log
 just mobile-android-sdk --ndk 2>&1 | tee evidence/android-sdk.log
-bash extensions/mobile/shared/build-android.sh 2>&1 | tee evidence/android-lib.log
+just mobile-rust-targets     2>&1 | tee evidence/rust-targets.log
+just mobile-android-library  2>&1 | tee evidence/android-lib.log
 just mobile-android          2>&1 | tee evidence/android-apk.log
 just mobile-android-check    2>&1 | tee evidence/android-check.log
 ```
 
-`build-android.sh` builds the Rust library for the three ABIs and generates
-the Kotlin bindings; `mobile-android` builds the debug APK. Record:
+`mobile-android-library` builds the Rust library for the three ABIs and
+generates the Kotlin bindings (both are build output); `mobile-android`
+builds the debug APK. Record:
 
-- the size of each `libsystemprompt*.so` per ABI under the app's `jniLibs`;
+- the size of `libsystemprompt_mobile_app.so` per ABI under the app's `jniLibs`;
 - the path, size and SHA-256 of the debug APK (`certutil -hashfile <apk> SHA256`).
 
 ### 4.1 Run it
 
 ```bash
-just mobile-stub-instance &          # the stub discovery server, prints its port
-just mobile-android-emulator         # or connect a device
+just mobile-stub-instance &          # the stub discovery server, port 8765
+just mobile-android-emulator         # or connect a device; `just mobile-android-emulator stop` ends it
 just mobile-android-test 2>&1 | tee evidence/android-connected.log
 ```
 
