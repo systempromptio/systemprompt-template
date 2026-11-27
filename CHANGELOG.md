@@ -6,8 +6,104 @@ Conventions (strict — hold every entry to them):
 
 - Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): an `## [Unreleased]`
   section at the top, then one `## [X.Y.Z] - YYYY-MM-DD` section per release, each with only the
-  categories it needs, in this order: `### Breaking`, `### Security`, `### Added`, `### Changed`,
-  `### Fixed`, `### Removed`. Every breaking bullet leads with `**Breaking:**`, names the
+  categories it needs, in this order: `### Breaking
+- **Breaking:** a supplied profile must carry `mcp_credential_broker_secret`
+  in its secrets. Every flavour's composition installs the web member, which
+  serves the connector token route (`/api/public/connectors/<server>/token`,
+  the `broker-calls` conferral), and core refuses to boot that member without
+  the secret. `just setup` and the image's first boot mint it once and keep
+  it; a profile supplied through `SYSTEMPROMPT_PROFILE_DIR` (Helm, air-gap,
+  scaled) is shared by every replica, so `docker/entrypoint.sh` refuses to
+  start without it rather than mint a per-replica value. Migrate by adding
+  `mcp_credential_broker_secret` (`openssl rand -hex 32`) to the supplied
+  secrets.
+- **Breaking:** the developer login link is removed: its handler, route,
+  login-page hint, repository and table (`dev_login_codes`, dropped by
+  migration `099_drop_dev_login_codes.sql`). Nothing issued its codes, and an
+  install member cannot mint a browser session. Migrate by signing in with a
+  passkey (`systemprompt admin users webauthn generate-setup-token --email …`,
+  then `/auth/link-passkey?token=…`).
+- **Breaking:** console pages are compiled per flavour. A page whose figures
+  belong to a member the flavour does not link is absent with its nav item
+  and answers 404: `gateway` and `mcp` have no sessions, conversations or
+  history pages, `gateway` has no project pages, and `site` has no requests,
+  analytics, group or project pages. A `dashboard.yaml` naming an item the
+  build does not compile refuses boot. Migrate by building the flavour whose
+  members a page needs (`docs/flavours/README.md`).
+- **Breaking:** the console admits only a signed-in principal. An anonymous
+  session, a token whose account is missing and an account with no console
+  role are refused (redirect to `/admin/login`, or 401 on the JSON API);
+  the fallback that granted `user` to a session with no account row is
+  gone. `GET /api/public/admin/dashboard` moves behind the console read tier
+  and answers 403 to a member without a console role. Migrate by signing in;
+  read the dashboard with a console role.
+- **Breaking:** `POST /api/public/auth/session` verifies the token through
+  core's authenticator, refuses an anonymous token or an account without a
+  console role (401, no cookie), and accepts `access_token` only: the
+  request body rejects unknown fields, `expires_in` is gone (Max-Age is the
+  token's own expiry) and no refresh-token cookie is set. Migrate by posting
+  `{"access_token": …}` alone.
+- **Breaking:** `GET /api/public/admin/plugins/{id}/env` ignores `?user_id=`;
+  the caller's own principal is the only source. Migrate by calling it as the
+  user whose variables are wanted.
+- **Breaking:** the image no longer mints `encryption_master_key`,
+  `manifest_signing_secret_seed` or `signing_key_pem` into a persisted
+  profile that lacks them, and no longer copies `/app/signing_key.pem` into
+  one. Only profiles persisted by images built on core before 0.62 lacked
+  them; `admin setup` writes all of them, and core refuses to boot without
+  them with a named error. Migrate a volume from such an image by adding the
+  keys to its `secrets.json`.
+- **Breaking:** the runtime image is distroless
+  (`gcr.io/distroless/base-nossl-debian12`) with busybox, jq, lsof and
+  setpriv. Python, curl, gosu and openssl are gone, and so are
+  `docker/container-state.py` and `docker/migrate-profile.py`; the
+  entrypoint is POSIX sh and the healthcheck is `docker/healthcheck.sh`. On a
+  key both set, `admin setup`'s profile now wins over the flavour overlay
+  (merged at build time into `<profiles>/base.yaml`). Migrate a derived
+  image or a `docker exec` script that calls those tools by bringing them in
+  its own layer.
+- **Breaking:** core is a git dependency on the one rev `bridge/CORE_REF`
+  names, in both workspaces; there is no `[patch]` table. `just core-pin
+  <sha|branch>` moves it, and `scripts/core-patch.sh on <checkout>` builds
+  against a local core. Migrate a fork that patched `crates-io` or pointed at
+  `../systemprompt-core` by using `scripts/core-patch.sh`.
+, `### Security`, `### Security
+- An anonymous session was treated as signed in by the console. Any visitor
+  holding the anonymous cookie core mints for every new visitor reached its
+  own profile, settings, setup and history pages, could mint a bridge
+  connect code and approve a bridge device link for that anonymous user, and
+  read `GET /api/public/admin/dashboard` (estate-wide activity, traffic and
+  content aggregates) and `GET /api/public/admin/agents/{id}`. Console-only
+  pages and the admin JSON tiers stayed refused. Both checkpoints now share
+  one type (`NotSignedIn`), and the principal's fields and constructor are
+  crate-private.
+- `GET /api/public/admin/agents/{agent_id}` returned any agent's full
+  configuration (system prompt, tools, MCP bindings) to any signed-in member.
+  It now applies the list's rule: an administrator sees every agent, anyone
+  else an enabled agent their catalog access grants, and an ungranted agent
+  answers 404 like an absent one.
+- `/admin/login?redirect=` accepted a backslash and other non-path forms,
+  which a browser can normalise to another origin. The server
+  (`systemprompt_web_shared::redirect::same_origin_path`) and the login script
+  now accept only a same-origin path.
+- `POST /api/public/auth/session` wrote the posted token into `Set-Cookie`
+  unescaped, so a caller could inject cookie attributes. The cookie is now
+  built from a verified token with the `cookie` crate.
+
+### Added`, `### Changed`,
+  `### Fixed`, `### Fixed
+- Without the gateway, the access-control and roles pages no longer read the
+  gateway route labels and log an error on every render.
+- A fresh `gateway` setup boots with every job clean: the flavour ships its
+  own `access-control/rules.yaml`, holding only gateway route and model rules.
+- `gateway`, `mcp` and `agents` no longer schedule `file_ingestion`, which
+  none of them compiles.
+- `just setup <flavour> --no-build` on a non-default port re-points the
+  profile after the overlay sets `paths.bin`.
+- `just stop` passes `--profile <flavour>`, so it finds the running stack when
+  several profiles exist.
+
+### Removed`. Every breaking bullet leads with `**Breaking:**`, names the
   affected symbol, and ends with `Migrate by …`.
 - The heading shape is load-bearing. `just release X.Y.Z` refuses a version with no
   `## [X.Y.Z]` heading, and `scripts/check-release-tag.sh` (a lint gate) requires every version
@@ -51,6 +147,17 @@ Conventions (strict — hold every entry to them):
   consumer expects.
 
 ### Added
+- Flavours: five builds of the template (`gateway`, `mcp`, `agents`, `site`,
+  `full`), each one cargo feature mirroring core's composition of the same
+  name, with its own services tree, profile overlay, image and smoke
+  expectations (`flavours/`, `docs/flavours/README.md`). `just setup <flavour>`,
+  `just docker-build`, `just smoke` and `just metrics` take the flavour.
+- Per-flavour checks: `scripts/check-flavour-queries.sh` re-checks every
+  template query online against a database migrated by that flavour's binary,
+  and smoke signs in with a passkey, seeds rows, asserts the compiled and
+  absent console pages and crawls every sidebar page one hop deep.
+- `scripts/flavour-metrics.sh --compare-images OLD NEW` prints the bytes, gzip
+  bytes, layers and binary bytes of two images side by side.
 - **Roles → Entitlements** (`/admin/roles?tab=entitlements`): every role-band
   rule grouped by role and entity kind, a kind folded to one line when the
   role reaches all of it, each entity linked to its "Who gets this" panel.
@@ -304,8 +411,7 @@ Conventions (strict — hold every entry to them):
   reads that decide what a person holds see only grants inside their window.
 - The login page offers **Sign in with single sign-on** when an ADFS relying
   party is configured and names the reason when the IdP sends the browser
-  back with `?sso=<reason>` (`pages/admin-login.js`); a development instance
-  shows the `just dev-login` hint.
+  back with `?sso=<reason>` (`pages/admin-login.js`).
 - Documentation pages group evidence screenshots (`/files/images/evidence/…`)
   into a gallery with a lightbox (`site/docs-evidence-gallery.js`).
 
@@ -328,6 +434,19 @@ Conventions (strict — hold every entry to them):
   debt. The README carries a coverage badge rendered from `coverage/baseline.json`.
 
 ### Changed
+- The web extension's schema is a feature-gated contribution: a schema file
+  reading an optional member's table is declared in
+  `extensions/web/src/schemas.rs` only under the feature that links that
+  member, and no stand-in view replaces an absent table.
+- A view-model field whose member the build does not link is `types::Absent`
+  (serialised `null`), and console links are drawn only to compiled pages
+  (`dashboard::PageLinks`, `page_href`, `page_url`, `link_to`).
+- Local setup copies the services tree into
+  `.systemprompt/flavours/<flavour>/services` instead of linking it, because
+  core refuses a catalog directory that is a symlink; an edit under
+  `services/` takes effect on the next `just setup`.
+- The runtime image stages storage per flavour: video only with a site, and
+  hosted plugin bundles only when the flavour ships plugins.
 - `next` now builds against the published systemprompt-core 0.70.0 instead of
   a live `[patch.crates-io]` onto an unreleased 0.62.0 `next` commit: every core
   pin in both workspaces is 0.70.0, the patch blocks are commented, both

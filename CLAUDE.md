@@ -167,7 +167,7 @@ nothing: every run already compiles).
 ```bash
 just verify             # what gates.yml runs: preflight-static → preflight-lint → test
 just preflight          # verify + coverage floor/ratchet
-just preflight-static   # no compile: fmt, sqlx cache, version/core pins, release self-tests, deploy config, docker/ py tests, lint gates
+just preflight-static   # no compile: fmt, sqlx cache, version/core pins, release self-tests, deploy config, docker entrypoint syntax, lint gates
 just preflight-lint     # clippy -D warnings, rustdoc -D warnings, MSRV
 just preflight-full     # weekly: preflight + deny + audit + machete + hack (both workspaces)
 just e2e-gate           # the browser tier; needs a running stack (`just start`)
