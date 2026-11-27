@@ -239,3 +239,6 @@ extensions/**/.sqlx/
 # Cargo build output under any target-dir suffix, at any depth
 target-*/
 **/target-*/
+
+# The Windows evidence run (docs/development/windows-evidence.md) writes here.
+/evidence/
