@@ -20,6 +20,7 @@ members = [
     "harness-notifications-ui-tests",
     "harness-shell-tests",
     "harness-ui-tests",
+    "migrated/desktop/process",
     "sp-brand-tests",
 ]
 resolver = "2"

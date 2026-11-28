@@ -4031,6 +4031,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "migrated-desktop-process"
+version = "0.0.0"
+dependencies = [
+ "serde_json",
+ "systemprompt-harness",
+ "systemprompt-harness-brand",
+ "systemprompt-harness-shell",
+ "systemprompt-harness-views",
+ "systemprompt-identifiers",
+ "systemprompt-traits",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"

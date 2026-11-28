@@ -34,3 +34,6 @@
 24|preview|The preview pane showing a served page|light|manual|-|-
 25|schedules|Schedules: list, one paused after repeated failure|light|manual|-|-
 26|memory|Memory: what a turn recalled; removing an item|light|manual|-|-
+27|window-off-display|Saved window on a display since disconnected, and a maximised window on a short display|light|manual|-|-
+28|window-restore-frame|Quit while maximised or minimised; reopen and unmaximise to the earlier frame (Windows)|light|manual|-|-
+29|second-start-restore|A second start while the window is minimised restores and focuses it|light|manual|-|-
