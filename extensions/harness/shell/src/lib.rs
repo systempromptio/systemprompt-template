@@ -14,9 +14,11 @@ use std::time::Duration;
 use anyhow::Context as _;
 use tokio::runtime::Runtime;
 
+use crate::app::headless::Environment;
 use crate::app::single_instance::{self, Endpoint, Instance};
 use crate::app::window::{self, Launch};
 use systemprompt_harness_views::app::deeplink::{self, LaunchRequest};
+use systemprompt_harness_views::app::headless::{self as invocation, Invocation};
 use systemprompt_harness_views::app::paths::{self, AppPaths, Forbidden};
 use systemprompt_harness_views::app::settings_store::SettingsStore;
 use systemprompt_harness_views::app::{Services, ServicesConfig};
@@ -28,6 +30,7 @@ const RUNTIME_DRAIN: Duration = Duration::from_secs(2);
 const RUNTIME_THREAD: &str = "harness-runtime";
 
 pub fn run() -> ExitCode {
+    app::tls::install_crypto_provider();
     match start() {
         Ok(code) => code,
         Err(error) => {
@@ -48,18 +51,25 @@ fn start() -> anyhow::Result<ExitCode> {
     // Why: discard-ok: without a log file the failure has nowhere to go.
     let _log = logging::init(&paths.logs, identity.scheme()).ok();
 
-    let mut request =
-        deeplink::parse_args(identity.scheme(), launch_arguments()).unwrap_or_else(|error| {
-            tracing::warn!(error = %error, "command line not understood");
-            LaunchRequest::default()
-        });
+    let arguments: Vec<String> = launch_arguments().collect();
+    if let Invocation::Command(args) = invocation::invocation(arguments.clone()) {
+        let runtime = build_runtime()?;
+        let environment = Environment {
+            search_path: std::env::var_os("PATH"),
+            path_ext: std::env::var_os("PATHEXT"),
+        };
+        let code = app::headless::execute(&runtime, &paths, args, environment);
+        runtime.shutdown_timeout(RUNTIME_DRAIN);
+        return Ok(code);
+    }
+
+    let mut request = deeplink::parse_args(identity.scheme(), arguments).unwrap_or_else(|error| {
+        tracing::warn!(error = %error, "command line not understood");
+        LaunchRequest::default()
+    });
     request.directory = request.directory.as_deref().and_then(paths::absolute);
 
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .thread_name(RUNTIME_THREAD)
-        .build()
-        .context("starting the async runtime")?;
+    let runtime = build_runtime()?;
     let endpoint = Endpoint::for_app(identity, &paths);
     let instance = runtime.block_on(single_instance::acquire(&endpoint, &request));
     if matches!(instance, Instance::Forwarded) {
@@ -101,6 +111,14 @@ fn start() -> anyhow::Result<ExitCode> {
     stop(&runtime, &services);
     runtime.shutdown_timeout(RUNTIME_DRAIN);
     Ok(ExitCode::SUCCESS)
+}
+
+fn build_runtime() -> anyhow::Result<Runtime> {
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .thread_name(RUNTIME_THREAD)
+        .build()
+        .context("starting the async runtime")
 }
 
 fn launch_arguments() -> impl Iterator<Item = String> {

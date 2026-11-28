@@ -5831,6 +5831,7 @@ version = "0.23.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48e13bd8c0e9365c43cfa5c9e8f9ad49d3c8444926c9aac819e0e4dc503c8fdf"
 dependencies = [
+ "log",
  "once_cell",
  "ring",
  "rustls-pki-types",
@@ -6692,7 +6693,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-device"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=608f8cab347836163d018031ef6571af4bdf4f5d#608f8cab347836163d018031ef6571af4bdf4f5d"
 dependencies = [
  "async-trait",
  "aws-lc-rs",
@@ -6725,7 +6726,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-drive"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=608f8cab347836163d018031ef6571af4bdf4f5d#608f8cab347836163d018031ef6571af4bdf4f5d"
 dependencies = [
  "bytes",
  "chrono",
@@ -6751,7 +6752,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-engine"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=608f8cab347836163d018031ef6571af4bdf4f5d#608f8cab347836163d018031ef6571af4bdf4f5d"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -6790,7 +6791,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-harness"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=608f8cab347836163d018031ef6571af4bdf4f5d#608f8cab347836163d018031ef6571af4bdf4f5d"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -6849,6 +6850,7 @@ dependencies = [
  "dirs 7.0.0",
  "embed-resource",
  "gpui-kit",
+ "rustls",
  "serde_json",
  "systemprompt-harness-brand",
  "systemprompt-harness-shared",
@@ -6902,7 +6904,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-identifiers"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=608f8cab347836163d018031ef6571af4bdf4f5d#608f8cab347836163d018031ef6571af4bdf4f5d"
 dependencies = [
  "chrono",
  "schemars",
@@ -6915,7 +6917,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-models"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=608f8cab347836163d018031ef6571af4bdf4f5d#608f8cab347836163d018031ef6571af4bdf4f5d"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -6945,7 +6947,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-provider-contracts"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=608f8cab347836163d018031ef6571af4bdf4f5d#608f8cab347836163d018031ef6571af4bdf4f5d"
 dependencies = [
  "async-trait",
  "chrono",
@@ -6962,7 +6964,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-traits"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=608f8cab347836163d018031ef6571af4bdf4f5d#608f8cab347836163d018031ef6571af4bdf4f5d"
 dependencies = [
  "arc-swap",
  "async-trait",

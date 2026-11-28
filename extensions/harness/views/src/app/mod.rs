@@ -9,6 +9,7 @@ pub mod deeplink;
 pub mod extension_services;
 pub(crate) mod governed;
 pub mod governor;
+pub mod headless;
 pub(crate) mod linked;
 pub mod paths;
 pub(crate) mod runtime;

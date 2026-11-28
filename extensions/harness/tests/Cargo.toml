@@ -51,13 +51,13 @@ systemprompt-harness-shared = { path = "../shared" }
 systemprompt-harness-views = { path = "../views" }
 systemprompt-harness-shell = { path = "../shell" }
 
-systemprompt-device = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
-systemprompt-drive = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
-systemprompt-engine = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
-systemprompt-harness = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
-systemprompt-identifiers = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
-systemprompt-models = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
-systemprompt-traits = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
+systemprompt-device = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "608f8cab347836163d018031ef6571af4bdf4f5d" }
+systemprompt-drive = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "608f8cab347836163d018031ef6571af4bdf4f5d" }
+systemprompt-engine = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "608f8cab347836163d018031ef6571af4bdf4f5d" }
+systemprompt-harness = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "608f8cab347836163d018031ef6571af4bdf4f5d" }
+systemprompt-identifiers = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "608f8cab347836163d018031ef6571af4bdf4f5d" }
+systemprompt-models = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "608f8cab347836163d018031ef6571af4bdf4f5d" }
+systemprompt-traits = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "608f8cab347836163d018031ef6571af4bdf4f5d" }
 
 # Each of these is the shell manifest's entry, so a test links the versions
 # and features the shell does.
@@ -66,4 +66,7 @@ async-trait = "0.1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 serde_json = { version = "1", features = ["preserve_order", "raw_value"] }
 tempfile = "3.27"
-tokio = { version = "1.54", features = ["rt-multi-thread", "net", "io-util", "time", "sync", "macros", "fs"] }
+# Why: core's reqwest is built with rustls-no-provider; the shell binary
+# installs ring as the process provider at start (shell/src/app/tls.rs).
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "logging", "tls12"] }
+tokio = { version = "1.54", features = ["rt-multi-thread", "net", "io-util", "time", "sync", "macros", "fs", "signal"] }

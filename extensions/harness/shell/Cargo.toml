@@ -19,6 +19,7 @@ path = "src/main.rs"
 anyhow.workspace = true
 dirs.workspace = true
 gpui-kit.workspace = true
+rustls.workspace = true
 serde_json.workspace = true
 systemprompt-harness-brand.workspace = true
 systemprompt-harness-shared.workspace = true
