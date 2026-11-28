@@ -5,11 +5,13 @@ use systemprompt_harness_views::transcript::tool_info::{
     Outcome, Phase, TodoLine, ToolKind, exit_code, summarize, todos, truncate,
 };
 
-fn completed(input: Value, metadata: Value) -> ToolState {
+use crate::TestResult;
+
+fn completed(input: Value, metadata: Value) -> TestResult<ToolState> {
     let Value::Object(metadata) = metadata else {
-        panic!("metadata must be an object")
+        return Err("metadata must be an object".into());
     };
-    ToolState::Completed {
+    Ok(ToolState::Completed {
         input,
         output: "done".to_owned(),
         title: "title".to_owned(),
@@ -17,45 +19,47 @@ fn completed(input: Value, metadata: Value) -> ToolState {
         attachments: Vec::new(),
         started: 1_000,
         ended: 1_420,
-    }
+    })
 }
 
-fn failed(error: &str, metadata: &Value) -> ToolState {
+fn failed(error: &str, metadata: &Value) -> TestResult<ToolState> {
     let state = json!({ "status": "error", "input": {}, "error": error, "metadata": metadata, "started": 1, "ended": 2 });
-    serde_json::from_value(state).unwrap()
+    Ok(serde_json::from_value(state)?)
 }
 
-fn outcome(state: &ToolState) -> Outcome {
+fn outcome(state: &ToolState) -> TestResult<Outcome> {
     match summarize("shell", state).phase {
-        Phase::Failed(outcome) => outcome,
-        other => panic!("expected a failed phase, got {other:?}"),
+        Phase::Failed(outcome) => Ok(outcome),
+        other => Err(format!("expected a failed phase, got {other:?}").into()),
     }
 }
 
 #[test]
-fn shell_rows_show_the_first_line_of_the_command() {
+fn shell_rows_show_the_first_line_of_the_command() -> TestResult {
     let state = completed(
         json!({ "command": "cargo build\ncargo test" }),
         json!({ "exit_code": 0 }),
-    );
+    )?;
     let summary = summarize("shell", &state);
     assert_eq!(summary.kind, ToolKind::Shell);
     assert_eq!(summary.subject.as_deref(), Some("cargo build"));
     assert_eq!(summary.duration_ms, Some(420));
     assert_eq!(summary.phase, Phase::Done);
     assert_eq!(exit_code(&state), Some(0));
+    Ok(())
 }
 
 #[test]
-fn patch_rows_list_the_files_from_metadata() {
+fn patch_rows_list_the_files_from_metadata() -> TestResult {
     let state = completed(
         json!({ "patch": "x" }),
         json!({ "files": ["a.rs", "b.rs"] }),
-    );
+    )?;
     assert_eq!(
         summarize("patch", &state).subject.as_deref(),
         Some("a.rs, b.rs")
     );
+    Ok(())
 }
 
 #[test]
@@ -68,75 +72,79 @@ fn unknown_tools_are_external() {
 }
 
 #[test]
-fn policy_denials_keep_their_reason() {
+fn policy_denials_keep_their_reason() -> TestResult {
     let state = failed(
         "blocked",
         &json!({ denied::KEY: denied::POLICY, denied::REASON: "no network" }),
-    );
+    )?;
     assert_eq!(
-        outcome(&state),
+        outcome(&state)?,
         Outcome::PolicyDenied("no network".to_owned())
     );
+    Ok(())
 }
 
 #[test]
-fn rejections_keep_the_feedback() {
+fn rejections_keep_the_feedback() -> TestResult {
     let with = failed(
         "declined",
         &json!({ denied::KEY: denied::REJECTED, denied::FEEDBACK: "use tabs" }),
-    );
+    )?;
     assert_eq!(
-        outcome(&with),
+        outcome(&with)?,
         Outcome::Rejected(Some("use tabs".to_owned()))
     );
-    let without = failed("declined", &json!({ denied::KEY: denied::REJECTED }));
-    assert_eq!(outcome(&without), Outcome::Rejected(None));
+    let without = failed("declined", &json!({ denied::KEY: denied::REJECTED }))?;
+    assert_eq!(outcome(&without)?, Outcome::Rejected(None));
+    Ok(())
 }
 
 #[test]
-fn rule_denials_show_the_reason_or_the_error() {
+fn rule_denials_show_the_reason_or_the_error() -> TestResult {
     let bare = failed(
         "a rule denies shell\nmore",
         &json!({ denied::KEY: denied::RULE }),
-    );
+    )?;
     assert_eq!(
-        outcome(&bare),
+        outcome(&bare)?,
         Outcome::RuleDenied("a rule denies shell".to_owned())
     );
     let reasoned = failed(
         "denied",
         &json!({ denied::KEY: denied::RULE, denied::REASON: "no shell here" }),
-    );
+    )?;
     assert_eq!(
-        outcome(&reasoned),
+        outcome(&reasoned)?,
         Outcome::RuleDenied("no shell here".to_owned())
     );
+    Ok(())
 }
 
 #[test]
-fn aborts_carry_the_marker_and_unmarked_errors_are_failures() {
+fn aborts_carry_the_marker_and_unmarked_errors_are_failures() -> TestResult {
     let aborted = systemprompt_engine::tools::ToolError::Aborted.to_string();
     assert_eq!(
-        outcome(&failed(&aborted, &json!({ denied::KEY: denied::ABORTED }))),
+        outcome(&failed(&aborted, &json!({ denied::KEY: denied::ABORTED }))?)?,
         Outcome::Aborted
     );
     assert_eq!(
-        outcome(&failed(&aborted, &json!({}))),
+        outcome(&failed(&aborted, &json!({}))?)?,
         Outcome::Error(aborted.clone())
     );
     assert_eq!(
-        outcome(&failed(" file not found ", &json!({}))),
+        outcome(&failed(" file not found ", &json!({}))?)?,
         Outcome::Error("file not found".to_owned())
     );
-    let looks_denied = failed("Denied by policy: Reason: none", &json!({}));
+    let looks_denied = failed("Denied by policy: Reason: none", &json!({}))?;
     assert_eq!(
-        outcome(&looks_denied),
+        outcome(&looks_denied)?,
         Outcome::Error("Denied by policy: Reason: none".to_owned())
     );
+    Ok(())
 }
 
 #[test]
-fn todos_are_read_from_metadata() {
+fn todos_are_read_from_metadata() -> TestResult {
     let state = completed(
         json!({}),
         json!({ "todos": [
@@ -144,7 +152,7 @@ fn todos_are_read_from_metadata() {
             { "content": "ship", "status": "in_progress" },
             { "content": "broken", "status": "unknown" }
         ] }),
-    );
+    )?;
     let lines = todos(&state);
     assert_eq!(lines.len(), 2);
     assert_eq!(
@@ -154,6 +162,7 @@ fn todos_are_read_from_metadata() {
             status: TodoStatus::InProgress
         }
     );
+    Ok(())
 }
 
 #[test]

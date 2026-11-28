@@ -5,6 +5,8 @@ use systemprompt_harness_views::app::deeplink::{
     ArgsError, LaunchRequest, Link, LinkError, is_link, parse, parse_args,
 };
 
+use crate::TestResult;
+
 const SCHEME: &str = "sp-harness";
 
 fn args(list: &[&str]) -> Result<LaunchRequest, ArgsError> {
@@ -91,9 +93,9 @@ fn settings_links_may_name_a_page() {
 }
 
 #[test]
-fn the_command_line_takes_one_directory_and_any_links() {
+fn the_command_line_takes_one_directory_and_any_links() -> TestResult {
     assert_eq!(args(&[]), Ok(LaunchRequest::default()));
-    let parsed = args(&["work", "sp-harness://open?dir=x", "sp-harness://settings"]).unwrap();
+    let parsed = args(&["work", "sp-harness://open?dir=x", "sp-harness://settings"])?;
     assert_eq!(parsed.directory, Some(PathBuf::from("work")));
     assert_eq!(parsed.links.len(), 2);
     assert_eq!(args(&["a", "b"]), Err(ArgsError::SecondDirectory));
@@ -103,35 +105,35 @@ fn the_command_line_takes_one_directory_and_any_links() {
             option: "--nope".to_owned()
         })
     );
+    Ok(())
 }
 
 #[test]
-fn a_link_alone_names_the_project_to_open() {
-    let request = args(&["sp-harness://settings", "sp-harness://open?dir=%2Fwork%2Fa"]).unwrap();
+fn a_link_alone_names_the_project_to_open() -> TestResult {
+    let request = args(&["sp-harness://settings", "sp-harness://open?dir=%2Fwork%2Fa"])?;
     assert_eq!(
         request.project_directory(SCHEME),
         Some(PathBuf::from("/work/a"))
     );
-    let explicit = args(&["/work/b", "sp-harness://open?dir=%2Fwork%2Fa"]).unwrap();
+    let explicit = args(&["/work/b", "sp-harness://open?dir=%2Fwork%2Fa"])?;
     assert_eq!(
         explicit.project_directory(SCHEME),
         Some(PathBuf::from("/work/b"))
     );
+    Ok(())
 }
 
 #[test]
-fn requests_round_trip_as_json() {
+fn requests_round_trip_as_json() -> TestResult {
     let request = LaunchRequest {
         directory: Some(PathBuf::from("/w")),
         links: vec!["sp-harness://settings".into()],
     };
-    let text = serde_json::to_string(&request).unwrap();
+    let text = serde_json::to_string(&request)?;
+    assert_eq!(serde_json::from_str::<LaunchRequest>(&text)?, request);
     assert_eq!(
-        serde_json::from_str::<LaunchRequest>(&text).unwrap(),
-        request
-    );
-    assert_eq!(
-        serde_json::from_str::<LaunchRequest>("{}").unwrap(),
+        serde_json::from_str::<LaunchRequest>("{}")?,
         LaunchRequest::default()
     );
+    Ok(())
 }

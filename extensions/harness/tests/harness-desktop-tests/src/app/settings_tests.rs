@@ -5,10 +5,12 @@ use systemprompt_harness_shared::Scheme;
 use systemprompt_harness_views::app::settings::{DeliveryPref, UiSettings, WindowGeometry};
 use systemprompt_harness_views::app::settings_store::{SettingsStore, decode, encode};
 
+use crate::TestResult;
+
 const RECENT_LIMIT: usize = 10;
 
 #[test]
-fn a_round_trip_keeps_every_field() {
+fn a_round_trip_keeps_every_field() -> TestResult {
     let mut settings = UiSettings::default();
     settings.set_scheme(Scheme::Dark);
     settings.remember_project(Path::new("/work/a"));
@@ -22,26 +24,29 @@ fn a_round_trip_keeps_every_field() {
     });
     settings.verdict_enabled = false;
     settings.composer.delivery = DeliveryPref::Queue;
-    let bytes = encode(&settings).unwrap();
-    let back = decode(&bytes).unwrap();
+    let bytes = encode(&settings)?;
+    let back = decode(&bytes)?;
     assert_eq!(back, settings);
     assert_eq!(back.scheme(), Scheme::Dark);
+    Ok(())
 }
 
 #[test]
-fn missing_fields_take_their_defaults() {
-    let back = decode(br#"{"scheme":"light"}"#).unwrap();
+fn missing_fields_take_their_defaults() -> TestResult {
+    let back = decode(br#"{"scheme":"light"}"#)?;
     assert_eq!(back.scheme(), Scheme::Light);
     assert!(back.verdict_enabled);
     assert!(back.sidebar_open);
     assert!(back.composer.enter_sends);
     assert_eq!(back.version, UiSettings::default().version);
+    Ok(())
 }
 
 #[test]
-fn an_unknown_scheme_reads_as_system() {
-    let back = decode(br#"{"scheme":"sepia"}"#).unwrap();
+fn an_unknown_scheme_reads_as_system() -> TestResult {
+    let back = decode(br#"{"scheme":"sepia"}"#)?;
     assert_eq!(back.scheme(), Scheme::System);
+    Ok(())
 }
 
 #[test]
@@ -92,24 +97,26 @@ fn window_geometry_must_be_usable() {
 }
 
 #[test]
-fn the_store_writes_and_reads_back() {
-    let dir = tempfile::tempdir().unwrap();
+fn the_store_writes_and_reads_back() -> TestResult {
+    let dir = tempfile::tempdir()?;
     let path = dir.path().join("ui.json");
     let store = SettingsStore::load(path.clone());
     assert_eq!(store.get(), UiSettings::default());
     store.update(|settings| settings.sidebar_open = false);
-    store.flush().unwrap();
+    store.flush()?;
     let again = SettingsStore::load(path);
     assert!(!again.get().sidebar_open);
+    Ok(())
 }
 
 #[test]
-fn an_unchanged_update_does_not_notify() {
-    let dir = tempfile::tempdir().unwrap();
+fn an_unchanged_update_does_not_notify() -> TestResult {
+    let dir = tempfile::tempdir()?;
     let store = SettingsStore::load(dir.path().join("ui.json"));
     let changes = store.subscribe();
     store.update(|settings| settings.sidebar_open = true);
-    assert!(!changes.has_changed().unwrap());
+    assert!(!changes.has_changed()?);
     store.update(|settings| settings.sidebar_open = false);
-    assert!(changes.has_changed().unwrap());
+    assert!(changes.has_changed()?);
+    Ok(())
 }

@@ -1,6 +1,10 @@
 //! Tests for the design system of systemprompt-harness-shared and the theme
 //! crate, through the public API.
 
+// What a test or a fixture returns, so a failed step is reported through `?`.
+#[cfg(test)]
+type TestResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
+
 #[cfg(test)]
 mod code_tests;
 #[cfg(test)]

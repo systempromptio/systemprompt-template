@@ -6,6 +6,8 @@ use systemprompt_engine::store::{
 };
 use systemprompt_harness_views::state::session_model::{SessionModel, Snapshot};
 
+use crate::TestResult;
+
 pub(crate) fn session(id: &SessionId) -> Session {
     Session {
         id: id.clone(),
@@ -50,24 +52,24 @@ pub(crate) fn text_part(session: &SessionId, message: &MessageId, text: &str) ->
     )
 }
 
-pub(crate) fn permission(session: &SessionId) -> PermissionAsk {
-    PermissionAsk {
+pub(crate) fn permission(session: &SessionId) -> TestResult<PermissionAsk> {
+    Ok(PermissionAsk {
         id: PermissionId::mint(&crate::IDS),
         session: session.clone(),
-        call_id: CallId::try_new("call").unwrap(),
+        call_id: CallId::try_new("call")?,
         tool: "shell".to_owned(),
         permission: "shell".to_owned(),
         patterns: vec!["cargo test".to_owned()],
         always: Vec::new(),
         title: "cargo test".to_owned(),
         metadata: serde_json::Value::Null,
-    }
+    })
 }
 
-pub(crate) fn text_of(model: &SessionModel, message: usize, part: usize) -> String {
-    model.messages[message].parts[part]
+pub(crate) fn text_of(model: &SessionModel, message: usize, part: usize) -> TestResult<String> {
+    Ok(model.messages[message].parts[part]
         .body
         .text()
-        .expect("a text part")
-        .to_owned()
+        .ok_or("a text part")?
+        .to_owned())
 }

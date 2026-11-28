@@ -6,6 +6,7 @@ use systemprompt_harness::members::notifications::{FeedStatus, NotificationsErro
 use systemprompt_harness::members::slack::SlackStatus;
 use systemprompt_harness_views::notifications::strings;
 
+use crate::TestResult;
 use crate::support::at;
 
 const fn unread(count: u64, capped: bool) -> UnreadCount {
@@ -36,8 +37,8 @@ fn the_bell_tooltip_names_the_unread_count() {
 }
 
 #[test]
-fn relative_times_read_naturally() {
-    let now = at("2026-11-20T12:00:00Z");
+fn relative_times_read_naturally() -> TestResult {
+    let now = at("2026-11-20T12:00:00Z")?;
     assert_eq!(
         strings::relative(now - TimeDelta::seconds(30), now),
         "just now"
@@ -53,6 +54,7 @@ fn relative_times_read_naturally() {
     assert_eq!(strings::relative(now - TimeDelta::hours(3), now), "3 h ago");
     assert_eq!(strings::relative(now - TimeDelta::days(2), now), "2 d ago");
     assert!(strings::relative(now - TimeDelta::days(30), now).contains("2026"));
+    Ok(())
 }
 
 #[test]
@@ -69,21 +71,22 @@ fn retries_round_up_to_whole_units() {
 }
 
 #[test]
-fn a_failing_feed_says_why_and_when_it_retries() {
+fn a_failing_feed_says_why_and_when_it_retries() -> TestResult {
     let line = strings::feed_line(
         FeedStatus::Failing {
             kind: SyncErrorKind::RateLimited,
             retry_in: Duration::from_secs(20),
         },
-        at("2026-11-20T12:00:00Z"),
+        at("2026-11-20T12:00:00Z")?,
     );
     assert!(line.starts_with(strings::failure(SyncErrorKind::RateLimited)));
     assert!(line.ends_with("Trying again in 20 s."));
+    Ok(())
 }
 
 #[test]
-fn a_live_feed_says_when_it_was_updated() {
-    let now = at("2026-11-20T12:00:00Z");
+fn a_live_feed_says_when_it_was_updated() -> TestResult {
+    let now = at("2026-11-20T12:00:00Z")?;
     let line = strings::feed_line(
         FeedStatus::Live {
             refreshed_at: now - TimeDelta::minutes(2),
@@ -99,6 +102,7 @@ fn a_live_feed_says_when_it_was_updated() {
         strings::feed_line(FeedStatus::NotServed, now),
         strings::NOT_SERVED_TITLE
     );
+    Ok(())
 }
 
 #[test]
@@ -129,8 +133,8 @@ fn coalesced_counts_show_only_above_one() {
 }
 
 #[test]
-fn slack_states_are_stated_plainly() {
-    let now = at("2026-11-20T12:00:00Z");
+fn slack_states_are_stated_plainly() -> TestResult {
+    let now = at("2026-11-20T12:00:00Z")?;
     assert_eq!(strings::slack_state(SlackStatus::Withheld), "Off");
     assert!(strings::slack_detail(SlackStatus::Withheld, now).contains("does not enable Slack"));
     assert_eq!(strings::slack_state(SlackStatus::Quiet), "Quiet");
@@ -151,6 +155,7 @@ fn slack_states_are_stated_plainly() {
         now,
     );
     assert!(unknown.ends_with(strings::CONNECTING_TITLE));
+    Ok(())
 }
 
 #[test]

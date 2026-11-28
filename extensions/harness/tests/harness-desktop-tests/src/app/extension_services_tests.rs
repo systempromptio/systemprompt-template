@@ -10,6 +10,8 @@ use systemprompt_identifiers::engine::ExtensionId;
 use systemprompt_identifiers::extension_id;
 use systemprompt_traits::{CancellationToken, OwnedTask};
 
+use crate::TestResult;
+
 #[derive(Default)]
 struct Counting {
     starts: AtomicUsize,
@@ -46,7 +48,7 @@ impl SpExtension for Plain {
     }
 }
 
-fn extensions() -> SpExtensions {
+fn extensions() -> TestResult<SpExtensions> {
     let linked: [Arc<dyn SpExtension>; 2] = [
         Arc::new(Plain(ExtensionMetadata::new(
             extension_id!("notifications"),
@@ -57,7 +59,7 @@ fn extensions() -> SpExtensions {
                 .depends_on(extension_id!("notifications")),
         )),
     ];
-    SpExtensions::from_extensions(linked).unwrap()
+    Ok(SpExtensions::from_extensions(linked)?)
 }
 
 fn enabled(ids: &[ExtensionId]) -> EnabledExtensions {
@@ -79,20 +81,20 @@ fn start(
     service: &Arc<Counting>,
     enablement: &Enablement,
     cancel: &CancellationToken,
-) -> OwnedTask<()> {
+) -> TestResult<OwnedTask<()>> {
     let admitted = AdmittedService {
         extension,
         service: Arc::<Counting>::clone(service),
-        extensions: extensions(),
+        extensions: extensions()?,
     };
-    OwnedTask::spawn(
+    Ok(OwnedTask::spawn(
         "admitted-service",
         admitted.run(enablement.subscribe(), cancel.clone()),
-    )
+    ))
 }
 
 #[tokio::test]
-async fn a_service_runs_only_while_its_extension_is_admitted() {
+async fn a_service_runs_only_while_its_extension_is_admitted() -> TestResult {
     let service = Arc::new(Counting::default());
     let enablement = Enablement::new();
     let cancel = CancellationToken::new();
@@ -101,7 +103,7 @@ async fn a_service_runs_only_while_its_extension_is_admitted() {
         &service,
         &enablement,
         &cancel,
-    );
+    )?;
 
     tokio::time::sleep(Duration::from_millis(30)).await;
     assert_eq!(service.counts(), (0, 0));
@@ -116,16 +118,17 @@ async fn a_service_runs_only_while_its_extension_is_admitted() {
     eventually(&service, (2, 1)).await;
 
     cancel.cancel();
-    task.join_named().await.unwrap();
+    task.join_named().await?;
     assert_eq!(service.counts(), (2, 2));
+    Ok(())
 }
 
 #[tokio::test]
-async fn a_service_whose_dependency_is_withheld_does_not_run() {
+async fn a_service_whose_dependency_is_withheld_does_not_run() -> TestResult {
     let service = Arc::new(Counting::default());
     let enablement = Enablement::new();
     let cancel = CancellationToken::new();
-    let task = start(extension_id!("slack"), &service, &enablement, &cancel);
+    let task = start(extension_id!("slack"), &service, &enablement, &cancel)?;
 
     enablement.set(Some(enabled(&[extension_id!("slack")])));
     tokio::time::sleep(Duration::from_millis(30)).await;
@@ -138,6 +141,7 @@ async fn a_service_whose_dependency_is_withheld_does_not_run() {
     eventually(&service, (1, 0)).await;
 
     cancel.cancel();
-    task.join_named().await.unwrap();
+    task.join_named().await?;
     assert_eq!(service.counts(), (1, 1));
+    Ok(())
 }

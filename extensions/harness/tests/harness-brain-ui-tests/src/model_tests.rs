@@ -10,11 +10,12 @@ use systemprompt_identifiers::BrainFactId;
 use systemprompt_identifiers::engine::{MessageId, SessionId};
 use systemprompt_models::brain::FactStatus;
 
+use crate::TestResult;
 use crate::fixtures::{FACT_A, fact};
 
 #[test]
-fn actions_follow_the_fact_status_and_pin() {
-    let candidate = fact(FACT_A, FactStatus::Candidate, false);
+fn actions_follow_the_fact_status_and_pin() -> TestResult {
+    let candidate = fact(FACT_A, FactStatus::Candidate, false)?;
     assert_eq!(
         FactAction::available(&candidate),
         [
@@ -24,21 +25,22 @@ fn actions_follow_the_fact_status_and_pin() {
             FactAction::Pin
         ]
     );
-    let confirmed = fact(FACT_A, FactStatus::Confirmed, true);
+    let confirmed = fact(FACT_A, FactStatus::Confirmed, true)?;
     assert_eq!(
         FactAction::available(&confirmed),
         [FactAction::Dispute, FactAction::Retract, FactAction::Unpin]
     );
-    let disputed = fact(FACT_A, FactStatus::Disputed, false);
+    let disputed = fact(FACT_A, FactStatus::Disputed, false)?;
     assert!(!FactAction::available(&disputed).contains(&FactAction::Dispute));
     assert_eq!(
-        FactAction::available(&fact(FACT_A, FactStatus::Retired, false)),
+        FactAction::available(&fact(FACT_A, FactStatus::Retired, false)?),
         []
     );
     assert_eq!(
-        FactAction::available(&fact(FACT_A, FactStatus::Superseded, true)),
+        FactAction::available(&fact(FACT_A, FactStatus::Superseded, true)?),
         [FactAction::Unpin]
     );
+    Ok(())
 }
 
 #[test]
@@ -51,16 +53,16 @@ fn a_dispute_needs_a_reason_and_a_retraction_does_not() {
     assert!(FactAction::Retract.accepts(""));
 }
 
-fn open_detail(status: FactStatus) -> FactDetail {
-    let id = BrainFactId::try_new(FACT_A).expect("a fact id");
+fn open_detail(status: FactStatus) -> TestResult<FactDetail> {
+    let id = BrainFactId::try_new(FACT_A)?;
     let mut detail = FactDetail::loading(id);
-    detail.fact = Load::Ready(fact(FACT_A, status, false));
-    detail
+    detail.fact = Load::Ready(fact(FACT_A, status, false)?);
+    Ok(detail)
 }
 
 #[test]
-fn the_open_fact_runs_one_available_action_at_a_time() {
-    let mut detail = open_detail(FactStatus::Candidate);
+fn the_open_fact_runs_one_available_action_at_a_time() -> TestResult {
+    let mut detail = open_detail(FactStatus::Candidate)?;
     assert!(!detail.begin(FactAction::Unpin));
     assert!(detail.begin(FactAction::Confirm));
     assert!(!detail.begin(FactAction::Pin));
@@ -75,11 +77,12 @@ fn the_open_fact_runs_one_available_action_at_a_time() {
             BrainFailure::Forbidden
         ))
     );
+    Ok(())
 }
 
 #[test]
-fn drafting_a_reason_only_applies_to_actions_that_take_one() {
-    let mut detail = open_detail(FactStatus::Confirmed);
+fn drafting_a_reason_only_applies_to_actions_that_take_one() -> TestResult {
+    let mut detail = open_detail(FactStatus::Confirmed)?;
     assert!(!detail.draft(FactAction::Pin));
     assert!(detail.draft(FactAction::Dispute));
     assert_eq!(detail.drafting, Some(FactAction::Dispute));
@@ -90,12 +93,14 @@ fn drafting_a_reason_only_applies_to_actions_that_take_one() {
         detail.outcome,
         Some(ActionOutcome::Done(FactAction::Dispute))
     );
+    Ok(())
 }
 
 #[test]
-fn a_loading_fact_offers_no_action() {
-    let detail = FactDetail::loading(BrainFactId::try_new(FACT_A).expect("a fact id"));
+fn a_loading_fact_offers_no_action() -> TestResult {
+    let detail = FactDetail::loading(BrainFactId::try_new(FACT_A)?);
     assert_eq!(detail.actions(), []);
+    Ok(())
 }
 
 #[test]

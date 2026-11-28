@@ -7,33 +7,36 @@ use systemprompt_harness_views::settings::permissions::rules::{
     EditValue, RulesError, ShownRule, add_edit, group, parse_file, remove_edit, to_json,
 };
 
+use crate::TestResult;
+
 fn home() -> &'static Path {
     Path::new("/home/user")
 }
 
 #[test]
-fn comments_and_trailing_commas_are_stripped_outside_strings() {
+fn comments_and_trailing_commas_are_stripped_outside_strings() -> TestResult {
     let text =
         "{\n  // a note\n  \"url\": \"http://x/*y*/\", /* gone */\n  \"list\": [1, 2,],\n}\n";
-    let value: Value = serde_json::from_str(&strip_jsonc(text)).unwrap();
+    let value: Value = serde_json::from_str(&strip_jsonc(text))?;
     assert_eq!(value["url"], "http://x/*y*/");
     assert_eq!(value["list"], serde_json::json!([1, 2]));
+    Ok(())
 }
 
 #[test]
-fn escaped_quotes_do_not_end_a_string() {
+fn escaped_quotes_do_not_end_a_string() -> TestResult {
     let text = r#"{"a": "say \"hi\" // not a comment",}"#;
-    let value: Value = serde_json::from_str(&strip_jsonc(text)).unwrap();
+    let value: Value = serde_json::from_str(&strip_jsonc(text))?;
     assert_eq!(value["a"], "say \"hi\" // not a comment");
+    Ok(())
 }
 
 #[test]
-fn object_rules_keep_the_key_they_sit_under() {
+fn object_rules_keep_the_key_they_sit_under() -> TestResult {
     let file = parse_file(
         r#"{"permission": {"shell": {"*": "ask", "git *": "allow"}, "edit": "deny"}}"#,
         home(),
-    )
-    .unwrap();
+    )?;
     assert!(file.editable);
     assert_eq!(file.entries.len(), 3);
     assert_eq!(
@@ -46,18 +49,19 @@ fn object_rules_keep_the_key_they_sit_under() {
     );
     assert!(file.entries[2].shorthand);
     assert_eq!(file.entries[2].rule, Rule::new("edit", "*", Action::Deny));
+    Ok(())
 }
 
 #[test]
-fn list_rules_are_shown_but_not_editable() {
+fn list_rules_are_shown_but_not_editable() -> TestResult {
     let file = parse_file(
         r#"{"permission": [{"permission": "fetch", "pattern": "*", "action": "allow"}]}"#,
         home(),
-    )
-    .unwrap();
+    )?;
     assert!(!file.editable);
     assert_eq!(file.entries[0].key, None);
     assert_eq!(remove_edit(&file.entries[0]), None);
+    Ok(())
 }
 
 #[test]
@@ -70,19 +74,20 @@ fn a_bad_action_is_refused() {
 }
 
 #[test]
-fn an_empty_file_is_editable_and_has_no_rules() {
-    let file = parse_file("  // nothing yet\n", home()).unwrap();
+fn an_empty_file_is_editable_and_has_no_rules() -> TestResult {
+    let file = parse_file("  // nothing yet\n", home())?;
     assert!(file.editable);
     assert_eq!(
         file.entries,
         Vec::<systemprompt_harness_views::settings::permissions::rules::Entry>::new()
     );
+    Ok(())
 }
 
 #[test]
-fn adding_beside_a_shorthand_keeps_it_first() {
-    let file = parse_file(r#"{"permission": {"shell": "ask"}}"#, home()).unwrap();
-    let edit = add_edit(&file, "shell", "git *", Action::Allow).unwrap();
+fn adding_beside_a_shorthand_keeps_it_first() -> TestResult {
+    let file = parse_file(r#"{"permission": {"shell": "ask"}}"#, home())?;
+    let edit = add_edit(&file, "shell", "git *", Action::Allow).ok_or("the rule is added")?;
     assert_eq!(edit.key, vec!["permission".to_owned(), "shell".to_owned()]);
     let expected = vec![
         ("*".to_owned(), Action::Ask),
@@ -90,15 +95,16 @@ fn adding_beside_a_shorthand_keeps_it_first() {
     ];
     assert_eq!(edit.value, Some(EditValue::Patterns(expected)));
     assert_eq!(
-        to_json(edit.value.as_ref().unwrap()),
+        to_json(edit.value.as_ref().ok_or("the edit writes a value")?),
         serde_json::json!({"*": "ask", "git *": "allow"})
     );
+    Ok(())
 }
 
 #[test]
-fn adding_a_new_pattern_writes_one_key() {
-    let file = parse_file("{}", home()).unwrap();
-    let edit = add_edit(&file, " read ", " *.pem ", Action::Deny).unwrap();
+fn adding_a_new_pattern_writes_one_key() -> TestResult {
+    let file = parse_file("{}", home())?;
+    let edit = add_edit(&file, " read ", " *.pem ", Action::Deny).ok_or("the rule is added")?;
     assert_eq!(
         edit.key,
         vec![
@@ -109,12 +115,13 @@ fn adding_a_new_pattern_writes_one_key() {
     );
     assert_eq!(edit.value, Some(EditValue::Action(Action::Deny)));
     assert_eq!(add_edit(&file, "read", "  ", Action::Deny), None);
+    Ok(())
 }
 
 #[test]
-fn removal_targets_the_full_key() {
-    let file = parse_file(r#"{"permission": {"shell": {"rm *": "deny"}}}"#, home()).unwrap();
-    let edit = remove_edit(&file.entries[0]).unwrap();
+fn removal_targets_the_full_key() -> TestResult {
+    let file = parse_file(r#"{"permission": {"shell": {"rm *": "deny"}}}"#, home())?;
+    let edit = remove_edit(&file.entries[0]).ok_or("the rule is removable")?;
     assert_eq!(
         edit.key,
         vec![
@@ -124,6 +131,7 @@ fn removal_targets_the_full_key() {
         ]
     );
     assert_eq!(edit.value, None);
+    Ok(())
 }
 
 #[test]

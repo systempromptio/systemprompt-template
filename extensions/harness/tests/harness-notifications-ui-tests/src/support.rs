@@ -2,21 +2,23 @@ use chrono::{DateTime, Utc};
 use serde_json::json;
 use systemprompt_harness::members::notifications::{Notification, NotificationId};
 
-pub(crate) fn id_of(index: usize) -> NotificationId {
-    NotificationId::try_new(format!("00000000-0000-4000-8000-{index:012x}")).unwrap()
+use crate::TestResult;
+
+pub(crate) fn id_of(index: usize) -> TestResult<NotificationId> {
+    Ok(NotificationId::try_new(format!(
+        "00000000-0000-4000-8000-{index:012x}"
+    ))?)
 }
 
-pub(crate) fn at(text: &str) -> DateTime<Utc> {
-    DateTime::parse_from_rfc3339(text)
-        .unwrap()
-        .with_timezone(&Utc)
+pub(crate) fn at(text: &str) -> TestResult<DateTime<Utc>> {
+    Ok(DateTime::parse_from_rfc3339(text)?.with_timezone(&Utc))
 }
 
-pub(crate) fn notification(index: usize, read: bool, attention: &str) -> Notification {
+pub(crate) fn notification(index: usize, read: bool, attention: &str) -> TestResult<Notification> {
     let user = "1ecce4e3-bc87-441d-b374-ea29bab88da8";
     let created = "2026-11-20T10:00:00Z";
     serde_json::from_value(json!({
-        "id": id_of(index).as_str(),
+        "id": id_of(index)?.as_str(),
         "recipient": user,
         "kind": "document.shared",
         "stream": null,
@@ -46,5 +48,5 @@ pub(crate) fn notification(index: usize, read: bool, attention: &str) -> Notific
         "held_until": null,
         "delivery_state": "delivered"
     }))
-    .unwrap()
+    .map_err(Into::into)
 }

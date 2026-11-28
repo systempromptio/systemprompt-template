@@ -4,6 +4,8 @@ use systemprompt_harness_shared::contract::{ShellExtension, ShellExtensions};
 use systemprompt_harness_views::notifications::{NotificationsShell, SlackShell};
 use systemprompt_harness_views::registered::REGISTERED;
 
+use crate::TestResult;
+
 #[test]
 fn each_shell_half_carries_its_instance_half_id() {
     assert_eq!(NotificationsShell.metadata().id, NotificationsExtension::ID);
@@ -22,8 +24,8 @@ fn slack_depends_on_notifications() {
 }
 
 #[test]
-fn both_extensions_are_in_the_registration_list() {
-    let discovered = ShellExtensions::from_registrations(&REGISTERED).unwrap();
+fn both_extensions_are_in_the_registration_list() -> TestResult {
+    let discovered = ShellExtensions::from_registrations(&REGISTERED)?;
     let ids: Vec<_> = discovered
         .entries()
         .iter()
@@ -44,4 +46,5 @@ fn both_extensions_are_in_the_registration_list() {
         );
         assert_eq!((shell.factory)().metadata().id, shell.id);
     }
+    Ok(())
 }

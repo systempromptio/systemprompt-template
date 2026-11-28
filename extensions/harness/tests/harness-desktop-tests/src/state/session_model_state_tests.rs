@@ -8,9 +8,10 @@ use systemprompt_engine::store::{
 use systemprompt_harness_views::state::session_model::{ModelEffect, SessionModel, Snapshot};
 
 use super::session_model_fixtures::{loaded, permission, session};
+use crate::TestResult;
 
 #[test]
-fn status_permissions_and_questions_follow_the_engine() {
+fn status_permissions_and_questions_follow_the_engine() -> TestResult {
     let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
     assert_eq!(
@@ -21,7 +22,7 @@ fn status_permissions_and_questions_follow_the_engine() {
         ModelEffect::Changed
     );
     assert!(model.is_busy());
-    let ask = permission(&id);
+    let ask = permission(&id)?;
     let ask_id = ask.id.clone();
     assert_eq!(
         model.apply_event(&EngineEvent::PermissionAsked(Box::new(ask.clone()))),
@@ -35,7 +36,7 @@ fn status_permissions_and_questions_follow_the_engine() {
     let question = QuestionAsk {
         id: question_id.clone(),
         session: id.clone(),
-        call_id: CallId::try_new("c").unwrap(),
+        call_id: CallId::try_new("c")?,
         questions: Vec::new(),
     };
     model.apply_event(&EngineEvent::QuestionAsked(question));
@@ -58,6 +59,7 @@ fn status_permissions_and_questions_follow_the_engine() {
         ModelEffect::Changed
     );
     assert!(!model.is_busy());
+    Ok(())
 }
 
 #[test]
@@ -130,10 +132,10 @@ fn a_revert_hides_messages_from_its_point_on() {
 }
 
 #[test]
-fn deletion_clears_pending_work() {
+fn deletion_clears_pending_work() -> TestResult {
     let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
-    model.apply_event(&EngineEvent::PermissionAsked(Box::new(permission(&id))));
+    model.apply_event(&EngineEvent::PermissionAsked(Box::new(permission(&id)?)));
     let deleted = Change::SessionDeleted {
         id,
         project_id: ProjectId::mint(&crate::IDS),
@@ -145,10 +147,11 @@ fn deletion_clears_pending_work() {
         model.permissions,
         Vec::<systemprompt_engine::run::PermissionAsk>::new()
     );
+    Ok(())
 }
 
 #[test]
-fn load_sorts_and_filters_what_it_is_given() {
+fn load_sorts_and_filters_what_it_is_given() -> TestResult {
     let id = SessionId::mint(&crate::IDS);
     let first = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
     let second = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
@@ -166,13 +169,14 @@ fn load_sorts_and_filters_what_it_is_given() {
             },
         ],
         todos: Vec::new(),
-        permissions: vec![permission(&id), permission(&SessionId::mint(&crate::IDS))],
+        permissions: vec![permission(&id)?, permission(&SessionId::mint(&crate::IDS))?],
         questions: Vec::new(),
         status: RunStatus::Busy,
     });
     assert_eq!(model.messages[0].message.id(), &first.id);
     assert_eq!(model.permissions.len(), 1);
     assert!(model.loaded && model.is_busy());
+    Ok(())
 }
 
 #[test]

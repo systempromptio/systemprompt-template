@@ -5,26 +5,29 @@ use systemprompt_harness_views::drive::items::DriveFailure;
 use systemprompt_harness_views::drive::model::BrowseScope;
 use systemprompt_harness_views::drive::strings::{self as text, sync};
 
+use crate::TestResult;
+
 #[test]
-fn sizes_and_times_read_well() {
+fn sizes_and_times_read_well() -> TestResult {
     assert_eq!(text::size(512), "512 B");
     assert_eq!(text::size(1536), "1.5 KB");
     assert_eq!(text::size(5 * 1024 * 1024), "5.0 MB");
     let now = Local
         .with_ymd_and_hms(2026, 11, 25, 15, 0, 0)
         .single()
-        .expect("a local time");
+        .ok_or("a local time")?;
     assert_eq!(text::when("not a time", now), "not a time");
     let earlier = Local
         .with_ymd_and_hms(2025, 3, 4, 9, 30, 0)
         .single()
-        .expect("a local time");
+        .ok_or("a local time")?;
     assert_eq!(text::when(&earlier.to_rfc3339(), now), "04 Mar 2025");
     let today = Local
         .with_ymd_and_hms(2026, 11, 25, 9, 5, 0)
         .single()
-        .expect("a local time");
+        .ok_or("a local time")?;
     assert_eq!(text::when(&today.to_rfc3339(), now), "09:05");
+    Ok(())
 }
 
 #[test]

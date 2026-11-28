@@ -10,6 +10,7 @@ use systemprompt_harness_views::notifications::model::{
     slack_tone, unseen,
 };
 
+use crate::TestResult;
 use crate::support::{at, id_of, notification};
 
 const FAILING: FeedStatus = FeedStatus::Failing {
@@ -17,10 +18,10 @@ const FAILING: FeedStatus = FeedStatus::Failing {
     retry_in: Duration::from_secs(30),
 };
 
-fn live() -> FeedStatus {
-    FeedStatus::Live {
-        refreshed_at: at("2026-11-20T10:00:00Z"),
-    }
+fn live() -> TestResult<FeedStatus> {
+    Ok(FeedStatus::Live {
+        refreshed_at: at("2026-11-20T10:00:00Z")?,
+    })
 }
 
 #[test]
@@ -34,54 +35,59 @@ fn withheld_and_unserved_feeds_show_their_state_even_with_items() {
 }
 
 #[test]
-fn held_items_stay_listed_while_the_feed_connects_or_fails() {
+fn held_items_stay_listed_while_the_feed_connects_or_fails() -> TestResult {
     assert_eq!(inbox_body(FeedStatus::Connecting, true), InboxBody::List);
     assert_eq!(inbox_body(FAILING, true), InboxBody::List);
-    assert_eq!(inbox_body(live(), true), InboxBody::List);
+    assert_eq!(inbox_body(live()?, true), InboxBody::List);
+    Ok(())
 }
 
 #[test]
-fn an_empty_inbox_says_why_it_is_empty() {
+fn an_empty_inbox_says_why_it_is_empty() -> TestResult {
     assert_eq!(
         inbox_body(FeedStatus::Connecting, false),
         InboxBody::Connecting
     );
     assert_eq!(inbox_body(FAILING, false), InboxBody::Unavailable);
-    assert_eq!(inbox_body(live(), false), InboxBody::Empty);
+    assert_eq!(inbox_body(live()?, false), InboxBody::Empty);
+    Ok(())
 }
 
 #[test]
-fn actions_are_refused_while_withheld_or_unserved() {
+fn actions_are_refused_while_withheld_or_unserved() -> TestResult {
     assert!(!accepts_actions(FeedStatus::Withheld));
     assert!(!accepts_actions(FeedStatus::NotServed));
     assert!(accepts_actions(FeedStatus::Connecting));
     assert!(accepts_actions(FAILING));
-    assert!(accepts_actions(live()));
+    assert!(accepts_actions(live()?));
+    Ok(())
 }
 
 #[test]
-fn the_badge_shows_only_unread_items_of_an_admitted_feed() {
+fn the_badge_shows_only_unread_items_of_an_admitted_feed() -> TestResult {
     let three = UnreadCount {
         count: 3,
         capped: false,
     };
-    assert!(shows_badge(live(), three));
+    assert!(shows_badge(live()?, three));
     assert!(shows_badge(FAILING, three));
     assert!(!shows_badge(FeedStatus::Withheld, three));
     assert!(!shows_badge(FeedStatus::NotServed, three));
-    assert!(!shows_badge(live(), UnreadCount::default()));
+    assert!(!shows_badge(live()?, UnreadCount::default()));
+    Ok(())
 }
 
 #[test]
-fn feed_tones_follow_the_status() {
+fn feed_tones_follow_the_status() -> TestResult {
     assert_eq!(feed_tone(FeedStatus::Withheld), Tone::Neutral);
     assert_eq!(feed_tone(FeedStatus::Connecting), Tone::Info);
-    assert_eq!(feed_tone(live()), Tone::Success);
+    assert_eq!(feed_tone(live()?), Tone::Success);
     assert_eq!(feed_tone(FAILING), Tone::Warning);
+    Ok(())
 }
 
 #[test]
-fn slack_tones_follow_the_status() {
+fn slack_tones_follow_the_status() -> TestResult {
     assert_eq!(slack_tone(SlackStatus::Withheld), Tone::Neutral);
     assert_eq!(slack_tone(SlackStatus::Quiet), Tone::Neutral);
     assert_eq!(
@@ -94,7 +100,7 @@ fn slack_tones_follow_the_status() {
         }),
         Tone::Info
     );
-    let latest_at = at("2026-11-20T10:00:00Z");
+    let latest_at = at("2026-11-20T10:00:00Z")?;
     assert_eq!(
         slack_tone(SlackStatus::Active {
             items: 2,
@@ -111,47 +117,52 @@ fn slack_tones_follow_the_status() {
         }),
         Tone::Accent
     );
+    Ok(())
 }
 
 #[test]
-fn only_human_attention_needs_the_reader() {
-    assert!(needs_reader(&notification(0, false, "human")));
-    assert!(!needs_reader(&notification(0, false, "agent")));
-    assert!(!needs_reader(&notification(0, false, "silent")));
+fn only_human_attention_needs_the_reader() -> TestResult {
+    assert!(needs_reader(&notification(0, false, "human")?));
+    assert!(!needs_reader(&notification(0, false, "agent")?));
+    assert!(!needs_reader(&notification(0, false, "silent")?));
+    Ok(())
 }
 
 #[test]
-fn unseen_lists_unread_items_not_yet_reported() {
+fn unseen_lists_unread_items_not_yet_reported() -> TestResult {
     let items = vec![
-        notification(0, false, "human"),
-        notification(1, true, "human"),
-        notification(2, false, "human"),
+        notification(0, false, "human")?,
+        notification(1, true, "human")?,
+        notification(2, false, "human")?,
     ];
-    assert_eq!(unseen(&items, &HashSet::new()), vec![id_of(0), id_of(2)]);
-    let reported: HashSet<_> = std::iter::once(id_of(0)).collect();
-    assert_eq!(unseen(&items, &reported), vec![id_of(2)]);
+    assert_eq!(unseen(&items, &HashSet::new()), vec![id_of(0)?, id_of(2)?]);
+    let reported: HashSet<_> = std::iter::once(id_of(0)?).collect();
+    assert_eq!(unseen(&items, &reported), vec![id_of(2)?]);
+    Ok(())
 }
 
 #[test]
-fn an_action_in_flight_is_not_started_twice() {
+fn an_action_in_flight_is_not_started_twice() -> TestResult {
     let mut pending = Pending::default();
-    let read = Action::MarkRead(id_of(1));
+    let read = Action::MarkRead(id_of(1)?);
     assert!(pending.start(&read));
     assert!(!pending.start(&read));
     assert!(pending.is_running(&read));
-    assert!(!pending.is_running(&Action::MarkRead(id_of(2))));
+    assert!(!pending.is_running(&Action::MarkRead(id_of(2)?)));
     pending.finish(&read);
     assert!(!pending.is_running(&read));
     assert!(pending.start(&read));
+    Ok(())
 }
 
 #[test]
-fn marking_everything_read_covers_every_row() {
+fn marking_everything_read_covers_every_row() -> TestResult {
     let mut pending = Pending::default();
     assert!(pending.start(&Action::MarkAllRead));
-    assert!(pending.is_running(&Action::MarkRead(id_of(7))));
-    assert!(!pending.start(&Action::MarkRead(id_of(7))));
+    assert!(pending.is_running(&Action::MarkRead(id_of(7)?)));
+    assert!(!pending.start(&Action::MarkRead(id_of(7)?)));
     assert!(!pending.is_running(&Action::LoadOlder));
     pending.finish(&Action::MarkAllRead);
-    assert!(!pending.is_running(&Action::MarkRead(id_of(7))));
+    assert!(!pending.is_running(&Action::MarkRead(id_of(7)?)));
+    Ok(())
 }

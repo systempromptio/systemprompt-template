@@ -12,6 +12,8 @@ use systemprompt_harness_shared::contract::{
     ShellExtensionRegistration, ShellExtensions, extension_id,
 };
 
+use crate::TestResult;
+
 const REGISTERED_UI: ExtensionId = extension_id!("registered-ui");
 
 #[derive(Default)]
@@ -31,40 +33,44 @@ impl ShellExtension for Plain {
     }
 }
 
-fn plain(id: &str, priority: u32) -> Arc<dyn ShellExtension> {
-    Arc::new(Plain(
-        ExtensionMetadata::new(ExtensionId::parse(id).unwrap(), "plain").with_priority(priority),
-    ))
+fn plain(id: &str, priority: u32) -> TestResult<Arc<dyn ShellExtension>> {
+    Ok(Arc::new(Plain(
+        ExtensionMetadata::new(ExtensionId::parse(id)?, "plain").with_priority(priority),
+    )))
 }
 
 #[test]
-fn a_registered_shell_extension_is_built_from_the_list() {
+fn a_registered_shell_extension_is_built_from_the_list() -> TestResult {
     let list = [ShellExtensionRegistration::of::<Registered>(REGISTERED_UI)];
-    let found = ShellExtensions::from_registrations(&list).unwrap();
+    let found = ShellExtensions::from_registrations(&list)?;
     assert!(
         found
             .entries()
             .iter()
             .any(|entry| entry.metadata.id.as_str() == "registered-ui")
     );
+    Ok(())
 }
 
 #[test]
-fn a_white_label_ui_shadows_the_stock_one() {
-    let resolved =
-        ShellExtensions::from_extensions([plain("drive", 100), plain("drive", 400)]).unwrap();
+fn a_white_label_ui_shadows_the_stock_one() -> TestResult {
+    let resolved = ShellExtensions::from_extensions([plain("drive", 100)?, plain("drive", 400)?])?;
     assert_eq!(resolved.entries().len(), 1);
     assert_eq!(resolved.entries()[0].metadata.priority, 400);
+    Ok(())
 }
 
 #[test]
-fn an_unbroken_tie_fails_discovery() {
-    let error =
-        ShellExtensions::from_extensions([plain("drive", 100), plain("drive", 100)]).unwrap_err();
+fn an_unbroken_tie_fails_discovery() -> TestResult {
+    let resolved = ShellExtensions::from_extensions([plain("drive", 100)?, plain("drive", 100)?]);
     assert!(matches!(
-        error,
-        ExtensionError::Resolve(ResolveError::Ambiguous { priority: 100, .. })
+        resolved,
+        Err(ExtensionError::Resolve(ResolveError::Ambiguous {
+            priority: 100,
+            ..
+        }))
     ));
+    Ok(())
 }
 
 #[test]

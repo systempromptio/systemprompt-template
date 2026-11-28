@@ -1,5 +1,7 @@
 use systemprompt_harness_shell::app::single_instance::pipe_name;
 
+use crate::TestResult;
+
 #[test]
 fn pipe_names_are_per_build_and_per_root() {
     let a = pipe_name("io.example.app", r"C:\Users\a\AppData\Local\Vendor\App");
@@ -20,7 +22,7 @@ fn pipe_names_are_per_build_and_per_root() {
 
 #[cfg(unix)]
 #[test]
-fn a_second_start_hands_its_request_to_the_first() {
+fn a_second_start_hands_its_request_to_the_first() -> TestResult {
     use std::time::Duration;
 
     use systemprompt_harness_shell::app::single_instance::{Endpoint, Instance, acquire, serve};
@@ -30,16 +32,15 @@ fn a_second_start_hands_its_request_to_the_first() {
 
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
-        .build()
-        .unwrap();
-    let dir = tempfile::tempdir().unwrap();
+        .build()?;
+    let dir = tempfile::tempdir()?;
     let paths = AppPaths::under(dir.path().to_path_buf(), dir.path().to_path_buf());
-    std::fs::create_dir_all(&paths.state).unwrap();
+    std::fs::create_dir_all(&paths.state)?;
     let endpoint = Endpoint::for_app(systemprompt_harness_brand::identity(), &paths);
     runtime.block_on(async {
         let Instance::Primary(listener) = acquire(&endpoint, &LaunchRequest::default()).await
         else {
-            panic!("the first start must own the endpoint");
+            return Err("the first start must own the endpoint".into());
         };
         let tasks = BackgroundTasks::new();
         let (sender, mut received) = tokio::sync::mpsc::unbounded_channel();
@@ -59,5 +60,6 @@ fn a_second_start_hands_its_request_to_the_first() {
                 .await
                 .is_drained()
         );
-    });
+        Ok(())
+    })
 }

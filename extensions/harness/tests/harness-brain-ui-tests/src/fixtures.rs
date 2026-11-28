@@ -4,6 +4,8 @@ use serde_json::json;
 use systemprompt_models::brain::client::FactPage;
 use systemprompt_models::brain::{BrainFact, BrainProposal, FactStatus};
 
+use crate::TestResult;
+
 // One clock for every id the tests mint, so ids a test compares are ordered.
 pub(crate) static IDS: systemprompt_identifiers::engine::IdClock =
     systemprompt_identifiers::engine::IdClock::new();
@@ -14,7 +16,7 @@ pub(crate) const FACT_C: &str = "m_8b3e4c7a-5d9f-4e3a-9cab-2f4d6a8bac32";
 pub(crate) const PROPOSAL_OPEN: &str = "0b6f2d4e-1a3c-4e5f-8a7b-9c0d1e2f3a4b";
 pub(crate) const PROPOSAL_DONE: &str = "1c7a3e5f-2b4d-4f6a-9b8c-ad1e2f3a4b5c";
 
-pub(crate) fn fact(id: &str, status: FactStatus, pinned: bool) -> BrainFact {
+pub(crate) fn fact(id: &str, status: FactStatus, pinned: bool) -> TestResult<BrainFact> {
     serde_json::from_value(json!({
         "id": id,
         "kind": "decision",
@@ -42,20 +44,20 @@ pub(crate) fn fact(id: &str, status: FactStatus, pinned: bool) -> BrainFact {
         "created_at": "2026-01-01T00:00:00Z",
         "updated_at": "2026-01-01T00:00:00Z"
     }))
-    .expect("the fixture decodes as a fact")
+    .map_err(Into::into)
 }
 
-pub(crate) fn page(ids: &[&str], next: Option<&str>) -> FactPage {
-    FactPage {
+pub(crate) fn page(ids: &[&str], next: Option<&str>) -> TestResult<FactPage> {
+    Ok(FactPage {
         facts: ids
             .iter()
             .map(|id| fact(id, FactStatus::Confirmed, false))
-            .collect(),
+            .collect::<TestResult<_>>()?,
         next: next.map(str::to_owned),
-    }
+    })
 }
 
-pub(crate) fn proposal(id: &str, status: &str) -> BrainProposal {
+pub(crate) fn proposal(id: &str, status: &str) -> TestResult<BrainProposal> {
     serde_json::from_value(json!({
         "id": id,
         "analysis": "duplicates",
@@ -67,5 +69,5 @@ pub(crate) fn proposal(id: &str, status: &str) -> BrainProposal {
         "decided_by": null,
         "decided_at": null
     }))
-    .expect("the fixture decodes as a proposal")
+    .map_err(Into::into)
 }

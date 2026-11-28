@@ -4,6 +4,8 @@ use systemprompt_harness_shared::theme::{
     AA_LARGE, AA_TEXT, BrandTheme, Color, Palette, Scheme, Tone, contrast_ratio, highlight_theme,
 };
 
+use crate::TestResult;
+
 fn palettes() -> Vec<(&'static str, &'static Palette)> {
     BrandTheme::all()
         .into_iter()
@@ -213,15 +215,14 @@ fn scheme_keys_round_trip_and_resolve() {
 }
 
 #[test]
-fn syntax_palette_deserialises_into_the_toolkit_theme() {
+fn syntax_palette_deserialises_into_the_toolkit_theme() -> TestResult {
     for theme in BrandTheme::all() {
         for palette in [&theme.light, &theme.dark] {
-            let highlight = highlight_theme(theme.id, palette);
-            let Some(highlight) = highlight else {
-                panic!("{} did not produce a highlight theme", theme.id);
-            };
+            let highlight = highlight_theme(theme.id, palette)
+                .ok_or_else(|| format!("{} did not produce a highlight theme", theme.id))?;
             let keyword = highlight.style("keyword").and_then(|style| style.color);
             assert_eq!(keyword, Some(palette.syntax.keyword.hsla()));
         }
     }
+    Ok(())
 }

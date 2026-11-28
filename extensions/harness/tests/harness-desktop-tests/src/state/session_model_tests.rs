@@ -5,9 +5,10 @@ use systemprompt_engine::store::{
 use systemprompt_harness_views::state::session_model::ModelEffect;
 
 use super::session_model_fixtures::{loaded, text_of, text_part};
+use crate::TestResult;
 
 #[test]
-fn a_streamed_turn_builds_the_transcript_in_order() {
+fn a_streamed_turn_builds_the_transcript_in_order() -> TestResult {
     let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
     let user = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
@@ -37,12 +38,13 @@ fn a_streamed_turn_builds_the_transcript_in_order() {
         assert_eq!(model.apply_change(change), ModelEffect::Changed);
     }
     assert_eq!(model.messages.len(), 2);
-    assert_eq!(text_of(&model, 0, 0), "run the tests");
-    assert_eq!(text_of(&model, 1, 0), "All green.");
+    assert_eq!(text_of(&model, 0, 0)?, "run the tests");
+    assert_eq!(text_of(&model, 1, 0)?, "All green.");
     assert_eq!(
         model.last_user_message().map(|entry| entry.message.id()),
         Some(&user.id)
     );
+    Ok(())
 }
 
 #[test]
@@ -105,7 +107,7 @@ fn a_delta_for_an_unknown_part_marks_the_model_stale_until_idle() {
 }
 
 #[test]
-fn an_older_part_update_does_not_overwrite_a_newer_one() {
+fn an_older_part_update_does_not_overwrite_a_newer_one() -> TestResult {
     let id = SessionId::mint(&crate::IDS);
     let mut model = loaded(&id);
     let user = UserMessage::new(&crate::IDS, id.clone(), "build", "m");
@@ -122,7 +124,8 @@ fn an_older_part_update_does_not_overwrite_a_newer_one() {
         model.apply_change(&Change::PartUpdated(older)),
         ModelEffect::Unchanged
     );
-    assert_eq!(text_of(&model, 0, 0), "abc");
+    assert_eq!(text_of(&model, 0, 0)?, "abc");
+    Ok(())
 }
 
 #[test]

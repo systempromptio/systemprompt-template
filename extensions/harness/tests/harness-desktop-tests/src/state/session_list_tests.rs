@@ -39,7 +39,7 @@ fn today() -> NaiveDate {
 #[test]
 fn days_fall_into_buckets() {
     let today = today();
-    let ago = |days: i64| today - chrono::Days::new(u64::try_from(days).unwrap());
+    let ago = |days: u64| today - chrono::Days::new(days);
     assert_eq!(bucket(today, today), DayBucket::Today);
     assert_eq!(bucket(today, ago(1)), DayBucket::Yesterday);
     assert_eq!(bucket(today, ago(7)), DayBucket::PreviousWeek);

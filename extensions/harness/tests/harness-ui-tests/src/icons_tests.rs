@@ -1,5 +1,7 @@
 use systemprompt_harness_shared::IconName;
 
+use crate::TestResult;
+
 #[test]
 fn every_icon_resolves_through_its_asset_path() {
     for icon in IconName::ALL {
@@ -8,14 +10,14 @@ fn every_icon_resolves_through_its_asset_path() {
 }
 
 #[test]
-fn every_icon_is_a_24px_stroke_svg() {
+fn every_icon_is_a_24px_stroke_svg() -> TestResult {
     for icon in IconName::ALL {
-        let Ok(text) = std::str::from_utf8(icon.svg()) else {
-            panic!("{} is not UTF-8", icon.stem());
-        };
+        let text = std::str::from_utf8(icon.svg())
+            .map_err(|error| format!("{} is not UTF-8: {error}", icon.stem()))?;
         assert!(text.contains("viewBox=\"0 0 24 24\""), "{}", icon.stem());
         assert!(text.contains("stroke=\"currentColor\""), "{}", icon.stem());
     }
+    Ok(())
 }
 
 #[test]
