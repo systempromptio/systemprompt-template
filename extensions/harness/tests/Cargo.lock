@@ -6775,7 +6775,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-device"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
 dependencies = [
  "async-trait",
  "aws-lc-rs",
@@ -6808,7 +6808,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-drive"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
 dependencies = [
  "bytes",
  "chrono",
@@ -6834,7 +6834,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-engine"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -6873,7 +6873,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-harness"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -6985,7 +6985,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-identifiers"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
 dependencies = [
  "chrono",
  "schemars",
@@ -6998,7 +6998,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-models"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7028,7 +7028,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-provider-contracts"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7045,7 +7045,7 @@ dependencies = [
 [[package]]
 name = "systemprompt-traits"
 version = "0.87.0"
-source = "git+https://github.com/systempromptio/systemprompt-core?rev=8bebe1607ff1adbea84ef57a426b8a9519a300fa#8bebe1607ff1adbea84ef57a426b8a9519a300fa"
+source = "git+https://github.com/systempromptio/systemprompt-core?rev=7b654858910bc5ec71d42127bc87bb1357e37c92#7b654858910bc5ec71d42127bc87bb1357e37c92"
 dependencies = [
  "arc-swap",
  "async-trait",

@@ -51,13 +51,13 @@ systemprompt-harness-shared = { path = "shared" }
 systemprompt-harness-views = { path = "views" }
 systemprompt-harness-shell = { path = "shell" }
 
-systemprompt-device = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
-systemprompt-drive = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
-systemprompt-engine = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
-systemprompt-harness = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
-systemprompt-identifiers = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
-systemprompt-models = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
-systemprompt-traits = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "8bebe1607ff1adbea84ef57a426b8a9519a300fa" }
+systemprompt-device = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
+systemprompt-drive = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
+systemprompt-engine = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
+systemprompt-harness = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
+systemprompt-identifiers = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
+systemprompt-models = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
+systemprompt-traits = { version = "0.87.0", git = "https://github.com/systempromptio/systemprompt-core", rev = "7b654858910bc5ec71d42127bc87bb1357e37c92" }
 
 # The window toolkit, pinned exactly: a bump is re-checked against every view.
 gpui-kit = { version = "=0.9.1", features = ["syntect"] }
