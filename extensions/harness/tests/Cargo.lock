@@ -4031,6 +4031,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "migrated-desktop-app"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "systemprompt-engine",
+ "systemprompt-harness-views",
+]
+
+[[package]]
 name = "migrated-desktop-process"
 version = "0.0.0"
 dependencies = [
@@ -4043,6 +4052,17 @@ dependencies = [
  "systemprompt-traits",
  "tempfile",
  "tokio",
+]
+
+[[package]]
+name = "migrated-desktop-session"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "serde_json",
+ "systemprompt-engine",
+ "systemprompt-harness-shared",
+ "systemprompt-harness-views",
 ]
 
 [[package]]

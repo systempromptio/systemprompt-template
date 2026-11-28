@@ -4,7 +4,9 @@
 # prose (services/ and storage/ skills and content, docs/, demo/, deploy/
 # recipes, examples/, the pdf/ factsheets, vendored crates' READMEs, test
 # fixtures, the scripts/*.txt allowlists), so those trees are allowed and
-# anything else is not.
+# anything else is not. The desktop shell's tests workspace and its evidence
+# script are test trees like tests/: their case tables, tour lists, step lists
+# and fixtures are allowed there.
 #
 # Fails on:
 #   * a tracked .md/.txt/.org/.rst/.adoc/.pdf/.docx outside the sanctioned set;
@@ -15,7 +17,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 prose='\.(md|txt|org|rst|adoc|pdf|docx)$'
-sanctioned='^(docs|demo|services|storage|deploy|examples|pdf|vendor|tests)/|^scripts/[^/]+\.txt$|^(AGENTS|CLAUDE|SECURITY)\.md$|(^|/)(README|CHANGELOG)\.md$'
+sanctioned='^(docs|demo|services|storage|deploy|examples|pdf|vendor|tests)/|^extensions/harness/tests/|^scripts/harness/evidence/|^scripts/[^/]+\.txt$|^(AGENTS|CLAUDE|SECURITY)\.md$|(^|/)(README|CHANGELOG)\.md$'
 hits=$( { git ls-files | grep -E "$prose" | grep -vE "$sanctioned" || true
           git ls-files | grep -iE "(status|plan|report|summary|progress|findings)[^/]*${prose}" || true
         } | sort -u)

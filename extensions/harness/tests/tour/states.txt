@@ -37,3 +37,19 @@
 27|window-off-display|Saved window on a display since disconnected, and a maximised window on a short display|light|manual|-|-
 28|window-restore-frame|Quit while maximised or minimised; reopen and unmaximise to the earlier frame (Windows)|light|manual|-|-
 29|second-start-restore|A second start while the window is minimised restores and focuses it|light|manual|-|-
+30|composer-toolbar-focus|Composer toolbar with overflowing controls, keyboard-only focus rings, form controls in both themes|light,dark|manual|-|-
+31|dialog-layering|A select, a menu, a tooltip and a notice opened over a dialog; notices stacked behind the front one|light|manual|-|-
+32|dock-motion|The question dock sized to its answers, a long list capped and scrolled, switching questions; composer height changes|light|manual|-|-
+33|transcript-reveal|A long transcript opened cold lands at its end; returning to the end and a revealed tool row|light|manual|-|-
+34|panel-motion|A side panel opening and closing, reversed mid-way, with the content beside it steady|light|manual|-|-
+35|search-popup|Session search popup sized to its results, with a running session's activity mark|light|manual|-|-
+36|composer-geometry|Composer caret without a focus ring, a long prompt clear of the bottom fade, a narrow window|light|manual|-|-
+37|focus-rings|Keyboard focus on the start screen, the new-session pickers, the changes view and settings|light|manual|-|-
+38|overlay-lists|Long lists and overflowing menus kept inside the window|light|manual|-|-
+39|session-header|Session header at narrow widths, under a nested subagent, with a long notice|light|manual|-|-
+40|titlebar-platform|Title bar menu and window controls on each platform|light|manual|-|-
+41|diff-scroll|A long diff: file headers while scrolling, an update in place, an off-screen selection|light|manual|-|-
+42|transcript-scroll|Reading position: first paint at the latest message, following at the end, staying when scrolled up, keyboard traversal|light|link|session?id={session:stream}|seed:stream
+43|row-stability|Rows streaming, completing and expanding without jumps, overlap or stray animation|light|link|session?id={session:tools}|seed:tools
+44|message-chrome|Message hover actions, menus and footers; error rows; the compaction divider|light|manual|-|-
+45|markdown-geometry|Overflowing code blocks and their wrap toggle; inline code and link geometry|light|manual|-|-

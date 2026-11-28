@@ -1,0 +1,21 @@
+[package]
+name = "migrated-desktop-session"
+description = "Migrated behaviour tests for the desktop shell's session surface: the transcript model and its rows, tool rows, streamed markdown blocks, the session list, the composer lists and the request docks."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+chrono.workspace = true
+serde_json.workspace = true
+systemprompt-engine.workspace = true
+systemprompt-harness-shared.workspace = true
+systemprompt-harness-views.workspace = true
+
+[lints]
+workspace = true

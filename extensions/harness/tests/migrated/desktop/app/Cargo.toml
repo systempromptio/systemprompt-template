@@ -1,0 +1,19 @@
+[package]
+name = "migrated-desktop-app"
+description = "Migrated behaviour tests for the desktop shell's application views: session lists, completion lists, pickers, links, preferences and composer submissions."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+chrono.workspace = true
+systemprompt-engine.workspace = true
+systemprompt-harness-views.workspace = true
+
+[lints]
+workspace = true
