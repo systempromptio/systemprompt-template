@@ -34,12 +34,12 @@ publish = false
 repository = "https://github.com/systempromptio/systemprompt-template"
 homepage = "https://systemprompt.io"
 
-# The template's tests lint table (tests/Cargo.toml), copied unchanged: test
-# code asserts by panicking and constructs fixtures liberally.
+# The shell's own denies hold in its tests too: a test reports a failed step
+# through its Result or an assertion, never through unwrap, expect or panic.
 [workspace.lints.clippy]
-unwrap_used = "allow"
-expect_used = "allow"
-panic = "allow"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
 missing_panics_doc = "allow"
 missing_errors_doc = "allow"
 
