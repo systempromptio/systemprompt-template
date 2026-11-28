@@ -1,0 +1,16 @@
+# The evidence steps (S2-C2; core testing/05-evidence.md section 3), read by run (bash) and run.ps1, in this order.
+# One step per line, fields separated by "|":
+#   id | needs | cwd | bash command | PowerShell command
+# needs: -           always runs
+#        core:<path> runs only with a core checkout at the rev extensions/harness/Cargo.toml pins that has <path>;
+#                    otherwise recorded as skipped (not a failure)
+# cwd:   root (this checkout) or core
+# Placeholders: {root} {core} {out} (the evidence folder), {dry} (the step's own dry-run flag, empty in a real run),
+#               {pwsh} (the running PowerShell). A step without a dry-run of its own is not run by --dry-run: its
+#               result comes from the fixture directory (<id>.exit, default 0, and <id>.log).
+toolchain|-|root|bash scripts/harness/toolchain.sh|bash scripts/harness/toolchain.sh
+shell-tests|-|root|bash scripts/harness/cargo.sh test|bash scripts/harness/cargo.sh test
+package|-|root|bash packaging/harness/macos/bundle.sh|& {pwsh} -NoProfile -File packaging/harness/windows/package.ps1 -TestInstall
+golden|core:crates/tests/golden/runner|core|cd crates/tests && cargo nextest run -p systemprompt-golden-runner|Set-Location crates/tests; cargo nextest run -p systemprompt-golden-runner
+device-native|core:scripts/device-native-crates.txt|core|./scripts/bridge-native-tests.sh --list scripts/device-native-crates.txt|bash ./scripts/bridge-native-tests.sh --list scripts/device-native-crates.txt
+tour|-|root|bash extensions/harness/tests/tour/tour.sh --out {out}/screenshots --core '{core}' {dry}|& {pwsh} -NoProfile -File extensions/harness/tests/tour/tour.ps1 -Out '{out}/screenshots' -Core '{core}' {dry}

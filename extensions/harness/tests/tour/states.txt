@@ -1,0 +1,36 @@
+# The screenshot tour list (core documentation/future/harness/testing/05-evidence.md section 2.2).
+# Read by tour.sh and tour.ps1; one state per line, fields separated by "|":
+#   number | slug | state | themes | reach | target | needs
+# reach:  launch  the app started on a fresh, signed-out data root
+#         link    a deep link <scheme>://<target> sent to the running app
+#         manual  no deep link or command reaches it: a person walks to it (listed, never captured blind)
+# target: the link without "<scheme>://"; {session:NAME} is the id of the session seed NAME made, {project} the tour workspace
+# needs:  -, login (signed in to the scripted instance) or seed:NAME (seeds.txt)
+01|signin-gate|Sign-in gate, no instance|light,dark|launch|-|-
+02|signin-paste|Sign-in gate, paste-code flow|light|manual|-|-
+03|key-trust|Key trust prompt on first manifest|light|manual|-|-
+04|empty-project|Empty project, signed in, synced|light,dark|link|open?dir={project}|login
+05|session-stream|Session with streamed text and reasoning|light,dark|link|session?id={session:stream}|seed:stream
+06|tool-rows|Tool rows: read, edit with diff, shell with output|light,dark|link|session?id={session:tools}|seed:tools
+07|todo-subagent|Todo list and a subagent row|light|manual|-|-
+08|permission-ask|Permission ask in the dock|light,dark|manual|-|-
+09|question-dock|Question dock|light|manual|-|-
+10|tool-denied|Tool denied by a rule; tool denied by the instance|light|manual|-|-
+11|composer-attachment|Composer with an attachment and a queued message|light|manual|-|-
+12|pickers|Model picker and agent picker|light|manual|-|-
+13a|settings-general|Settings: general|light,dark|link|settings?page=general|login
+13b|settings-permissions|Settings: permissions|light,dark|link|settings?page=permissions|login
+13c|settings-themes|Settings: themes (no themes page yet)|light,dark|manual|-|-
+14|governance|Governance: instances, key trust, sync state|light,dark|link|settings?page=governance|login
+15|sync-error|Sync error and stale-manifest states|light|manual|-|-
+16|drive|Drive: documents, a folder in sync|light|manual|-|-
+17|compaction|Compaction notice|light|manual|-|-
+18|revert|Revert confirmation and the result|light|manual|-|-
+19|signed-out-refused|Signed out by a refused credential|light|manual|-|-
+20|about|About, with version and build provenance|light|link|settings?page=about|-
+21|mode-selector|The mode selector, with an unavailable mode and its reason|light|manual|-|-
+22|two-worktrees|Two sessions on one repository, each in its own working copy|light|manual|-|-
+23|terminal|The integrated terminal|light,dark|manual|-|-
+24|preview|The preview pane showing a served page|light|manual|-|-
+25|schedules|Schedules: list, one paused after repeated failure|light|manual|-|-
+26|memory|Memory: what a turn recalled; removing an item|light|manual|-|-

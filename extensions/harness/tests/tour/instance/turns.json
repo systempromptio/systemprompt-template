@@ -1,0 +1,117 @@
+{
+  "turns": [
+    {
+      "expect": {
+        "tools_include": [
+          "read"
+        ],
+        "tool_results": []
+      },
+      "respond": [
+        {
+          "text": "This project is a small fixture for the screenshot tour. It has a README, one source file and a test script.\n\nNothing here talks to a network."
+        }
+      ],
+      "stop": "end",
+      "usage": {
+        "input": 120,
+        "output": 40
+      }
+    },
+    {
+      "expect": {
+        "tools_include": [
+          "read"
+        ],
+        "tool_results": []
+      },
+      "respond": [
+        {
+          "text": "Reading the README first."
+        },
+        {
+          "tool_call": {
+            "id": "tour-read",
+            "name": "read",
+            "input": {
+              "path": "README.md"
+            }
+          }
+        }
+      ],
+      "stop": "tool_use",
+      "usage": {
+        "input": 140,
+        "output": 20
+      }
+    },
+    {
+      "expect": {
+        "tool_results": [
+          "tour-read"
+        ]
+      },
+      "respond": [
+        {
+          "text": "There is a typo: \"teh\"."
+        },
+        {
+          "tool_call": {
+            "id": "tour-edit",
+            "name": "edit",
+            "input": {
+              "path": "README.md",
+              "old_string": "teh tour",
+              "new_string": "the tour"
+            }
+          }
+        }
+      ],
+      "stop": "tool_use",
+      "usage": {
+        "input": 180,
+        "output": 30
+      }
+    },
+    {
+      "expect": {
+        "tool_results": [
+          "tour-edit"
+        ]
+      },
+      "respond": [
+        {
+          "tool_call": {
+            "id": "tour-shell",
+            "name": "shell",
+            "input": {
+              "command": "sh test.sh"
+            }
+          }
+        }
+      ],
+      "stop": "tool_use",
+      "usage": {
+        "input": 200,
+        "output": 12
+      }
+    },
+    {
+      "expect": {
+        "tool_results": [
+          "tour-shell"
+        ]
+      },
+      "respond": [
+        {
+          "text": "Fixed the typo; the tests pass."
+        }
+      ],
+      "stop": "end",
+      "usage": {
+        "input": 230,
+        "output": 10
+      }
+    }
+  ]
+}

@@ -39,3 +39,15 @@ harness-build-release *ARGS:
 # Supply chain over both workspaces (cargo-deny, the template's deny.toml)
 harness-deny:
     bash scripts/harness/cargo.sh deny
+
+# The screenshot tour on this Mac (installs the bundle, signs in to the scripted instance); --dry-run launches nothing
+harness-tour *ARGS:
+    bash extensions/harness/tests/tour/tour.sh {{ARGS}}
+
+# Run the suites and the tour on this machine into an untracked evidence/<host>-<timestamp>/ folder; uploads nothing
+harness-evidence *ARGS:
+    bash scripts/harness/evidence/run {{ARGS}}
+
+# The evidence command's dry run against its fixture: installs, builds and launches nothing
+harness-evidence-dry FIXTURE="scripts/harness/evidence/fixture/pass":
+    bash scripts/harness/evidence/run --dry-run --fixture {{FIXTURE}} --out-root target/evidence-dry-run

@@ -1,0 +1,5 @@
+# Sessions the tour creates before it captures, with the headless `run` (one per line, "|" separated):
+#   name | permission mode | prompt
+# Each run takes its turns, in this order, from instance/turns.json; a seed's id fills {session:NAME} in states.txt.
+stream|allow|Explain what this project does.
+tools|allow|Read README.md, fix the typo in it and run the tests.

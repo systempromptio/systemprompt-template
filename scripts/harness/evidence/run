@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# run: the evidence command on macOS (S2-C2; core testing/05-evidence.md section 3); run.ps1 is its Windows twin.
+#
+# Runs the steps in steps.txt (the shell's tests, the package, core's golden runner and device-native tests when a
+# core checkout at the pinned rev is present, the screenshot tour) on this machine and writes a local, untracked
+# folder evidence/<host>-<timestamp>/:
+#   index.html          one page linking everything: steps, tour captures, manual walk, machine
+#   summary.tsv         step|status|exit|seconds   (status: passed, failed, skipped)
+#   meta.txt            host, system, commit, core commit, pinned rev, toolchain, start and end
+#   logs/<step>.log     each step's output
+#   screenshots/        the tour: <number>-<slug>-<theme>.png, tour.tsv, manual-walk.txt
+#   package/            dist/SHA256SUMS and the package's file names, when packaging ran
+# Nothing is uploaded. Exits 1 if any step failed, and names them.
+#
+# Usage:
+#   scripts/harness/evidence/run [--core DIR] [--out-root DIR] [--dry-run [--fixture DIR]]
+#
+# --core defaults to the first of ../systemprompt-core and ../core-future whose HEAD is the pinned rev.
+# --dry-run installs, builds and launches nothing: steps with a dry run of their own (the tour) run it; every other
+# step's result is read from --fixture (default scripts/harness/evidence/fixture/pass).
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+root="$(cd "$here/../../.." && pwd)"
+core=""
+out_root="$root/evidence"
+dry_run=0
+fixture="$here/fixture/pass"
+
+usage() {
+    sed -n '/^# Usage:/,/^# step/p' "$0" | sed 's/^# \{0,1\}//' >&2
+    exit 2
+}
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --core) [ "$#" -ge 2 ] || usage; core="$2"; shift 2 ;;
+        --out-root) [ "$#" -ge 2 ] || usage; out_root="$2"; shift 2 ;;
+        --dry-run) dry_run=1; shift ;;
+        --fixture) [ "$#" -ge 2 ] || usage; fixture="$2"; shift 2 ;;
+        -h | --help) usage ;;
+        *) echo "run: unknown argument '$1'" >&2; usage ;;
+    esac
+done
+
+pinned_rev="$(sed -nE 's/^systemprompt-harness = .*rev = "([0-9a-f]+)".*/\1/p' "$root/extensions/harness/Cargo.toml")"
+at_rev() { [ -d "$1" ] && [ "$(git -C "$1" rev-parse HEAD 2>/dev/null)" = "$pinned_rev" ]; }
+if [ -z "$core" ]; then
+    for candidate in "$root/../systemprompt-core" "$root/../core-future"; do
+        if at_rev "$candidate"; then core="$(cd "$candidate" && pwd)"; break; fi
+    done
+fi
+core_ok=0
+if [ -n "$core" ] && at_rev "$core"; then core_ok=1; fi
+
+host="$(hostname -s 2>/dev/null || hostname)"
+started="$(date -u +%Y%m%dT%H%M%SZ)"
+out="$out_root/$host-$started"
+mkdir -p "$out/logs" "$out/screenshots" "$out/package"
+summary="$out/summary.tsv"
+printf 'step|status|exit|seconds\n' >"$summary"
+failed=()
+
+{
+    echo "host: $host"
+    echo "system: $(uname -srm)"
+    echo "commit: $(git -C "$root" rev-parse HEAD)$(git -C "$root" diff --quiet HEAD 2>/dev/null || echo ' (working tree differs)')"
+    echo "pinned core rev: $pinned_rev"
+    if [ "$core_ok" -eq 1 ]; then echo "core: $core at $pinned_rev"; else echo "core: none at the pinned rev (core steps skipped)"; fi
+    echo "toolchain: $(cd "$root/extensions/harness" && rustc --version 2>/dev/null || echo unavailable)"
+    echo "inference spend: none; no provider credential is used by any step"
+    echo "mode: $([ "$dry_run" -eq 1 ] && echo "dry run, fixture $fixture" || echo real)"
+    echo "started: $started"
+} >"$out/meta.txt"
+
+expand() {
+    local command="$1" dry=""
+    if [ "$dry_run" -eq 1 ]; then dry="--dry-run"; fi
+    command="${command//\{root\}/$root}"
+    command="${command//\{core\}/$core}"
+    command="${command//\{out\}/$out}"
+    command="${command//\{dry\}/$dry}"
+    printf '%s' "$command"
+}
+
+while IFS='|' read -r id needs cwd bash_command _ps_command; do
+    case "$id" in '' | '#'*) continue ;; esac
+    log="$out/logs/$id.log"
+    if [[ "$needs" == core:* ]] && { [ "$core_ok" -eq 0 ] || [ ! -e "$core/${needs#core:}" ]; }; then
+        echo "skipped: needs a core checkout at $pinned_rev with ${needs#core:}" >"$log"
+        printf '%s|skipped||0\n' "$id" >>"$summary"
+        echo "== $id: skipped"
+        continue
+    fi
+    command="$(expand "$bash_command")"
+    dir="$root"
+    [ "$cwd" = core ] && dir="$core"
+    echo "== $id: $command"
+    begin=$SECONDS
+    if [ "$dry_run" -eq 1 ] && [[ "$bash_command" != *"{dry}"* ]]; then
+        code=0
+        [ -f "$fixture/$id.exit" ] && code="$(tr -d '[:space:]' <"$fixture/$id.exit")"
+        { echo "dry run: would run in $dir: $command"; [ -f "$fixture/$id.log" ] && cat "$fixture/$id.log"; } >"$log"
+    else
+        set +e
+        (cd "$dir" && bash -c "$command") >"$log" 2>&1
+        code=$?
+        set -e
+    fi
+    seconds=$((SECONDS - begin))
+    if [ "$code" -eq 0 ]; then status=passed; else status=failed; failed+=("$id"); fi
+    printf '%s|%s|%s|%s\n' "$id" "$status" "$code" "$seconds" >>"$summary"
+    echo "   $status (exit $code, ${seconds}s)"
+done <"$here/steps.txt"
+
+if [ -f "$root/dist/SHA256SUMS" ] && [ "$dry_run" -eq 0 ]; then
+    cp "$root/dist/SHA256SUMS" "$out/package/"
+    (cd "$root/dist" && ls -l) >"$out/package/files.txt"
+fi
+echo "finished: $(date -u +%Y%m%dT%H%M%SZ)" >>"$out/meta.txt"
+
+bash "$here/index.sh" "$out"
+echo
+echo "evidence: $out/index.html"
+if [ "${#failed[@]}" -gt 0 ]; then
+    echo "failed: ${failed[*]}"
+    exit 1
+fi
+echo "every step passed or was skipped"
